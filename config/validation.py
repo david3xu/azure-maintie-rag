@@ -53,8 +53,8 @@ class ConfigurationValidator:
     def _validate_basic_settings(self) -> None:
         """Validate basic application settings"""
         # Check OpenAI API key
-        if not settings.openai_api_key or settings.openai_api_key == "your_openai_api_key_here":
-            self.errors.append("OPENAI_API_KEY is not set or is using default value")
+        if not settings.openai_api_key or settings.openai_api_key in ["your_openai_api_key_here", "az-1234abcd5678efgh9012ijkl3456mnop"]:
+            self.errors.append("OPENAI_API_KEY is not set or is using default/example value")
 
         # Check environment
         if settings.environment not in ["development", "staging", "production"]:

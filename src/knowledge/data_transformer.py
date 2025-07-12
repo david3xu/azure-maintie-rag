@@ -16,6 +16,7 @@ from src.models.maintenance_models import (
     EntityType, RelationType
 )
 from config.settings import settings
+from config.advanced_settings import advanced_settings
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,6 @@ class MaintIEDataTransformer:
 
     def __init__(self, gold_path: Optional[Path] = None, silver_path: Optional[Path] = None):
         """Initialize transformer with data paths"""
-        from config.advanced_settings import advanced_settings
 
         # Use configurable filenames
         gold_filename = advanced_settings.gold_data_filename

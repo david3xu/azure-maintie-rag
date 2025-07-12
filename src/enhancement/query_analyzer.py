@@ -8,12 +8,15 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 import networkx as nx
 from collections import defaultdict
+from pathlib import Path
+import json
 
 from src.models.maintenance_models import (
     QueryAnalysis, EnhancedQuery, QueryType, MaintenanceEntity
 )
 from src.knowledge.data_transformer import MaintIEDataTransformer
 from config.settings import settings
+from config.advanced_settings import advanced_settings
 
 
 logger = logging.getLogger(__name__)
@@ -24,8 +27,6 @@ class MaintenanceQueryAnalyzer:
 
     def __init__(self, transformer: Optional[MaintIEDataTransformer] = None):
         """Initialize analyzer with knowledge transformer"""
-        from config.advanced_settings import advanced_settings
-
         self.transformer = transformer
         self.config = advanced_settings
         self.knowledge_graph: Optional[nx.Graph] = None

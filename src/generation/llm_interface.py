@@ -6,37 +6,40 @@ Integrates with OpenAI and other LLM providers for domain-aware response generat
 import logging
 import time
 from typing import Dict, List, Any, Optional, Union
-import openai
-from openai import OpenAI
+from openai import AzureOpenAI
 
 from src.models.maintenance_models import SearchResult, EnhancedQuery, RAGResponse
 from config.settings import settings
+from config.advanced_settings import advanced_settings
+from config.prompt_templates import template_manager
 
 
 logger = logging.getLogger(__name__)
 
 
 class MaintenanceLLMInterface:
-    """LLM interface specialized for maintenance domain responses"""
+    """LLM interface specialized for maintenance domain responses (Azure OpenAI only)"""
 
     def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
-        """Initialize LLM interface with configurable parameters"""
-        from config.advanced_settings import advanced_settings
-        from config.prompt_templates import template_manager
+        """Initialize LLM interface for Azure OpenAI only"""
 
         self.api_key = api_key or settings.openai_api_key
-        self.model = model or settings.openai_model
+        self.deployment_name = settings.openai_deployment_name
+        self.api_base = settings.openai_api_base
+        self.api_version = settings.openai_api_version
         self.max_tokens = settings.openai_max_tokens
         self.temperature = settings.openai_temperature
-
-        # Use configurable advanced settings
         self.config = advanced_settings
         self.template_manager = template_manager
 
-        # Initialize OpenAI client
-        self.client = OpenAI(api_key=self.api_key)
+        # Azure OpenAI client setup using new SDK
+        self.client = AzureOpenAI(
+            api_key=self.api_key,
+            api_version=self.api_version,
+            azure_endpoint=self.api_base
+        )
 
-        logger.info(f"MaintenanceLLMInterface initialized with model {self.model}")
+        logger.info(f"MaintenanceLLMInterface initialized with Azure deployment {self.deployment_name}")
 
     def generate_response(
         self,
@@ -45,25 +48,16 @@ class MaintenanceLLMInterface:
         include_citations: bool = True,
         include_safety_warnings: bool = True
     ) -> Dict[str, Any]:
-        """Generate maintenance response using LLM"""
-
+        """Generate maintenance response using Azure OpenAI"""
         start_time = time.time()
-
         try:
-            # Build maintenance-specific prompt
             prompt = self._build_maintenance_prompt(enhanced_query, search_results)
-
-            # Generate response using OpenAI
             response = self._call_openai(prompt)
-
-            # Enhance response with maintenance-specific features
             enhanced_response = self._enhance_response(
                 response, enhanced_query, search_results,
                 include_citations, include_safety_warnings
             )
-
             processing_time = time.time() - start_time
-
             return {
                 "generated_response": enhanced_response["response"],
                 "confidence_score": enhanced_response["confidence"],
@@ -71,10 +65,9 @@ class MaintenanceLLMInterface:
                 "safety_warnings": enhanced_response["safety_warnings"],
                 "citations": enhanced_response["citations"],
                 "processing_time": processing_time,
-                "model_used": self.model,
+                "model_used": self.deployment_name,
                 "prompt_type": enhanced_response["prompt_type"]
             }
-
         except Exception as e:
             logger.error(f"Error generating response: {e}")
             return self._create_fallback_response(enhanced_query, search_results)
@@ -128,37 +121,23 @@ Entities: {", ".join(result.entities) if result.entities else "None specified"}
         return "\n".join(context_parts)
 
     def _call_openai(self, prompt: str) -> str:
-        """Call OpenAI API with configurable parameters"""
+        """Call Azure OpenAI API with new SDK client"""
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=self.deployment_name,
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert maintenance engineer with 20+ years of experience in industrial equipment maintenance. Provide accurate, practical, and safety-focused maintenance guidance."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
+                    {"role": "system", "content": "You are an expert maintenance engineer with 20+ years of experience in industrial equipment maintenance. Provide accurate, practical, and safety-focused maintenance guidance."},
+                    {"role": "user", "content": prompt}
                 ],
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
-                top_p=self.config.llm_top_p,  # Now configurable
-                frequency_penalty=self.config.llm_frequency_penalty,  # Now configurable
-                presence_penalty=self.config.llm_presence_penalty  # Now configurable
+                top_p=self.config.llm_top_p,
+                frequency_penalty=self.config.llm_frequency_penalty,
+                presence_penalty=self.config.llm_presence_penalty
             )
-
             return response.choices[0].message.content.strip()
-
-        except openai.RateLimitError:
-            logger.warning("OpenAI rate limit exceeded, using fallback")
-            raise
-        except openai.APIError as e:
-            logger.error(f"OpenAI API error: {e}")
-            raise
         except Exception as e:
-            logger.error(f"Unexpected error calling OpenAI: {e}")
+            logger.error(f"Error calling Azure OpenAI: {e}")
             raise
 
     def _enhance_response(
