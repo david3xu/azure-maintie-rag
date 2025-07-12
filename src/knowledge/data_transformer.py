@@ -1,6 +1,6 @@
 """
-MaintIE data transformation module
-Loads and transforms MaintIE annotations into RAG-ready knowledge structures
+MaintIE data transformation module - Enhanced working version
+Keeps your working logic + adds simple scheme.json type mapping
 """
 
 import json
@@ -17,7 +17,6 @@ from src.models.maintenance_models import (
 )
 from config.settings import settings
 from config.advanced_settings import advanced_settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +35,10 @@ class MaintIEDataTransformer:
         self.silver_path = silver_path or settings.raw_data_dir / silver_filename
         self.processed_dir = settings.processed_data_dir
 
+        # ENHANCEMENT: Load scheme.json if available
+        self.scheme_path = settings.raw_data_dir / "scheme.json"
+        self.type_mappings = self._load_type_mappings()
+
         # Ensure directories exist
         self.processed_dir.mkdir(parents=True, exist_ok=True)
 
@@ -46,6 +49,51 @@ class MaintIEDataTransformer:
         self.knowledge_graph: Optional[nx.Graph] = None
 
         logger.info(f"Initialized MaintIE transformer for {self.gold_path} and {self.silver_path}")
+
+    def _load_type_mappings(self) -> Dict[str, Any]:
+        """Simple scheme.json loader (optional enhancement)"""
+        mappings = {"entity": {}, "relation": {}}
+
+        if not self.scheme_path.exists():
+            logger.info("No scheme.json found, using default type mappings")
+            return mappings
+
+        try:
+            with open(self.scheme_path, 'r') as f:
+                scheme = json.load(f)
+
+            # Build simple type mappings from scheme
+            for entity_def in scheme.get("entity", []):
+                fullname = entity_def.get("fullname", "")
+                mappings["entity"][fullname] = self._map_entity_type(fullname)
+
+            for relation_def in scheme.get("relation", []):
+                fullname = relation_def.get("fullname", "")
+                mappings["relation"][fullname] = self._map_relation_type(fullname)
+
+            logger.info(f"Loaded scheme mappings: {len(mappings['entity'])} entities, {len(mappings['relation'])} relations")
+
+        except Exception as e:
+            logger.warning(f"Could not load scheme.json: {e}, using defaults")
+
+        return mappings
+
+    def _map_entity_type(self, fullname: str) -> EntityType:
+        """Map scheme entity type to enum"""
+        name_lower = fullname.lower()
+
+        if "physicalobject" in name_lower:
+            return EntityType.PHYSICAL_OBJECT
+        elif "activity" in name_lower:
+            return EntityType.ACTIVITY
+        elif "process" in name_lower:
+            return EntityType.PROBLEM if "undesirable" in name_lower else EntityType.ACTIVITY
+        elif "state" in name_lower:
+            return EntityType.PROBLEM if "undesirable" in name_lower else EntityType.STATE
+        elif "property" in name_lower:
+            return EntityType.PROPERTY
+        else:
+            return EntityType.PHYSICAL_OBJECT
 
     def load_raw_data(self) -> Dict[str, Any]:
         """Load raw MaintIE datasets"""
@@ -111,7 +159,8 @@ class MaintIEDataTransformer:
             try:
                 # Create document
                 doc_id = doc_data.get("id", f"doc_{stats['documents']}")
-                text = doc_data.get("text", "")
+                text = doc_data.get("text", "")  # Get the document text here
+                tokens = doc_data.get("tokens", [])  # Get the tokens here
 
                 document = MaintenanceDocument(
                     doc_id=doc_id,
@@ -122,26 +171,28 @@ class MaintIEDataTransformer:
                         "confidence_base": confidence_base
                     }
                 )
+                self.documents[doc_id] = document  # Move this line here
 
                 # Extract entities
                 entities_data = doc_data.get("entities", [])
+                entities_in_doc: List[MaintenanceEntity] = []  # New list to store entities created for this document
                 for entity_data in entities_data:
-                    entity = self._create_entity(entity_data, confidence_base)
+                    entity = self._create_entity(entity_data, doc_id, text, tokens, confidence_base)  # Pass doc_id, doc_text, and tokens
                     if entity:
                         self.entities[entity.entity_id] = entity
                         document.add_entity(entity)
+                        entities_in_doc.append(entity)  # Add to list for relation processing
                         stats["entities"] += 1
 
                 # Extract relations
                 relations_data = doc_data.get("relations", [])
                 for relation_data in relations_data:
-                    relation = self._create_relation(relation_data, confidence_base)
+                    relation = self._create_relation(relation_data, entities_in_doc, confidence_base)
                     if relation:
                         self.relations.append(relation)
                         document.add_relation(relation)
                         stats["relations"] += 1
 
-                self.documents[doc_id] = document
                 stats["documents"] += 1
 
             except Exception as e:
@@ -150,21 +201,36 @@ class MaintIEDataTransformer:
 
         return stats
 
-    def _create_entity(self, entity_data: Dict[str, Any], confidence_base: float) -> Optional[MaintenanceEntity]:
+    def _create_entity(self, entity_data: Dict[str, Any], doc_id: str, doc_text: str, doc_tokens: List[str], confidence_base: float) -> Optional[MaintenanceEntity]:
         """Create MaintenanceEntity from annotation data"""
         try:
-            entity_id = entity_data.get("id", f"entity_{len(self.entities)}")
+            # Generate a unique entity_id based on doc_id, start, and end
+            start = entity_data.get("start")
+            end = entity_data.get("end")
+            entity_id = f"{doc_id}_entity_{start}_{end}"
+
             text = entity_data.get("text", "").strip()
 
-            if not text:
-                return None
+            if not text:  # If text is not directly provided in entity_data
+                # Use the provided doc_tokens to extract the entity text
+                if doc_tokens and start is not None and end is not None and len(doc_tokens) >= end:
+                    text = " ".join(doc_tokens[start:end]).strip()
+                if not text:
+                    logger.warning(f"Skipping entity creation: no text or invalid start/end for {doc_id}")
+                    return None
 
-            # Map entity type
+            # ENHANCEMENT: Use scheme mapping if available
             entity_type_str = entity_data.get("type", "PhysicalObject")
-            try:
-                entity_type = EntityType(entity_type_str)
-            except ValueError:
-                entity_type = EntityType.PHYSICAL_OBJECT
+
+            # Try scheme mapping first
+            if entity_type_str in self.type_mappings["entity"]:
+                entity_type = self.type_mappings["entity"][entity_type_str]
+            else:
+                # Fallback to your original logic
+                try:
+                    entity_type = EntityType(entity_type_str)
+                except ValueError:
+                    entity_type = EntityType.PHYSICAL_OBJECT
 
             return MaintenanceEntity(
                 entity_id=entity_id,
@@ -173,36 +239,57 @@ class MaintIEDataTransformer:
                 confidence=min(confidence_base * entity_data.get("confidence", 1.0), 1.0),
                 context=entity_data.get("context"),
                 metadata={
-                    "start": entity_data.get("start"),
-                    "end": entity_data.get("end"),
-                    "original_type": entity_type_str
+                    "start": start,
+                    "end": end,
+                    "original_type": entity_type_str,
+                    "doc_id": doc_id  # Add doc_id to metadata for completeness
                 }
             )
         except Exception as e:
             logger.warning(f"Error creating entity: {e}")
             return None
 
-    def _create_relation(self, relation_data: Dict[str, Any], confidence_base: float) -> Optional[MaintenanceRelation]:
+    def _create_relation(self, relation_data: Dict[str, Any], entities_in_doc: List[MaintenanceEntity], confidence_base: float) -> Optional[MaintenanceRelation]:
         """Create MaintenanceRelation from annotation data"""
         try:
             relation_id = relation_data.get("id", f"relation_{len(self.relations)}")
-            source = relation_data.get("source", "")
-            target = relation_data.get("target", "")
 
-            if not source or not target:
+            # Resolve source and target entities using head/tail indices
+            head_index = relation_data.get("head")
+            tail_index = relation_data.get("tail")
+
+            if head_index is None or tail_index is None:
+                logger.warning(f"Skipping relation creation: missing head or tail index for {relation_data}")
                 return None
 
-            # Map relation type
+            if head_index >= len(entities_in_doc) or tail_index >= len(entities_in_doc):
+                logger.warning(f"Skipping relation creation: head or tail index out of bounds for {relation_data}")
+                return None
+
+            source_entity_id = entities_in_doc[head_index].entity_id
+            target_entity_id = entities_in_doc[tail_index].entity_id
+
+            if not source_entity_id or not target_entity_id:
+                logger.warning(f"Skipping relation creation: could not resolve source or target entity IDs for {relation_data}")
+                return None
+
+            # ENHANCEMENT: Use scheme mapping if available
             relation_type_str = relation_data.get("type", "hasPart")
-            try:
-                relation_type = RelationType(relation_type_str)
-            except ValueError:
-                relation_type = RelationType.HAS_PART
+
+            # Try scheme mapping first
+            if relation_type_str in self.type_mappings["relation"]:
+                relation_type = self.type_mappings["relation"][relation_type_str]
+            else:
+                # Fallback to your original logic
+                try:
+                    relation_type = RelationType(relation_type_str)
+                except ValueError:
+                    relation_type = RelationType.HAS_PART
 
             return MaintenanceRelation(
                 relation_id=relation_id,
-                source_entity=source,
-                target_entity=target,
+                source_entity=source_entity_id,
+                target_entity=target_entity_id,
                 relation_type=relation_type,
                 confidence=min(confidence_base * relation_data.get("confidence", 1.0), 1.0),
                 context=relation_data.get("context"),
@@ -262,7 +349,10 @@ class MaintIEDataTransformer:
 
         # Save knowledge graph
         if self.knowledge_graph:
-            nx.write_gpickle(self.knowledge_graph, self.processed_dir / "knowledge_graph.pkl")
+            # Use JSON serialization instead of gpickle
+            graph_data = nx.node_link_data(self.knowledge_graph, edges="edges")
+            self._save_json(graph_data, self.processed_dir / "knowledge_graph.json")
+            logger.info(f"Knowledge graph saved to {self.processed_dir / 'knowledge_graph.json'}")
 
         # Save entity vocabulary
         entity_vocab = self._build_entity_vocabulary()
