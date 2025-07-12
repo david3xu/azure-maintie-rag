@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.env/
+.env
+.venv/
+
+# Environment variables
+.env
+.env.*
+
+# Data and indices (keep raw, ignore processed/indices)
+data/processed/
+data/indices/
+logs/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+
+# System
+Thumbs.db
+
+# Test outputs
+*.log
+*.tmp
+
+# Ignore model checkpoints and large files
+*.ckpt
+*.pth
+*.pt
+*.h5
+*.onnx
+
+# Ignore compiled files
+*.egg-info/
+*.egg
+
+# Ignore Docker artifacts
+*.pid
+
+# Ignore extraction artifacts
+extracted_knowledge.json
