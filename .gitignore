@@ -55,3 +55,8 @@ Thumbs.db
 
 # Ignore extraction artifacts
 extracted_knowledge.json
+
+# Ignore FAISS index and embedding files
+/data/indices/faiss_index.bin
+/data/indices/doc_mappings.pkl
+/data/indices/document_embeddings.pkl

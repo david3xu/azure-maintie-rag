@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
 import faiss
-from sentence_transformers import SentenceTransformer
+from openai import AzureOpenAI
 
 from src.models.maintenance_models import SearchResult, MaintenanceDocument
 from config.settings import settings
@@ -19,35 +19,32 @@ logger = logging.getLogger(__name__)
 
 
 class MaintenanceVectorSearch:
-    """Semantic vector search for maintenance documents"""
+    """Semantic vector search for maintenance documents (Azure OpenAI only)"""
 
     def __init__(self, model_name: Optional[str] = None):
-        """Initialize vector search with embedding model"""
-        self.model_name = model_name or settings.embedding_model
-        self.embedding_model = None
+        """Initialize vector search with Azure OpenAI embedding model"""
+        self.api_key = settings.openai_api_key
+        self.embedding_deployment = settings.embedding_deployment_name
+        self.api_base = settings.embedding_api_base
+        self.api_version = settings.embedding_api_version
+        self.embedding_model = self.embedding_deployment
         self.faiss_index = None
         self.document_embeddings: Dict[str, np.ndarray] = {}
         self.documents: Dict[str, MaintenanceDocument] = {}
         self.doc_id_to_index: Dict[str, int] = {}
         self.index_to_doc_id: Dict[int, str] = {}
 
-        # Initialize model
-        self._load_embedding_model()
+        # Azure OpenAI embedding client setup using new SDK
+        self.client = AzureOpenAI(
+            api_key=self.api_key,
+            api_version=self.api_version,
+            azure_endpoint=self.api_base
+        )
 
         # Load existing index if available
         self._load_existing_index()
 
-        logger.info(f"MaintenanceVectorSearch initialized with {self.model_name}")
-
-    def _load_embedding_model(self) -> None:
-        """Load sentence transformer model"""
-        try:
-            logger.info(f"Loading embedding model: {self.model_name}")
-            self.embedding_model = SentenceTransformer(self.model_name)
-            logger.info("Embedding model loaded successfully")
-        except Exception as e:
-            logger.error(f"Failed to load embedding model: {e}")
-            raise
+        logger.info(f"MaintenanceVectorSearch initialized with Azure embedding deployment {self.embedding_deployment}")
 
     def _load_existing_index(self) -> None:
         """Load existing FAISS index and mappings if available"""
@@ -72,57 +69,73 @@ class MaintenanceVectorSearch:
         except Exception as e:
             logger.warning(f"Could not load existing index: {e}")
 
+    def _get_embedding(self, texts: List[str]) -> np.ndarray:
+        """Get embeddings from Azure OpenAI using new SDK"""
+        try:
+            # Validate input texts
+            if not texts:
+                raise ValueError("No texts provided for embedding")
+
+            # Filter out empty or invalid texts
+            valid_texts = [text.strip() for text in texts if text and text.strip()]
+            if not valid_texts:
+                raise ValueError("No valid texts found for embedding")
+
+            response = self.client.embeddings.create(
+                model=self.embedding_deployment,
+                input=valid_texts
+            )
+            embeddings = [data.embedding for data in response.data]
+            return np.array(embeddings)
+        except Exception as e:
+            logger.error(f"Error getting embeddings from Azure OpenAI: {e}")
+            raise
+
     def build_index(self, documents: Dict[str, MaintenanceDocument]) -> None:
-        """Build FAISS index from maintenance documents"""
+        """Build FAISS index from maintenance documents using Azure OpenAI embeddings"""
         logger.info(f"Building vector index for {len(documents)} documents")
-
         self.documents = documents
-
-        # Generate embeddings for all documents
         doc_texts = []
         doc_ids = []
 
+        # Filter out documents with empty or invalid text
         for doc_id, doc in documents.items():
-            # Combine title and text for embedding
             full_text = f"{doc.title or ''} {doc.text}".strip()
-            doc_texts.append(full_text)
-            doc_ids.append(doc_id)
+            if full_text and len(full_text) > 10:  # Ensure text is not empty and has minimum length
+                doc_texts.append(full_text)
+                doc_ids.append(doc_id)
+            else:
+                logger.warning(f"Skipping document {doc_id} with empty or too short text")
 
-        # Generate embeddings in batches
-        logger.info("Generating document embeddings...")
-        from config.advanced_settings import advanced_settings
+        if not doc_texts:
+            logger.error("No valid documents found for indexing")
+            return
 
-        embeddings = self.embedding_model.encode(
-            doc_texts,
-            batch_size=advanced_settings.embedding_batch_size,
-            show_progress_bar=True,
-            convert_to_numpy=True
-        )
+        # Get batch size from settings (default 32, max 2048 for Azure OpenAI)
+        batch_size = min(settings.embedding_batch_size, 2048)
+        logger.info(f"Generating embeddings for {len(doc_texts)} valid documents via Azure OpenAI in batches of {batch_size}...")
 
-        # Create FAISS index
+        # Process embeddings in batches
+        all_embeddings = []
+        for i in range(0, len(doc_texts), batch_size):
+            batch_texts = doc_texts[i:i + batch_size]
+            batch_embeddings = self._get_embedding(batch_texts)
+            all_embeddings.append(batch_embeddings)
+            logger.info(f"Processed batch {i//batch_size + 1}/{(len(doc_texts) + batch_size - 1)//batch_size} ({len(batch_texts)} documents)")
+
+        # Combine all embeddings
+        embeddings = np.vstack(all_embeddings)
+
         dimension = embeddings.shape[1]
         logger.info(f"Creating FAISS index with dimension {dimension}")
-
-        # Use IndexFlatIP for cosine similarity (after normalization)
         self.faiss_index = faiss.IndexFlatIP(dimension)
-
-        # Normalize embeddings for cosine similarity
         faiss.normalize_L2(embeddings)
-
-        # Add embeddings to index
         self.faiss_index.add(embeddings.astype(np.float32))
-
-        # Create mappings
         self.doc_id_to_index = {doc_id: idx for idx, doc_id in enumerate(doc_ids)}
         self.index_to_doc_id = {idx: doc_id for idx, doc_id in enumerate(doc_ids)}
-
-        # Store embeddings
         for idx, doc_id in enumerate(doc_ids):
             self.document_embeddings[doc_id] = embeddings[idx]
-
-        # Save index
         self._save_index()
-
         logger.info(f"Vector index built successfully with {self.faiss_index.ntotal} documents")
 
     def _save_index(self) -> None:
@@ -133,7 +146,11 @@ class MaintenanceVectorSearch:
 
             # Save FAISS index
             index_path = index_dir / "faiss_index.bin"
-            faiss.write_index(self.faiss_index, str(index_path))
+            try:
+                faiss.write_index(self.faiss_index, str(index_path))
+                logger.info(f"FAISS index saved to {index_path}")
+            except Exception as e:
+                logger.error(f"Failed to save FAISS index: {e}")
 
             # Save document mappings
             mappings_path = index_dir / "doc_mappings.pkl"
@@ -141,51 +158,46 @@ class MaintenanceVectorSearch:
                 'doc_id_to_index': self.doc_id_to_index,
                 'index_to_doc_id': self.index_to_doc_id
             }
-            with open(mappings_path, 'wb') as f:
-                pickle.dump(mappings, f)
+            try:
+                with open(str(mappings_path), 'wb') as f:
+                    pickle.dump(mappings, f)
+                logger.info(f"Document mappings saved to {mappings_path}")
+            except Exception as e:
+                logger.error(f"Failed to save document mappings: {e}")
 
             # Save document embeddings
             embeddings_path = index_dir / "document_embeddings.pkl"
-            with open(embeddings_path, 'wb') as f:
-                pickle.dump(self.document_embeddings, f)
+            try:
+                with open(str(embeddings_path), 'wb') as f:
+                    pickle.dump(self.document_embeddings, f)
+                logger.info(f"Document embeddings saved to {embeddings_path}")
+            except Exception as e:
+                logger.error(f"Failed to save document embeddings: {e}")
 
-            logger.info("Vector index saved successfully")
         except Exception as e:
-            logger.error(f"Failed to save index: {e}")
+            logger.error(f"Failed to save index directory or files: {e}")
 
     def search(self, query: str, top_k: int = 10) -> List[SearchResult]:
-        """Search for similar documents using vector similarity"""
-        if not self.faiss_index or not self.embedding_model:
-            logger.warning("Index or model not available for search")
+        """Search for similar documents using Azure OpenAI embeddings"""
+        if not self.faiss_index:
+            logger.warning("Index not available for search")
             return []
-
         logger.info(f"Searching for: {query}")
-
         try:
-            # Generate query embedding
-            query_embedding = self.embedding_model.encode([query], convert_to_numpy=True)
-
-            # Normalize for cosine similarity
+            query_embedding = self._get_embedding([query])
             faiss.normalize_L2(query_embedding)
-
-            # Search in FAISS index
             scores, indices = self.faiss_index.search(
                 query_embedding.astype(np.float32),
                 min(top_k, self.faiss_index.ntotal)
             )
-
-            # Convert results to SearchResult objects
             results = []
             for score, idx in zip(scores[0], indices[0]):
-                if idx == -1:  # Invalid index
+                if idx == -1:
                     continue
-
                 doc_id = self.index_to_doc_id.get(idx)
                 if not doc_id or doc_id not in self.documents:
                     continue
-
                 doc = self.documents[doc_id]
-
                 result = SearchResult(
                     doc_id=doc_id,
                     title=doc.title or f"Document {doc_id}",
@@ -193,30 +205,24 @@ class MaintenanceVectorSearch:
                     score=float(score),
                     source="vector",
                     metadata={
-                        "embedding_model": self.model_name,
+                        "embedding_model": self.embedding_deployment,
                         "similarity_type": "cosine",
                         "full_text_length": len(doc.text)
                     },
                     entities=doc.get_entity_texts()
                 )
-
                 results.append(result)
-
             logger.info(f"Vector search returned {len(results)} results")
             return results
-
         except Exception as e:
             logger.error(f"Error during vector search: {e}")
             return []
 
     def get_similarity_scores(self, query: str, doc_ids: List[str]) -> Dict[str, float]:
         """Get similarity scores for specific documents"""
-        if not self.embedding_model:
-            return {}
-
         try:
-            # Generate query embedding
-            query_embedding = self.embedding_model.encode([query], convert_to_numpy=True)
+            # Generate query embedding using Azure OpenAI
+            query_embedding = self._get_embedding([query])
             faiss.normalize_L2(query_embedding)
 
             scores = {}
@@ -236,9 +242,9 @@ class MaintenanceVectorSearch:
     def add_document(self, doc_id: str, document: MaintenanceDocument) -> bool:
         """Add a single document to the index"""
         try:
-            # Generate embedding for new document
+            # Generate embedding for new document using Azure OpenAI
             full_text = f"{document.title or ''} {document.text}".strip()
-            embedding = self.embedding_model.encode([full_text], convert_to_numpy=True)
+            embedding = self._get_embedding([full_text])
 
             # Normalize embedding
             faiss.normalize_L2(embedding)
@@ -291,10 +297,7 @@ class MaintenanceVectorSearch:
 
     def get_query_embedding(self, query: str) -> np.ndarray:
         """Get embedding for a query"""
-        if not self.embedding_model:
-            raise ValueError("Embedding model not loaded")
-
-        embedding = self.embedding_model.encode([query], convert_to_numpy=True)
+        embedding = self._get_embedding([query])
         faiss.normalize_L2(embedding)
         return embedding[0]
 
@@ -347,7 +350,7 @@ class MaintenanceVectorSearch:
             "total_documents": len(self.documents),
             "index_size": self.faiss_index.ntotal if self.faiss_index else 0,
             "embedding_dimension": self.faiss_index.d if self.faiss_index else 0,
-            "model_name": self.model_name,
+            "model_name": self.embedding_deployment,
             "index_type": type(self.faiss_index).__name__ if self.faiss_index else None
         }
         return stats
