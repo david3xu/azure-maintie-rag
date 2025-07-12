@@ -1,0 +1,92 @@
+{
+  "query_classification": {
+    "troubleshooting": ["failure", "problem", "issue", "broken", "not working", "troubleshoot", "diagnose", "fix", "repair", "malfunction"],
+    "procedural": ["how to", "procedure", "steps", "process", "method", "instructions", "guide", "manual", "protocol"],
+    "preventive": ["preventive", "maintenance schedule", "inspection", "service", "routine", "periodic", "scheduled"],
+    "safety": ["safety", "hazard", "risk", "dangerous", "caution", "warning", "lockout", "ppe", "procedure"]
+  },
+  "equipment_categories": {
+    "rotating_equipment": ["pump", "motor", "compressor", "turbine", "fan"],
+    "static_equipment": ["tank", "vessel", "pipe", "valve"],
+    "electrical": ["motor", "generator", "transformer", "panel"],
+    "hvac": ["fan", "damper", "coil", "duct", "filter"],
+    "instrumentation": ["sensor", "transmitter", "gauge", "indicator"]
+  },
+  "technical_abbreviations": {
+    "pm": "preventive maintenance",
+    "cm": "corrective maintenance",
+    "hvac": "heating ventilation air conditioning",
+    "loto": "lockout tagout",
+    "sop": "standard operating procedure",
+    "rca": "root cause analysis"
+  },
+  "component_patterns": {
+    "bearing": "bearing",
+    "seal": "seal",
+    "gasket": "gasket",
+    "valve": "valve",
+    "motor": "motor",
+    "filter": "filter",
+    "belt": "belt",
+    "coupling": "coupling"
+  },
+  "equipment_patterns": {
+    "pump": "pump",
+    "motor": "motor",
+    "compressor": "compressor",
+    "turbine": "turbine",
+    "fan": "fan",
+    "valve": "valve",
+    "tank": "tank",
+    "vessel": "vessel",
+    "pipe": "pipe",
+    "heat exchanger": "heat exchanger"
+  },
+  "failure_patterns": {
+    "failure": "failure",
+    "leak": "leak",
+    "vibration": "vibration",
+    "noise": "noise",
+    "overheating": "overheating",
+    "wear": "wear",
+    "corrosion": "corrosion",
+    "crack": "crack",
+    "misalignment": "misalignment"
+  },
+  "procedure_patterns": {
+    "maintenance": "maintenance",
+    "inspection": "inspection",
+    "repair": "repair",
+    "replacement": "replacement",
+    "installation": "installation",
+    "calibration": "calibration",
+    "testing": "testing",
+    "servicing": "servicing"
+  },
+  "tool_mappings": {
+    "pump": ["wrench set", "pressure gauge", "vibration meter"],
+    "motor": ["multimeter", "insulation tester", "alignment tool"],
+    "bearing": ["bearing puller", "lubricant", "dial indicator"],
+    "seal": ["seal installation tool", "torque wrench", "gasket material"]
+  },
+  "safety_mappings": {
+    "electrical": ["lockout/tagout", "PPE required", "voltage testing"],
+    "pressure": ["pressure relief", "isolation", "proper venting"],
+    "rotating": ["guards in place", "stop rotation", "clear area"],
+    "chemical": ["MSDS review", "containment", "ventilation"]
+  },
+  "expansion_rules": {
+    "pump": ["centrifugal pump", "positive displacement pump", "impeller", "volute"],
+    "seal": ["mechanical seal", "packing", "gasket", "O-ring"],
+    "bearing": ["ball bearing", "roller bearing", "thrust bearing", "lubrication"],
+    "motor": ["electric motor", "AC motor", "DC motor", "stator", "rotor"],
+    "failure": ["malfunction", "breakdown", "defect", "wear", "damage"]
+  },
+  "typical_procedures": {
+    "troubleshooting": ["visual inspection", "diagnostic testing", "root cause analysis"],
+    "preventive": ["scheduled inspection", "lubrication", "replacement"],
+    "procedural": ["step-by-step guide", "safety checklist", "quality verification"]
+  },
+  "maintie_equipment": [],
+  "extracted_abbreviations": {}
+}
