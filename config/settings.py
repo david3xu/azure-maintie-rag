@@ -6,7 +6,8 @@ Centralizes all application settings and environment variables
 import os
 from pathlib import Path
 from typing import Optional, List
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
 class Settings(BaseSettings):
@@ -23,18 +24,20 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000, env="API_PORT")
     api_prefix: str = "/api/v1"
 
-    # OpenAI Settings
+    # Azure OpenAI Settings
+    openai_api_type: str = Field(default="azure", env="OPENAI_API_TYPE")
     openai_api_key: str = Field(env="OPENAI_API_KEY")
-    openai_model: str = Field(default="gpt-3.5-turbo", env="OPENAI_MODEL")
-    openai_max_tokens: int = Field(default=500, env="OPENAI_MAX_TOKENS")
-    openai_temperature: float = Field(default=0.3, env="OPENAI_TEMPERATURE")
+    openai_api_base: str = Field(env="OPENAI_API_BASE")
+    openai_api_version: str = Field(env="OPENAI_API_VERSION")
+    openai_deployment_name: str = Field(env="OPENAI_DEPLOYMENT_NAME")
+    openai_model: str = Field(env="OPENAI_MODEL")
 
-    # Embedding Settings
-    embedding_model: str = Field(
-        default="sentence-transformers/all-MiniLM-L6-v2",
-        env="EMBEDDING_MODEL"
-    )
-    embedding_dimension: int = Field(default=384, env="EMBEDDING_DIMENSION")
+    # Embedding Settings (Azure)
+    embedding_model: str = Field(env="EMBEDDING_MODEL")
+    embedding_deployment_name: str = Field(env="EMBEDDING_DEPLOYMENT_NAME")
+    embedding_api_base: str = Field(env="EMBEDDING_API_BASE")
+    embedding_api_version: str = Field(env="EMBEDDING_API_VERSION")
+    embedding_dimension: int = Field(default=1536, env="EMBEDDING_DIMENSION")
 
     # Data Paths
     data_dir: Path = Field(default=Path("data"), env="DATA_DIR")
@@ -42,20 +45,41 @@ class Settings(BaseSettings):
     processed_data_dir: Path = Field(default=Path("data/processed"), env="PROCESSED_DATA_DIR")
     indices_dir: Path = Field(default=Path("data/indices"), env="INDICES_DIR")
 
-    # Knowledge Graph Settings
-    max_entities: int = Field(default=10000, env="MAX_ENTITIES")
-    max_relations: int = Field(default=50000, env="MAX_RELATIONS")
-    graph_expansion_depth: int = Field(default=2, env="GRAPH_EXPANSION_DEPTH")
+    # Data Processing Settings
+    gold_data_filename: str = Field(default="gold_release.json", env="GOLD_DATA_FILENAME")
+    silver_data_filename: str = Field(default="silver_release.json", env="SILVER_DATA_FILENAME")
+    gold_confidence_base: float = Field(default=0.9, env="GOLD_CONFIDENCE_BASE")
+    silver_confidence_base: float = Field(default=0.7, env="SILVER_CONFIDENCE_BASE")
+
+    # Query Analysis Settings
+    max_related_entities: int = Field(default=15, env="MAX_RELATED_ENTITIES")
+    max_neighbors: int = Field(default=5, env="MAX_NEIGHBORS")
+    concept_expansion_limit: int = Field(default=10, env="CONCEPT_EXPANSION_LIMIT")
 
     # Retrieval Settings
     vector_search_top_k: int = Field(default=10, env="VECTOR_SEARCH_TOP_K")
     entity_search_top_k: int = Field(default=8, env="ENTITY_SEARCH_TOP_K")
     graph_search_top_k: int = Field(default=6, env="GRAPH_SEARCH_TOP_K")
+    embedding_batch_size: int = Field(default=128, env="EMBEDDING_BATCH_SIZE")
+    faiss_index_type: str = Field(default="IndexFlatIP", env="FAISS_INDEX_TYPE")
+    similarity_threshold: float = Field(default=0.7, env="SIMILARITY_THRESHOLD")
 
     # Fusion Weights
     vector_weight: float = Field(default=0.4, env="VECTOR_WEIGHT")
     entity_weight: float = Field(default=0.3, env="ENTITY_WEIGHT")
     graph_weight: float = Field(default=0.3, env="GRAPH_WEIGHT")
+
+    # Generation Settings
+    openai_max_tokens: int = Field(default=500, env="OPENAI_MAX_TOKENS")
+    openai_temperature: float = Field(default=0.3, env="OPENAI_TEMPERATURE")
+    llm_top_p: float = Field(default=0.9, env="LLM_TOP_P")
+    llm_frequency_penalty: float = Field(default=0.1, env="LLM_FREQUENCY_PENALTY")
+    llm_presence_penalty: float = Field(default=0.1, env="LLM_PRESENCE_PENALTY")
+
+    # API Validation Settings
+    query_min_length: int = Field(default=3, env="QUERY_MIN_LENGTH")
+    query_max_length: int = Field(default=500, env="QUERY_MAX_LENGTH")
+    max_results_limit: int = Field(default=50, env="MAX_RESULTS_LIMIT")
 
     # Performance Settings
     max_query_time: float = Field(default=2.0, env="MAX_QUERY_TIME")

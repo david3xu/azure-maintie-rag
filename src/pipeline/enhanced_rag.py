@@ -95,8 +95,13 @@ class MaintIEEnhancedRAG:
                 index_path = settings.indices_dir / "faiss_index.bin"
                 if not index_path.exists() or force_rebuild:
                     logger.info("Building vector search index...")
-                    self.vector_search.build_index(documents)
-                    initialization_results["index_built"] = True
+                    try:
+                        self.vector_search.build_index(documents)
+                        initialization_results["index_built"] = True
+                        logger.info("Vector search index built successfully")
+                    except Exception as e:
+                        logger.warning(f"Could not build vector search index: {e}")
+                        logger.info("Vector search will be available but may have limited functionality")
                 else:
                     logger.info("Using existing vector search index")
                     # Load existing documents into search
