@@ -129,8 +129,11 @@ class MaintenanceVectorSearch:
         dimension = embeddings.shape[1]
         logger.info(f"Creating FAISS index with dimension {dimension}")
         self.faiss_index = faiss.IndexFlatIP(dimension)
+
+        # Ensure embeddings are float32 and contiguous before normalization and adding to index
+        embeddings = np.ascontiguousarray(embeddings.astype(np.float32))
         faiss.normalize_L2(embeddings)
-        self.faiss_index.add(embeddings.astype(np.float32))
+        self.faiss_index.add(embeddings)
         self.doc_id_to_index = {doc_id: idx for idx, doc_id in enumerate(doc_ids)}
         self.index_to_doc_id = {idx: doc_id for idx, doc_id in enumerate(doc_ids)}
         for idx, doc_id in enumerate(doc_ids):
@@ -185,9 +188,11 @@ class MaintenanceVectorSearch:
         logger.info(f"Searching for: {query}")
         try:
             query_embedding = self._get_embedding([query])
+            # Ensure query_embedding is float32 and contiguous before normalization
+            query_embedding = np.ascontiguousarray(query_embedding.astype(np.float32))
             faiss.normalize_L2(query_embedding)
             scores, indices = self.faiss_index.search(
-                query_embedding.astype(np.float32),
+                query_embedding,
                 min(top_k, self.faiss_index.ntotal)
             )
             results = []
@@ -298,6 +303,8 @@ class MaintenanceVectorSearch:
     def get_query_embedding(self, query: str) -> np.ndarray:
         """Get embedding for a query"""
         embedding = self._get_embedding([query])
+        # Ensure embedding is float32 and contiguous before normalization
+        embedding = np.ascontiguousarray(embedding.astype(np.float32))
         faiss.normalize_L2(embedding)
         return embedding[0]
 
