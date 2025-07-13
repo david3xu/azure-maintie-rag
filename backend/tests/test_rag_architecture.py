@@ -30,6 +30,7 @@ from src.pipeline.rag_multi_modal import MaintIEMultiModalRAG
 from src.pipeline.rag_structured import MaintIEStructuredRAG
 from src.pipeline.enhanced_rag import MaintIEEnhancedRAG
 from api.models.query_models import QueryRequest, QueryResponse
+from src.models.maintenance_models import RAGResponse, EnhancedQuery, SearchResult, QueryAnalysis
 
 class TestRAGBase:
     """Test the base RAG class functionality"""
@@ -46,11 +47,32 @@ class TestRAGBase:
                 return {"mock": True}
 
             def _process_query_implementation(self, query: str, **kwargs):
-                return QueryResponse(
+                # Create minimal required objects for RAGResponse
+                analysis = QueryAnalysis(
+                    original_query=query,
+                    query_type="informational",
+                    entities=[],
+                    intent="test",
+                    complexity="simple"
+                )
+                enhanced_query = EnhancedQuery(
+                    analysis=analysis,
+                    expanded_concepts=[],
+                    related_entities=[],
+                    domain_context={},
+                    structured_search="",
+                    safety_considerations=[]
+                )
+                return RAGResponse(
+                    query=query,
+                    enhanced_query=enhanced_query,
+                    search_results=[],
                     generated_response="Mock response",
-                    sources=[],
                     confidence_score=0.8,
-                    processing_time=0.1
+                    processing_time=0.1,
+                    sources=[],
+                    safety_warnings=[],
+                    citations=[]
                 )
 
         rag = MockRAG()
@@ -78,11 +100,32 @@ class TestRAGBase:
                 return {"mock": True}
 
             def _process_query_implementation(self, query: str, **kwargs):
-                return QueryResponse(
+                # Create minimal required objects for RAGResponse
+                analysis = QueryAnalysis(
+                    original_query=query,
+                    query_type="informational",
+                    entities=[],
+                    intent="test",
+                    complexity="simple"
+                )
+                enhanced_query = EnhancedQuery(
+                    analysis=analysis,
+                    expanded_concepts=[],
+                    related_entities=[],
+                    domain_context={},
+                    structured_search="",
+                    safety_considerations=[]
+                )
+                return RAGResponse(
+                    query=query,
+                    enhanced_query=enhanced_query,
+                    search_results=[],
                     generated_response="Mock response",
-                    sources=[],
                     confidence_score=0.8,
-                    processing_time=0.1
+                    processing_time=0.1,
+                    sources=[],
+                    safety_warnings=[],
+                    citations=[]
                 )
 
         rag = MockRAG()
@@ -95,8 +138,8 @@ class TestRAGBase:
 
         # Test get_performance_metrics
         metrics = rag.get_performance_metrics()
-        assert "total_queries" in metrics
-        assert "average_response_time" in metrics
+        assert "query_count" in metrics
+        assert "average_processing_time" in metrics
 
         print("✅ Common methods working correctly")
 
@@ -254,7 +297,10 @@ class TestRAGArchitectureIntegration:
         assert type(multi_modal) != type(structured)
         assert isinstance(multi_modal, MaintIERAGBase)
         assert isinstance(structured, MaintIERAGBase)
-        assert isinstance(enhanced, MaintIERAGBase)
+        # Enhanced RAG is an orchestrator, not a base class implementation
+        assert not isinstance(enhanced, MaintIERAGBase)
+        assert hasattr(enhanced, 'multi_modal_rag')
+        assert hasattr(enhanced, 'structured_rag')
 
         print("✅ Component separation verified")
 
@@ -316,11 +362,32 @@ def test_architecture_design_patterns():
         def _initialize_components(self):
             return {"template": True}
         def _process_query_implementation(self, query: str, **kwargs):
-            return QueryResponse(
+            # Create minimal required objects for RAGResponse
+            analysis = QueryAnalysis(
+                original_query=query,
+                query_type="informational",
+                entities=[],
+                intent="test",
+                complexity="simple"
+            )
+            enhanced_query = EnhancedQuery(
+                analysis=analysis,
+                expanded_concepts=[],
+                related_entities=[],
+                domain_context={},
+                structured_search="",
+                safety_considerations=[]
+            )
+            return RAGResponse(
+                query=query,
+                enhanced_query=enhanced_query,
+                search_results=[],
                 generated_response="Template response",
-                sources=[],
                 confidence_score=0.9,
-                processing_time=0.05
+                processing_time=0.05,
+                sources=[],
+                safety_warnings=[],
+                citations=[]
             )
         def process_query(self, query: str, **kwargs):
             return self._process_query_implementation(query, **kwargs)

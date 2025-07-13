@@ -91,7 +91,7 @@ async def process_structured_query(
 
         response = QueryResponse(
             query=request.query,
-            response=formatted_response,
+            generated_response=formatted_response,
             confidence_score=rag_response.confidence_score,
             processing_time=rag_response.processing_time,
             query_analysis=rag_response.enhanced_query.analysis.to_dict(),
