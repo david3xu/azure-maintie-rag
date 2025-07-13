@@ -40,12 +40,12 @@ dev-install:
 
 # Development targets
 run:
-	python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+	./.venv/bin/python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
 test: test-unit test-integration
 
 test-unit:
-	PYTHONPATH=. ./venv/bin/pytest tests/test_azure_*.py tests/test_real_config.py tests/test_real_pipeline.py tests/test_real_vector_search.py --cov=src
+	PYTHONPATH=. ./.venv/bin/pytest tests/test_azure_*.py tests/test_real_config.py tests/test_real_pipeline.py tests/test_real_vector_search.py --cov=src
 
 test-integration:
 	@echo "Starting API server for integration tests..."
