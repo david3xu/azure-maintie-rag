@@ -153,12 +153,16 @@ async def root():
         "message": "MaintIE Enhanced RAG API",
         "version": "1.0.0",
         "status": "operational",
+        "architecture": "dual-api",
         "endpoints": {
-            "query": "/api/v1/query",
+            "multi_modal": "/api/v1/query/multi-modal",
+            "structured": "/api/v1/query/structured",
+            "comparison": "/api/v1/query/compare",
             "health": "/api/v1/health",
             "metrics": "/api/v1/metrics",
             "docs": "/docs"
-        }
+        },
+        "description": "Dual API architecture with multi-modal and structured RAG approaches"
     }
 
 
@@ -196,11 +200,15 @@ async def health_check():
         response_data = {
             "status": overall_status,
             "timestamp": time.time(),
-            "components": health_status["components"],
+            "components": {
+                "multi_modal_rag": health_status.get("multi_modal_rag", {}),
+                "structured_rag": health_status.get("structured_rag", {}),
+                "active_implementation": health_status.get("active_implementation", "unknown")
+            },
             "system_stats": {
-                "queries_processed": system_status["total_queries_processed"],
-                "average_response_time": system_status["average_processing_time"],
-                "components_initialized": system_status["components_initialized"]
+                "queries_processed": system_status.get("total_queries_processed", 0),
+                "average_response_time": system_status.get("average_processing_time", 0),
+                "components_initialized": system_status.get("components_initialized", False)
             },
             "issues": health_status.get("issues", []),
             "recommendations": health_status.get("recommendations", [])
@@ -261,9 +269,15 @@ async def get_system_status(rag_system=Depends(get_rag_system)):
         raise HTTPException(status_code=500, detail=f"Error retrieving system status: {str(e)}")
 
 
-# Include query endpoints
-from api.endpoints.query import router as query_router
-app.include_router(query_router, prefix="/api/v1", tags=["Query Processing"])
+# Include query endpoints with new separated structure
+from api.endpoints.query_multi_modal import router as multi_modal_router
+from api.endpoints.query_structured import router as structured_router
+from api.endpoints.query_comparison import router as comparison_router
+
+# Mount the routers with clear path prefixes
+app.include_router(multi_modal_router, prefix="/api/v1/query/multi-modal", tags=["Multi-Modal RAG"])
+app.include_router(structured_router, prefix="/api/v1/query/structured", tags=["Structured RAG"])
+app.include_router(comparison_router, prefix="/api/v1/query/compare", tags=["A/B Testing"])
 
 
 if __name__ == "__main__":
