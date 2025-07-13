@@ -96,18 +96,25 @@ class MaintIEDataTransformer:
             return EntityType.PHYSICAL_OBJECT
 
     def _map_relation_type(self, fullname: str) -> RelationType:
-        """Map scheme relation type to enum"""
+        """Map scheme relation type to enum, robust to actual data."""
         name_lower = fullname.lower()
-        if "cause" in name_lower:
-            return RelationType.CAUSES
-        elif "partof" in name_lower:
-            return RelationType.PART_OF
-        elif "associated" in name_lower:
-            return RelationType.ASSOCIATED_WITH
-        elif "precedes" in name_lower:
-            return RelationType.PRECEDES
+        # Map known relation types from scheme.json to Enum
+        if "haspart" in name_lower:
+            return RelationType.HAS_PART
+        elif "hasproperty" in name_lower:
+            return RelationType.HAS_PROPERTY
+        elif "isa" in name_lower:
+            # Not in Enum, fallback to HAS_PART
+            return RelationType.HAS_PART
+        elif "contains" in name_lower:
+            # Not in Enum, fallback to HAS_PART
+            return RelationType.HAS_PART
+        elif "hasparticipant" in name_lower:
+            # Not in Enum, fallback to HAS_PART
+            return RelationType.HAS_PART
         else:
-            return RelationType.ASSOCIATED_WITH
+            logger.warning(f"Unknown relation type in scheme.json: {fullname}, defaulting to HAS_PART")
+            return RelationType.HAS_PART
 
     def load_raw_data(self) -> Dict[str, Any]:
         """Load raw MaintIE datasets"""

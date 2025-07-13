@@ -18,6 +18,10 @@ faiss-cpu>=1.7.4
 
 # Utilities
 httpx>=0.25.0
+requests>=2.31.0
 structlog>=23.2.0
 pyyaml>=6.0
 pydantic-settings>=2.0.0
+
+# Testing
+pytest>=7.4.0
