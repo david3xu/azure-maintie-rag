@@ -1,35 +1,38 @@
 version: "3.8"
 
 services:
-  maintie-rag-api:
-    build: .
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=production
+      - ENVIRONMENT=development
       - API_HOST=0.0.0.0
       - API_PORT=8000
-      - LOG_LEVEL=INFO
-    env_file:
-      - .env
     volumes:
-      - ./data:/app/data
+      # Only backend data - self-contained service
+      - ./backend/data:/app/data
+      - ./backend/config:/app/config
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    restart: unless-stopped
 
-  # Optional: Add Redis for caching
-  redis:
-    image: redis:7-alpine
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
     ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
     volumes:
-      - redis_data:/data
-    restart: unless-stopped
-
-volumes:
-  redis_data:
+      # Only frontend source - pure UI service
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    depends_on:
+      - backend

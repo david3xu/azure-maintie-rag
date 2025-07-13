@@ -13,6 +13,7 @@ MaintIE Enhanced RAG is a production-grade backend system for advanced maintenan
 - **Domain-aware LLM response generation**
 - **Configurable domain knowledge** (no hard-coded rules)
 - **FastAPI API** with health, metrics, and query endpoints
+- **Clean Service Architecture** with a dedicated frontend UI
 
 ---
 
@@ -25,6 +26,7 @@ MaintIE Enhanced RAG is a production-grade backend system for advanced maintenan
 - Configurable domain knowledge (JSON)
 - Docker and virtualenv support
 - Health, metrics, and system status endpoints
+- Separated Backend API and Frontend UI services
 
 ---
 
@@ -37,43 +39,52 @@ git clone https://github.com/david3xu/azure-maintie-rag.git
 cd azure-maintie-rag
 ```
 
-### 2. Create and activate a virtual environment
+### 2. Configure environment
+
+- Copy `.env.example` to `.env` in the project root and set your OpenAI API key and other settings.
+
+### 3. Full Project Setup
+
+This command will:
+
+- Create Python virtual environments for the backend.
+- Install all Python dependencies for the backend.
+- Create necessary data directories within `backend/data/`.
+- Install Node.js dependencies for the frontend.
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+make setup
 ```
 
-### 3. Install dependencies
+### 4. Prepare MaintIE Data (Optional)
+
+If you have MaintIE data files (`gold_release.json` and `silver_release.json`), place them in `backend/data/raw/`. Then, run the data setup command:
 
 ```bash
-pip install -r requirements.txt
+make data-setup SOURCE=/path/to/your/maintie/data
 ```
 
-### 4. Configure environment
-
-- Copy `.env.example` to `.env` and set your OpenAI API key and other settings.
-- Place MaintIE data files in `data/raw/` (see below).
-
-### 5. Prepare MaintIE data
-
-- Place `gold_release.json` and `silver_release.json` in `data/raw/`.
-- Run the data transformer or use the provided scripts to process data.
+(Adjust `SOURCE` path as needed. If your data is already in `backend/data/raw/`, you can omit `SOURCE` or point it there.)
 
 ---
 
-## 🚦 Quick Start
+## 🚦 Quick Commands
 
-### Run the API server
+This project uses a root `Makefile` to simplify common tasks for both backend and frontend services.
 
-```bash
-python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
-```
-
-### Test the API
+### Using Makefile
 
 ```bash
-curl http://localhost:8000/api/v1/health
+make help               # See all available commands
+make setup              # Full project setup (backend and frontend)
+make dev                # Start both backend API and frontend UI services
+make backend            # Start backend API service only
+make frontend           # Start frontend UI service only
+make test               # Run all tests (backend and frontend)
+make health             # Check health of both services
+make docker-up          # Build and run Docker containers for both services via docker-compose
+make docker-down        # Stop and remove Docker containers
+make clean              # Clean generated files for both services
 ```
 
 ---
@@ -81,26 +92,29 @@ curl http://localhost:8000/api/v1/health
 ## 📝 Documentation
 
 - See `docs/` for architecture, configuration, and usage guides.
-- See `scripts/extract_knowledge.py` for knowledge extraction from MaintIE data.
+- See `backend/scripts/extract_knowledge.py` for knowledge extraction from MaintIE data.
 
 ---
 
 ## 🐳 Docker
 
+To build and run both backend and frontend services using Docker:
+
 ```bash
-docker-compose up --build
+make docker-up
 ```
 
 ---
 
 ## 📂 Project Structure
 
-- `src/` - Core backend modules
-- `api/` - FastAPI app and endpoints
-- `config/` - Settings and domain knowledge config
-- `data/` - Raw and processed data
-- `scripts/` - Utility scripts
+- `backend/` - Complete Backend API service (includes `data/`, `src/`, `api/`, `config/`, `scripts/`)
+  - `backend/data/` - Raw, processed data, and indices.
+- `frontend/` - Pure UI consumer service
 - `docs/` - Documentation
+- `.env` - Environment variables (copy from `.env.example`)
+- `docker-compose.yml` - Docker Compose configuration for both services
+- `Makefile` - Root Makefile for orchestrating both services
 
 ---
 
