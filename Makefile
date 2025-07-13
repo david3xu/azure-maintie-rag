@@ -38,10 +38,11 @@ dev:
 	@echo "🚀 Starting clean service architecture:"
 	@echo ""
 	@echo "📍 Backend API:   http://localhost:8000 (self-contained)"
-	@echo "📍 Frontend UI:   http://localhost:3000 (API consumer)"
+	@echo "📍 Frontend UI:   http://localhost:5174 (API consumer)"
 	@echo "📍 API Docs:      http://localhost:8000/docs"
 	@echo ""
-	make -j2 backend frontend
+	cd backend && make run
+	cd frontend && npm run dev &
 
 # Individual services
 backend:
@@ -67,7 +68,7 @@ health:
 	@curl -s http://localhost:8000/api/v1/health || echo "❌ Backend API not responding"
 	@echo ""
 	@echo "Frontend UI (should only consume API):"
-	@curl -s http://localhost:3000 > /dev/null && echo "✅ Frontend UI accessible" || echo "❌ Frontend UI not running"
+	@curl -s http://localhost:5174 > /dev/null && echo "✅ Frontend UI accessible" || echo "❌ Frontend UI not running"
 
 # Docker - clean service deployment
 docker-up:

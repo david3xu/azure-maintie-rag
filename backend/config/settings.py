@@ -5,7 +5,7 @@ Centralizes all application settings and environment variables
 
 import os
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, ClassVar
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     embedding_dimension: int = Field(default=1536, env="EMBEDDING_DIMENSION")
 
     # Data Paths
-    BASE_DIR = Path(__file__).parent.parent
+    BASE_DIR: ClassVar[Path] = Path(__file__).parent.parent
     data_dir: Path = Field(default=BASE_DIR / "data", env="DATA_DIR")
     raw_data_dir: Path = Field(default=BASE_DIR / "data" / "raw", env="RAW_DATA_DIR")
     processed_data_dir: Path = Field(default=BASE_DIR / "data" / "processed", env="PROCESSED_DATA_DIR")
