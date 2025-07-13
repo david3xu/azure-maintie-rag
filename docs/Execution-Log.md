@@ -109,6 +109,12 @@ cd /home/azureuser/workspace/azure-maintie-rag/backend && source .venv/bin/activ
 
 cd /home/azureuser/workspace/azure-maintie-rag/backend && source .venv/bin/activate && python -m pytest tests/ -v --tb=short
 
+
+cd /home/azureuser/workspace/azure-maintie-rag/backend && source .venv/bin/activate && python -m pytest tests/ --tb=no -q
+
+
+cd /home/azureuser/workspace/azure-maintie-rag/backend && source .venv/bin/activate && python -m pytest tests/test_rag_architecture.py tests/test_end_to_end_enhancement.py -v
+
 ```
 
 

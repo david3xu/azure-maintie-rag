@@ -4,6 +4,7 @@ End-to-end integration tests for enhanced scheme integration
 import pytest
 from pathlib import Path
 from src.knowledge.data_transformer import MaintIEDataTransformer
+from src.models.maintenance_models import EntityType, RelationType
 
 
 class TestEndToEndEnhancement:
