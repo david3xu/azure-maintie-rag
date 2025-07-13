@@ -102,7 +102,17 @@ curl -X POST "https://clu-project-foundry-instance.openai.azure.com/openai/deplo
     ]
   }'
 
+
+
+cd /home/azureuser/workspace/azure-maintie-rag/backend && source .venv/bin/activate && pytest tests/ -v --cov=src/knowledge/
+
+
+cd /home/azureuser/workspace/azure-maintie-rag/backend && source .venv/bin/activate && python -m pytest tests/ -v --tb=short
+
 ```
+
+
+
 
 ---
 
