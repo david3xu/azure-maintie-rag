@@ -60,3 +60,6 @@ extracted_knowledge.json
 /backend/data/indices/faiss_index.bin
 /backend/data/indices/doc_mappings.pkl
 /backend/data/indices/document_embeddings.pkl
+
+# Virtual environment that should not be tracked
+backend/mining_analytics/
