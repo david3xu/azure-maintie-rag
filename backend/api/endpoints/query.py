@@ -50,7 +50,7 @@ class QueryRequest(BaseModel):
 
     def __init__(self, **data):
         """Initialize with configurable validation limits"""
-        from config.advanced_settings import advanced_settings
+        from config.settings import settings
 
         super().__init__(**data) # Call super().__init__ first
 
@@ -59,13 +59,13 @@ class QueryRequest(BaseModel):
         if 'query' in self.model_fields:
             if self.model_fields['query'].json_schema_extra is None:
                 self.model_fields['query'].json_schema_extra = {}
-            self.model_fields['query'].json_schema_extra['min_length'] = advanced_settings.query_min_length
-            self.model_fields['query'].json_schema_extra['max_length'] = advanced_settings.query_max_length
+            self.model_fields['query'].json_schema_extra['min_length'] = settings.query_min_length
+            self.model_fields['query'].json_schema_extra['max_length'] = settings.query_max_length
 
         if 'max_results' in self.model_fields:
             if self.model_fields['max_results'].json_schema_extra is None:
                 self.model_fields['max_results'].json_schema_extra = {}
-            self.model_fields['max_results'].json_schema_extra['le'] = advanced_settings.max_results_limit
+            self.model_fields['max_results'].json_schema_extra['le'] = settings.max_results_limit
 
     @validator('query')
     def validate_query(cls, v):
@@ -167,12 +167,17 @@ async def process_maintenance_query(
         quality_indicators = _build_quality_indicators(rag_response)
 
         # Build model information
+        from config.settings import settings
         model_info = {
             "rag_version": "1.0.0",
-            "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
-            "llm_model": "gpt-3.5-turbo",
+            "embedding_model": settings.embedding_model,
+            "llm_model": settings.openai_model,
             "knowledge_base": "MaintIE",
-            "pipeline_components": ["query_enhancement", "multi_modal_retrieval", "domain_generation"]
+            "pipeline_components": [
+                "query_enhancement",
+                "multi_modal_retrieval",
+                "domain_generation"
+            ]
         }
 
         response = QueryResponse(
@@ -195,7 +200,7 @@ async def process_maintenance_query(
         return response
 
     except Exception as e:
-        logger.error(f"Error processing query '{request.query}': {e}")
+        logger.error(f"Error processing query '{request.query}': {e}", exc_info=True)
         processing_time = time.time() - start_time
 
         # Return error response with helpful information
@@ -277,7 +282,7 @@ async def get_query_suggestions(
         )
 
     except Exception as e:
-        logger.error(f"Error generating query suggestions: {e}")
+        logger.error(f"Error generating query suggestions: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Error generating suggestions: {str(e)}"
@@ -497,7 +502,7 @@ async def query_processing_health(rag_system=Depends(get_rag_system)):
         return health_result
 
     except Exception as e:
-        logger.error(f"Query processing health check failed: {e}")
+        logger.error(f"Query processing health check failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=503,
             detail=f"Query processing health check failed: {str(e)}"

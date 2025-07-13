@@ -16,7 +16,7 @@ from src.models.maintenance_models import (
 )
 from src.knowledge.data_transformer import MaintIEDataTransformer
 from config.settings import settings
-from config.advanced_settings import advanced_settings
+
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class MaintenanceQueryAnalyzer:
     def __init__(self, transformer: Optional[MaintIEDataTransformer] = None):
         """Initialize analyzer with knowledge transformer"""
         self.transformer = transformer
-        self.config = advanced_settings
+        self.config = settings
         self.knowledge_graph: Optional[nx.Graph] = None
         self.entity_vocabulary: Dict[str, Any] = {}
 

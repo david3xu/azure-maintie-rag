@@ -16,7 +16,7 @@ from src.models.maintenance_models import (
     EntityType, RelationType
 )
 from config.settings import settings
-from config.advanced_settings import advanced_settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ class MaintIEDataTransformer:
         """Initialize transformer with data paths"""
 
         # Use configurable filenames
-        gold_filename = advanced_settings.gold_data_filename
-        silver_filename = advanced_settings.silver_data_filename
+        gold_filename = settings.gold_data_filename
+        silver_filename = settings.silver_data_filename
 
         self.gold_path = gold_path or settings.raw_data_dir / gold_filename
         self.silver_path = silver_path or settings.raw_data_dir / silver_filename
@@ -95,6 +95,20 @@ class MaintIEDataTransformer:
         else:
             return EntityType.PHYSICAL_OBJECT
 
+    def _map_relation_type(self, fullname: str) -> RelationType:
+        """Map scheme relation type to enum"""
+        name_lower = fullname.lower()
+        if "cause" in name_lower:
+            return RelationType.CAUSES
+        elif "partof" in name_lower:
+            return RelationType.PART_OF
+        elif "associated" in name_lower:
+            return RelationType.ASSOCIATED_WITH
+        elif "precedes" in name_lower:
+            return RelationType.PRECEDES
+        else:
+            return RelationType.ASSOCIATED_WITH
+
     def load_raw_data(self) -> Dict[str, Any]:
         """Load raw MaintIE datasets"""
         logger.info("Loading raw MaintIE datasets...")
@@ -127,10 +141,10 @@ class MaintIEDataTransformer:
         raw_data = self.load_raw_data()
 
         # Process gold data (high confidence)
-        gold_stats = self._process_dataset(raw_data["gold"], confidence_base=advanced_settings.gold_confidence_base)
+        gold_stats = self._process_dataset(raw_data["gold"], confidence_base=settings.gold_confidence_base)
 
         # Process silver data (lower confidence)
-        silver_stats = self._process_dataset(raw_data["silver"], confidence_base=advanced_settings.silver_confidence_base)
+        silver_stats = self._process_dataset(raw_data["silver"], confidence_base=settings.silver_confidence_base)
 
         # Build knowledge graph
         self._build_knowledge_graph()

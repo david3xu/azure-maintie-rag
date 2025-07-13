@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
         app.state.rag_system = get_rag_instance()
 
     except Exception as e:
-        logger.error(f"Failed to initialize RAG system: {e}")
+        logger.error(f"Failed to initialize RAG system: {e}", exc_info=True)
         app.state.rag_system = None
         app.state.initialization_results = {"error": str(e)}
 
@@ -209,7 +209,7 @@ async def health_check():
         return JSONResponse(status_code=status_code, content=response_data)
 
     except Exception as e:
-        logger.error(f"Health check failed: {e}")
+        logger.error(f"Health check failed: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={
@@ -240,7 +240,7 @@ async def get_metrics(rag_system=Depends(get_rag_system)):
         return metrics
 
     except Exception as e:
-        logger.error(f"Error retrieving metrics: {e}")
+        logger.error(f"Error retrieving metrics: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error retrieving metrics: {str(e)}")
 
 
@@ -257,7 +257,7 @@ async def get_system_status(rag_system=Depends(get_rag_system)):
         return status
 
     except Exception as e:
-        logger.error(f"Error retrieving system status: {e}")
+        logger.error(f"Error retrieving system status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error retrieving system status: {str(e)}")
 
 
