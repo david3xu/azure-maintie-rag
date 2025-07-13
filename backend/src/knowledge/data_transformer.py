@@ -51,8 +51,19 @@ class MaintIEDataTransformer:
         logger.info(f"Initialized MaintIE transformer for {self.gold_path} and {self.silver_path}")
 
     def _load_type_mappings(self) -> Dict[str, Any]:
-        """Simple scheme.json loader (optional enhancement)"""
+        """Enhanced scheme.json loader: recursively traverse hierarchy for all entities and relations."""
         mappings = {"entity": {}, "relation": {}}
+
+        def process_hierarchy(items, category):
+            for item in items:
+                fullname = item.get("fullname", "")
+                if category == "entity":
+                    mappings[category][fullname] = self._map_entity_type(fullname)
+                else:
+                    mappings[category][fullname] = self._map_relation_type(fullname)
+                # Recursively process children
+                for child in item.get("children", []):
+                    process_hierarchy([child], category)
 
         if not self.scheme_path.exists():
             logger.info("No scheme.json found, using default type mappings")
@@ -61,21 +72,11 @@ class MaintIEDataTransformer:
         try:
             with open(self.scheme_path, 'r') as f:
                 scheme = json.load(f)
-
-            # Build simple type mappings from scheme
-            for entity_def in scheme.get("entity", []):
-                fullname = entity_def.get("fullname", "")
-                mappings["entity"][fullname] = self._map_entity_type(fullname)
-
-            for relation_def in scheme.get("relation", []):
-                fullname = relation_def.get("fullname", "")
-                mappings["relation"][fullname] = self._map_relation_type(fullname)
-
-            logger.info(f"Loaded scheme mappings: {len(mappings['entity'])} entities, {len(mappings['relation'])} relations")
-
+            process_hierarchy(scheme.get("entity", []), "entity")
+            process_hierarchy(scheme.get("relation", []), "relation")
+            logger.info(f"Loaded scheme mappings (recursive): {len(mappings['entity'])} entities, {len(mappings['relation'])} relations")
         except Exception as e:
             logger.warning(f"Could not load scheme.json: {e}, using defaults")
-
         return mappings
 
     def _map_entity_type(self, fullname: str) -> EntityType:
