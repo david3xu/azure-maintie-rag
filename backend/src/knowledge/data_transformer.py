@@ -15,6 +15,8 @@ from src.models.maintenance_models import (
     MaintenanceEntity, MaintenanceRelation, MaintenanceDocument,
     EntityType, RelationType
 )
+from src.knowledge.schema_processor import SchemeProcessor
+from src.knowledge.metadata_manager import MetadataManager
 from config.settings import settings
 
 
@@ -35,9 +37,14 @@ class MaintIEDataTransformer:
         self.silver_path = silver_path or settings.raw_data_dir / silver_filename
         self.processed_dir = settings.processed_data_dir
 
-        # ENHANCEMENT: Load scheme.json if available
+        # ENHANCEMENT: Replace simple scheme loading with hierarchy processor
         self.scheme_path = settings.raw_data_dir / "scheme.json"
-        self.type_mappings = self._load_type_mappings()
+        self.scheme_processor = SchemeProcessor(self.scheme_path)
+        self.scheme_data = self.scheme_processor.load_scheme()
+        self.type_mappings = self._build_enhanced_type_mappings()
+
+        # Add metadata manager
+        self.metadata_manager = MetadataManager(self.scheme_processor)
 
         # Ensure directories exist
         self.processed_dir.mkdir(parents=True, exist_ok=True)
@@ -50,72 +57,186 @@ class MaintIEDataTransformer:
 
         logger.info(f"Initialized MaintIE transformer for {self.gold_path} and {self.silver_path}")
 
-    def _load_type_mappings(self) -> Dict[str, Any]:
-        """Enhanced scheme.json loader: recursively traverse hierarchy for all entities and relations."""
+    def _build_enhanced_type_mappings(self) -> Dict[str, Any]:
+        """Build comprehensive type mappings using hierarchy"""
         mappings = {"entity": {}, "relation": {}}
 
-        def process_hierarchy(items, category):
-            for item in items:
-                fullname = item.get("fullname", "")
-                if category == "entity":
-                    mappings[category][fullname] = self._map_entity_type(fullname)
-                else:
-                    mappings[category][fullname] = self._map_relation_type(fullname)
-                # Recursively process children
-                for child in item.get("children", []):
-                    process_hierarchy([child], category)
+        # Map all entity types (including children)
+        for entity_type in self.scheme_processor.get_all_types("entity"):
+            mappings["entity"][entity_type] = self._map_entity_type(entity_type)
 
-        if not self.scheme_path.exists():
-            logger.info("No scheme.json found, using default type mappings")
-            return mappings
+        # Map all relation types (including children)
+        for relation_type in self.scheme_processor.get_all_types("relation"):
+            mappings["relation"][relation_type] = self._map_relation_type(relation_type)
 
-        try:
-            with open(self.scheme_path, 'r') as f:
-                scheme = json.load(f)
-            process_hierarchy(scheme.get("entity", []), "entity")
-            process_hierarchy(scheme.get("relation", []), "relation")
-            logger.info(f"Loaded scheme mappings (recursive): {len(mappings['entity'])} entities, {len(mappings['relation'])} relations")
-        except Exception as e:
-            logger.warning(f"Could not load scheme.json: {e}, using defaults")
+        logger.info(f"Built enhanced mappings: {len(mappings['entity'])} entity types, "
+                   f"{len(mappings['relation'])} relation types")
+
         return mappings
 
     def _map_entity_type(self, fullname: str) -> EntityType:
-        """Map scheme entity type to enum"""
-        name_lower = fullname.lower()
+        """Enhanced entity type mapping with hierarchy support"""
+        try:
+            # Direct enum lookup first
+            return EntityType(fullname)
+        except ValueError:
+            # Fallback to pattern matching for backwards compatibility
+            name_lower = fullname.lower()
 
-        if "physicalobject" in name_lower:
-            return EntityType.PHYSICAL_OBJECT
-        elif "activity" in name_lower:
-            return EntityType.ACTIVITY
-        elif "process" in name_lower:
-            return EntityType.PROBLEM if "undesirable" in name_lower else EntityType.ACTIVITY
-        elif "state" in name_lower:
-            return EntityType.PROBLEM if "undesirable" in name_lower else EntityType.STATE
-        elif "property" in name_lower:
-            return EntityType.PROPERTY
-        else:
-            return EntityType.PHYSICAL_OBJECT
+            if "physicalobject" in name_lower:
+                if "substance" in name_lower:
+                    if "gas" in name_lower:
+                        return EntityType.GAS
+                    elif "liquid" in name_lower:
+                        return EntityType.LIQUID
+                    elif "solid" in name_lower:
+                        return EntityType.SOLID
+                    elif "mixture" in name_lower:
+                        return EntityType.MIXTURE
+                    else:
+                        return EntityType.SUBSTANCE
+                elif "organism" in name_lower:
+                    if "person" in name_lower:
+                        return EntityType.PERSON
+                    else:
+                        return EntityType.ORGANISM
+                elif "sensing" in name_lower:
+                    return EntityType.SENSING_OBJECT
+                elif "storing" in name_lower:
+                    return EntityType.STORING_OBJECT
+                elif "emitting" in name_lower:
+                    return EntityType.EMITTING_OBJECT
+                elif "protecting" in name_lower:
+                    return EntityType.PROTECTING_OBJECT
+                elif "generating" in name_lower:
+                    return EntityType.GENERATING_OBJECT
+                elif "matterprocessing" in name_lower:
+                    return EntityType.MATTER_PROCESSING_OBJECT
+                elif "informationprocessing" in name_lower:
+                    return EntityType.INFORMATION_PROCESSING_OBJECT
+                elif "driving" in name_lower:
+                    return EntityType.DRIVING_OBJECT
+                elif "covering" in name_lower:
+                    return EntityType.COVERING_OBJECT
+                elif "presenting" in name_lower:
+                    return EntityType.PRESENTING_OBJECT
+                elif "controlling" in name_lower:
+                    return EntityType.CONTROLLING_OBJECT
+                elif "restricting" in name_lower:
+                    return EntityType.RESTRICTING_OBJECT
+                elif "humaninteraction" in name_lower:
+                    return EntityType.HUMAN_INTERACTION_OBJECT
+                elif "transforming" in name_lower:
+                    return EntityType.TRANSFORMING_OBJECT
+                elif "holding" in name_lower:
+                    return EntityType.HOLDING_OBJECT
+                elif "guiding" in name_lower:
+                    return EntityType.GUIDING_OBJECT
+                elif "interfacing" in name_lower:
+                    return EntityType.INTERFACING_OBJECT
+                else:
+                    return EntityType.PHYSICAL_OBJECT
+            elif "process" in name_lower:
+                if "undesirable" in name_lower:
+                    return EntityType.UNDESIRABLE_PROCESS
+                elif "desirable" in name_lower:
+                    return EntityType.DESIRABLE_PROCESS
+                else:
+                    return EntityType.PROCESS
+            elif "property" in name_lower:
+                if "undesirable" in name_lower:
+                    return EntityType.UNDESIRABLE_PROPERTY
+                elif "desirable" in name_lower:
+                    return EntityType.DESIRABLE_PROPERTY
+                else:
+                    return EntityType.PROPERTY
+            elif "activity" in name_lower:
+                if "maintenance" in name_lower:
+                    if "adjust" in name_lower:
+                        return EntityType.ADJUST
+                    elif "calibrate" in name_lower:
+                        return EntityType.CALIBRATE
+                    elif "diagnose" in name_lower:
+                        return EntityType.DIAGNOSE
+                    elif "inspect" in name_lower:
+                        return EntityType.INSPECT
+                    elif "replace" in name_lower:
+                        return EntityType.REPLACE
+                    elif "repair" in name_lower:
+                        return EntityType.REPAIR
+                    elif "service" in name_lower:
+                        return EntityType.SERVICE
+                    else:
+                        return EntityType.MAINTENANCE_ACTIVITY
+                elif "supporting" in name_lower:
+                    if "admin" in name_lower:
+                        return EntityType.ADMIN
+                    elif "assemble" in name_lower:
+                        return EntityType.ASSEMBLE
+                    elif "isolate" in name_lower:
+                        return EntityType.ISOLATE
+                    elif "measure" in name_lower:
+                        return EntityType.MEASURE
+                    elif "modify" in name_lower:
+                        return EntityType.MODIFY
+                    elif "move" in name_lower:
+                        return EntityType.MOVE
+                    elif "operate" in name_lower:
+                        return EntityType.OPERATE
+                    elif "perform" in name_lower:
+                        return EntityType.PERFORM
+                    elif "teamwork" in name_lower:
+                        return EntityType.TEAMWORK
+                    else:
+                        return EntityType.SUPPORTING_ACTIVITY
+                else:
+                    return EntityType.ACTIVITY
+            elif "state" in name_lower:
+                if "undesirable" in name_lower:
+                    if "degraded" in name_lower:
+                        return EntityType.DEGRADED_STATE
+                    elif "failed" in name_lower:
+                        return EntityType.FAILED_STATE
+                    else:
+                        return EntityType.UNDESIRABLE_STATE
+                elif "desirable" in name_lower:
+                    if "normal" in name_lower:
+                        return EntityType.NORMAL_STATE
+                    else:
+                        return EntityType.DESIRABLE_STATE
+                else:
+                    return EntityType.STATE
+            else:
+                logger.warning(f"Unknown entity type: {fullname}, defaulting to PHYSICAL_OBJECT")
+                return EntityType.PHYSICAL_OBJECT
 
     def _map_relation_type(self, fullname: str) -> RelationType:
-        """Map scheme relation type to enum, robust to actual data."""
-        name_lower = fullname.lower()
-        # Map known relation types from scheme.json to Enum
-        if "haspart" in name_lower:
-            return RelationType.HAS_PART
-        elif "hasproperty" in name_lower:
-            return RelationType.HAS_PROPERTY
-        elif "isa" in name_lower:
-            # Not in Enum, fallback to HAS_PART
-            return RelationType.HAS_PART
-        elif "contains" in name_lower:
-            # Not in Enum, fallback to HAS_PART
-            return RelationType.HAS_PART
-        elif "hasparticipant" in name_lower:
-            # Not in Enum, fallback to HAS_PART
-            return RelationType.HAS_PART
-        else:
-            logger.warning(f"Unknown relation type in scheme.json: {fullname}, defaulting to HAS_PART")
-            return RelationType.HAS_PART
+        """Enhanced relation type mapping with hierarchy support"""
+        try:
+            # Direct enum lookup first
+            return RelationType(fullname)
+        except ValueError:
+            # Fallback to pattern matching
+            name_lower = fullname.lower()
+
+            if "haspart" in name_lower:
+                return RelationType.HAS_PART
+            elif "hasproperty" in name_lower:
+                return RelationType.HAS_PROPERTY
+            elif "isa" in name_lower:
+                return RelationType.IS_A
+            elif "contains" in name_lower:
+                return RelationType.CONTAINS
+            elif "hasparticipant" in name_lower:
+                if "patient" in name_lower:
+                    return RelationType.HAS_PATIENT
+                elif "agent" in name_lower:
+                    return RelationType.HAS_AGENT
+                else:
+                    return RelationType.HAS_PARTICIPANT
+            else:
+                logger.warning(f"Unknown relation type: {fullname}, defaulting to HAS_PART")
+                return RelationType.HAS_PART
 
     def load_raw_data(self) -> Dict[str, Any]:
         """Load raw MaintIE datasets"""
@@ -224,7 +345,7 @@ class MaintIEDataTransformer:
         return stats
 
     def _create_entity(self, entity_data: Dict[str, Any], doc_id: str, doc_text: str, doc_tokens: List[str], confidence_base: float) -> Optional[MaintenanceEntity]:
-        """Create MaintenanceEntity from annotation data"""
+        """Create MaintenanceEntity from annotation data with enhanced metadata"""
         try:
             # Generate a unique entity_id based on doc_id, start, and end
             start = entity_data.get("start")
@@ -243,6 +364,14 @@ class MaintIEDataTransformer:
 
             # ENHANCEMENT: Use scheme mapping if available
             entity_type_str = entity_data.get("type", "PhysicalObject")
+
+            # Get metadata for the entity type
+            metadata = self.metadata_manager.get_entity_metadata(entity_type_str)
+
+            # Check if type is active
+            if metadata and not metadata.active:
+                logger.debug(f"Skipping inactive entity type: {entity_type_str}")
+                return None
 
             # Try scheme mapping first
             if entity_type_str in self.type_mappings["entity"]:
@@ -264,7 +393,10 @@ class MaintIEDataTransformer:
                     "start": start,
                     "end": end,
                     "original_type": entity_type_str,
-                    "doc_id": doc_id  # Add doc_id to metadata for completeness
+                    "doc_id": doc_id,  # Add doc_id to metadata for completeness
+                    "color": metadata.color if metadata else "#cccccc",
+                    "description": metadata.description if metadata else "",
+                    "example_terms": metadata.example_terms if metadata else []
                 }
             )
         except Exception as e:
@@ -272,7 +404,7 @@ class MaintIEDataTransformer:
             return None
 
     def _create_relation(self, relation_data: Dict[str, Any], entities_in_doc: List[MaintenanceEntity], confidence_base: float) -> Optional[MaintenanceRelation]:
-        """Create MaintenanceRelation from annotation data"""
+        """Create MaintenanceRelation from annotation data with enhanced metadata"""
         try:
             relation_id = relation_data.get("id", f"relation_{len(self.relations)}")
 
@@ -298,6 +430,14 @@ class MaintIEDataTransformer:
             # ENHANCEMENT: Use scheme mapping if available
             relation_type_str = relation_data.get("type", "hasPart")
 
+            # Get metadata for the relation type
+            metadata = self.metadata_manager.get_relation_metadata(relation_type_str)
+
+            # Check if type is active
+            if metadata and not metadata.active:
+                logger.debug(f"Skipping inactive relation type: {relation_type_str}")
+                return None
+
             # Try scheme mapping first
             if relation_type_str in self.type_mappings["relation"]:
                 relation_type = self.type_mappings["relation"][relation_type_str]
@@ -316,7 +456,10 @@ class MaintIEDataTransformer:
                 confidence=min(confidence_base * relation_data.get("confidence", 1.0), 1.0),
                 context=relation_data.get("context"),
                 metadata={
-                    "original_type": relation_type_str
+                    "original_type": relation_type_str,
+                    "color": metadata.color if metadata else "#cccccc",
+                    "description": metadata.description if metadata else "",
+                    "example_terms": metadata.example_terms if metadata else []
                 }
             )
         except Exception as e:
