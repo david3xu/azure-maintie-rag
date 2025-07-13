@@ -52,17 +52,20 @@ class QueryRequest(BaseModel):
         """Initialize with configurable validation limits"""
         from config.advanced_settings import advanced_settings
 
+        super().__init__(**data) # Call super().__init__ first
+
         # Override validation limits with configurable values
-        if 'query' in data:
-            query_field = self.__fields__['query']
-            query_field.field_info.min_length = advanced_settings.query_min_length
-            query_field.field_info.max_length = advanced_settings.query_max_length
+        # Access fields using self.model_fields (Pydantic v2 way)
+        if 'query' in self.model_fields:
+            if self.model_fields['query'].json_schema_extra is None:
+                self.model_fields['query'].json_schema_extra = {}
+            self.model_fields['query'].json_schema_extra['min_length'] = advanced_settings.query_min_length
+            self.model_fields['query'].json_schema_extra['max_length'] = advanced_settings.query_max_length
 
-        if 'max_results' in data:
-            max_results_field = self.__fields__['max_results']
-            max_results_field.field_info.le = advanced_settings.max_results_limit
-
-        super().__init__(**data)
+        if 'max_results' in self.model_fields:
+            if self.model_fields['max_results'].json_schema_extra is None:
+                self.model_fields['max_results'].json_schema_extra = {}
+            self.model_fields['max_results'].json_schema_extra['le'] = advanced_settings.max_results_limit
 
     @validator('query')
     def validate_query(cls, v):
