@@ -10,7 +10,7 @@ from openai import AzureOpenAI
 
 from src.models.maintenance_models import SearchResult, EnhancedQuery, RAGResponse
 from config.settings import settings
-from config.advanced_settings import advanced_settings
+
 from config.prompt_templates import template_manager
 
 
@@ -29,7 +29,7 @@ class MaintenanceLLMInterface:
         self.api_version = settings.openai_api_version
         self.max_tokens = settings.openai_max_tokens
         self.temperature = settings.openai_temperature
-        self.config = advanced_settings
+        self.config = settings
         self.template_manager = template_manager
 
         # Azure OpenAI client setup using new SDK

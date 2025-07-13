@@ -4,7 +4,7 @@ Configurable prompt templates for different query types
 
 from typing import Dict
 from pathlib import Path
-from config.advanced_settings import advanced_settings
+from config.settings import settings
 
 
 class ConfigurablePromptTemplates:

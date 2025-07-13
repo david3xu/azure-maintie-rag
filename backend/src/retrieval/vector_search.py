@@ -88,8 +88,8 @@ class MaintenanceVectorSearch:
             embeddings = [data.embedding for data in response.data]
             return np.array(embeddings)
         except Exception as e:
-            logger.error(f"Error getting embeddings from Azure OpenAI: {e}")
-            raise
+            logger.error(f"Error getting embeddings from Azure OpenAI: {e}", exc_info=True)
+            raise RuntimeError(f"Embedding retrieval failed: {e if e else 'Unknown error'}") from e
 
     def build_index(self, documents: Dict[str, MaintenanceDocument]) -> None:
         """Build FAISS index from maintenance documents using Azure OpenAI embeddings"""
@@ -200,28 +200,21 @@ class MaintenanceVectorSearch:
                 if idx == -1:
                     continue
                 doc_id = self.index_to_doc_id.get(idx)
-                if not doc_id or doc_id not in self.documents:
-                    continue
-                doc = self.documents[doc_id]
-                result = SearchResult(
-                    doc_id=doc_id,
-                    title=doc.title or f"Document {doc_id}",
-                    content=doc.text[:500] + "..." if len(doc.text) > 500 else doc.text,
-                    score=float(score),
-                    source="vector",
-                    metadata={
-                        "embedding_model": self.embedding_deployment,
-                        "similarity_type": "cosine",
-                        "full_text_length": len(doc.text)
-                    },
-                    entities=doc.get_entity_texts()
-                )
-                results.append(result)
-            logger.info(f"Vector search returned {len(results)} results")
+                if doc_id:
+                    doc = self.documents.get(doc_id)
+                    results.append(SearchResult(
+                        doc_id=doc_id,
+                        title=doc.title if doc and doc.title else f"Document {doc_id}",
+                        content=doc.text if doc else "",
+                        score=float(score),
+                        source="vector",
+                        metadata=doc.metadata if doc else {},
+                        entities=doc.get_entity_texts() if doc else []
+                    ))
             return results
         except Exception as e:
-            logger.error(f"Error during vector search: {e}")
-            return []
+            logger.error(f"Error during vector search: {e if e else 'Unknown error'}", exc_info=True)
+            raise RuntimeError(f"Vector search failed: {e if e else 'Unknown error'}") from e
 
     def get_similarity_scores(self, query: str, doc_ids: List[str]) -> Dict[str, float]:
         """Get similarity scores for specific documents"""
