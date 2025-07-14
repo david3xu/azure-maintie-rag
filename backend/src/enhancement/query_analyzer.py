@@ -26,7 +26,7 @@ class MaintenanceQueryAnalyzer:
     """Analyze and enhance maintenance queries using domain knowledge"""
 
     def __init__(self, transformer: Optional[MaintIEDataTransformer] = None):
-        """Initialize analyzer with enhanced domain knowledge"""
+        """Initialize analyzer with enhanced domain knowledge and optional GNN"""
         self.transformer = transformer
         self.config = settings
         self.knowledge_graph: Optional[nx.Graph] = None
@@ -56,11 +56,37 @@ class MaintenanceQueryAnalyzer:
         self.maintie_equipment = self.domain_knowledge.get("maintie_equipment", [])
         self.extracted_abbreviations = self.domain_knowledge.get("extracted_abbreviations", {})
 
+        # Initialize GNN query expander (optional)
+        self.gnn_expander = None
+        self.gnn_enabled = False
+
         # Load knowledge if transformer provided
         if self.transformer:
             self._load_knowledge()
+            self._init_gnn_expander(transformer)
 
         logger.info("Enhanced MaintenanceQueryAnalyzer initialized with domain knowledge")
+
+    def _init_gnn_expander(self, transformer: MaintIEDataTransformer):
+        """Initialize GNN query expander if available"""
+        try:
+            from src.gnn.gnn_query_expander import GNNQueryExpander
+
+            # Check for pre-trained model
+            model_path = Path("data/models/maintenance_gnn.pt")
+
+            self.gnn_expander = GNNQueryExpander(transformer, model_path)
+            self.gnn_enabled = self.gnn_expander.enabled
+
+            if self.gnn_enabled:
+                logger.info("GNN query expansion enabled")
+            else:
+                logger.info("GNN query expansion disabled, using rule-based fallback")
+
+        except Exception as e:
+            logger.warning(f"GNN initialization failed: {e}")
+            self.gnn_expander = None
+            self.gnn_enabled = False
 
     def _load_domain_knowledge(self) -> Dict[str, Any]:
         """Load domain knowledge from configuration file"""
@@ -193,6 +219,40 @@ class MaintenanceQueryAnalyzer:
         )
 
         logger.info(f"Query analysis complete: {analysis.to_dict()}")
+
+        # Enhance analysis with GNN domain context if available
+        analysis = self._gnn_enhanced_analysis(analysis)
+
+        return analysis
+
+    def _gnn_enhanced_analysis(self, analysis: QueryAnalysis) -> QueryAnalysis:
+        """Enhance query analysis with GNN domain context"""
+
+        if not self.gnn_enabled or not self.gnn_expander:
+            return analysis
+
+        try:
+            # Get GNN domain context
+            domain_context = self.gnn_expander.get_domain_context(analysis.entities)
+
+            # Enhance analysis with GNN insights
+            if domain_context:
+                # Adjust confidence based on domain context
+                if domain_context.get('equipment_focus', 0) > 0.7:
+                    analysis.confidence = min(analysis.confidence + 0.1, 1.0)
+
+                # Adjust urgency based on safety focus
+                if domain_context.get('safety_focus', 0) > 0.8:
+                    analysis.urgency = 'high'
+
+                # Add domain context to analysis
+                analysis.domain_context = domain_context
+
+                logger.debug(f"GNN domain context: {domain_context}")
+
+        except Exception as e:
+            logger.warning(f"GNN analysis enhancement failed: {e}")
+
         return analysis
 
     def enhance_query(self, analysis: QueryAnalysis) -> EnhancedQuery:
@@ -538,10 +598,21 @@ class MaintenanceQueryAnalyzer:
         return safety_assessment
 
     def _enhanced_expand_concepts(self, entities: List[str]) -> List[str]:
-        """Enhanced concept expansion using equipment hierarchy"""
-        expanded = set(entities)  # Start with original entities
+        """Enhanced concept expansion using GNN + existing methods"""
 
-        # Add equipment hierarchy expansions
+        # Start with original entities
+        expanded = set(entities)
+
+        # Use GNN expansion if available
+        if self.gnn_enabled and self.gnn_expander:
+            try:
+                gnn_expanded = self.gnn_expander.expand_query_entities(entities, max_expansions=8)
+                expanded.update(gnn_expanded)
+                logger.debug(f"GNN expansion added {len(gnn_expanded)} concepts")
+            except Exception as e:
+                logger.warning(f"GNN expansion failed: {e}")
+
+        # Add equipment hierarchy expansions (from weeks 3-4)
         entities_lower = [e.lower() for e in entities]
 
         for entity in entities_lower:
@@ -565,7 +636,7 @@ class MaintenanceQueryAnalyzer:
             graph_expansions = self._knowledge_graph_expansion(entities)
             expanded.update(graph_expansions)
 
-        # Add rule-based expansions
+        # Add rule-based expansions (your existing logic)
         rule_expansions = self._rule_based_expansion(entities)
         expanded.update(rule_expansions)
 

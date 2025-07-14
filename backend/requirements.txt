@@ -7,6 +7,10 @@ python-dotenv>=1.0.0
 # AI/ML Libraries
 openai>=1.13.3
 
+# GNN Libraries (Optional - for weeks 9-12)
+torch>=2.0.0
+torch-geometric>=2.3.0
+
 # Data Processing
 pandas>=2.0.0
 numpy==1.23.5  # Pinned for compatibility with pandas, scipy, faiss-cpu

@@ -1,76 +1,72 @@
-import os
-import pandas as pd
+"""
+Script to train GNN model on MaintIE data
+Run this after GNN data preparation is complete
+"""
+
+import logging
+import sys
 import torch
-import torch.nn.functional as F
-from torch_geometric.data import Data
-from torch_geometric.nn import GCNConv
 from pathlib import Path
-import numpy as np
 
-# --- Configuration ---
-GRAPH_DIR = Path(__file__).parent.parent / 'data' / 'graph'
-NODES_FILE = GRAPH_DIR / 'nodes.csv'
-EDGES_FILE = GRAPH_DIR / 'edges.csv'
-MODEL_OUT = GRAPH_DIR / 'model.pt'
+# Add backend to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# --- Load nodes and edges ---
-print(f"Loading nodes from {NODES_FILE}")
-df_nodes = pd.read_csv(NODES_FILE)
-print(f"Loading edges from {EDGES_FILE}")
-df_edges = pd.read_csv(EDGES_FILE)
+from src.knowledge.data_transformer import MaintIEDataTransformer
+from src.gnn.data_preparation import MaintIEGNNDataProcessor
+from src.gnn.gnn_models import MaintenanceGNNModel, GNNTrainer
 
-# --- Build node index mapping ---
-node_ids = df_nodes['id'].tolist()
-node_id_map = {nid: i for i, nid in enumerate(node_ids)}
+def main():
+    """Train GNN model on MaintIE data"""
 
-# --- Build edge index ---
-edge_index = [
-    [node_id_map.get(src, -1), node_id_map.get(tgt, -1)]
-    for src, tgt in zip(df_edges['source'], df_edges['target'])
-    if src in node_id_map and tgt in node_id_map
-]
-edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()  # shape [2, num_edges]
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
-# --- Dummy node features (all ones) ---
-x = torch.ones((len(node_ids), 8))  # 8-dim features for demo
+    logger.info("Starting GNN model training...")
 
-# --- Dummy labels (random classes for demonstration) ---
-num_classes = 3
-labels = torch.tensor(np.random.randint(0, num_classes, size=len(node_ids)), dtype=torch.long)
+    # Load data
+    data_transformer = MaintIEDataTransformer()
+    gnn_processor = MaintIEGNNDataProcessor(data_transformer)
+    gnn_data = gnn_processor.prepare_gnn_data(use_cache=True)
 
-# --- Build PyG Data object ---
-data = Data(x=x, edge_index=edge_index, y=labels)
+    if gnn_data['full_data'] is None:
+        logger.error("GNN data not available. Install PyTorch Geometric: pip install torch-geometric")
+        return
 
-# --- Define a simple GCN model ---
-class GCN(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels):
-        super().__init__()
-        self.conv1 = GCNConv(in_channels, hidden_channels)
-        self.conv2 = GCNConv(hidden_channels, out_channels)
+    # Model configuration
+    config = {
+        'input_dim': gnn_data['full_data'].x.shape[1],
+        'hidden_dim': 128,
+        'output_dim': 64,
+        'num_layers': 3,
+        'num_entity_types': len(set(gnn_data['node_labels'].tolist())),
+        'gnn_type': 'GraphSAGE',
+        'dropout': 0.2
+    }
 
-    def forward(self, x, edge_index):
-        x = self.conv1(x, edge_index)
-        x = F.relu(x)
-        x = self.conv2(x, edge_index)
-        return x
+    # Create model and trainer
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    model = MaintenanceGNNModel(config)
+    trainer = GNNTrainer(model, device)
 
-model = GCN(in_channels=8, hidden_channels=16, out_channels=num_classes)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    logger.info(f"Training on device: {device}")
+    logger.info(f"Model config: {config}")
 
-# --- Training loop (dummy, for demonstration) ---
-print("Starting GNN training (dummy labels)...")
-model.train()
-for epoch in range(1, 21):
-    optimizer.zero_grad()
-    out = model(data.x, data.edge_index)
-    loss = F.cross_entropy(out, data.y)
-    loss.backward()
-    optimizer.step()
-    if epoch % 5 == 0:
-        pred = out.argmax(dim=1)
-        acc = int((pred == data.y).sum()) / len(data.y)
-        print(f"Epoch {epoch:02d}, Loss: {loss.item():.4f}, Acc: {acc:.4f}")
+    # Train model
+    train_data = gnn_data['train_data']
+    val_data = gnn_data['val_data']
+    train_labels = gnn_data['node_labels']
+    val_labels = gnn_data['node_labels']
 
-# --- Save the trained model ---
-torch.save(model.state_dict(), MODEL_OUT)
-print(f"✅ GNN model saved to {MODEL_OUT}")
+    results = trainer.train(train_data, val_data, train_labels, val_labels, num_epochs=200)
+
+    # Save model
+    model_dir = Path("data/models")
+    model_dir.mkdir(parents=True, exist_ok=True)
+    model_path = model_dir / "maintenance_gnn.pt"
+    trainer.save_model(model_path)
+
+    logger.info(f"Training completed. Model saved to {model_path}")
+    logger.info(f"Final validation accuracy: {results['val_accuracies'][-1]:.4f}")
+
+if __name__ == "__main__":
+    main()
