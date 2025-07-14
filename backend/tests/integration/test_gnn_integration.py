@@ -41,10 +41,10 @@ def test_complete_integration():
         logger.info("-" * 40)
 
         # Test structured endpoint (weeks 1-8 + GNN enhancement)
-        test_structured_endpoint(test_case)
+        _test_structured_endpoint(test_case)
 
         # Test comparison endpoint (A/B testing)
-        test_comparison_endpoint(test_case)
+        _test_comparison_endpoint(test_case)
 
         time.sleep(1)  # Rate limiting
 
@@ -53,7 +53,7 @@ def test_complete_integration():
 
     logger.info("\n✅ Complete integration testing finished!")
 
-def test_structured_endpoint(test_case: Dict[str, Any]):
+def _test_structured_endpoint(test_case: Dict[str, Any]):
     """Test the optimized structured endpoint with GNN enhancement"""
 
     try:
@@ -123,7 +123,7 @@ def test_structured_endpoint(test_case: Dict[str, Any]):
     except Exception as e:
         logger.error(f"  ❌ Structured endpoint error: {e}")
 
-def test_comparison_endpoint(test_case: Dict[str, Any]):
+def _test_comparison_endpoint(test_case: Dict[str, Any]):
     """Test A/B comparison between different approaches"""
 
     try:

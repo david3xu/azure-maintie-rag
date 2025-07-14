@@ -1,0 +1,29 @@
+{
+  "experiment_name": "maintie_gnn_example",
+  "use_wandb": false,
+  "model_config": {
+    "input_dim": 68,
+    "hidden_dim": 128,
+    "output_dim": 64,
+    "num_layers": 2,
+    "num_entity_types": 10,
+    "gnn_type": "GCN",
+    "dropout": 0.2,
+    "use_batch_norm": true,
+    "use_residual": false
+  },
+  "optimizer": "AdamW",
+  "learning_rate": 0.0005,
+  "weight_decay": 1e-4,
+  "scheduler": "ReduceLROnPlateau",
+  "label_smoothing": 0.05,
+  "max_epochs": 100,
+  "patience": 10,
+  "min_epochs": 10,
+  "eval_every": 2,
+  "save_every": 10,
+  "batch_size": 16,
+  "num_workers": 2,
+  "gradient_clip": 1.0,
+  "noise_std": 0.0
+}

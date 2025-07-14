@@ -1,0 +1,9 @@
+============================= test session starts ==============================
+platform linux -- Python 3.10.11, pytest-8.4.1, pluggy-1.6.0
+rootdir: /home/azureuser/workspace/azure-maintie-rag/backend
+configfile: pytest.ini
+plugins: cov-6.2.1, anyio-4.9.0
+collected 56 items
+
+tests/api/test_dual_api.py ....                                          [  7%]
+tests/api/test_real_api.py 
