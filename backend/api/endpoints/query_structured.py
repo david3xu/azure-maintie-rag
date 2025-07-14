@@ -71,6 +71,9 @@ async def process_structured_query(
         formatted_response = _format_response(rag_response, request.response_format)
 
         # Build quality indicators
+        if rag_response.enhanced_query is None:
+            logger.error("enhanced_query is None in rag_response. This indicates a broken or corrupted cache entry. Forcing recomputation.")
+            raise ValueError("Corrupted cache: enhanced_query is None. Please clear cache or recompute response.")
         quality_indicators = _build_quality_indicators(rag_response)
 
         # Build model information with method indicator

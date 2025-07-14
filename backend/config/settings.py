@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     raw_data_dir: Path = Field(default=BASE_DIR / "data" / "raw", env="RAW_DATA_DIR")
     processed_data_dir: Path = Field(default=BASE_DIR / "data" / "processed", env="PROCESSED_DATA_DIR")
     indices_dir: Path = Field(default=BASE_DIR / "data" / "indices", env="INDICES_DIR")
+    config_dir: Path = Field(default=BASE_DIR / "config", env="CONFIG_DIR")
 
     # Data Processing Settings
     gold_data_filename: str = Field(default="gold_release.json", env="GOLD_DATA_FILENAME")

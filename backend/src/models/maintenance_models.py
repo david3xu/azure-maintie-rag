@@ -248,6 +248,10 @@ class EnhancedQuery:
     domain_context: Dict[str, Any]
     structured_search: str
     safety_considerations: List[str] = field(default_factory=list)
+    safety_critical: bool = False
+    safety_warnings: List[str] = field(default_factory=list)
+    equipment_category: Optional[str] = None
+    maintenance_context: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert enhanced query to dictionary"""
@@ -257,7 +261,11 @@ class EnhancedQuery:
             "related_entities": self.related_entities,
             "domain_context": self.domain_context,
             "structured_search": self.structured_search,
-            "safety_considerations": self.safety_considerations
+            "safety_considerations": self.safety_considerations,
+            "safety_critical": self.safety_critical,
+            "safety_warnings": self.safety_warnings,
+            "equipment_category": self.equipment_category,
+            "maintenance_context": self.maintenance_context
         }
 
 

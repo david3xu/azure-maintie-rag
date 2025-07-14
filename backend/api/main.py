@@ -16,6 +16,7 @@ import uvicorn
 
 from src.pipeline.enhanced_rag import get_rag_instance, initialize_rag_system
 from config.settings import settings
+from api.endpoints import health
 
 
 # Configure logging
@@ -278,6 +279,7 @@ from api.endpoints.query_comparison import router as comparison_router
 app.include_router(multi_modal_router, prefix="/api/v1/query/multi-modal", tags=["Multi-Modal RAG"])
 app.include_router(structured_router, prefix="/api/v1/query/structured", tags=["Structured RAG"])
 app.include_router(comparison_router, prefix="/api/v1/query/compare", tags=["A/B Testing"])
+app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
 
 
 if __name__ == "__main__":

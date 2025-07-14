@@ -43,11 +43,13 @@ python -m uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 ### **Test Both Methods**
 ```bash
 # Test individual endpoints
-curl -X POST http://localhost:8000/api/v1/query \
+curl -X POST "http://localhost:8000/api/v1/query/multi-modal/" \
+  -H "Content-Type: application/json" \
   -H "Content-Type: application/json" \
   -d '{"query": "pump seal failure", "max_results": 5}'
 
-curl -X POST http://localhost:8000/api/v1/query/optimized \
+curl -X POST "http://localhost:8000/api/v1/query/structured/" \
+  -H "Content-Type: application/json" \
   -H "Content-Type: application/json" \
   -d '{"query": "pump seal failure", "max_results": 5}'
 
