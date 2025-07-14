@@ -375,3 +375,76 @@ curl -s localhost:8000/api/v1/query -X POST -H "Content-Type: application/json" 
     "processing_time": 6.8503522872924805,
     ...
 ```
+
+---
+
+## 10. Query Endpoint Usage (July 2025)
+
+### Multi-Modal Query Endpoint
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/query/multi-modal/" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the maintenance procedure for pump P-101?"}'
+```
+
+### Structured Query Endpoint
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/query/structured/" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is the maintenance procedure for pump P-101?"}'
+```
+
+**Note:** The trailing slash is required for these endpoints. If omitted, the server will redirect (HTTP 307) to the correct path.
+
+**Example Output:**
+```
+{
+    "query": "What is the maintenance procedure for pump P-101?",
+    "generated_response": "...",
+    "confidence_score": 0.85,
+    "processing_time": 1.23,
+    ...
+}
+```
+
+---
+
+## 11. Cache Error Fix (July 2025)
+
+### Issue
+```
+2025-07-13 23:40:39,555 - src.cache.response_cache - ERROR - Error caching response: 'str' object has no attribute 'get'
+```
+
+### Root Cause
+The `_serialize_response` method in `ResponseCache` was incorrectly treating `response.sources` as a list of dictionaries when it's actually defined as `List[str]` in the `RAGResponse` model.
+
+### Fix Applied
+Updated `backend/src/cache/response_cache.py`:
+
+**Before:**
+```python
+'sources': [
+    {
+        'title': source.get('title', ''),
+        'content': source.get('content', '')[:500],
+        'doc_id': source.get('doc_id', '')
+    }
+    for source in (response.sources or [])
+],
+```
+
+**After:**
+```python
+'sources': response.sources or [],  # sources is List[str], not List[Dict]
+```
+
+### Verification
+- Created test script to verify serialization/deserialization works correctly
+- Cache now properly handles `List[str]` sources without errors
+- All cache operations (store, retrieve, clear) function as expected
+
+### Status
+✅ **Resolved** - Cache error no longer occurs during query processing.

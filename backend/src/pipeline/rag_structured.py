@@ -23,10 +23,66 @@ class MaintIEStructuredRAG(MaintIERAGBase):
     """Structured RAG pipeline for maintenance intelligence (optimized approach)"""
 
     def __init__(self):
-        """Initialize structured RAG pipeline"""
+        """Initialize structured RAG pipeline with graph optimization and caching"""
         super().__init__("Structured")
         self.retrieval_method = "optimized_structured_rag"
         self.api_calls_per_query = 1
+
+        # Initialize caching
+        self.response_cache = None
+        self.caching_enabled = True
+        self._init_caching()
+
+        # Initialize graph optimization components
+        self.data_transformer = None
+        self.entity_index = None
+        self.graph_ranker = None
+        self.graph_operations_enabled = False
+
+        self._init_graph_components()
+
+    def _init_caching(self):
+        """Initialize response caching"""
+        try:
+            from src.cache.response_cache import ResponseCache
+            self.response_cache = ResponseCache()
+            logger.info("Response caching initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize caching: {e}")
+            self.caching_enabled = False
+
+    def _init_graph_components(self):
+        """Initialize graph optimization components"""
+        try:
+            from src.knowledge.data_transformer import MaintIEDataTransformer
+            from src.knowledge.entity_document_index import EntityDocumentIndex
+            from src.retrieval.graph_enhanced_ranking import GraphEnhancedRanker
+
+            logger.info("Initializing graph optimization components...")
+
+            # Initialize data transformer
+            self.data_transformer = MaintIEDataTransformer()
+
+            # Initialize entity-document index
+            self.entity_index = EntityDocumentIndex(self.data_transformer)
+            index_stats = self.entity_index.build_index()
+
+            # Initialize graph ranker
+            if (self.data_transformer.knowledge_graph and
+                self.entity_index.index_built):
+
+                self.graph_ranker = GraphEnhancedRanker(
+                    self.data_transformer, self.entity_index
+                )
+                self.graph_operations_enabled = True
+
+                logger.info(f"Graph optimization enabled: {index_stats}")
+            else:
+                logger.warning("Graph optimization disabled: missing components")
+
+        except Exception as e:
+            logger.error(f"Error initializing graph components: {e}")
+            self.graph_operations_enabled = False
 
     def initialize_components(self, force_rebuild: bool = False) -> Dict[str, Any]:
         """Initialize all pipeline components"""
@@ -39,26 +95,22 @@ class MaintIEStructuredRAG(MaintIERAGBase):
         include_explanations: bool = True,
         enable_safety_warnings: bool = True
     ) -> RAGResponse:
-        """
-        Process maintenance query using optimized structured RAG approach (1 API call + graph operations)
+        """Process query with caching optimization"""
+        # Check cache first
+        if self.caching_enabled and self.response_cache:
+            cached_response = self.response_cache.get_cached_response(query, max_results)
+            if cached_response:
+                logger.info(f"Returning cached response for: {query[:50]}...")
+                return cached_response
 
-        This method implements the three innovation points:
-        1. Domain Understanding: Enhanced query analysis with maintenance context
-        2. Structured Knowledge: Graph-enhanced retrieval instead of multiple vector calls
-        3. Intelligent Retrieval: Single API call with structured ranking
-        """
-
-        if not self.components_initialized:
-            logger.warning("Components not initialized, initializing now...")
-            self.initialize_components()
-
+        # Process query normally
         start_time = time.time()
         self.query_count += 1
 
         logger.info(f"Processing structured query #{self.query_count}: {query}")
 
         try:
-            # Step 1: Enhanced domain understanding (same as original but with maintenance context)
+                        # Step 1: Enhanced domain understanding (same as original but with maintenance context)
             logger.info("Step 1: Enhanced domain analysis...")
             if not self.query_analyzer:
                 raise ValueError("Query analyzer not initialized")
@@ -66,9 +118,25 @@ class MaintIEStructuredRAG(MaintIERAGBase):
             analysis = self.query_analyzer.analyze_query(query)
             enhanced_query = self.query_analyzer.enhance_query(analysis)
 
+            # Defensive check: if enhanced_query is None, create a minimal one
+            if enhanced_query is None:
+                logger.warning(f"Enhanced query is None for query: {query}, creating fallback")
+                enhanced_query = EnhancedQuery(
+                    analysis=analysis,
+                    expanded_concepts=analysis.entities if analysis.entities else [],
+                    related_entities=[],
+                    domain_context={},
+                    structured_search=query,
+                    safety_considerations=[],
+                    safety_critical=False,
+                    safety_warnings=[],
+                    equipment_category=None,
+                    maintenance_context={}
+                )
+
             # Step 2: Structured retrieval (NEW - replaces multi-modal with single optimized call)
             logger.info("Step 2: Structured retrieval (1 API call)...")
-            search_results = self._structured_retrieval(enhanced_query, max_results)
+            search_results = self._optimized_structured_retrieval(enhanced_query, max_results)
 
             # Step 3: Generate response (same as original for quality consistency)
             logger.info("Step 3: Generating enhanced response...")
@@ -98,6 +166,11 @@ class MaintIEStructuredRAG(MaintIERAGBase):
                 citations=generation_result["citations"]
             )
 
+            # Cache the response if high confidence
+            if (self.caching_enabled and self.response_cache and
+                response.confidence_score > 0.6):
+                self.response_cache.cache_response(query, response, max_results)
+
             logger.info(f"Structured query processed successfully in {processing_time:.2f}s with confidence {response.confidence_score:.2f}")
             return response
 
@@ -118,35 +191,33 @@ class MaintIEStructuredRAG(MaintIERAGBase):
             query, max_results, include_explanations, enable_safety_warnings
         ))
 
-    def _structured_retrieval(self, enhanced_query: EnhancedQuery, max_results: int) -> List[SearchResult]:
-        """
-        Structured RAG: Single API call + graph-enhanced ranking
-
-        Innovation Point 2 & 3: Structured Knowledge + Intelligent Retrieval
-        - Builds comprehensive query using domain knowledge
-        - Single vector search instead of 3 separate calls
-        - Applies knowledge graph intelligence to ranking
-        """
+    def _optimized_structured_retrieval(self, enhanced_query: EnhancedQuery,
+                                       max_results: int) -> List[SearchResult]:
+        """Optimized structured retrieval using entity index and graph ranking"""
 
         if not self.vector_search:
             logger.error("Vector search not initialized")
             return []
 
         try:
-            # Step 1: Build structured query using domain knowledge
+            # Step 1: Build optimized query
             structured_query = self._build_structured_query(enhanced_query)
 
-            # Step 2: Single vector search with expanded context
+            # Step 2: Single vector search (optimization: 1 API call instead of 3)
             base_results = self.vector_search.search(structured_query, top_k=max_results * 2)
 
-            # Step 3: Apply knowledge graph intelligence to ranking
-            enhanced_results = self._apply_knowledge_graph_ranking(base_results, enhanced_query)
+            # Step 3: Apply graph-enhanced ranking if available
+            if self.graph_operations_enabled and self.graph_ranker:
+                enhanced_results = self.graph_ranker.enhance_ranking(base_results, enhanced_query)
+            else:
+                # Fallback to knowledge graph ranking
+                enhanced_results = self._apply_knowledge_graph_ranking(base_results, enhanced_query)
 
-            logger.info(f"Structured retrieval: 1 API call, {len(enhanced_results)} results")
+            logger.info(f"Optimized retrieval: 1 API call, {len(enhanced_results)} results")
             return enhanced_results[:max_results]
 
         except Exception as e:
-            logger.error(f"Error in structured retrieval: {e}")
+            logger.error(f"Error in optimized retrieval: {e}")
             # Fallback to simple search
             return self.vector_search.search(enhanced_query.analysis.original_query, top_k=max_results)
 
@@ -185,15 +256,84 @@ class MaintIEStructuredRAG(MaintIERAGBase):
         """
         Use knowledge graph to select most relevant concepts
 
-        TODO: Replace with actual knowledge graph operations
-        Current implementation uses simple term matching
+        REPLACES TODO: Now uses actual NetworkX graph operations from data_transformer.py
         """
-
         if not concepts:
             return []
 
-        # For now, prioritize concepts that relate to identified entities
-        # TODO: Replace with actual knowledge graph traversal
+        # Use graph operations if available
+        if self.graph_operations_enabled and self.data_transformer:
+            return self._graph_based_concept_selection(concepts, entities)
+        else:
+            # Fallback to term matching
+            return self._term_based_concept_selection(concepts, entities)
+
+    def _graph_based_concept_selection(self, concepts: List[str], entities: List[str]) -> List[str]:
+        """Select concepts using NetworkX graph operations"""
+        relevant_concepts = []
+        concept_scores = {}
+
+        # For each concept, calculate relevance using graph operations
+        for concept in concepts:
+            concept_score = 0.0
+
+            # Find concept entity in knowledge graph
+            concept_entity = self.data_transformer.get_entity_by_text(concept)
+            if concept_entity:
+                concept_id = concept_entity.entity_id if hasattr(concept_entity, 'entity_id') else concept
+
+                # Calculate relevance based on graph distance to query entities
+                for entity in entities:
+                    query_entity = self.data_transformer.get_entity_by_text(entity)
+                    if query_entity:
+                        query_id = query_entity.entity_id if hasattr(query_entity, 'entity_id') else entity
+
+                        # Use existing get_related_entities to check connectivity
+                        related_entities = self.data_transformer.get_related_entities(query_id, max_distance=2)
+
+                        if concept_id in related_entities:
+                            # Score based on graph distance (closer = higher score)
+                            try:
+                                import networkx as nx
+                                if self.data_transformer.knowledge_graph:
+                                    distance = nx.shortest_path_length(
+                                        self.data_transformer.knowledge_graph,
+                                        query_id,
+                                        concept_id
+                                    )
+                                    # Inverse distance scoring: distance 1 = 1.0, distance 2 = 0.5
+                                    concept_score += 1.0 / distance
+                            except (nx.NetworkXNoPath, nx.NetworkXError):
+                                # If no path, give small score for entity match
+                                concept_score += 0.1
+
+                    # Also check entity type compatibility
+                    if (concept_entity and query_entity and
+                        hasattr(concept_entity, 'entity_type') and
+                        hasattr(query_entity, 'entity_type') and
+                        concept_entity.entity_type == query_entity.entity_type):
+                        concept_score += 0.3
+
+            if concept_score > 0:
+                concept_scores[concept] = concept_score
+
+        # Sort by relevance score and return top concepts
+        sorted_concepts = sorted(concept_scores.items(), key=lambda x: x[1], reverse=True)
+        relevant_concepts = [concept for concept, score in sorted_concepts]
+
+        # Ensure we always return some concepts (fallback)
+        if len(relevant_concepts) < 3 and len(concepts) >= 3:
+            for concept in concepts:
+                if concept not in relevant_concepts:
+                    relevant_concepts.append(concept)
+                if len(relevant_concepts) >= 5:
+                    break
+
+        logger.debug(f"Graph-based concept selection: {len(relevant_concepts)} concepts selected")
+        return relevant_concepts[:5]
+
+    def _term_based_concept_selection(self, concepts: List[str], entities: List[str]) -> List[str]:
+        """Fallback: Simple term matching (original logic)"""
         relevant_concepts = []
         entity_terms = set(e.lower() for e in entities)
 
@@ -260,9 +400,121 @@ class MaintIEStructuredRAG(MaintIERAGBase):
         """
         Calculate knowledge graph-based relevance score
 
-        TODO: Replace with actual knowledge graph operations
-        Current implementation uses simple term matching
+        REPLACES TODO: Now uses actual NetworkX graph operations from data_transformer.py
         """
+
+        # Use graph operations if available
+        if self.graph_operations_enabled and self.data_transformer:
+            return self._graph_based_relevance_scoring(result, query_entities, query_concepts)
+        else:
+            # Fallback to term matching
+            return self._term_based_relevance_scoring(result, query_entities, query_concepts)
+
+    def _graph_based_relevance_scoring(self, result: SearchResult,
+                                      query_entities: set, query_concepts: set) -> float:
+        """Calculate relevance using NetworkX graph operations"""
+
+        # Extract document terms for entity matching
+        doc_text = f"{result.title} {result.content}".lower()
+        doc_terms = set(doc_text.split())
+
+        graph_score = 0.0
+        entity_graph_score = 0.0
+        concept_graph_score = 0.0
+
+        # 1. Entity graph relevance
+        entity_matches = 0
+        for query_entity in query_entities:
+            # Find entity in knowledge graph
+            entity_obj = self.data_transformer.get_entity_by_text(query_entity)
+            if entity_obj:
+                entity_id = entity_obj.entity_id if hasattr(entity_obj, 'entity_id') else query_entity
+
+                # Get related entities from graph (2-hop neighborhood)
+                related_entities = self.data_transformer.get_related_entities(entity_id, max_distance=2)
+
+                # Check if document contains related entities
+                for related_id in related_entities:
+                    if (self.data_transformer.knowledge_graph and
+                        related_id in self.data_transformer.knowledge_graph):
+
+                        related_text = self.data_transformer.knowledge_graph.nodes[related_id].get('text', '').lower()
+                        if related_text and any(word in doc_terms for word in related_text.split()):
+                            # Score based on graph distance
+                            try:
+                                import networkx as nx
+                                distance = nx.shortest_path_length(
+                                    self.data_transformer.knowledge_graph,
+                                    entity_id,
+                                    related_id
+                                )
+                                # Higher score for closer entities: distance 1 = 1.0, distance 2 = 0.5
+                                entity_matches += 1.0 / distance
+                            except (nx.NetworkXNoPath, nx.NetworkXError):
+                                entity_matches += 0.1  # Small score for unconnected matches
+
+            # Fallback: Direct entity mention in document
+            if query_entity.lower() in doc_text:
+                entity_matches += 1.0
+
+        # Normalize entity score
+        entity_graph_score = min(entity_matches / max(len(query_entities), 1), 1.0)
+
+        # 2. Concept graph relevance (similar logic for concepts)
+        concept_matches = 0
+        for query_concept in query_concepts:
+            concept_obj = self.data_transformer.get_entity_by_text(query_concept)
+            if concept_obj:
+                concept_id = concept_obj.entity_id if hasattr(concept_obj, 'entity_id') else query_concept
+
+                # Get related concepts from graph
+                related_concepts = self.data_transformer.get_related_entities(concept_id, max_distance=2)
+
+                # Check if document contains related concepts
+                for related_id in related_concepts:
+                    if (self.data_transformer.knowledge_graph and
+                        related_id in self.data_transformer.knowledge_graph):
+
+                        related_text = self.data_transformer.knowledge_graph.nodes[related_id].get('text', '').lower()
+                        if related_text and any(word in doc_terms for word in related_text.split()):
+                            try:
+                                import networkx as nx
+                                distance = nx.shortest_path_length(
+                                    self.data_transformer.knowledge_graph,
+                                    concept_id,
+                                    related_id
+                                )
+                                concept_matches += 1.0 / distance
+                            except (nx.NetworkXNoPath, nx.NetworkXError):
+                                concept_matches += 0.1
+
+            # Fallback: Direct concept mention in document
+            if query_concept.lower() in doc_text:
+                concept_matches += 1.0
+
+        # Normalize concept score
+        concept_graph_score = min(concept_matches / max(len(query_concepts), 1), 1.0)
+
+        # 3. Combined graph relevance score
+        # Weight entity relevance higher than concept relevance for maintenance domain
+        graph_score = 0.7 * entity_graph_score + 0.3 * concept_graph_score
+
+        # 4. Add bonus for document metadata if available
+        if hasattr(result, 'metadata') and result.metadata:
+            # Check if document has maintenance-relevant metadata
+            metadata_bonus = 0.0
+            if 'equipment_type' in result.metadata or 'maintenance_type' in result.metadata:
+                metadata_bonus = 0.1
+            graph_score = min(graph_score + metadata_bonus, 1.0)
+
+        logger.debug(f"Graph relevance for doc {result.doc_id}: entity_score={entity_graph_score:.3f}, "
+                    f"concept_score={concept_graph_score:.3f}, final_score={graph_score:.3f}")
+
+        return graph_score
+
+    def _term_based_relevance_scoring(self, result: SearchResult,
+                                     query_entities: set, query_concepts: set) -> float:
+        """Fallback: Simple term matching (original logic)"""
 
         # Extract document terms
         doc_text = f"{result.title} {result.content}".lower()
@@ -286,8 +538,13 @@ class MaintIEStructuredRAG(MaintIERAGBase):
         status = super().get_system_status()
         status.update({
             "retrieval_method": self.retrieval_method,
-            "api_calls_per_query": self.api_calls_per_query
+            "api_calls_per_query": self.api_calls_per_query,
+            "graph_operations_enabled": self.graph_operations_enabled,
+            "data_transformer_available": self.data_transformer is not None,
+            "caching_enabled": self.caching_enabled
         })
+        if self.caching_enabled and self.response_cache:
+            status["cache_stats"] = self.response_cache.get_cache_stats()
         return status
 
     def get_performance_metrics(self) -> Dict[str, Any]:

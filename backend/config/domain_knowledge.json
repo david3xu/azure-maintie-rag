@@ -1,100 +1,92 @@
 {
-  "query_classification": {
-    "troubleshooting": [
-      "failure",
-      "problem",
-      "issue",
-      "broken",
-      "not working",
-      "troubleshoot",
-      "diagnose",
-      "fix",
-      "repair",
-      "malfunction"
-    ],
-    "procedural": [
-      "how to",
-      "procedure",
-      "steps",
-      "process",
-      "method",
-      "instructions",
-      "guide",
-      "manual",
-      "protocol"
-    ],
-    "preventive": [
-      "preventive",
-      "maintenance schedule",
-      "inspection",
-      "service",
-      "routine",
-      "periodic",
-      "scheduled"
-    ],
-    "safety": [
-      "safety",
-      "hazard",
-      "risk",
-      "dangerous",
-      "caution",
-      "warning",
-      "lockout",
-      "ppe",
-      "procedure"
-    ]
+  "equipment_hierarchy": {
+    "rotating_equipment": {
+      "types": ["pump", "motor", "compressor", "turbine", "fan", "blower"],
+      "components": ["bearing", "seal", "shaft", "impeller", "coupling", "belt"],
+      "failure_modes": ["vibration", "misalignment", "wear", "overheating", "leakage", "noise"]
+    },
+    "static_equipment": {
+      "types": ["tank", "vessel", "pipe", "valve", "heat_exchanger", "filter"],
+      "components": ["gasket", "flange", "nozzle", "support", "insulation"],
+      "failure_modes": ["corrosion", "erosion", "leakage", "blockage", "thermal_stress"]
+    },
+    "electrical_equipment": {
+      "types": ["motor", "generator", "transformer", "switchgear", "panel"],
+      "components": ["winding", "insulation", "contact", "breaker", "relay"],
+      "failure_modes": ["overheating", "short_circuit", "insulation_failure", "contact_wear"]
+    },
+    "instrumentation": {
+      "types": ["sensor", "transmitter", "gauge", "indicator", "controller"],
+      "components": ["diaphragm", "spring", "linkage", "display", "electronics"],
+      "failure_modes": ["drift", "calibration_error", "mechanical_failure", "electronic_failure"]
+    }
   },
-  "equipment_categories": {
-    "rotating_equipment": [
-      "pump",
-      "motor",
-      "compressor",
-      "turbine",
-      "fan"
-    ],
-    "static_equipment": [
-      "tank",
-      "vessel",
-      "pipe",
-      "valve"
-    ],
-    "electrical": [
-      "motor",
-      "generator",
-      "transformer",
-      "panel"
-    ],
-    "hvac": [
-      "fan",
-      "damper",
-      "coil",
-      "duct",
-      "filter"
-    ],
-    "instrumentation": [
-      "sensor",
-      "transmitter",
-      "gauge",
-      "indicator"
-    ]
+  "maintenance_tasks": {
+    "troubleshooting": {
+      "keywords": ["failure", "problem", "issue", "broken", "not working", "troubleshoot", "diagnose", "fix", "repair", "malfunction", "error", "fault"],
+      "urgency": "high",
+      "description": "Diagnostic and repair procedures for equipment failures"
+    },
+    "procedural": {
+      "keywords": ["how to", "procedure", "steps", "process", "method", "instructions", "guide", "manual", "protocol", "sequence"],
+      "urgency": "medium",
+      "description": "Step-by-step maintenance procedures and instructions"
+    },
+    "preventive": {
+      "keywords": ["preventive", "maintenance schedule", "inspection", "service", "routine", "periodic", "scheduled", "preventive", "predictive"],
+      "urgency": "low",
+      "description": "Preventive and predictive maintenance activities"
+    },
+    "safety": {
+      "keywords": ["safety", "hazard", "risk", "dangerous", "caution", "warning", "lockout", "ppe", "procedure", "emergency"],
+      "urgency": "high",
+      "description": "Safety procedures and hazard mitigation"
+    },
+    "informational": {
+      "keywords": ["what is", "information", "details", "specifications", "data", "documentation", "manual"],
+      "urgency": "low",
+      "description": "General information and documentation requests"
+    }
   },
+  "safety_critical_equipment": [
+    "pressure_vessel", "boiler", "high_voltage_equipment", "crane", "elevator",
+    "fire_suppression", "emergency_shutdown", "safety_valve", "relief_valve"
+  ],
   "technical_abbreviations": {
     "pm": "preventive maintenance",
     "cm": "corrective maintenance",
     "hvac": "heating ventilation air conditioning",
     "loto": "lockout tagout",
     "sop": "standard operating procedure",
-    "rca": "root cause analysis"
+    "rca": "root cause analysis",
+    "msds": "material safety data sheet",
+    "ppe": "personal protective equipment",
+    "rpm": "revolutions per minute",
+    "psi": "pounds per square inch",
+    "psig": "pounds per square inch gauge",
+    "psia": "pounds per square inch absolute",
+    "cfm": "cubic feet per minute",
+    "gpm": "gallons per minute",
+    "hp": "horsepower",
+    "kw": "kilowatt",
+    "kva": "kilovolt-ampere",
+    "vfd": "variable frequency drive",
+    "plc": "programmable logic controller",
+    "scada": "supervisory control and data acquisition"
   },
-  "component_patterns": {
-    "bearing": "bearing",
-    "seal": "seal",
-    "gasket": "gasket",
-    "valve": "valve",
-    "motor": "motor",
-    "filter": "filter",
-    "belt": "belt",
-    "coupling": "coupling"
+  "query_classification": {
+    "troubleshooting": ["failure", "problem", "issue", "broken", "not working", "troubleshoot", "diagnose", "fix", "repair", "malfunction"],
+    "procedural": ["how to", "procedure", "steps", "process", "method", "instructions", "guide", "manual", "protocol"],
+    "preventive": ["preventive", "maintenance schedule", "inspection", "service", "routine", "periodic", "scheduled"],
+    "safety": ["safety", "hazard", "risk", "dangerous", "caution", "warning", "lockout", "ppe", "procedure"],
+    "informational": ["what is", "information", "details", "specifications", "data", "documentation"]
+  },
+  "equipment_categories": {
+    "rotating_equipment": ["pump", "motor", "compressor", "turbine", "fan", "blower"],
+    "static_equipment": ["tank", "vessel", "pipe", "valve", "heat_exchanger", "filter"],
+    "electrical": ["motor", "generator", "transformer", "switchgear", "panel", "vfd"],
+    "instrumentation": ["sensor", "transmitter", "gauge", "indicator", "controller", "plc"],
+    "hvac": ["fan", "damper", "coil", "duct", "filter", "chiller", "heater"]
   },
   "equipment_patterns": {
     "pump": "pump",
@@ -106,7 +98,7 @@
     "tank": "tank",
     "vessel": "vessel",
     "pipe": "pipe",
-    "heat exchanger": "heat exchanger"
+    "heat_exchanger": "heat exchanger"
   },
   "failure_patterns": {
     "failure": "failure",
@@ -121,7 +113,6 @@
   },
   "procedure_patterns": {
     "maintenance": "maintenance",
-    "inspection": "inspection",
     "repair": "repair",
     "replacement": "replacement",
     "installation": "installation",
@@ -129,171 +120,73 @@
     "testing": "testing",
     "servicing": "servicing"
   },
+  "component_patterns": {
+    "bearing": "bearing",
+    "seal": "seal",
+    "gasket": "gasket",
+    "valve": "valve",
+    "motor": "motor",
+    "filter": "filter",
+    "belt": "belt",
+    "coupling": "coupling"
+  },
+  "maintie_equipment": [],
+  "extracted_abbreviations": {},
   "tool_mappings": {
-    "pump": [
-      "wrench set",
-      "pressure gauge",
-      "vibration meter"
-    ],
-    "motor": [
-      "multimeter",
-      "insulation tester",
-      "alignment tool"
-    ],
-    "bearing": [
-      "bearing puller",
-      "lubricant",
-      "dial indicator"
-    ],
-    "seal": [
-      "seal installation tool",
-      "torque wrench",
-      "gasket material"
-    ]
+    "pump": ["wrench set", "pressure gauge", "vibration meter", "flow meter", "thermometer"],
+    "motor": ["multimeter", "insulation tester", "alignment tool", "vibration analyzer", "thermal camera"],
+    "bearing": ["bearing puller", "lubricant", "dial indicator", "vibration meter", "thermal camera"],
+    "seal": ["seal installation tool", "torque wrench", "gasket material", "pressure tester", "leak detector"],
+    "valve": ["valve wrench", "pressure gauge", "leak detector", "actuator tool", "calibration kit"],
+    "compressor": ["pressure gauge", "vibration meter", "thermometer", "flow meter", "oil analysis kit"]
   },
   "safety_mappings": {
-    "electrical": [
-      "lockout/tagout",
-      "PPE required",
-      "voltage testing"
-    ],
-    "pressure": [
-      "pressure relief",
-      "isolation",
-      "proper venting"
-    ],
-    "rotating": [
-      "guards in place",
-      "stop rotation",
-      "clear area"
-    ],
-    "chemical": [
-      "MSDS review",
-      "containment",
-      "ventilation"
-    ]
+    "electrical": ["lockout/tagout", "PPE required", "voltage testing", "ground fault protection", "arc flash protection"],
+    "pressure": ["pressure relief", "isolation", "proper venting", "pressure testing", "safety valve"],
+    "rotating": ["guards in place", "stop rotation", "clear area", "vibration monitoring", "alignment check"],
+    "chemical": ["MSDS review", "containment", "ventilation", "spill kit", "respiratory protection"],
+    "high_temperature": ["allow cooling", "thermal protection", "heat resistant PPE", "temperature monitoring"]
   },
   "expansion_rules": {
-    "pump": [
-      "centrifugal pump",
-      "positive displacement pump",
-      "impeller",
-      "volute"
-    ],
-    "seal": [
-      "mechanical seal",
-      "packing",
-      "gasket",
-      "O-ring"
-    ],
-    "bearing": [
-      "ball bearing",
-      "roller bearing",
-      "thrust bearing",
-      "lubrication"
-    ],
-    "motor": [
-      "electric motor",
-      "AC motor",
-      "DC motor",
-      "stator",
-      "rotor"
-    ],
-    "failure": [
-      "malfunction",
-      "breakdown",
-      "defect",
-      "wear",
-      "damage"
-    ]
+    "pump": ["centrifugal pump", "positive displacement pump", "impeller", "volute", "casing", "shaft"],
+    "seal": ["mechanical seal", "packing", "gasket", "O-ring", "lip seal", "labyrinth seal"],
+    "bearing": ["ball bearing", "roller bearing", "thrust bearing", "lubrication", "grease", "oil"],
+    "motor": ["electric motor", "AC motor", "DC motor", "stator", "rotor", "winding"],
+    "failure": ["malfunction", "breakdown", "defect", "wear", "damage", "fault"],
+    "valve": ["gate valve", "ball valve", "butterfly valve", "check valve", "relief valve", "control valve"]
   },
   "typical_procedures": {
     "troubleshooting": [
+      "safety isolation and lockout",
       "visual inspection",
+      "operational parameter review",
       "diagnostic testing",
-      "root cause analysis"
-    ],
-    "preventive": [
-      "scheduled inspection",
-      "lubrication",
-      "replacement"
+      "root cause analysis",
+      "corrective action implementation"
     ],
     "procedural": [
-      "step-by-step guide",
-      "safety checklist",
-      "quality verification"
+      "safety preparation",
+      "equipment isolation",
+      "step-by-step procedure execution",
+      "quality verification",
+      "restoration to service",
+      "documentation"
+    ],
+    "preventive": [
+      "schedule review",
+      "equipment preparation",
+      "inspection and testing",
+      "maintenance activities",
+      "performance verification",
+      "schedule update"
+    ],
+    "safety": [
+      "hazard identification",
+      "risk assessment",
+      "safety procedure review",
+      "PPE selection",
+      "emergency response preparation",
+      "safety verification"
     ]
-  },
-  "maintie_equipment": [
-    "oil supply",
-    "riser",
-    "lock out",
-    "light fitting",
-    "rubber bump",
-    "washer",
-    "shoes",
-    "hydraulic oil temperature sensor",
-    "auxiliary engine",
-    "air filter",
-    "drill crew",
-    "transmission",
-    "fire detector",
-    "ripper shank",
-    "control arm",
-    "boosters",
-    "control system",
-    "workshop",
-    "hd work lights",
-    "retaining cover",
-    "walkways",
-    "checks",
-    "transducer",
-    "smoke",
-    "stuck on",
-    "speaker",
-    "scoreboard",
-    "crib",
-    "strut",
-    "storage compartment",
-    "high voltage cable",
-    "fuel cart",
-    "pumps",
-    "t-pieces",
-    "timbers",
-    "hydraulic lock out",
-    "camshaft",
-    "unserviceable",
-    "cooler",
-    "grease pod",
-    "supply",
-    "cover plates",
-    "crows nest",
-    "shutdown solenoid",
-    "self rounders",
-    "high beam",
-    "bins",
-    "tunnel",
-    "slip joint",
-    "encoder"
-  ],
-  "extracted_abbreviations": {},
-  "extracted_failure_terms": [
-    "corrosion",
-    "leak",
-    "crack",
-    "failure",
-    "wear",
-    "vibration",
-    "overheating",
-    "noise"
-  ],
-  "extracted_procedure_terms": [
-    "replacement",
-    "testing",
-    "calibration",
-    "repair",
-    "installation",
-    "inspection",
-    "maintenance"
-  ]
+  }
 }

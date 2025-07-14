@@ -35,7 +35,7 @@ function App() {
 
     try {
       const result = await axios.post<QueryResponse>(
-        "http://localhost:8000/api/v1/query",
+        "http://localhost:8000/api/v1/query/structured/",
         {
           query,
           max_results: 10,

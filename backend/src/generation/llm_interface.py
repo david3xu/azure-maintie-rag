@@ -87,31 +87,66 @@ class MaintenanceLLMInterface:
         enhanced_query: EnhancedQuery,
         search_results: List[SearchResult]
     ) -> str:
-        """Build maintenance-specific prompt using configurable templates"""
+        """Build maintenance-specific prompt with domain context"""
 
-        query_type = enhanced_query.analysis.query_type.value
+        # Base maintenance prompt
+        prompt_parts = [
+            "You are a maintenance expert assistant helping with industrial equipment maintenance.",
+            f"Query Type: {enhanced_query.analysis.query_type.value}",
+            f"Equipment Category: {enhanced_query.equipment_category or 'General'}",
+        ]
 
-        # Use configurable template manager
-        template = self.template_manager.get_template(query_type)
+        # Add safety context if critical
+        if enhanced_query.safety_critical:
+            prompt_parts.extend([
+                "",
+                "⚠️ SAFETY CRITICAL EQUIPMENT DETECTED ⚠️",
+                "Always prioritize safety in your response.",
+                "Include relevant safety warnings and procedures.",
+            ])
 
-        # Build context from search results
-        context = self._build_context(search_results)
+        # Add maintenance context
+        if enhanced_query.maintenance_context:
+            context = enhanced_query.maintenance_context
+            urgency = context.get("task_urgency", "normal")
 
-        # Extract safety considerations
-        safety_info = "\n".join(enhanced_query.safety_considerations) if enhanced_query.safety_considerations else "Standard safety procedures apply."
+            if urgency == "high" or urgency == "critical":
+                prompt_parts.append(f"URGENT: This is a {urgency} priority maintenance issue.")
 
-        # Build comprehensive prompt
-        prompt = template.format(
-            query=enhanced_query.analysis.original_query,
-            entities=", ".join(enhanced_query.analysis.entities),
-            expanded_concepts=", ".join(enhanced_query.expanded_concepts[:self.config.concept_expansion_limit]),
-            equipment_category=enhanced_query.analysis.equipment_category or "general equipment",
-            context=context,
-            safety_considerations=safety_info,
-            urgency=enhanced_query.analysis.urgency
-        )
+        # Add query and context
+        prompt_parts.extend([
+            "",
+            f"Original Query: {enhanced_query.analysis.original_query}",
+            "",
+            "Relevant Documentation:",
+        ])
 
-        return prompt
+        # Add search results with relevance scores
+        for i, result in enumerate(search_results[:5], 1):
+            score_info = ""
+            if hasattr(result, 'metadata') and result.metadata:
+                if 'knowledge_graph_score' in result.metadata:
+                    kg_score = result.metadata['knowledge_graph_score']
+                    score_info = f" (Domain Relevance: {kg_score:.2f})"
+
+            prompt_parts.append(f"{i}. {result.title}{score_info}")
+            prompt_parts.append(f"   {result.content[:200]}...")
+
+        # Response instructions
+        prompt_parts.extend([
+            "",
+            "Instructions:",
+            "1. Provide a comprehensive maintenance response",
+            "2. Include step-by-step procedures when applicable",
+            "3. Highlight any safety considerations",
+            "4. Reference the provided documentation",
+            "5. Use proper maintenance terminology",
+        ])
+
+        if enhanced_query.safety_critical:
+            prompt_parts.append("6. MANDATORY: Include safety warnings for critical equipment")
+
+        return "\n".join(prompt_parts)
 
     def _build_context(self, search_results: List[SearchResult]) -> str:
         """Build context from search results"""

@@ -26,31 +26,33 @@ class MaintenanceQueryAnalyzer:
     """Analyze and enhance maintenance queries using domain knowledge"""
 
     def __init__(self, transformer: Optional[MaintIEDataTransformer] = None):
-        """Initialize analyzer with knowledge transformer"""
+        """Initialize analyzer with enhanced domain knowledge"""
         self.transformer = transformer
         self.config = settings
         self.knowledge_graph: Optional[nx.Graph] = None
         self.entity_vocabulary: Dict[str, Any] = {}
 
-        # Load domain knowledge from config file
+        # Load domain knowledge from configuration
         self.domain_knowledge = self._load_domain_knowledge()
 
         # Extract patterns from domain knowledge
+        self.equipment_hierarchy = self.domain_knowledge.get("equipment_hierarchy", {})
+        self.maintenance_tasks = self.domain_knowledge.get("maintenance_tasks", {})
+        self.safety_critical = set(self.domain_knowledge.get("safety_critical_equipment", []))
+        self.abbreviations = self.domain_knowledge.get("technical_abbreviations", {})
+
+        # Build pattern matchers
+        self.equipment_patterns = self._build_equipment_patterns()
+        self.failure_patterns = self._build_failure_patterns()
+        self.procedure_patterns = self._build_procedure_patterns()
+
+        # Legacy patterns for backward compatibility
         self.troubleshooting_keywords = self.domain_knowledge.get("query_classification", {}).get("troubleshooting", [])
         self.procedural_keywords = self.domain_knowledge.get("query_classification", {}).get("procedural", [])
         self.preventive_keywords = self.domain_knowledge.get("query_classification", {}).get("preventive", [])
         self.safety_keywords = self.domain_knowledge.get("query_classification", {}).get("safety", [])
-
         self.equipment_categories = self.domain_knowledge.get("equipment_categories", {})
-        self.abbreviations = self.domain_knowledge.get("technical_abbreviations", {})
-
-        # Use configurable patterns from domain knowledge
-        self.equipment_patterns = self.domain_knowledge.get("equipment_patterns", {})
-        self.failure_patterns = self.domain_knowledge.get("failure_patterns", {})
-        self.procedure_patterns = self.domain_knowledge.get("procedure_patterns", {})
         self.component_patterns = self.domain_knowledge.get("component_patterns", {})
-
-        # Load extracted knowledge from MaintIE
         self.maintie_equipment = self.domain_knowledge.get("maintie_equipment", [])
         self.extracted_abbreviations = self.domain_knowledge.get("extracted_abbreviations", {})
 
@@ -58,24 +60,43 @@ class MaintenanceQueryAnalyzer:
         if self.transformer:
             self._load_knowledge()
 
-        logger.info("MaintenanceQueryAnalyzer initialized with domain knowledge")
+        logger.info("Enhanced MaintenanceQueryAnalyzer initialized with domain knowledge")
 
     def _load_domain_knowledge(self) -> Dict[str, Any]:
         """Load domain knowledge from configuration file"""
-        config_path = Path("config/domain_knowledge.json")
         try:
-            with open(config_path, 'r') as f:
-                return json.load(f)
-        except FileNotFoundError:
-            logger.warning(f"Domain knowledge config not found: {config_path}. Using minimal defaults.")
-            return self._get_minimal_defaults()
+            from config.settings import settings
+            domain_config_path = settings.config_dir / "domain_knowledge.json"
+
+            if domain_config_path.exists():
+                with open(domain_config_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            else:
+                logger.warning(f"Domain knowledge config not found at {domain_config_path}")
+                return self._get_default_domain_knowledge()
+
         except Exception as e:
             logger.error(f"Error loading domain knowledge: {e}")
-            return self._get_minimal_defaults()
+            return self._get_default_domain_knowledge()
 
-    def _get_minimal_defaults(self) -> Dict[str, Any]:
-        """Minimal fallback knowledge"""
+    def _get_default_domain_knowledge(self) -> Dict[str, Any]:
+        """Fallback domain knowledge if config file not available"""
         return {
+            "equipment_hierarchy": {
+                "rotating_equipment": {
+                    "types": ["pump", "motor", "compressor"],
+                    "components": ["bearing", "seal", "shaft"],
+                    "failure_modes": ["vibration", "misalignment", "wear"]
+                }
+            },
+            "maintenance_tasks": {
+                "troubleshooting": {
+                    "keywords": ["failure", "problem", "issue", "broken"],
+                    "urgency": "high"
+                }
+            },
+            "safety_critical_equipment": ["pressure_vessel", "boiler"],
+            "technical_abbreviations": {"pm": "preventive maintenance"},
             "query_classification": {
                 "troubleshooting": ["failure", "problem"],
                 "procedural": ["how to", "procedure"],
@@ -85,7 +106,6 @@ class MaintenanceQueryAnalyzer:
             "equipment_categories": {
                 "equipment": ["pump", "motor", "valve"]
             },
-            "technical_abbreviations": {},
             "equipment_patterns": {},
             "failure_patterns": {},
             "procedure_patterns": {},
@@ -106,10 +126,35 @@ class MaintenanceQueryAnalyzer:
                 import json
                 with open(vocab_path, 'r') as f:
                     self.entity_vocabulary = json.load(f)
-
             logger.info("Knowledge loaded successfully")
         except Exception as e:
             logger.warning(f"Could not load knowledge: {e}")
+
+    def _build_equipment_patterns(self) -> Dict[str, str]:
+        """Build equipment patterns from hierarchy"""
+        patterns = {}
+        for category, data in self.equipment_hierarchy.items():
+            for eq_type in data.get("types", []):
+                patterns[eq_type] = eq_type
+            for component in data.get("components", []):
+                patterns[component] = component
+        return patterns
+
+    def _build_failure_patterns(self) -> Dict[str, str]:
+        """Build failure patterns from hierarchy"""
+        patterns = {}
+        for category, data in self.equipment_hierarchy.items():
+            for failure_mode in data.get("failure_modes", []):
+                patterns[failure_mode] = failure_mode
+        return patterns
+
+    def _build_procedure_patterns(self) -> Dict[str, str]:
+        """Build procedure patterns from maintenance tasks"""
+        patterns = {}
+        for task_type, task_config in self.maintenance_tasks.items():
+            for keyword in task_config.get("keywords", []):
+                patterns[keyword] = keyword
+        return patterns
 
     def analyze_query(self, query: str) -> QueryAnalysis:
         """Analyze maintenance query and extract key information"""
@@ -151,13 +196,17 @@ class MaintenanceQueryAnalyzer:
         return analysis
 
     def enhance_query(self, analysis: QueryAnalysis) -> EnhancedQuery:
-        """Enhance query with expanded concepts and domain knowledge"""
-        logger.info("Enhancing query with domain knowledge")
+        """Enhanced query enhancement with domain intelligence"""
 
-        # Expand concepts using knowledge graph
-        expanded_concepts = self._expand_concepts(analysis.entities)
+        # Perform safety assessment
+        safety_assessment = self._assess_safety_criticality(
+            analysis.entities, analysis.query_type
+        )
 
-        # Find related entities
+        # Enhanced concept expansion
+        expanded_concepts = self._enhanced_expand_concepts(analysis.entities)
+
+        # Find related entities using enhanced methods
         related_entities = self._find_related_entities(analysis.entities)
 
         # Add domain context
@@ -173,16 +222,29 @@ class MaintenanceQueryAnalyzer:
             analysis.entities, expanded_concepts
         )
 
+        # Create enhanced query with safety information
         enhanced = EnhancedQuery(
             analysis=analysis,
             expanded_concepts=expanded_concepts,
             related_entities=related_entities,
             domain_context=domain_context,
             structured_search=structured_search,
-            safety_considerations=safety_considerations
+            safety_considerations=safety_considerations,
+            safety_critical=safety_assessment["is_safety_critical"],
+            safety_warnings=safety_assessment["safety_warnings"],
+            equipment_category=self._enhanced_categorize_equipment(analysis.entities),
+            maintenance_context={
+                "task_urgency": self.maintenance_tasks.get(
+                    analysis.query_type.value.lower(), {}
+                ).get("urgency", "normal"),
+                "safety_level": safety_assessment["safety_level"],
+                "critical_equipment": safety_assessment["critical_equipment"]
+            }
         )
 
-        logger.info(f"Query enhancement complete: {len(expanded_concepts)} concepts expanded")
+        logger.info(f"Enhanced query created with {len(expanded_concepts)} concepts, "
+                   f"safety_critical={enhanced.safety_critical}")
+
         return enhanced
 
     def _normalize_query(self, query: str) -> str:
@@ -250,8 +312,48 @@ class MaintenanceQueryAnalyzer:
         return components
 
     def _classify_query_type(self, query: str) -> QueryType:
-        """Classify the type of maintenance query using domain knowledge keywords"""
+        """Classify query type based on keywords"""
+        # Use enhanced classification if available
+        if hasattr(self, '_enhanced_classify_query_type'):
+            return self._enhanced_classify_query_type(query)
+        else:
+            return self._original_classify_query_type(query)
 
+    def _enhanced_classify_query_type(self, query: str) -> QueryType:
+        """Enhanced query type classification using domain knowledge"""
+        query_lower = query.lower()
+
+        # Expand abbreviations first
+        expanded_query = self._expand_abbreviations(query_lower)
+
+        # Score each maintenance task type
+        task_scores = {}
+        for task_type, task_config in self.maintenance_tasks.items():
+            score = 0
+            keywords = task_config.get("keywords", [])
+
+            # Count keyword matches
+            for keyword in keywords:
+                if keyword in expanded_query:
+                    score += 1
+
+            # Weight by keyword density
+            if len(keywords) > 0:
+                score = score / len(keywords)
+
+            task_scores[task_type] = score
+
+        # Return highest scoring task type
+        if task_scores:
+            best_task = max(task_scores, key=task_scores.get)
+            if task_scores[best_task] > 0.2:  # Minimum confidence threshold
+                return QueryType(best_task)  # best_task is already lowercase
+
+        # Fallback to original classification logic
+        return self._original_classify_query_type(query)
+
+    def _original_classify_query_type(self, query: str) -> QueryType:
+        """Original query type classification logic"""
         # Use domain knowledge keyword lists
         if any(keyword in query for keyword in self.troubleshooting_keywords):
             return QueryType.TROUBLESHOOTING
@@ -263,6 +365,16 @@ class MaintenanceQueryAnalyzer:
             return QueryType.SAFETY
         else:
             return QueryType.INFORMATIONAL
+
+    def _expand_abbreviations(self, query: str) -> str:
+        """Expand technical abbreviations in query"""
+        expanded = query
+        for abbrev, full_form in self.abbreviations.items():
+            # Replace abbreviation with full form (case-insensitive)
+            pattern = r'\b' + re.escape(abbrev) + r'\b'
+            expanded = re.sub(pattern, full_form, expanded, flags=re.IGNORECASE)
+
+        return expanded
 
     def _detect_intent(self, query: str, query_type: QueryType) -> str:
         """Detect specific intent within query type"""
@@ -334,6 +446,33 @@ class MaintenanceQueryAnalyzer:
 
     def _identify_equipment_category(self, entities: List[str]) -> Optional[str]:
         """Identify equipment category from entities using domain knowledge categories"""
+        # Use enhanced categorization if available
+        if hasattr(self, '_enhanced_categorize_equipment'):
+            return self._enhanced_categorize_equipment(entities)
+        else:
+            return self._original_categorize_equipment(entities)
+
+    def _enhanced_categorize_equipment(self, entities: List[str]) -> Optional[str]:
+        """Enhanced equipment categorization using hierarchy"""
+        entities_lower = [e.lower() for e in entities]
+
+        # Check each equipment category
+        for category, category_data in self.equipment_hierarchy.items():
+            equipment_types = category_data.get("types", [])
+            components = category_data.get("components", [])
+
+            # Check if any entities match equipment types or components
+            for entity in entities_lower:
+                if any(eq_type in entity for eq_type in equipment_types):
+                    return category
+                if any(component in entity for component in components):
+                    return category
+
+        # Fallback to original categorization
+        return self._original_categorize_equipment(entities)
+
+    def _original_categorize_equipment(self, entities: List[str]) -> Optional[str]:
+        """Original equipment categorization logic"""
         for category, equipment_list in self.equipment_categories.items():
             if any(equipment in ' '.join(entities).lower() for equipment in equipment_list):
                 return category
@@ -360,6 +499,93 @@ class MaintenanceQueryAnalyzer:
         expanded.update(rule_expansions)
 
         return list(expanded)
+
+    def _assess_safety_criticality(self, entities: List[str], query_type: QueryType) -> Dict[str, Any]:
+        """Assess safety criticality of the query"""
+        entities_lower = [e.lower() for e in entities]
+
+        safety_assessment = {
+            "is_safety_critical": False,
+            "safety_level": "standard",
+            "critical_equipment": [],
+            "safety_warnings": []
+        }
+
+        # Check for safety-critical equipment
+        for entity in entities_lower:
+            for critical_eq in self.safety_critical:
+                if critical_eq in entity:
+                    safety_assessment["is_safety_critical"] = True
+                    safety_assessment["critical_equipment"].append(critical_eq)
+
+        # Check query type safety implications
+        if query_type in [QueryType.TROUBLESHOOTING, QueryType.SAFETY]:
+            safety_assessment["safety_level"] = "high"
+
+        # Generate safety warnings
+        if safety_assessment["is_safety_critical"]:
+            safety_assessment["safety_warnings"].extend([
+                "Follow lockout/tagout procedures before work",
+                "Use appropriate personal protective equipment",
+                "Ensure proper ventilation and gas monitoring"
+            ])
+
+        if query_type == QueryType.TROUBLESHOOTING:
+            safety_assessment["safety_warnings"].append(
+                "Verify equipment is safely isolated before troubleshooting"
+            )
+
+        return safety_assessment
+
+    def _enhanced_expand_concepts(self, entities: List[str]) -> List[str]:
+        """Enhanced concept expansion using equipment hierarchy"""
+        expanded = set(entities)  # Start with original entities
+
+        # Add equipment hierarchy expansions
+        entities_lower = [e.lower() for e in entities]
+
+        for entity in entities_lower:
+            # Find which equipment category this entity belongs to
+            for category, category_data in self.equipment_hierarchy.items():
+                equipment_types = category_data.get("types", [])
+                components = category_data.get("components", [])
+                failure_modes = category_data.get("failure_modes", [])
+
+                # If entity matches equipment type, add related components and failure modes
+                if any(eq_type in entity for eq_type in equipment_types):
+                    expanded.update(components[:3])  # Add top 3 components
+                    expanded.update(failure_modes[:2])  # Add top 2 failure modes
+
+                # If entity matches component, add related equipment types
+                elif any(component in entity for component in components):
+                    expanded.update(equipment_types[:2])  # Add related equipment
+
+        # Use knowledge graph for additional expansion if available
+        if self.knowledge_graph:
+            graph_expansions = self._knowledge_graph_expansion(entities)
+            expanded.update(graph_expansions)
+
+        # Add rule-based expansions
+        rule_expansions = self._rule_based_expansion(entities)
+        expanded.update(rule_expansions)
+
+        return list(expanded)
+
+    def _knowledge_graph_expansion(self, entities: List[str]) -> List[str]:
+        """Expand concepts using knowledge graph"""
+        expansions = []
+
+        for entity in entities:
+            # Find entity in knowledge graph
+            entity_id = self._find_entity_id(entity)
+            if entity_id and entity_id in self.knowledge_graph:
+                # Get neighbors
+                neighbors = list(self.knowledge_graph.neighbors(entity_id))
+                for neighbor in neighbors[:5]:  # Limit expansion
+                    neighbor_text = self.knowledge_graph.nodes[neighbor].get('text', neighbor)
+                    expansions.append(neighbor_text)
+
+        return expansions
 
     def _find_entity_id(self, entity_text: str) -> Optional[str]:
         """Find entity ID for given text"""
