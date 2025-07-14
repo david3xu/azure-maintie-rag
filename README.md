@@ -96,6 +96,37 @@ make clean              # Clean generated files for both services
 
 ---
 
+## 🔬 Comprehensive GNN Training Pipeline
+
+MaintIE RAG includes a **research-level, end-to-end GNN training pipeline** for advanced experimentation and publication-ready results.
+
+**Features:**
+- Hyperparameter optimization (Optuna)
+- Cross-validation (k-fold)
+- Advanced training: schedulers, early stopping, gradient clipping, label smoothing, class weighting
+- Comprehensive evaluation: accuracy, precision, recall, F1, AUC, confusion matrix, per-class analysis
+- Ablation studies
+- Experiment tracking (Weights & Biases)
+- Model checkpointing and result saving
+
+**How to Use:**
+- **CLI:**
+  ```bash
+  python backend/scripts/train_comprehensive_gnn.py --config backend/scripts/example_comprehensive_gnn_config.json --n_trials 10 --k_folds 3
+  python backend/scripts/train_comprehensive_gnn.py  # uses default config
+  ```
+- **Config:** Edit `backend/scripts/example_comprehensive_gnn_config.json` or provide your own.
+- **API:** Import and call `run_comprehensive_gnn_training()` from `src.gnn.comprehensive_trainer`.
+
+**Documentation:**
+- See `backend/scripts/README_comprehensive_gnn.md` for CLI/config details.
+- See module docstring in `backend/src/gnn/comprehensive_trainer.py` for full feature list and integration points.
+
+**CI/CD:**
+- The pipeline is smoke-tested in CI to ensure research code health.
+
+---
+
 ## 🐳 Docker
 
 To build and run both backend and frontend services using Docker:

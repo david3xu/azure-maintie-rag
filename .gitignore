@@ -63,3 +63,11 @@ extracted_knowledge.json
 
 # Virtual environment that should not be tracked
 backend/mining_analytics/
+
+# GNN trainer outputs
+comprehensive_training_results.json
+confusion_matrix.png
+training_history.png
+
+# Weights & Biases logs
+wandb/

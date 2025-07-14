@@ -1,8 +1,8 @@
 # Redis for production caching
 redis>=4.0.0
 
-# Optional: Redis cluster support
-redis-py-cluster>=2.1.0
+# Optional: Redis cluster support (commented out due to conflict with redis>=4.0.0)
+# redis-py-cluster>=2.1.0
 
 # Production monitoring
 prometheus-client>=0.15.0
