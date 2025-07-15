@@ -410,9 +410,23 @@ class MaintenanceQueryAnalyzer:
                 valid_entities.append(entity)
         # Remove duplicates
         valid_entities = list(set(valid_entities))
+        # Deduplicate variants: keep longer, more specific entity if variants exist
+        deduplicated = []
+        for entity in valid_entities:
+            is_variant = False
+            for existing in deduplicated:
+                if entity != existing and (entity in existing or existing in entity):
+                    # Keep the longer term (more specific)
+                    if len(entity) > len(existing):
+                        deduplicated.remove(existing)
+                        deduplicated.append(entity)
+                    is_variant = True
+                    break
+            if not is_variant:
+                deduplicated.append(entity)
         # Cache result
-        self._entity_cache[query] = valid_entities
-        return valid_entities
+        self._entity_cache[query] = deduplicated
+        return deduplicated
 
     def _extract_equipment_entities(self, query: str) -> List[str]:
         """Extract equipment-related entities"""

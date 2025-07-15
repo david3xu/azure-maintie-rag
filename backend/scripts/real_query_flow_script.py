@@ -101,6 +101,15 @@ async def run_detailed_algorithm_flow() -> Tuple[Optional[DetailedQueryFlowTrack
             f"components_initialized: {components_ready}",
             "Python class initialization"
         )
+        # Print graph optimization diagnostics
+        print("\n--- GRAPH OPTIMIZATION DIAGNOSTICS ---")
+        print(f"graph_operations_enabled: {getattr(rag_system, 'graph_operations_enabled', None)}")
+        print(f"graph_ranker present: {hasattr(rag_system, 'graph_ranker') and rag_system.graph_ranker is not None}")
+        dt = getattr(rag_system, 'data_transformer', None)
+        print(f"knowledge_graph present: {getattr(dt, 'knowledge_graph', None) is not None if dt else False}")
+        ei = getattr(rag_system, 'entity_index', None)
+        print(f"entity_index present: {ei is not None}")
+        print(f"index_built: {getattr(ei, 'index_built', None) if ei else False}")
         # Step 2: Initialize components
         init_start = time.time()
         init_results = rag_system.initialize_components(force_rebuild=False)
@@ -255,55 +264,129 @@ async def run_detailed_algorithm_flow() -> Tuple[Optional[DetailedQueryFlowTrack
                 f"{len(search_results)} results, top score: {search_results[0].score if search_results else 0:.3f}",
                 faiss_start, time.time(), "FAISS IndexFlatIP + Cosine Similarity"
             )
-        # DETAILED ALGORITHM STEP 5: Graph Enhancement Algorithms
+        # DETAILED ALGORITHM STEP 5: Graph Enhancement Algorithms (REAL EXECUTION)
         print(f"\n📊 DETAILED GRAPH ENHANCEMENT ALGORITHMS:")
         if search_results and enhanced_query:
             graph_start = time.time()
-            # Sub-algorithm 5a.1: Entity Scoring Algorithm
-            entity_score_start = time.time()
-            mock_entity_scores = [0.85, 0.78, 0.92, 0.65, 0.71][:len(search_results)]
-            tracker.capture_algorithm(
-                "Graph Enhancement", "5a.1", "Entity Scoring Algorithm",
-                "_calculate_entity_score()", f"doc_entities vs query_entities",
-                f"entity_scores: {mock_entity_scores[:3]}...", entity_score_start, time.time(),
-                "Jaccard Similarity (entity intersection/union)"
+            # Check if graph operations are actually available
+            graph_available = (
+                hasattr(rag_system, 'graph_operations_enabled') and
+                rag_system.graph_operations_enabled and
+                hasattr(rag_system, 'graph_ranker') and
+                rag_system.graph_ranker is not None
             )
-            # Sub-algorithm 5a.2: Concept Scoring Algorithm
-            concept_score_start = time.time()
-            mock_concept_scores = [0.72, 0.68, 0.81, 0.59, 0.64][:len(search_results)]
-            tracker.capture_algorithm(
-                "Graph Enhancement", "5a.2", "Concept Scoring Algorithm",
-                "_calculate_concept_score()", f"doc_entities vs expanded_concepts",
-                f"concept_scores: {mock_concept_scores[:3]}...", concept_score_start, time.time(),
-                "Concept Match Count / Total Concepts"
-            )
-            # Sub-algorithm 5a.3: Graph Distance Algorithm
-            distance_start = time.time()
-            mock_distance_scores = [0.67, 0.45, 0.89, 0.34, 0.56][:len(search_results)]
-            tracker.capture_algorithm(
-                "Graph Enhancement", "5a.3", "Graph Distance Algorithm",
-                "_calculate_distance_score()", f"doc_entities to query_entities",
-                f"distance_scores: {mock_distance_scores[:3]}...", distance_start, time.time(),
-                "NetworkX shortest_path_length + 1/(distance+1)"
-            )
-            # Sub-algorithm 5a.4: Fusion Scoring Algorithm
-            fusion_start = time.time()
-            enhanced_results = []
-            for i, result in enumerate(search_results[:5]):
-                entity_score = mock_entity_scores[i] if i < len(mock_entity_scores) else 0.5
-                concept_score = mock_concept_scores[i] if i < len(mock_concept_scores) else 0.5
-                distance_score = mock_distance_scores[i] if i < len(mock_distance_scores) else 0.5
-                graph_score = 0.4 * entity_score + 0.3 * concept_score + 0.3 * distance_score
-                final_score = 0.7 * result.score + 0.3 * graph_score
-                result.score = final_score
-                enhanced_results.append(result)
-            fusion_formula = "0.7*vector_score + 0.3*(0.4*entity + 0.3*concept + 0.3*distance)"
-            tracker.capture_algorithm(
-                "Graph Enhancement", "5a.4", "Fusion Scoring Algorithm",
-                "_combine_scores()", f"vector_scores + graph_scores",
-                f"fusion_formula: {fusion_formula}", fusion_start, time.time(),
-                "Weighted Linear Combination (70% Vector + 30% Graph)"
-            )
+            if graph_available:
+                print("  🟢 Graph operations available - running REAL graph enhancement")
+                # Sub-algorithm 5a.1: Real Entity Scoring Algorithm
+                entity_score_start = time.time()
+                try:
+                    # Try to use real entity index to get document entities
+                    doc_entities = []
+                    if hasattr(rag_system, 'entity_index') and rag_system.entity_index:
+                        for result in search_results[:3]:
+                            entities = rag_system.entity_index.get_entities_for_document(result.doc_id)
+                            doc_entities.append(entities)
+                    tracker.capture_algorithm(
+                        "Graph Enhancement", "5a.1", "Entity Scoring Algorithm (REAL)",
+                        "entity_index.get_entities_for_document()", f"doc_ids: {[r.doc_id for r in search_results[:3]]}",
+                        f"doc_entities: {doc_entities}", entity_score_start, time.time(),
+                        "Real Entity-Document Index Lookup"
+                    )
+                except Exception as e:
+                    tracker.capture_algorithm(
+                        "Graph Enhancement", "5a.1", "Entity Scoring Algorithm (ERROR)",
+                        "entity_index.get_entities_for_document()", "doc_ids",
+                        f"ERROR: {str(e)}", entity_score_start, time.time(),
+                        "Entity Index Lookup Failed"
+                    )
+                # Sub-algorithm 5a.2: Real Graph Ranker Enhancement
+                ranker_start = time.time()
+                try:
+                    # Try to use real graph ranker
+                    enhanced_results = rag_system.graph_ranker.enhance_ranking(search_results, enhanced_query)
+                    tracker.capture_algorithm(
+                        "Graph Enhancement", "5a.2", "Graph Ranker Enhancement (REAL)",
+                        "graph_ranker.enhance_ranking()", f"{len(search_results)} search results",
+                        f"Enhanced {len(enhanced_results)} results", ranker_start, time.time(),
+                        "Real NetworkX Graph Operations + Weighted Fusion"
+                    )
+                except Exception as e:
+                    enhanced_results = search_results  # Fallback
+                    tracker.capture_algorithm(
+                        "Graph Enhancement", "5a.2", "Graph Ranker Enhancement (ERROR)",
+                        "graph_ranker.enhance_ranking()", f"{len(search_results)} search results",
+                        f"ERROR: {str(e)}", ranker_start, time.time(),
+                        "Graph Ranker Failed"
+                    )
+                # Sub-algorithm 5a.3: Real Knowledge Graph Check
+                kg_start = time.time()
+                try:
+                    # Check knowledge graph connectivity
+                    kg_available = (hasattr(rag_system, 'data_transformer') and
+                                  rag_system.data_transformer and
+                                  hasattr(rag_system.data_transformer, 'knowledge_graph') and
+                                  rag_system.data_transformer.knowledge_graph is not None)
+                    if kg_available:
+                        kg = rag_system.data_transformer.knowledge_graph
+                        graph_stats = f"nodes: {kg.number_of_nodes()}, edges: {kg.number_of_edges()}"
+                    else:
+                        graph_stats = "Knowledge graph not available"
+                    tracker.capture_algorithm(
+                        "Graph Enhancement", "5a.3", "Knowledge Graph Analysis (REAL)",
+                        "data_transformer.knowledge_graph", "graph connectivity check",
+                        graph_stats, kg_start, time.time(),
+                        "NetworkX Graph Analysis"
+                    )
+                except Exception as e:
+                    tracker.capture_algorithm(
+                        "Graph Enhancement", "5a.3", "Knowledge Graph Analysis (ERROR)",
+                        "data_transformer.knowledge_graph", "graph connectivity check",
+                        f"ERROR: {str(e)}", kg_start, time.time(),
+                        "Knowledge Graph Analysis Failed"
+                    )
+            else:
+                # Show real diagnostic information about why graph operations are disabled
+                diagnostic_start = time.time()
+                # Check each component that graph operations depend on
+                diagnostics = []
+                # Check data transformer
+                if hasattr(rag_system, 'data_transformer'):
+                    if rag_system.data_transformer is None:
+                        diagnostics.append("data_transformer is None")
+                    elif not hasattr(rag_system.data_transformer, 'knowledge_graph'):
+                        diagnostics.append("data_transformer has no knowledge_graph attribute")
+                    elif rag_system.data_transformer.knowledge_graph is None:
+                        diagnostics.append("knowledge_graph is None")
+                    else:
+                        kg = rag_system.data_transformer.knowledge_graph
+                        diagnostics.append(f"knowledge_graph OK: {kg.number_of_nodes()} nodes, {kg.number_of_edges()} edges")
+                else:
+                    diagnostics.append("no data_transformer attribute")
+                # Check entity index
+                if hasattr(rag_system, 'entity_index'):
+                    if rag_system.entity_index is None:
+                        diagnostics.append("entity_index is None")
+                    elif not hasattr(rag_system.entity_index, 'index_built'):
+                        diagnostics.append("entity_index has no index_built attribute")
+                    elif not rag_system.entity_index.index_built:
+                        diagnostics.append("entity_index.index_built is False")
+                    else:
+                        diagnostics.append("entity_index is built")
+                else:
+                    diagnostics.append("no entity_index attribute")
+                # Check graph operations enabled flag
+                if hasattr(rag_system, 'graph_operations_enabled'):
+                    diagnostics.append(f"graph_operations_enabled: {rag_system.graph_operations_enabled}")
+                else:
+                    diagnostics.append("no graph_operations_enabled attribute")
+                diagnostic_result = "; ".join(diagnostics)
+                tracker.capture_algorithm(
+                    "Graph Enhancement", "5a.0", "Graph Operations Disabled (DIAGNOSTIC)",
+                    "Component availability check", "graph component dependencies",
+                    diagnostic_result, diagnostic_start, time.time(),
+                    "Component Dependency Analysis"
+                )
+                enhanced_results = search_results  # No enhancement
         # Continue with LLM generation...
         query_time = time.time() - query_start
         from src.models.maintenance_models import RAGResponse

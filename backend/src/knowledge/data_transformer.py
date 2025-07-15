@@ -57,6 +57,24 @@ class MaintIEDataTransformer:
 
         logger.info(f"Initialized MaintIE transformer for {self.gold_path} and {self.silver_path}")
 
+        # Ensure knowledge graph is built
+        if self.knowledge_graph is None:
+            logger.info("Knowledge graph not found, extracting/processing knowledge...")
+            try:
+                self.extract_maintenance_knowledge()
+                logger.info("Knowledge graph built during initialization.")
+            except Exception as e:
+                logger.error(f"Failed to build knowledge graph during initialization: {e}")
+
+    def check_knowledge_graph_status(self):
+        """Diagnostic method to check knowledge graph status"""
+        print(f"Knowledge graph exists: {self.knowledge_graph is not None}")
+        if self.knowledge_graph:
+            print(f"Graph nodes: {self.knowledge_graph.number_of_nodes()}")
+            print(f"Graph edges: {self.knowledge_graph.number_of_edges()}")
+        else:
+            print("Knowledge graph is None - need to run extract_maintenance_knowledge()")
+
     def _build_enhanced_type_mappings(self) -> Dict[str, Any]:
         """Build comprehensive type mappings using hierarchy"""
         mappings = {"entity": {}, "relation": {}}

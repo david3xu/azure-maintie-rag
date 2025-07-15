@@ -46,6 +46,7 @@ class EntityDocumentIndex:
         logger.info("Building entity-document index...")
 
         if not self.data_transformer:
+            logger.error("Data transformer not provided to EntityDocumentIndex!")
             raise ValueError("Data transformer not provided")
 
         # Clear existing data
@@ -57,51 +58,62 @@ class EntityDocumentIndex:
         documents_processed = 0
         entities_processed = 0
 
-        # Process documents and their entities
-        if hasattr(self.data_transformer, 'documents'):
-            for doc_id, document in self.data_transformer.documents.items():
-                documents_processed += 1
+        try:
+            # Process documents and their entities
+            if hasattr(self.data_transformer, 'documents'):
+                for doc_id, document in self.data_transformer.documents.items():
+                    documents_processed += 1
 
-                # Extract entities from document content and metadata
-                doc_entities = self._extract_document_entities(document)
+                    # Extract entities from document content and metadata
+                    doc_entities = self._extract_document_entities(document)
 
-                for entity_text in doc_entities:
-                    # Normalize entity text
-                    entity_key = entity_text.lower().strip()
+                    for entity_text in doc_entities:
+                        # Normalize entity text
+                        entity_key = entity_text.lower().strip()
 
-                    # Update indices
-                    self.entity_to_docs[entity_key].add(doc_id)
-                    self.doc_to_entities[doc_id].add(entity_key)
-                    self.entity_frequency[entity_key] += 1
-                    entities_processed += 1
+                        # Update indices
+                        self.entity_to_docs[entity_key].add(doc_id)
+                        self.doc_to_entities[doc_id].add(entity_key)
+                        self.entity_frequency[entity_key] += 1
+                        entities_processed += 1
 
-        # Process explicit entity-document relationships if available
-        if hasattr(self.data_transformer, 'entities'):
-            for entity_id, entity in self.data_transformer.entities.items():
-                entity_key = entity.text.lower().strip()
+            # Process explicit entity-document relationships if available
+            if hasattr(self.data_transformer, 'entities'):
+                for entity_id, entity in self.data_transformer.entities.items():
+                    entity_key = entity.text.lower().strip()
 
-                # Find documents containing this entity
-                containing_docs = self._find_documents_for_entity(entity)
+                    # Find documents containing this entity
+                    containing_docs = self._find_documents_for_entity(entity)
 
-                for doc_id in containing_docs:
-                    self.entity_to_docs[entity_key].add(doc_id)
-                    self.doc_to_entities[doc_id].add(entity_key)
+                    for doc_id in containing_docs:
+                        self.entity_to_docs[entity_key].add(doc_id)
+                        self.doc_to_entities[doc_id].add(entity_key)
 
-        self.index_built = True
+            self.index_built = True
 
-        # Cache the results
-        self._save_to_cache()
+            # Cache the results
+            self._save_to_cache()
 
-        stats = {
-            "documents_processed": documents_processed,
-            "entities_processed": entities_processed,
-            "unique_entities": len(self.entity_to_docs),
-            "entity_document_pairs": sum(len(docs) for docs in self.entity_to_docs.values()),
-            "index_built": True
-        }
+            stats = {
+                "documents_processed": documents_processed,
+                "entities_processed": entities_processed,
+                "unique_entities": len(self.entity_to_docs),
+                "entity_document_pairs": sum(len(docs) for docs in self.entity_to_docs.values()),
+                "index_built": True
+            }
 
-        logger.info(f"Entity-document index built: {stats}")
-        return stats
+            logger.info(f"Entity-document index built: {stats}")
+            return stats
+        except Exception as e:
+            logger.error(f"Error building entity-document index: {e}")
+            self.index_built = False
+            return {"index_built": False, "error": str(e)}
+
+    def check_index_status(self):
+        """Diagnostic method to print index build status and stats"""
+        print(f"Entity index built: {self.index_built}")
+        stats = self._get_index_stats()
+        print(f"Index stats: {stats}")
 
     def get_documents_for_entity(self, entity_text: str) -> List[str]:
         """Get document IDs containing the entity (O(1) lookup)"""

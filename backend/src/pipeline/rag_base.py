@@ -62,6 +62,10 @@ class MaintIERAGBase:
             logger.info("Step 1: Initializing data transformer...")
             self.data_transformer = MaintIEDataTransformer()
 
+            # Check and print knowledge graph status
+            if hasattr(self.data_transformer, 'check_knowledge_graph_status'):
+                self.data_transformer.check_knowledge_graph_status()
+
             # Check if processed data exists or force rebuild
             processed_entities_path = settings.processed_data_dir / "maintenance_entities.json"
 
