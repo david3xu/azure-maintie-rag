@@ -9,6 +9,7 @@ import pickle
 from pathlib import Path
 from typing import Dict, List, Set, Optional, Any
 from collections import defaultdict
+import re
 
 from src.models.maintenance_models import MaintenanceEntity, MaintenanceDocument
 from src.knowledge.data_transformer import MaintIEDataTransformer
@@ -36,64 +37,81 @@ class EntityDocumentIndex:
         self.index_built = False
         logger.info("EntityDocumentIndex initialized")
 
-    def build_index(self, force_rebuild: bool = False) -> Dict[str, Any]:
-        """Build entity-document index from transformer data"""
+    def _get_document_text(self, document) -> str:
+        """Get text content from document regardless of structure"""
+        if isinstance(document, dict):
+            return document.get('text', '') or document.get('content', '')
+        return getattr(document, 'text', '') or getattr(document, 'content', '')
 
-        # Check cache first
+    def _get_document_title(self, document) -> str:
+        """Get title from document regardless of structure"""
+        if isinstance(document, dict):
+            return document.get('title', '')
+        return getattr(document, 'title', '')
+
+    def _extract_document_entities(self, document) -> set:
+        """Extract entities from document content with robust matching"""
+        entities = set()
+        document_text = self._get_document_text(document)
+        title = self._get_document_title(document)
+        full_text = f"{title} {document_text}".lower()
+        if self.data_transformer and hasattr(self.data_transformer, 'entities'):
+            for entity_id, entity in self.data_transformer.entities.items():
+                entity_text = entity.text.lower().strip()
+                # Enhanced text matching with word boundaries
+                if re.search(r'\b' + re.escape(entity_text) + r'\b', full_text):
+                    entities.add(entity.text)
+        return entities
+
+    def build_index(self, force_rebuild: bool = False) -> dict:
+        """Build entity-document index from transformer data with optimizations"""
+        import time
+        start_time = time.time()
         if not force_rebuild and self._load_from_cache():
+            print(f"[build_index] Loaded from cache in {time.time() - start_time:.2f}s")
             return self._get_index_stats()
-
         logger.info("Building entity-document index...")
-
+        print("[build_index] Starting index build...")
         if not self.data_transformer:
             logger.error("Data transformer not provided to EntityDocumentIndex!")
             raise ValueError("Data transformer not provided")
-
-        # Clear existing data
         self.entity_to_docs.clear()
         self.doc_to_entities.clear()
         self.entity_frequency.clear()
-
-        # Build index from transformer data
         documents_processed = 0
         entities_processed = 0
-
         try:
             # Process documents and their entities
             if hasattr(self.data_transformer, 'documents'):
+                total_docs = len(self.data_transformer.documents)
+                print(f"[build_index] Processing {total_docs} documents...")
                 for doc_id, document in self.data_transformer.documents.items():
                     documents_processed += 1
-
-                    # Extract entities from document content and metadata
+                    if documents_processed % 100 == 0:
+                        print(f"[build_index] Processed {documents_processed}/{total_docs} documents...")
                     doc_entities = self._extract_document_entities(document)
-
                     for entity_text in doc_entities:
-                        # Normalize entity text
                         entity_key = entity_text.lower().strip()
-
-                        # Update indices
                         self.entity_to_docs[entity_key].add(doc_id)
                         self.doc_to_entities[doc_id].add(entity_key)
                         self.entity_frequency[entity_key] += 1
                         entities_processed += 1
-
-            # Process explicit entity-document relationships if available
+            print(f"[build_index] Finished document/entity pass. Entities processed: {entities_processed}")
+            # Process explicit entity-document relationships from entity metadata
             if hasattr(self.data_transformer, 'entities'):
+                total_entities = len(self.data_transformer.entities)
+                print(f"[build_index] Processing {total_entities} entities for explicit relationships...")
                 for entity_id, entity in self.data_transformer.entities.items():
                     entity_key = entity.text.lower().strip()
-
-                    # Find documents containing this entity
-                    containing_docs = self._find_documents_for_entity(entity)
-
-                    for doc_id in containing_docs:
-                        self.entity_to_docs[entity_key].add(doc_id)
-                        self.doc_to_entities[doc_id].add(entity_key)
-
+                    if hasattr(entity, 'metadata') and entity.metadata:
+                        doc_id = entity.metadata.get('doc_id')
+                        if doc_id:
+                            self.entity_to_docs[entity_key].add(doc_id)
+                            self.doc_to_entities[doc_id].add(entity_key)
+                            self.entity_frequency[entity_key] += 1
+                print(f"[build_index] Finished explicit entity-document relationships.")
             self.index_built = True
-
-            # Cache the results
             self._save_to_cache()
-
             stats = {
                 "documents_processed": documents_processed,
                 "entities_processed": entities_processed,
@@ -101,7 +119,8 @@ class EntityDocumentIndex:
                 "entity_document_pairs": sum(len(docs) for docs in self.entity_to_docs.values()),
                 "index_built": True
             }
-
+            elapsed = time.time() - start_time
+            print(f"[build_index] Index built in {elapsed:.2f}s. Stats: {stats}")
             logger.info(f"Entity-document index built: {stats}")
             return stats
         except Exception as e:
@@ -142,24 +161,6 @@ class EntityDocumentIndex:
         return [entity for entity, freq in self.entity_frequency.items()
                 if freq >= min_frequency]
 
-    def _extract_document_entities(self, document: MaintenanceDocument) -> Set[str]:
-        """Extract entities from document content"""
-        entities = set()
-
-        # Extract from content using simple tokenization
-        content_text = f"{document.title} {document.text}".lower()
-
-        # Use existing entity vocabulary if available
-        if (self.data_transformer and
-            hasattr(self.data_transformer, 'entities')):
-
-            for entity_id, entity in self.data_transformer.entities.items():
-                entity_text = entity.text.lower()
-                if entity_text in content_text:
-                    entities.add(entity.text)
-
-        return entities
-
     def _find_documents_for_entity(self, entity: MaintenanceEntity) -> Set[str]:
         """Find documents containing the entity"""
         containing_docs = set()
@@ -168,8 +169,15 @@ class EntityDocumentIndex:
             hasattr(self.data_transformer, 'documents')):
 
             for doc_id, document in self.data_transformer.documents.items():
-                content_text = f"{document.title} {document.content}".lower()
-                if entity.text.lower() in content_text:
+                # Safe attribute access
+                title = getattr(document, 'title', '') or ''
+                text = getattr(document, 'text', '') or getattr(document, 'content', '') or ''
+                content_text = f"{title} {text}".lower()
+
+                # Enhanced matching with word boundaries
+                import re
+                entity_text = entity.text.lower().strip()
+                if re.search(r'\b' + re.escape(entity_text) + r'\b', content_text):
                     containing_docs.add(doc_id)
 
         return containing_docs

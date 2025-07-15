@@ -1,5 +1,8 @@
 import pytest
 import torch
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.gnn.comprehensive_trainer import ComprehensiveGNNTrainer, create_comprehensive_training_config
 
 class DummyModel(torch.nn.Module):
@@ -11,6 +14,8 @@ class DummyModel(torch.nn.Module):
 
 def test_trainer_initialization():
     config = create_comprehensive_training_config()
+    config["use_wandb"] = False
+    config['use_wandb'] = False
     trainer = ComprehensiveGNNTrainer(DummyModel, {}, config)
     assert trainer.model_class == DummyModel
     assert trainer.training_config == config
@@ -18,6 +23,8 @@ def test_trainer_initialization():
 
 def test_setup_model_and_training():
     config = create_comprehensive_training_config()
+    config["use_wandb"] = False
+    config['use_wandb'] = False
     trainer = ComprehensiveGNNTrainer(DummyModel, {}, config)
     trainer.setup_model_and_training({'input_dim': 4, 'hidden_dim': 4, 'output_dim': 2, 'num_layers': 1, 'num_entity_types': 2, 'gnn_type': 'GCN', 'dropout': 0.0, 'use_batch_norm': False, 'use_residual': False})
     assert trainer.model is not None
