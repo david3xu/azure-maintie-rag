@@ -62,10 +62,15 @@ class MaintIEStructuredRAG(MaintIERAGBase):
 
             # Initialize data transformer
             self.data_transformer = MaintIEDataTransformer()
+            logger.info(f"Data transformer available: {self.data_transformer is not None}")
+            if self.data_transformer:
+                logger.info(f"Knowledge graph available: {getattr(self.data_transformer, 'knowledge_graph', None) is not None}")
 
             # Initialize entity-document index
             self.entity_index = EntityDocumentIndex(self.data_transformer)
+            logger.info(f"Entity index available: {self.entity_index is not None}")
             index_stats = self.entity_index.build_index()
+            logger.info(f"Entity index built: {getattr(self.entity_index, 'index_built', False)}")
 
             # Initialize graph ranker
             if (self.data_transformer.knowledge_graph and
