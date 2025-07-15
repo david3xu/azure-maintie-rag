@@ -195,6 +195,32 @@ To change VSCode settings:
 - Check if markdown preview is using custom CSS
 - Verify `.vscode/markdown.css` exists
 
+### Backend Data & Environment Troubleshooting
+
+- **Knowledge Graph Not Found:**
+  If you see errors about missing `knowledge_graph.json`, ensure you have run the backend with the correct processed data, or trigger a rebuild by deleting the file and restarting the backend.
+
+- **GNN Data Preparation Fails:**
+  The GNN data preparation script (`backend/scripts/prepare_gnn_data.py`) requires several environment variables for OpenAI and embedding services.
+  **Required variables include:**
+  - `OPENAI_API_KEY`
+  - `OPENAI_API_BASE`
+  - `OPENAI_API_VERSION`
+  - `OPENAI_DEPLOYMENT_NAME`
+  - `OPENAI_MODEL`
+  - `EMBEDDING_MODEL`
+  - `EMBEDDING_DEPLOYMENT_NAME`
+  - `EMBEDDING_API_BASE`
+  - `EMBEDDING_API_VERSION`
+
+  Set these in your `.env` file or export them in your shell before running the script.
+
+- **Entity Extraction Issues:**
+  If entity-document indexing returns empty results, check that your document models use the `text` field for content, not `content`.
+
+- **Redis Not Available:**
+  If Redis is not running, caching will be disabled but the backend will still work. To enable caching, start a Redis server and set the appropriate environment variables.
+
 ### Getting Help
 - Check `make docs-status` for setup verification
 - Review VSCode extension marketplace for individual extension issues

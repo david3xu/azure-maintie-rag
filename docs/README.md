@@ -83,6 +83,24 @@ backend/api/endpoints/
 3. **Implementation Details**: [Dual API Implementation](./Dual-API-Implementation.md)
 4. **Configuration**: [Configuration Guide](./Configuration-Guide.md)
 
+## ⚠️ Important Setup & Troubleshooting Notes
+
+- **Knowledge Graph File:**
+  The backend now checks for `knowledge_graph.json` (not `maintenance_entities.json`) in the processed data directory. If you encounter missing knowledge graph errors, ensure this file exists or trigger a rebuild.
+
+- **Entity Extraction Model:**
+  The entity-document indexer now uses the `text` field of `MaintenanceDocument` for entity extraction. If you add new document models, ensure they have a `text` attribute.
+
+- **GNN Data Preparation:**
+  To use GNN-based features, you must run the GNN data preparation script:
+  ```bash
+  python backend/scripts/prepare_gnn_data.py
+  ```
+  This script requires several environment variables (e.g., `OPENAI_API_KEY`, `OPENAI_API_BASE`, etc.). If you see validation errors, set these in your `.env` file or environment.
+
+- **Redis Caching:**
+  Redis is optional. If not available, the backend will fall back to in-memory or no caching. You may see warnings, but the system will still function.
+
 ## 📖 **Documentation Standards**
 
 - **Version Control**: All documentation is version-controlled

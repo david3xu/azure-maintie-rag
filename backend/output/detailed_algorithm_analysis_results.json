@@ -13,9 +13,9 @@
       "step": "Component Initialization",
       "component": "initialize_components()",
       "input": "force_rebuild=False",
-      "output": "Init results: ['data_transformer', 'query_analyzer', 'vector_search', 'llm_interface', 'knowledge_loaded', 'total_documents', 'total_entities', 'index_built'], took 6.20s",
+      "output": "Init results: ['data_transformer', 'query_analyzer', 'vector_search', 'llm_interface', 'knowledge_loaded', 'total_documents', 'total_entities', 'index_built', 'total_relations', 'gold_stats', 'silver_...",
       "technology": "Component dependency injection",
-      "real_output": "Init results: ['data_transformer', 'query_analyzer', 'vector_search', 'llm_interface', 'knowledge_loaded', 'total_documents', 'total_entities', 'index_built'], took 6.20s"
+      "real_output": "Init results: ['data_transformer', 'query_analyzer', 'vector_search', 'llm_interface', 'knowledge_loaded', 'total_documents', 'total_entities', 'index_built', 'total_relations', 'gold_stats', 'silver_stats', 'graph_nodes', 'graph_edges'], took 10.70s"
     }
   },
   "detailed_algorithms": {
@@ -27,7 +27,7 @@
       "implementation": "_normalize_query()",
       "input": "pump bearing failure",
       "output": "pump bearing failure",
-      "processing_time_ms": 0.5939006805419922,
+      "processing_time_ms": 0.5884170532226562,
       "real_output": "pump bearing failure"
     },
     "2": {
@@ -38,7 +38,7 @@
       "implementation": "_extract_entities()",
       "input": "pump bearing failure",
       "output": "['pump', 'bearing', 'failure']",
-      "processing_time_ms": 2.4712085723876953,
+      "processing_time_ms": 2.543926239013672,
       "real_output": [
         "pump",
         "bearing",
@@ -53,7 +53,7 @@
       "implementation": "_classify_query_type()",
       "input": "pump bearing failure",
       "output": "QueryType.TROUBLESHOOTING",
-      "processing_time_ms": 0.6160736083984375,
+      "processing_time_ms": 0.5922317504882812,
       "real_output": "troubleshooting"
     },
     "4": {
@@ -64,7 +64,7 @@
       "implementation": "_identify_equipment_category()",
       "input": "['pump', 'bearing', 'failure']",
       "output": "rotating_equipment",
-      "processing_time_ms": 0.010251998901367188,
+      "processing_time_ms": 0.010728836059570312,
       "real_output": "rotating_equipment"
     },
     "5": {
@@ -75,7 +75,7 @@
       "implementation": "_assess_safety_criticality()",
       "input": "entities=['pump', 'bearing', 'failure'], query_type=troubleshooting",
       "output": "{'is_safety_critical': True, 'safety_level': 'high', 'critical_equipment': ['pump'], 'safety_warnings': ['Follow lockout/tagout procedures before work...",
-      "processing_time_ms": 0.025272369384765625,
+      "processing_time_ms": 0.023603439331054688,
       "real_output": {
         "is_safety_critical": true,
         "safety_level": "high",
@@ -97,9 +97,9 @@
       "algorithm_type": "GNN Domain Context + Equipment Hierarchy Rules",
       "implementation": "_enhanced_expand_concepts()",
       "input": "['pump', 'bearing', 'failure']",
-      "output": "30 concepts",
-      "processing_time_ms": 2.886056900024414,
-      "real_output": "30 concepts"
+      "output": "33 concepts",
+      "processing_time_ms": 49.83353614807129,
+      "real_output": "33 concepts"
     },
     "7": {
       "main_step": "Query Analysis",
@@ -108,19 +108,19 @@
       "algorithm_type": "NetworkX Graph Traversal (neighbors + shortest_path)",
       "implementation": "_find_related_entities()",
       "input": "['pump', 'bearing', 'failure']",
-      "output": "['door', 'not working', 'seat', 'investigate', 'hose', 'operators seat', 'leak', 'heater', 'pedestal bearing', 'gauge']",
-      "processing_time_ms": 2.3140907287597656,
+      "output": "['investigate', 'pedestal bearing', 'heater', 'leak', 'hose', 'not working', 'gauge', 'door', 'seat', 'operators seat']",
+      "processing_time_ms": 2.785921096801758,
       "real_output": [
-        "door",
-        "not working",
-        "seat",
         "investigate",
-        "hose",
-        "operators seat",
-        "leak",
-        "heater",
         "pedestal bearing",
-        "gauge"
+        "heater",
+        "leak",
+        "hose",
+        "not working",
+        "gauge",
+        "door",
+        "seat",
+        "operators seat"
       ]
     },
     "8": {
@@ -130,9 +130,9 @@
       "algorithm_type": "Query Concatenation + Domain Prioritization",
       "implementation": "_build_structured_search()",
       "input": "entities + concepts",
-      "output": "centrifugal pump pump oil bearing ball bearing positive displacement pump malfunction roller bearing failure breakdown",
-      "processing_time_ms": 0.000476837158203125,
-      "real_output": "centrifugal pump pump oil bearing ball bearing positive displacement pump malfunction roller bearing failure breakdown"
+      "output": "pump grease roller bearing malfunction centrifugal pump failure breakdown lubrication ball bearing positive displacement pump bearing",
+      "processing_time_ms": 0.0002384185791015625,
+      "real_output": "pump grease roller bearing malfunction centrifugal pump failure breakdown lubrication ball bearing positive displacement pump bearing"
     },
     "9": {
       "main_step": "Vector Search",
@@ -140,9 +140,9 @@
       "algorithm_name": "Azure OpenAI Embedding Generation",
       "algorithm_type": "AzureOpenAI.embeddings.create() + L2 Normalization",
       "implementation": "vector_search.search() -> embeddings.create()",
-      "input": "centrifugal pump pump oil bearing ball bearing positive displacement pump malfunction roller bearing failure breakdown",
+      "input": "pump grease roller bearing malfunction centrifugal pump failure breakdown lubrication ball bearing positive displacement pump bearing",
       "output": "1536-dim embedding generated",
-      "processing_time_ms": 1017.9145336151123,
+      "processing_time_ms": 993.1681156158447,
       "real_output": "1536-dim embedding generated"
     },
     "10": {
@@ -152,59 +152,48 @@
       "algorithm_type": "FAISS IndexFlatIP + Cosine Similarity",
       "implementation": "faiss.IndexFlatIP.search()",
       "input": "normalized embedding",
-      "output": "20 results, top score: 0.837",
-      "processing_time_ms": 0.0026226043701171875,
-      "real_output": "20 results, top score: 0.837"
+      "output": "20 results, top score: 0.841",
+      "processing_time_ms": 0.0030994415283203125,
+      "real_output": "20 results, top score: 0.841"
     },
     "11": {
       "main_step": "Graph Enhancement",
       "sub_step": "5a.1",
-      "algorithm_name": "Entity Scoring Algorithm",
-      "algorithm_type": "Jaccard Similarity (entity intersection/union)",
-      "implementation": "_calculate_entity_score()",
-      "input": "doc_entities vs query_entities",
-      "output": "entity_scores: [0.85, 0.78, 0.92]...",
-      "processing_time_ms": 0.00762939453125,
-      "real_output": "entity_scores: [0.85, 0.78, 0.92]..."
+      "algorithm_name": "Entity Scoring Algorithm (REAL)",
+      "algorithm_type": "Real Entity-Document Index Lookup",
+      "implementation": "entity_index.get_entities_for_document()",
+      "input": "doc_ids: ['doc_4722', 'doc_4887', 'doc_3255']",
+      "output": "doc_entities: [[], [], []]",
+      "processing_time_ms": 0.020265579223632812,
+      "real_output": "doc_entities: [[], [], []]"
     },
     "12": {
       "main_step": "Graph Enhancement",
       "sub_step": "5a.2",
-      "algorithm_name": "Concept Scoring Algorithm",
-      "algorithm_type": "Concept Match Count / Total Concepts",
-      "implementation": "_calculate_concept_score()",
-      "input": "doc_entities vs expanded_concepts",
-      "output": "concept_scores: [0.72, 0.68, 0.81]...",
-      "processing_time_ms": 0.003814697265625,
-      "real_output": "concept_scores: [0.72, 0.68, 0.81]..."
+      "algorithm_name": "Graph Ranker Enhancement (REAL)",
+      "algorithm_type": "Real NetworkX Graph Operations + Weighted Fusion",
+      "implementation": "graph_ranker.enhance_ranking()",
+      "input": "20 search results",
+      "output": "Enhanced 20 results",
+      "processing_time_ms": 0.2970695495605469,
+      "real_output": "Enhanced 20 results"
     },
     "13": {
       "main_step": "Graph Enhancement",
       "sub_step": "5a.3",
-      "algorithm_name": "Graph Distance Algorithm",
-      "algorithm_type": "NetworkX shortest_path_length + 1/(distance+1)",
-      "implementation": "_calculate_distance_score()",
-      "input": "doc_entities to query_entities",
-      "output": "distance_scores: [0.67, 0.45, 0.89]...",
-      "processing_time_ms": 0.0021457672119140625,
-      "real_output": "distance_scores: [0.67, 0.45, 0.89]..."
-    },
-    "14": {
-      "main_step": "Graph Enhancement",
-      "sub_step": "5a.4",
-      "algorithm_name": "Fusion Scoring Algorithm",
-      "algorithm_type": "Weighted Linear Combination (70% Vector + 30% Graph)",
-      "implementation": "_combine_scores()",
-      "input": "vector_scores + graph_scores",
-      "output": "fusion_formula: 0.7*vector_score + 0.3*(0.4*entity + 0.3*concept + 0.3*distance)",
-      "processing_time_ms": 0.008106231689453125,
-      "real_output": "fusion_formula: 0.7*vector_score + 0.3*(0.4*entity + 0.3*concept + 0.3*distance)"
+      "algorithm_name": "Knowledge Graph Analysis (REAL)",
+      "algorithm_type": "NetworkX Graph Analysis",
+      "implementation": "data_transformer.knowledge_graph",
+      "input": "graph connectivity check",
+      "output": "nodes: 24464, edges: 17412",
+      "processing_time_ms": 9.973287582397461,
+      "real_output": "nodes: 24464, edges: 17412"
     }
   },
   "timing_analysis": {
     "total_steps": 2,
-    "total_algorithms": 14,
-    "processing_time": 1.0274341106414795,
+    "total_algorithms": 13,
+    "processing_time": 1.0605039596557617,
     "confidence": 0.89,
     "success": true
   }

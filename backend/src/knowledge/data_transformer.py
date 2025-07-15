@@ -75,6 +75,47 @@ class MaintIEDataTransformer:
         else:
             print("Knowledge graph is None - need to run extract_maintenance_knowledge()")
 
+    def load_existing_processed_data(self) -> bool:
+        """Load existing processed data if available"""
+        try:
+            required_files = [
+                self.processed_dir / "maintenance_entities.json",
+                self.processed_dir / "maintenance_documents.json",
+                self.processed_dir / "knowledge_graph.json"
+            ]
+            for file_path in required_files:
+                if not file_path.exists():
+                    return False
+
+            # Load entities (saved as a list)
+            with open(self.processed_dir / "maintenance_entities.json", 'r') as f:
+                entities_data = json.load(f)
+            from src.models.maintenance_models import MaintenanceEntity
+            self.entities = {}
+            for entity_data in entities_data:
+                entity = MaintenanceEntity.from_dict(entity_data) if hasattr(MaintenanceEntity, 'from_dict') else MaintenanceEntity(**entity_data)
+                self.entities[entity.entity_id] = entity
+
+            # Load documents (saved as a list)
+            with open(self.processed_dir / "maintenance_documents.json", 'r') as f:
+                documents_data = json.load(f)
+            from src.models.maintenance_models import MaintenanceDocument
+            self.documents = {}
+            for doc_data in documents_data:
+                doc = MaintenanceDocument.from_dict(doc_data) if hasattr(MaintenanceDocument, 'from_dict') else MaintenanceDocument(**doc_data)
+                self.documents[doc.doc_id] = doc
+
+            # Load knowledge graph
+            with open(self.processed_dir / "knowledge_graph.json", 'r') as f:
+                graph_data = json.load(f)
+            self.knowledge_graph = nx.node_link_graph(graph_data)
+
+            logger.info("Loaded existing processed data from cache.")
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to load existing processed data: {e}")
+            return False
+
     def _build_enhanced_type_mappings(self) -> Dict[str, Any]:
         """Build comprehensive type mappings using hierarchy"""
         mappings = {"entity": {}, "relation": {}}
