@@ -147,7 +147,7 @@ class EntityDocumentIndex:
         entities = set()
 
         # Extract from content using simple tokenization
-        content_text = f"{document.title} {document.content}".lower()
+        content_text = f"{document.title} {document.text}".lower()
 
         # Use existing entity vocabulary if available
         if (self.data_transformer and

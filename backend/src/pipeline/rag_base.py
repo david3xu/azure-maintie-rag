@@ -66,10 +66,8 @@ class MaintIERAGBase:
             if hasattr(self.data_transformer, 'check_knowledge_graph_status'):
                 self.data_transformer.check_knowledge_graph_status()
 
-            # Check if processed data exists or force rebuild
-            processed_entities_path = settings.processed_data_dir / "maintenance_entities.json"
-
-            if not processed_entities_path.exists() or force_rebuild:
+            # Try to load existing processed data; only rebuild if missing or force_rebuild
+            if not self.data_transformer.load_existing_processed_data() or force_rebuild:
                 logger.info("Processing MaintIE data...")
                 knowledge_stats = self.data_transformer.extract_maintenance_knowledge()
                 initialization_results.update(knowledge_stats)
