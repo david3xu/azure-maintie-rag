@@ -72,6 +72,8 @@ training_history.png
 # Weights & Biases logs
 wandb/
 
-# Ignore all Markdown files everywhere except root README.md
+# Ignore all markdown files everywhere
 *.md
-!/README.md
+
+# But do NOT ignore any .md files in the root directory
+!/*.md
