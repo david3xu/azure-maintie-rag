@@ -52,7 +52,7 @@ class MaintIEStructuredRAG(MaintIERAGBase):
             self.caching_enabled = False
 
     def _init_graph_components(self):
-        """Initialize graph optimization components"""
+        """Initialize graph optimization components with better error handling"""
         try:
             from src.knowledge.data_transformer import MaintIEDataTransformer
             from src.knowledge.entity_document_index import EntityDocumentIndex
@@ -60,30 +60,48 @@ class MaintIEStructuredRAG(MaintIERAGBase):
 
             logger.info("Initializing graph optimization components...")
 
-            # Initialize data transformer
+            # Initialize data transformer with caching
             self.data_transformer = MaintIEDataTransformer()
-            logger.info(f"Data transformer available: {self.data_transformer is not None}")
-            if self.data_transformer:
-                logger.info(f"Knowledge graph available: {getattr(self.data_transformer, 'knowledge_graph', None) is not None}")
 
-            # Initialize entity-document index
+            # Check if knowledge graph already exists
+            if (hasattr(self.data_transformer, 'knowledge_graph') and
+                self.data_transformer.knowledge_graph):
+                logger.info("Knowledge graph already exists, skipping extraction")
+            else:
+                # Try to load existing data first
+                if self.data_transformer.load_existing_processed_data():
+                    logger.info("Successfully loaded existing processed data")
+                else:
+                    logger.info("No existing data found, extracting knowledge...")
+                    self.data_transformer.extract_maintenance_knowledge()
+
+            # Initialize entity-document index with validation
             self.entity_index = EntityDocumentIndex(self.data_transformer)
-            logger.info(f"Entity index available: {self.entity_index is not None}")
-            index_stats = self.entity_index.build_index()
-            logger.info(f"Entity index built: {getattr(self.entity_index, 'index_built', False)}")
 
-            # Initialize graph ranker
-            if (self.data_transformer.knowledge_graph and
-                self.entity_index.index_built):
+            # Only build index if we have valid data
+            if (self.data_transformer and
+                hasattr(self.data_transformer, 'documents') and
+                self.data_transformer.documents):
+
+                index_stats = self.entity_index.build_index()
+                logger.info(f"Entity index built: {index_stats}")
+            else:
+                logger.warning("No documents available for entity index building")
+
+            # Initialize graph ranker only if prerequisites are met
+            if (self.data_transformer and
+                getattr(self.data_transformer, 'knowledge_graph', None) and
+                self.entity_index and
+                getattr(self.entity_index, 'index_built', False)):
 
                 self.graph_ranker = GraphEnhancedRanker(
                     self.data_transformer, self.entity_index
                 )
                 self.graph_operations_enabled = True
-
-                logger.info(f"Graph optimization enabled: {index_stats}")
+                logger.info("Graph optimization enabled")
             else:
-                logger.warning("Graph optimization disabled: missing components")
+                logger.warning("Graph optimization disabled: missing prerequisites")
+                self.graph_operations_enabled = False
 
         except Exception as e:
             logger.error(f"Error initializing graph components: {e}")

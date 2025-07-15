@@ -3,6 +3,15 @@ import json
 import time
 import pytest # Added import for pytest
 
+def is_server_running():
+    """Check if API server is running"""
+    try:
+        response = requests.get("http://localhost:8000/api/v1/health", timeout=2)
+        return response.status_code == 200
+    except Exception:
+        return False
+
+@pytest.mark.skipif(not is_server_running(), reason="API server not running on localhost:8000")
 def test_real_api_queries():
     """Test real API with Azure OpenAI backend using new dual API endpoints"""
     base_url = "http://localhost:8000"

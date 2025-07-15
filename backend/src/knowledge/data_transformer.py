@@ -108,7 +108,7 @@ class MaintIEDataTransformer:
             # Load knowledge graph
             with open(self.processed_dir / "knowledge_graph.json", 'r') as f:
                 graph_data = json.load(f)
-            self.knowledge_graph = nx.node_link_graph(graph_data)
+            self.knowledge_graph = nx.node_link_graph(graph_data, edges="links")
 
             logger.info("Loaded existing processed data from cache.")
             return True
@@ -556,7 +556,7 @@ class MaintIEDataTransformer:
                    f"{self.knowledge_graph.number_of_edges()} edges")
 
     def _save_processed_data(self) -> None:
-        """Save processed data to files"""
+        """Save processed data to JSON files"""
         logger.info("Saving processed data...")
 
         # Save entities
@@ -574,7 +574,7 @@ class MaintIEDataTransformer:
         # Save knowledge graph
         if self.knowledge_graph:
             # Use JSON serialization instead of gpickle
-            graph_data = nx.node_link_data(self.knowledge_graph, edges="edges")
+            graph_data = nx.node_link_data(self.knowledge_graph, edges="links")
             self._save_json(graph_data, self.processed_dir / "knowledge_graph.json")
             logger.info(f"Knowledge graph saved to {self.processed_dir / 'knowledge_graph.json'}")
 

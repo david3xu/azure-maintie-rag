@@ -112,6 +112,16 @@ def test_performance_logging():
     print("\n⏱️ Testing Performance Logging Integration")
     print("=" * 50)
 
+    from src.monitoring.pipeline_monitor import get_monitor, reset_monitor
+    from src.enhancement.query_analyzer import MaintenanceQueryAnalyzer
+
+    # Reset monitor to ensure clean state
+    reset_monitor()
+
+    # Initialize monitor and start query
+    monitor = get_monitor()
+    query_id = monitor.start_query("pump bearing failure analysis", "structured")
+
     analyzer = MaintenanceQueryAnalyzer()
 
     # Test a full analysis with timing
@@ -122,15 +132,33 @@ def test_performance_logging():
     print(f"Query: '{test_query}'")
 
     start_time = time.time()
-    analysis = analyzer.analyze_query(test_query)
-    analysis_time = time.time() - start_time
+    try:
+        analysis = analyzer.analyze_query(test_query)
+        end_time = time.time()
 
-    print(f"Analysis time: {analysis_time:.3f}s")
-    print(f"Entities found: {len(analysis.entities)}")
-    print(f"Query type: {analysis.query_type.value}")
+        # End monitoring
+        metrics = monitor.end_query(
+            confidence_score=0.85,
+            sources_count=3,
+            safety_warnings_count=2
+        )
 
-    if analysis_time > 0.1:
-        print("⚠️  Slow analysis detected (should trigger warning in full pipeline)")
+        print(f"✅ Analysis completed in {end_time - start_time:.2f}s")
+        print(f"📊 Entities found: {len(analysis.entities)}")
+        print(f"📊 Query type: {analysis.query_type}")
+        print(f"📊 Equipment category: {analysis.equipment_category}")
+
+        # Verify metrics were collected
+        assert metrics is not None, "Metrics should be collected"
+        assert metrics.total_steps > 0, "Should have tracked steps"
+
+        print("✅ Performance logging test passed")
+
+    except Exception as e:
+        print(f"❌ Error during analysis: {e}")
+        # Still end the query to clean up
+        monitor.end_query(confidence_score=0.0, sources_count=0)
+        raise
 
 
 def main():
