@@ -4,31 +4,6 @@
 
 This directory contains comprehensive documentation for the MaintIE Enhanced RAG system, covering architecture, implementation, deployment, and usage.
 
-## 🛠️ **Documentation Setup**
-
-### Enhanced VSCode Experience
-
-For the best documentation reading experience with syntax highlighting and live preview:
-
-```bash
-# From backend directory
-make docs-setup    # Sets up VSCode environment with extensions
-make docs-status   # Shows documentation setup status
-make docs-preview  # Opens markdown preview (if VSCode CLI available)
-```
-
-**For SSH Development (Azure ML):**
-- Use VSCode Remote-SSH extension for best experience
-- All extensions auto-install when you connect
-- Markdown preview works perfectly with `Ctrl+Shift+V`
-
-**Configured Extensions:**
-- Markdown All in One
-- Markdown Preview Enhanced
-- Markdown Mermaid
-- Python, Black, Pylint
-- JSON and YAML support
-
 ## 🏗️ **Architecture Documentation**
 
 ### Core Architecture
@@ -114,14 +89,12 @@ backend/api/endpoints/
 - **Review Cycle**: Quarterly review and updates
 - **Maintainer**: Development Team
 - **Format**: Markdown with embedded code examples
-- **VSCode Integration**: Enhanced preview with custom CSS and extensions
 
 ## 🔄 **Documentation Updates**
 
 - **Last Updated**: 2024
 - **Review Cycle**: Quarterly
 - **Contributing**: Please update documentation when making architectural changes
-- **VSCode Setup**: Use `make docs-setup` for enhanced development experience
 
 ---
 
