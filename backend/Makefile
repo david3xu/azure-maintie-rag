@@ -140,8 +140,9 @@ test-unit:
 
 test-integration:
 	@echo "Starting API server for integration tests..."
+	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
 	python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 & sleep 3
-	PYTHONPATH=. ./venv/bin/pytest tests/test_real_api.py
+	PYTHONPATH=. ./.venv/bin/pytest tests/test_real_api.py
 	@pkill -f "uvicorn api.main:app" || true
 
 clean:
