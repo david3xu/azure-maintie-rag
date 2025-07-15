@@ -32,6 +32,9 @@ class MaintenanceQueryAnalyzer:
         self.knowledge_graph: Optional[nx.Graph] = None
         self.entity_vocabulary: Dict[str, Any] = {}
 
+        # Add entity cache (pattern cache will be initialized after patterns are built)
+        self._entity_cache = {}
+
         # Load domain knowledge from configuration
         self.domain_knowledge = self._load_domain_knowledge()
 
@@ -45,6 +48,14 @@ class MaintenanceQueryAnalyzer:
         self.equipment_patterns = self._build_equipment_patterns()
         self.failure_patterns = self._build_failure_patterns()
         self.procedure_patterns = self._build_procedure_patterns()
+        self.component_patterns = self.domain_knowledge.get("component_patterns", {})
+
+        # Initialize pattern cache after patterns are built
+        self._pattern_cache = {
+            "equipment": self.equipment_patterns,
+            "failure": self.failure_patterns,
+            "component": self.component_patterns
+        }
 
         # Legacy patterns for backward compatibility
         self.troubleshooting_keywords = self.domain_knowledge.get("query_classification", {}).get("troubleshooting", [])
@@ -52,7 +63,6 @@ class MaintenanceQueryAnalyzer:
         self.preventive_keywords = self.domain_knowledge.get("query_classification", {}).get("preventive", [])
         self.safety_keywords = self.domain_knowledge.get("query_classification", {}).get("safety", [])
         self.equipment_categories = self.domain_knowledge.get("equipment_categories", {})
-        self.component_patterns = self.domain_knowledge.get("component_patterns", {})
         self.maintie_equipment = self.domain_knowledge.get("maintie_equipment", [])
         self.extracted_abbreviations = self.domain_knowledge.get("extracted_abbreviations", {})
 
@@ -137,7 +147,8 @@ class MaintenanceQueryAnalyzer:
             "procedure_patterns": {},
             "component_patterns": {},
             "maintie_equipment": [],
-            "extracted_abbreviations": {}
+            "extracted_abbreviations": {},
+            "expansion_rules": {}
         }
 
     def _load_knowledge(self) -> None:
@@ -184,46 +195,70 @@ class MaintenanceQueryAnalyzer:
 
     def analyze_query(self, query: str) -> QueryAnalysis:
         """Analyze maintenance query and extract key information"""
-        logger.info(f"Analyzing query: {query}")
+        from src.monitoring.pipeline_monitor import get_monitor
 
-        # Clean and normalize query
-        normalized_query = self._normalize_query(query)
+        monitor = get_monitor()
 
-        # Extract entities
-        entities = self._extract_entities(normalized_query)
+        with monitor.track_sub_step("Query Analysis", "MaintenanceQueryAnalyzer", query):
+            logger.info(f"Analyzing query: {query}")
 
-        # Classify query type
-        query_type = self._classify_query_type(normalized_query)
+            # Clean and normalize query
+            with monitor.track_sub_step("Query Normalization", "MaintenanceQueryAnalyzer", query):
+                normalized_query = self._normalize_query(query)
+                monitor.add_custom_metric("Query Normalization", "normalized_length", len(normalized_query))
 
-        # Detect intent
-        intent = self._detect_intent(normalized_query, query_type)
+            # Extract entities
+            with monitor.track_sub_step("Entity Extraction", "MaintenanceQueryAnalyzer", normalized_query):
+                entities = self._extract_entities(normalized_query)
+                monitor.add_custom_metric("Entity Extraction", "entities_count", len(entities))
+                monitor.add_custom_metric("Entity Extraction", "entities_list", entities)
 
-        # Assess complexity
-        complexity = self._assess_complexity(normalized_query, entities)
+            # Classify query type
+            with monitor.track_sub_step("Query Classification", "MaintenanceQueryAnalyzer", normalized_query):
+                query_type = self._classify_query_type(normalized_query)
+                monitor.add_custom_metric("Query Classification", "query_type", query_type.value)
 
-        # Determine urgency
-        urgency = self._determine_urgency(normalized_query)
+            # Detect intent
+            with monitor.track_sub_step("Intent Detection", "MaintenanceQueryAnalyzer", normalized_query):
+                intent = self._detect_intent(normalized_query, query_type)
+                monitor.add_custom_metric("Intent Detection", "detected_intent", intent)
 
-        # Identify equipment category
-        equipment_category = self._identify_equipment_category(entities)
+            # Assess complexity
+            with monitor.track_sub_step("Complexity Assessment", "MaintenanceQueryAnalyzer", entities):
+                complexity = self._assess_complexity(normalized_query, entities)
+                monitor.add_custom_metric("Complexity Assessment", "complexity_level", complexity)
 
-        analysis = QueryAnalysis(
-            original_query=query,
-            query_type=query_type,
-            entities=entities,
-            intent=intent,
-            complexity=complexity,
-            urgency=urgency,
-            equipment_category=equipment_category,
-            confidence=0.85  # Base confidence
-        )
+            # Determine urgency
+            with monitor.track_sub_step("Urgency Assessment", "MaintenanceQueryAnalyzer", normalized_query):
+                urgency = self._determine_urgency(normalized_query)
+                monitor.add_custom_metric("Urgency Assessment", "urgency_level", urgency)
 
-        logger.info(f"Query analysis complete: {analysis.to_dict()}")
+            # Identify equipment category
+            with monitor.track_sub_step("Equipment Categorization", "MaintenanceQueryAnalyzer", entities):
+                equipment_category = self._identify_equipment_category(entities)
+                monitor.add_custom_metric("Equipment Categorization", "equipment_category", equipment_category)
 
-        # Enhance analysis with GNN domain context if available
-        analysis = self._gnn_enhanced_analysis(analysis)
+            # Create analysis result
+            with monitor.track_sub_step("Analysis Assembly", "MaintenanceQueryAnalyzer"):
+                analysis = QueryAnalysis(
+                    original_query=query,
+                    query_type=query_type,
+                    entities=entities,
+                    intent=intent,
+                    complexity=complexity,
+                    urgency=urgency,
+                    equipment_category=equipment_category,
+                    confidence=0.85  # Base confidence
+                )
 
-        return analysis
+            logger.info(f"Query analysis complete: {analysis.to_dict()}")
+
+            # Enhance analysis with GNN domain context if available
+            with monitor.track_sub_step("GNN Enhancement", "MaintenanceQueryAnalyzer", analysis):
+                analysis = self._gnn_enhanced_analysis(analysis)
+                monitor.add_custom_metric("GNN Enhancement", "enhancement_applied", True)
+
+            return analysis
 
     def _gnn_enhanced_analysis(self, analysis: QueryAnalysis) -> QueryAnalysis:
         """Enhance query analysis with GNN domain context"""
@@ -257,55 +292,74 @@ class MaintenanceQueryAnalyzer:
 
     def enhance_query(self, analysis: QueryAnalysis) -> EnhancedQuery:
         """Enhanced query enhancement with domain intelligence"""
+        from src.monitoring.pipeline_monitor import get_monitor
 
-        # Perform safety assessment
-        safety_assessment = self._assess_safety_criticality(
-            analysis.entities, analysis.query_type
-        )
+        monitor = get_monitor()
 
-        # Enhanced concept expansion
-        expanded_concepts = self._enhanced_expand_concepts(analysis.entities)
+        with monitor.track_sub_step("Query Enhancement", "MaintenanceQueryAnalyzer", analysis):
+            # Perform safety assessment
+            with monitor.track_sub_step("Safety Assessment", "MaintenanceQueryAnalyzer", analysis.entities):
+                safety_assessment = self._assess_safety_criticality(
+                    analysis.entities, analysis.query_type
+                )
+                monitor.add_custom_metric("Safety Assessment", "is_safety_critical", safety_assessment["is_safety_critical"])
+                monitor.add_custom_metric("Safety Assessment", "safety_level", safety_assessment["safety_level"])
 
-        # Find related entities using enhanced methods
-        related_entities = self._find_related_entities(analysis.entities)
+            # Enhanced concept expansion
+            with monitor.track_sub_step("Concept Expansion", "MaintenanceQueryAnalyzer", analysis.entities):
+                expanded_concepts = self._enhanced_expand_concepts(analysis.entities)
+                monitor.add_custom_metric("Concept Expansion", "concepts_count", len(expanded_concepts))
+                monitor.add_custom_metric("Concept Expansion", "concepts_list", expanded_concepts[:10])  # First 10 for logging
 
-        # Add domain context
-        domain_context = self._add_domain_context(analysis)
+            # Find related entities using enhanced methods
+            with monitor.track_sub_step("Related Entity Discovery", "MaintenanceQueryAnalyzer", analysis.entities):
+                related_entities = self._find_related_entities(analysis.entities)
+                monitor.add_custom_metric("Related Entity Discovery", "related_entities_count", len(related_entities))
 
-        # Build structured search query
-        structured_search = self._build_structured_search(
-            analysis.entities, expanded_concepts
-        )
+            # Add domain context
+            with monitor.track_sub_step("Domain Context Building", "MaintenanceQueryAnalyzer", analysis):
+                domain_context = self._add_domain_context(analysis)
+                monitor.add_custom_metric("Domain Context Building", "context_keys", list(domain_context.keys()))
 
-        # Identify safety considerations
-        safety_considerations = self._identify_safety_considerations(
-            analysis.entities, expanded_concepts
-        )
+            # Build structured search query
+            with monitor.track_sub_step("Structured Query Building", "MaintenanceQueryAnalyzer", expanded_concepts):
+                structured_search = self._build_structured_search(
+                    analysis.entities, expanded_concepts
+                )
+                monitor.add_custom_metric("Structured Query Building", "query_length", len(structured_search))
 
-        # Create enhanced query with safety information
-        enhanced = EnhancedQuery(
-            analysis=analysis,
-            expanded_concepts=expanded_concepts,
-            related_entities=related_entities,
-            domain_context=domain_context,
-            structured_search=structured_search,
-            safety_considerations=safety_considerations,
-            safety_critical=safety_assessment["is_safety_critical"],
-            safety_warnings=safety_assessment["safety_warnings"],
-            equipment_category=self._enhanced_categorize_equipment(analysis.entities),
-            maintenance_context={
-                "task_urgency": self.maintenance_tasks.get(
-                    analysis.query_type.value.lower(), {}
-                ).get("urgency", "normal"),
-                "safety_level": safety_assessment["safety_level"],
-                "critical_equipment": safety_assessment["critical_equipment"]
-            }
-        )
+            # Identify safety considerations
+            with monitor.track_sub_step("Safety Considerations", "MaintenanceQueryAnalyzer", expanded_concepts):
+                safety_considerations = self._identify_safety_considerations(
+                    analysis.entities, expanded_concepts
+                )
+                monitor.add_custom_metric("Safety Considerations", "considerations_count", len(safety_considerations))
 
-        logger.info(f"Enhanced query created with {len(expanded_concepts)} concepts, "
-                   f"safety_critical={enhanced.safety_critical}")
+            # Create enhanced query with safety information
+            with monitor.track_sub_step("Enhanced Query Assembly", "MaintenanceQueryAnalyzer"):
+                enhanced = EnhancedQuery(
+                    analysis=analysis,
+                    expanded_concepts=expanded_concepts,
+                    related_entities=related_entities,
+                    domain_context=domain_context,
+                    structured_search=structured_search,
+                    safety_considerations=safety_considerations,
+                    safety_critical=safety_assessment["is_safety_critical"],
+                    safety_warnings=safety_assessment["safety_warnings"],
+                    equipment_category=self._enhanced_categorize_equipment(analysis.entities),
+                    maintenance_context={
+                        "task_urgency": self.maintenance_tasks.get(
+                            analysis.query_type.value.lower(), {}
+                        ).get("urgency", "normal"),
+                        "safety_level": safety_assessment["safety_level"],
+                        "critical_equipment": safety_assessment["critical_equipment"]
+                    }
+                )
 
-        return enhanced
+            logger.info(f"Enhanced query created with {len(expanded_concepts)} concepts, "
+                       f"safety_critical={enhanced.safety_critical}")
+
+            return enhanced
 
     def _normalize_query(self, query: str) -> str:
         """Normalize query text using configurable abbreviations"""
@@ -323,27 +377,42 @@ class MaintenanceQueryAnalyzer:
         return normalized
 
     def _extract_entities(self, query: str) -> List[str]:
-        """Extract maintenance entities from query"""
-        entities = []
+        """Extract maintenance entities from query with caching and pattern filtering"""
+        # Use cache if available
+        if query in self._entity_cache:
+            return self._entity_cache[query]
 
+        entities = []
         # Use entity vocabulary if available
         if self.entity_vocabulary:
             entity_to_type = self.entity_vocabulary.get("entity_to_type", {})
             for entity_text in entity_to_type.keys():
                 if entity_text.lower() in query:
                     entities.append(entity_text)
-
         # Pattern-based extraction as fallback
         equipment_entities = self._extract_equipment_entities(query)
         failure_entities = self._extract_failure_entities(query)
         component_entities = self._extract_component_entities(query)
-
         entities.extend(equipment_entities)
         entities.extend(failure_entities)
         entities.extend(component_entities)
-
-        # Remove duplicates and return
-        return list(set(entities))
+        # Filter entities against valid patterns from domain knowledge
+        valid_entities = []
+        for entity in entities:
+            is_valid = (
+                entity in self.equipment_patterns or
+                entity in self.failure_patterns or
+                entity in self.component_patterns or
+                entity in self.domain_knowledge.get("component_patterns", {}) or
+                len(entity) > 2
+            )
+            if is_valid:
+                valid_entities.append(entity)
+        # Remove duplicates
+        valid_entities = list(set(valid_entities))
+        # Cache result
+        self._entity_cache[query] = valid_entities
+        return valid_entities
 
     def _extract_equipment_entities(self, query: str) -> List[str]:
         """Extract equipment-related entities"""
@@ -365,7 +434,7 @@ class MaintenanceQueryAnalyzer:
         """Extract component-related entities using configurable patterns"""
         components = []
 
-        for pattern, component in self.config.component_patterns.items():
+        for pattern, component in self.component_patterns.items():
             if re.search(pattern, query):
                 components.append(component)
 
@@ -561,27 +630,32 @@ class MaintenanceQueryAnalyzer:
         return list(expanded)
 
     def _assess_safety_criticality(self, entities: List[str], query_type: QueryType) -> Dict[str, Any]:
-        """Assess safety criticality of the query"""
+        """Assess safety criticality of the query using config patterns"""
         entities_lower = [e.lower() for e in entities]
-
         safety_assessment = {
             "is_safety_critical": False,
             "safety_level": "standard",
             "critical_equipment": [],
             "safety_warnings": []
         }
-
-        # Check for safety-critical equipment
+        # Check for safety-critical equipment from config
         for entity in entities_lower:
             for critical_eq in self.safety_critical:
                 if critical_eq in entity:
                     safety_assessment["is_safety_critical"] = True
                     safety_assessment["critical_equipment"].append(critical_eq)
-
-        # Check query type safety implications
-        if query_type in [QueryType.TROUBLESHOOTING, QueryType.SAFETY]:
-            safety_assessment["safety_level"] = "high"
-
+        # Use equipment_hierarchy for rotating_equipment
+        rotating_equipment = self.equipment_hierarchy.get("rotating_equipment", {}).get("types", [])
+        for entity in entities_lower:
+            if any(eq_type in entity for eq_type in rotating_equipment):
+                safety_assessment["is_safety_critical"] = True
+                safety_assessment["critical_equipment"].append(entity)
+        # Use maintenance_tasks for troubleshooting safety flagging
+        if query_type == QueryType.TROUBLESHOOTING:
+            troubleshooting_config = self.maintenance_tasks.get("troubleshooting", {})
+            if troubleshooting_config.get("urgency") == "high":
+                safety_assessment["is_safety_critical"] = True
+                safety_assessment["safety_level"] = "high"
         # Generate safety warnings
         if safety_assessment["is_safety_critical"]:
             safety_assessment["safety_warnings"].extend([
@@ -589,12 +663,10 @@ class MaintenanceQueryAnalyzer:
                 "Use appropriate personal protective equipment",
                 "Ensure proper ventilation and gas monitoring"
             ])
-
         if query_type == QueryType.TROUBLESHOOTING:
             safety_assessment["safety_warnings"].append(
                 "Verify equipment is safely isolated before troubleshooting"
             )
-
         return safety_assessment
 
     def _enhanced_expand_concepts(self, entities: List[str]) -> List[str]:
@@ -701,7 +773,8 @@ class MaintenanceQueryAnalyzer:
                         continue
 
         # Use configurable limit instead of hard-coded [:15]
-        return list(related)[:self.config.max_related_entities]
+        max_related = getattr(self.config, 'max_related_entities', 15)
+        return list(related)[:max_related]
 
     def _add_domain_context(self, analysis: QueryAnalysis) -> Dict[str, Any]:
         """Add maintenance domain context"""
@@ -752,20 +825,17 @@ class MaintenanceQueryAnalyzer:
         return list(safety_reqs)
 
     def _build_structured_search(self, entities: List[str], expanded_concepts: List[str]) -> str:
-        """Build structured search query"""
-        all_terms = entities + expanded_concepts
-
-        # Group related terms
-        grouped_terms = []
-        if entities:
-            entity_group = " OR ".join(f'"{term}"' for term in entities)
-            grouped_terms.append(f"({entity_group})")
-
-        if expanded_concepts:
-            concept_group = " OR ".join(f'"{term}"' for term in expanded_concepts[:10])
-            grouped_terms.append(f"({concept_group})")
-
-        return " AND ".join(grouped_terms) if grouped_terms else " OR ".join(all_terms)
+        """Build structured search query using expansion_rules from config"""
+        expansion_rules = self.domain_knowledge.get("expansion_rules", {})
+        important_terms = []
+        for entity in entities:
+            important_terms.append(entity)
+            if entity in expansion_rules:
+                important_terms.extend(expansion_rules[entity][:2])
+        important_terms.extend(expanded_concepts[:3])
+        structured_query = " ".join(set(important_terms))
+        logger.debug(f"Built structured query: {structured_query}")
+        return structured_query
 
     def _identify_safety_considerations(self, entities: List[str], expanded_concepts: List[str]) -> List[str]:
         """Identify safety considerations"""

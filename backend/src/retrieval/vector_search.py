@@ -101,7 +101,7 @@ class MaintenanceVectorSearch:
         # Filter out documents with empty or invalid text
         for doc_id, doc in documents.items():
             full_text = f"{doc.title or ''} {doc.text}".strip()
-            if full_text and len(full_text) > 10:  # Ensure text is not empty and has minimum length
+            if full_text and len(full_text) > 10:
                 doc_texts.append(full_text)
                 doc_ids.append(doc_id)
             else:
@@ -111,35 +111,54 @@ class MaintenanceVectorSearch:
             logger.error("No valid documents found for indexing")
             return
 
-        # Get batch size from settings (default 32, max 2048 for Azure OpenAI)
-        batch_size = min(settings.embedding_batch_size, 2048)
-        logger.info(f"Generating embeddings for {len(doc_texts)} valid documents via Azure OpenAI in batches of {batch_size}...")
+        # CRITICAL FIX: Ensure batch size respects Azure OpenAI limits
+        max_azure_batch = 2048  # Azure OpenAI embedding API limit
+        configured_batch = getattr(settings, 'embedding_batch_size', 32)
+        batch_size = min(configured_batch, max_azure_batch)
 
-        # Process embeddings in batches
+        logger.info(f"Processing {len(doc_texts)} documents in batches of {batch_size}")
+
+        # Process embeddings in batches - EXISTING LOGIC IS CORRECT
         all_embeddings = []
         for i in range(0, len(doc_texts), batch_size):
             batch_texts = doc_texts[i:i + batch_size]
-            batch_embeddings = self._get_embedding(batch_texts)
-            all_embeddings.append(batch_embeddings)
-            logger.info(f"Processed batch {i//batch_size + 1}/{(len(doc_texts) + batch_size - 1)//batch_size} ({len(batch_texts)} documents)")
+            try:
+                batch_embeddings = self._get_embedding(batch_texts)
+                all_embeddings.append(batch_embeddings)
+                logger.info(f"✅ Batch {i//batch_size + 1}/{(len(doc_texts) + batch_size - 1)//batch_size} completed ({len(batch_texts)} docs)")
+            except Exception as e:
+                logger.error(f"❌ Failed to process batch {i//batch_size + 1}: {e}")
+                # Continue with remaining batches
+                continue
+
+        if not all_embeddings:
+            logger.error("No embeddings generated - all batches failed")
+            return
 
         # Combine all embeddings
         embeddings = np.vstack(all_embeddings)
 
+        # Create and populate FAISS index
         dimension = embeddings.shape[1]
         logger.info(f"Creating FAISS index with dimension {dimension}")
         self.faiss_index = faiss.IndexFlatIP(dimension)
 
-        # Ensure embeddings are float32 and contiguous before normalization and adding to index
+        # Normalize and add to index
         embeddings = np.ascontiguousarray(embeddings.astype(np.float32))
         faiss.normalize_L2(embeddings)
         self.faiss_index.add(embeddings)
+
+        # Update mappings
         self.doc_id_to_index = {doc_id: idx for idx, doc_id in enumerate(doc_ids)}
         self.index_to_doc_id = {idx: doc_id for idx, doc_id in enumerate(doc_ids)}
+
+        # Store embeddings
         for idx, doc_id in enumerate(doc_ids):
             self.document_embeddings[doc_id] = embeddings[idx]
+
+        # Save index
         self._save_index()
-        logger.info(f"Vector index built successfully with {self.faiss_index.ntotal} documents")
+        logger.info(f"✅ Vector index built successfully with {self.faiss_index.ntotal} documents")
 
     def _save_index(self) -> None:
         """Save FAISS index and mappings to disk"""

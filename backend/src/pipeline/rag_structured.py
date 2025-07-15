@@ -96,12 +96,25 @@ class MaintIEStructuredRAG(MaintIERAGBase):
         enable_safety_warnings: bool = True
     ) -> RAGResponse:
         """Process query with caching optimization"""
+        from src.monitoring.pipeline_monitor import get_monitor
+
+        # Initialize monitoring
+        monitor = get_monitor()
+        query_id = monitor.start_query(query, "structured")
+
         # Check cache first
         if self.caching_enabled and self.response_cache:
-            cached_response = self.response_cache.get_cached_response(query, max_results)
-            if cached_response:
-                logger.info(f"Returning cached response for: {query[:50]}...")
-                return cached_response
+            with monitor.track_sub_step("Cache Check", "MaintIEStructuredRAG", query):
+                cached_response = self.response_cache.get_cached_response(query, max_results)
+                if cached_response:
+                    logger.info(f"Returning cached response for: {query[:50]}...")
+                    monitor.track_cache_hit("Cache Check")
+                    monitor.end_query(
+                        confidence_score=cached_response.confidence_score,
+                        sources_count=len(cached_response.sources),
+                        safety_warnings_count=len(cached_response.safety_warnings)
+                    )
+                    return cached_response
 
         # Process query normally
         start_time = time.time()
@@ -110,72 +123,105 @@ class MaintIEStructuredRAG(MaintIERAGBase):
         logger.info(f"Processing structured query #{self.query_count}: {query}")
 
         try:
-                        # Step 1: Enhanced domain understanding (same as original but with maintenance context)
+            # Step 1: Enhanced domain understanding (same as original but with maintenance context)
             logger.info("Step 1: Enhanced domain analysis...")
             if not self.query_analyzer:
                 raise ValueError("Query analyzer not initialized")
 
-            analysis = self.query_analyzer.analyze_query(query)
-            enhanced_query = self.query_analyzer.enhance_query(analysis)
-
-            # Defensive check: if enhanced_query is None, create a minimal one
-            if enhanced_query is None:
-                logger.warning(f"Enhanced query is None for query: {query}, creating fallback")
-                enhanced_query = EnhancedQuery(
-                    analysis=analysis,
-                    expanded_concepts=analysis.entities if analysis.entities else [],
-                    related_entities=[],
-                    domain_context={},
-                    structured_search=query,
-                    safety_considerations=[],
-                    safety_critical=False,
-                    safety_warnings=[],
-                    equipment_category=None,
-                    maintenance_context={}
-                )
+            analysis_start = time.time()
+            with monitor.track_sub_step("Query Analysis and Enhancement", "MaintIEStructuredRAG", query):
+                analysis = self.query_analyzer.analyze_query(query)
+                enhanced_query = self.query_analyzer.enhance_query(analysis)
+                monitor.add_custom_metric("Query Analysis and Enhancement", "entities_count", len(analysis.entities))
+                monitor.add_custom_metric("Query Analysis and Enhancement", "concepts_count", len(enhanced_query.expanded_concepts))
+                # Defensive check: if enhanced_query is None, create a minimal one
+                if enhanced_query is None:
+                    logger.warning(f"Enhanced query is None for query: {query}, creating fallback")
+                    enhanced_query = EnhancedQuery(
+                        analysis=analysis,
+                        expanded_concepts=analysis.entities if analysis.entities else [],
+                        related_entities=[],
+                        domain_context={},
+                        structured_search=query,
+                        safety_considerations=[],
+                        safety_critical=False,
+                        safety_warnings=[],
+                        equipment_category=None,
+                        maintenance_context={}
+                    )
+            analysis_time = time.time() - analysis_start
+            if analysis_time > 0.1:
+                logger.warning(f"Slow query analysis: {analysis_time:.3f}s")
 
             # Step 2: Structured retrieval (NEW - replaces multi-modal with single optimized call)
             logger.info("Step 2: Structured retrieval (1 API call)...")
-            search_results = self._optimized_structured_retrieval(enhanced_query, max_results)
+            retrieval_start = time.time()
+            with monitor.track_sub_step("Structured Retrieval", "MaintIEStructuredRAG", enhanced_query):
+                search_results = self._optimized_structured_retrieval(enhanced_query, max_results)
+                monitor.add_custom_metric("Structured Retrieval", "results_count", len(search_results))
+                monitor.add_custom_metric("Structured Retrieval", "top_score", search_results[0].score if search_results else 0.0)
+            retrieval_time = time.time() - retrieval_start
+            if retrieval_time > 0.1:
+                logger.warning(f"Slow retrieval: {retrieval_time:.3f}s")
 
             # Step 3: Generate response (same as original for quality consistency)
             logger.info("Step 3: Generating enhanced response...")
             if not self.llm_interface:
                 raise ValueError("LLM interface not initialized")
-
-            generation_result = self.llm_interface.generate_response(
-                enhanced_query=enhanced_query,
-                search_results=search_results,
-                include_citations=True,
-                include_safety_warnings=enable_safety_warnings
-            )
+            generation_start = time.time()
+            with monitor.track_sub_step("Response Generation", "MaintIEStructuredRAG", search_results):
+                generation_result = self.llm_interface.generate_response(
+                    enhanced_query=enhanced_query,
+                    search_results=search_results,
+                    include_citations=True,
+                    include_safety_warnings=enable_safety_warnings
+                )
+                monitor.add_custom_metric("Response Generation", "response_length", len(generation_result["generated_response"]))
+                monitor.add_custom_metric("Response Generation", "confidence_score", generation_result["confidence_score"])
+                monitor.add_custom_metric("Response Generation", "sources_count", len(generation_result["sources"]))
+            generation_time = time.time() - generation_start
+            if generation_time > 0.1:
+                logger.warning(f"Slow response generation: {generation_time:.3f}s")
 
             # Step 4: Create final response
             processing_time = time.time() - start_time
             self._update_performance_metrics(processing_time)
 
-            response = RAGResponse(
-                query=query,
-                enhanced_query=enhanced_query,
-                search_results=search_results,
-                generated_response=generation_result["generated_response"],
-                confidence_score=generation_result["confidence_score"],
-                processing_time=processing_time,
-                sources=generation_result["sources"],
-                safety_warnings=generation_result["safety_warnings"],
-                citations=generation_result["citations"]
-            )
+            with monitor.track_sub_step("Response Assembly", "MaintIEStructuredRAG"):
+                response = RAGResponse(
+                    query=query,
+                    enhanced_query=enhanced_query,
+                    search_results=search_results,
+                    generated_response=generation_result["generated_response"],
+                    confidence_score=generation_result["confidence_score"],
+                    processing_time=processing_time,
+                    sources=generation_result["sources"],
+                    safety_warnings=generation_result["safety_warnings"],
+                    citations=generation_result["citations"]
+                )
 
             # Cache the response if high confidence
             if (self.caching_enabled and self.response_cache and
                 response.confidence_score > 0.6):
-                self.response_cache.cache_response(query, response, max_results)
+                with monitor.track_sub_step("Response Caching", "MaintIEStructuredRAG"):
+                    self.response_cache.cache_response(query, response, max_results)
+                    monitor.add_custom_metric("Response Caching", "cached", True)
+
+            # End monitoring and get metrics
+            metrics = monitor.end_query(
+                confidence_score=response.confidence_score,
+                sources_count=len(response.sources),
+                safety_warnings_count=len(response.safety_warnings)
+            )
 
             logger.info(f"Structured query processed successfully in {processing_time:.2f}s with confidence {response.confidence_score:.2f}")
+            logger.info(f"Pipeline metrics: {metrics.total_steps} steps, {metrics.total_api_calls} API calls, {metrics.cache_hits} cache hits")
             return response
 
         except Exception as e:
             logger.error(f"Error in structured processing: {e}")
+            # End monitoring with error
+            monitor.end_query()
             return self._create_error_response(query, str(e), time.time() - start_time)
 
     def process_query(
@@ -194,6 +240,9 @@ class MaintIEStructuredRAG(MaintIERAGBase):
     def _optimized_structured_retrieval(self, enhanced_query: EnhancedQuery,
                                        max_results: int) -> List[SearchResult]:
         """Optimized structured retrieval using entity index and graph ranking"""
+        from src.monitoring.pipeline_monitor import get_monitor
+
+        monitor = get_monitor()
 
         if not self.vector_search:
             logger.error("Vector search not initialized")
@@ -201,17 +250,28 @@ class MaintIEStructuredRAG(MaintIERAGBase):
 
         try:
             # Step 1: Build optimized query
-            structured_query = self._build_structured_query(enhanced_query)
+            with monitor.track_sub_step("Query Building", "MaintIEStructuredRAG", enhanced_query):
+                structured_query = self._build_structured_query(enhanced_query)
+                monitor.add_custom_metric("Query Building", "query_length", len(structured_query))
+                monitor.add_custom_metric("Query Building", "entities_count", len(enhanced_query.analysis.entities))
 
             # Step 2: Single vector search (optimization: 1 API call instead of 3)
-            base_results = self.vector_search.search(structured_query, top_k=max_results * 2)
+            with monitor.track_sub_step("Vector Search", "MaintIEStructuredRAG", structured_query):
+                base_results = self.vector_search.search(structured_query, top_k=max_results * 2)
+                monitor.add_custom_metric("Vector Search", "base_results_count", len(base_results))
+                monitor.add_custom_metric("Vector Search", "top_base_score", base_results[0].score if base_results else 0.0)
 
             # Step 3: Apply graph-enhanced ranking if available
-            if self.graph_operations_enabled and self.graph_ranker:
-                enhanced_results = self.graph_ranker.enhance_ranking(base_results, enhanced_query)
-            else:
-                # Fallback to knowledge graph ranking
-                enhanced_results = self._apply_knowledge_graph_ranking(base_results, enhanced_query)
+            with monitor.track_sub_step("Result Enhancement", "MaintIEStructuredRAG", base_results):
+                if self.graph_operations_enabled and self.graph_ranker:
+                    enhanced_results = self.graph_ranker.enhance_ranking(base_results, enhanced_query)
+                    monitor.add_custom_metric("Result Enhancement", "enhancement_method", "graph_ranker")
+                else:
+                    # Fallback to knowledge graph ranking
+                    enhanced_results = self._apply_knowledge_graph_ranking(base_results, enhanced_query)
+                    monitor.add_custom_metric("Result Enhancement", "enhancement_method", "knowledge_graph")
+
+                monitor.add_custom_metric("Result Enhancement", "enhanced_results_count", len(enhanced_results))
 
             logger.info(f"Optimized retrieval: 1 API call, {len(enhanced_results)} results")
             return enhanced_results[:max_results]
@@ -219,7 +279,10 @@ class MaintIEStructuredRAG(MaintIERAGBase):
         except Exception as e:
             logger.error(f"Error in optimized retrieval: {e}")
             # Fallback to simple search
-            return self.vector_search.search(enhanced_query.analysis.original_query, top_k=max_results)
+            with monitor.track_sub_step("Fallback Search", "MaintIEStructuredRAG", enhanced_query.analysis.original_query):
+                fallback_results = self.vector_search.search(enhanced_query.analysis.original_query, top_k=max_results)
+                monitor.add_custom_metric("Fallback Search", "fallback_results_count", len(fallback_results))
+                return fallback_results
 
     def _build_structured_query(self, enhanced_query: EnhancedQuery) -> str:
         """
