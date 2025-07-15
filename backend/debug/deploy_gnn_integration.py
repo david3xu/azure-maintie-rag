@@ -92,16 +92,20 @@ def test_gnn_integration():
 
         rag = MaintIEStructuredRAG()
 
+        # Initialize components first
+        logger.info("Initializing RAG components...")
+        rag.initialize_components(force_rebuild=False)
+
         # Test structured query
-        response = rag.process_structured_query(
+        response = rag.process_query(
             query=test_query,
             max_results=3,
             include_explanations=True
         )
 
-        if response and response.get('enhanced_query'):
-            enhanced_query = response['enhanced_query']
-            expanded_concepts = enhanced_query.get('expanded_concepts', [])
+        if response and hasattr(response, 'enhanced_query') and response.enhanced_query:
+            enhanced_query = response.enhanced_query
+            expanded_concepts = enhanced_query.expanded_concepts if hasattr(enhanced_query, 'expanded_concepts') else []
             logger.info(f"✅ Pipeline test: {len(expanded_concepts)} concepts expanded")
 
             # Check if GNN was used

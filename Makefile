@@ -2,7 +2,7 @@
 # Backend = Complete API service with data
 # Frontend = Pure UI consumer
 
-.PHONY: help setup dev test clean health
+.PHONY: help setup dev test clean health docs-setup docs-status docs-preview
 
 help:
 	@echo "🔧 Azure MaintIE RAG - Clean Service Architecture"
@@ -16,6 +16,11 @@ help:
 	@echo "  make dev        - Start both services"
 	@echo "  make backend    - Backend API only"
 	@echo "  make frontend   - Frontend UI only"
+	@echo ""
+	@echo "📝 Documentation:"
+	@echo "  make docs-setup - Setup VSCode documentation environment"
+	@echo "  make docs-status - Show documentation setup status"
+	@echo "  make docs-preview - Open markdown preview"
 	@echo ""
 	@echo "🧪 Testing:"
 	@echo "  make test       - Test both services"
@@ -52,6 +57,19 @@ backend:
 frontend:
 	@echo "🎨 Starting frontend UI service..."
 	cd frontend && npm run dev
+
+# Documentation setup
+docs-setup:
+	@echo "📝 Setting up documentation environment..."
+	cd backend && make docs-setup
+
+docs-status:
+	@echo "📋 Checking documentation setup status..."
+	cd backend && make docs-status
+
+docs-preview:
+	@echo "📖 Opening markdown preview..."
+	cd backend && make docs-preview
 
 # Testing
 test:
