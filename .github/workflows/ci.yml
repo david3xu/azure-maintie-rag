@@ -12,6 +12,11 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+      OPENAI_DEPLOYMENT_NAME: ${{ secrets.OPENAI_DEPLOYMENT_NAME }}
+      EMBEDDING_DEPLOYMENT_NAME: ${{ secrets.EMBEDDING_DEPLOYMENT_NAME }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
