@@ -1,0 +1,51 @@
+name: MaintIE RAG CD
+
+on:
+  workflow_run:
+    workflows: ["MaintIE RAG CI"]
+    types:
+      - completed
+
+jobs:
+  deploy-staging:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/develop' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add your staging deployment commands here
+          # Example: Deploy to Azure Container Apps, AWS ECS, etc.
+
+      - name: Run staging health checks
+        run: |
+          echo "Running staging health checks..."
+          # Add health check commands for staging environment
+
+  deploy-production:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          # Add your production deployment commands here
+          # Example: Deploy to Azure Container Apps, AWS ECS, etc.
+
+      - name: Run production health checks
+        run: |
+          echo "Running production health checks..."
+          # Add health check commands for production environment
+
+      - name: Notify deployment success
+        run: |
+          echo "Production deployment completed successfully"
+          # Add notification logic (Slack, Teams, etc.)
