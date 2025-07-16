@@ -30,8 +30,8 @@ except ImportError:
             for key, value in kwargs.items():
                 setattr(self, key, value)
 
-from src.knowledge.data_transformer import MaintIEDataTransformer
-from src.models.maintenance_models import MaintenanceEntity, MaintenanceRelation
+from core.knowledge.data_transformer import MaintIEDataTransformer
+from core.models.maintenance_models import MaintenanceEntity, MaintenanceRelation
 from config.settings import settings
 
 logger = logging.getLogger(__name__)

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, List, Any
 from collections import Counter
 
-from src.models.maintenance_models import MaintenanceEntity, MaintenanceDocument, EntityType
+from core.models.maintenance_models import MaintenanceEntity, MaintenanceDocument, EntityType
 from config.settings import settings
 
 

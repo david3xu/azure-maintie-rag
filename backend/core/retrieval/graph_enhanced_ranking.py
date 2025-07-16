@@ -1,16 +1,15 @@
 """
-Graph-enhanced document ranking using NetworkX operations
-Professional implementation that builds on existing graph operations
+Graph-based ranking enhancement
+Improves document relevance ranking based on knowledge graph context
 """
 
 import logging
-import networkx as nx
 from typing import List, Dict, Any, Optional, Set
 from collections import defaultdict
 
-from src.models.maintenance_models import SearchResult, EnhancedQuery
-from src.knowledge.data_transformer import MaintIEDataTransformer
-from src.knowledge.entity_document_index import EntityDocumentIndex
+from core.models.maintenance_models import SearchResult, EnhancedQuery
+from core.knowledge.data_transformer import MaintIEDataTransformer
+from core.knowledge.entity_document_index import EntityDocumentIndex
 
 logger = logging.getLogger(__name__)
 

@@ -8,10 +8,10 @@ import logging
 import time
 from typing import Dict, List, Any, Optional
 
-from src.models.maintenance_models import (
+from core.models.maintenance_models import (
     RAGResponse, EnhancedQuery, SearchResult, QueryAnalysis
 )
-from src.retrieval.vector_search import MaintenanceVectorSearch
+from core.retrieval.vector_search import MaintenanceVectorSearch
 from config.settings import settings
 from .rag_base import MaintIERAGBase
 
@@ -44,7 +44,7 @@ class MaintIEStructuredRAG(MaintIERAGBase):
     def _init_caching(self):
         """Initialize response caching"""
         try:
-            from src.cache.response_cache import ResponseCache
+            from core.utilities.response_cache import ResponseCache
             self.response_cache = ResponseCache()
             logger.info("Response caching initialized")
         except Exception as e:
@@ -54,9 +54,9 @@ class MaintIEStructuredRAG(MaintIERAGBase):
     def _init_graph_components(self):
         """Initialize graph optimization components with better error handling"""
         try:
-            from src.knowledge.data_transformer import MaintIEDataTransformer
-            from src.knowledge.entity_document_index import EntityDocumentIndex
-            from src.retrieval.graph_enhanced_ranking import GraphEnhancedRanker
+            from core.knowledge.data_transformer import MaintIEDataTransformer
+            from core.knowledge.entity_document_index import EntityDocumentIndex
+            from core.retrieval.graph_enhanced_ranking import GraphEnhancedRanker
 
             logger.info("Initializing graph optimization components...")
 
@@ -119,7 +119,7 @@ class MaintIEStructuredRAG(MaintIERAGBase):
         enable_safety_warnings: bool = True
     ) -> RAGResponse:
         """Process query with caching optimization"""
-        from src.monitoring.pipeline_monitor import get_monitor
+        from core.utilities.pipeline_monitor import get_monitor
 
         # Initialize monitoring
         monitor = get_monitor()
@@ -263,7 +263,7 @@ class MaintIEStructuredRAG(MaintIERAGBase):
     def _optimized_structured_retrieval(self, enhanced_query: EnhancedQuery,
                                        max_results: int) -> List[SearchResult]:
         """Optimized structured retrieval using entity index and graph ranking"""
-        from src.monitoring.pipeline_monitor import get_monitor
+        from core.utilities.pipeline_monitor import get_monitor
 
         monitor = get_monitor()
 

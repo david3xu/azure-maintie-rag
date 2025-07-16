@@ -8,9 +8,9 @@ import logging
 from typing import List, Dict, Optional, Any, Set
 from pathlib import Path
 
-from src.gnn.gnn_models import MaintenanceGNNModel
-from src.gnn.data_preparation import MaintIEGNNDataProcessor
-from src.knowledge.data_transformer import MaintIEDataTransformer
+from core.gnn.gnn_models import MaintenanceGNNModel
+from core.gnn.data_preparation import MaintIEGNNDataProcessor
+from core.knowledge.data_transformer import MaintIEDataTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class GNNQueryExpander:
         self.model = MaintenanceGNNModel(config)
 
         # Quick training (for demo - in production, use proper training)
-        from src.gnn.gnn_models import GNNTrainer
+        from core.gnn.gnn_models import GNNTrainer
         trainer = GNNTrainer(self.model, self.device)
 
         # Move data to device

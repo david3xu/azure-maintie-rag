@@ -8,10 +8,10 @@ import logging
 import time
 from typing import Dict, List, Any, Optional
 
-from src.models.maintenance_models import (
+from core.models.maintenance_models import (
     RAGResponse, EnhancedQuery, SearchResult, QueryAnalysis
 )
-from src.retrieval.vector_search import MaintenanceVectorSearch
+from core.retrieval.vector_search import MaintenanceVectorSearch
 from config.settings import settings
 from .rag_base import MaintIERAGBase
 
