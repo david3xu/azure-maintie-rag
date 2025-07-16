@@ -18,6 +18,8 @@ venv/
 # Data and indices (keep raw, ignore processed/indices)
 backend/data/processed/
 backend/data/indices/
+backend/data/metrics/
+backend/data/models/
 logs/
 
 # Jupyter Notebook checkpoints
