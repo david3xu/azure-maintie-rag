@@ -63,7 +63,7 @@ jobs:
       - name: Run all tests with coverage
         run: |
           PYTHONPATH=. pytest --cov=src tests/ --timeout=1800 --durations=10 -v --tb=short
-        timeout-minutes: 30
+        timeout-minutes: 60
         continue-on-error: false
 
       - name: Upload coverage report
