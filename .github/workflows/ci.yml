@@ -15,8 +15,13 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+      OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}
       OPENAI_DEPLOYMENT_NAME: ${{ secrets.OPENAI_DEPLOYMENT_NAME }}
+      OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+      EMBEDDING_MODEL: ${{ secrets.EMBEDDING_MODEL }}
       EMBEDDING_DEPLOYMENT_NAME: ${{ secrets.EMBEDDING_DEPLOYMENT_NAME }}
+      EMBEDDING_API_BASE: ${{ secrets.EMBEDDING_API_BASE }}
+      EMBEDDING_API_VERSION: ${{ secrets.EMBEDDING_API_VERSION }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,11 +36,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-cache.txt || true
-          pip install pytest pytest-cov requests
+          pip install pytest pytest-cov requests pytest-timeout
+          pip list
+
+      - name: Debug environment
+        run: |
+          echo "Python version: $(python --version)"
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo "Tests directory:"
+          ls -la tests/ || echo "No tests directory found"
+          echo "Environment variables:"
+          env | grep -E "(OPENAI|PYTHON)" || echo "No relevant env vars found"
+
+      - name: Set test environment variables
+        run: |
+          # Set default values for testing if secrets are not available
+          export OPENAI_API_VERSION=${OPENAI_API_VERSION:-"2024-02-15-preview"}
+          export OPENAI_MODEL=${OPENAI_MODEL:-"gpt-4"}
+          export EMBEDDING_MODEL=${EMBEDDING_MODEL:-"text-embedding-ada-002"}
+          export EMBEDDING_API_BASE=${EMBEDDING_API_BASE:-"https://api.openai.com"}
+          export EMBEDDING_API_VERSION=${EMBEDDING_API_VERSION:-"2024-02-15-preview"}
+          echo "Test environment variables set"
 
       - name: Run all tests with coverage
         run: |
-          PYTHONPATH=. pytest --cov=src tests/
+          PYTHONPATH=. pytest --cov=src tests/ --timeout=1800 --durations=10 -v --tb=short
+        timeout-minutes: 30
+        continue-on-error: false
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
