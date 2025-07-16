@@ -39,6 +39,10 @@ Thumbs.db
 *.log
 *.tmp
 
+# Test coverage reports
+htmlcov/
+.coverage
+
 # Ignore model checkpoints and large files
 *.ckpt
 *.pth
