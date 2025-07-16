@@ -1,0 +1,33 @@
+{
+  "extraction_date": "2025-07-16T12:09:59.200497",
+  "source_files": {
+    "gold": "data/raw/gold_release.json",
+    "silver": "data/raw/silver_release.json"
+  },
+  "statistics": {
+    "gold": {
+      "total_documents": 1076,
+      "texts_extracted": 717,
+      "texts_skipped": 359,
+      "total_characters": 28416,
+      "avg_length": 39.63179916317991,
+      "min_length": 30,
+      "max_length": 74
+    },
+    "silver": {
+      "total_documents": 7000,
+      "texts_extracted": 4537,
+      "texts_skipped": 2463,
+      "total_characters": 176454,
+      "avg_length": 38.89221952832268,
+      "min_length": 30,
+      "max_length": 78
+    },
+    "combined": {
+      "total_texts": 5254,
+      "total_characters": 204870,
+      "avg_length": 38.99314807765512
+    }
+  },
+  "output_files": {
+    "gold_file": 

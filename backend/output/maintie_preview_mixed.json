@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "statistics": {
+    "total_texts": 445,
+    "avg_length": 55.530337078651684,
+    "min_length": 50,
+    "max_length": 78,
+    "total_characters": 24711,
+    "source_statistics": {
+      "gold_texts_extracted": 76,
+      "silver_texts_extracted": 369,
+      "total_texts": 445,
+      "avg_text_length": 55.530337078651684,
+      "data_source": "pure_text_files",
+      "source_files": {
+        "high_quality": "data/raw/maintenance_high_quality_texts.txt",
+        "gold": "data/raw/maintenance_gold_texts.txt",
+        "silver": "data/raw/maintenance_silver_texts.txt",
+        "combined": "data/raw/maintenance_all_texts.txt"
+      }
+    }
+  },
+  "samples": [
+    "<id> air conditioner unserviceable when stationary",
+    "<num> hour mechanical replace brake swing left rear <id>",
+    "<id> replace transfer tube left hand lift cylinder"
+  ],
+  "metadata": {
+    "data_mode": "pure_text_files",
+    "source": "pure_text_combined",
+    "domain": "preview",
+    "extraction_date": "1752667491.6758447",
+    "original_data_source": "maintie_dataset",
+    "pure_text_available": true,
+    "pure_text_files": {
+      "high_quality": "data/raw/maintenance_high_quality_texts.txt",
+      "gold": "data/raw/maintenance_gold_texts.txt",
+      "silver": "data/raw/maintenance_silver_texts.txt",
+      "combined": "data/raw/maintenance_all_texts.txt"
+    }
+  }
+}

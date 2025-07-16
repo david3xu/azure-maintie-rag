@@ -1,0 +1,86 @@
+# Enhanced Universal Schema Template
+# Supports domain inheritance and customization
+
+# Base universal entity types (all domains inherit these)
+base_entity_types:
+  - physical_object
+  - abstract_concept
+  - process
+  - activity
+  - property
+  - state
+  - location
+  - temporal_entity
+
+# Base universal relationship types
+base_relationship_types:
+  - has_part
+  - located_in
+  - caused_by
+  - used_for
+  - associated_with
+  - temporal_relation
+
+# Domain-specific extensions (auto-populated by LLM)
+domain_entity_extensions:
+  # Will be populated automatically, e.g.:
+  # medical: [symptom, treatment, medication, diagnosis]
+  # legal: [contract, clause, obligation, right]
+  # maintenance: [equipment, failure, repair, component]
+
+domain_relationship_extensions:
+  # Will be populated automatically, e.g.:
+  # medical: [treats, causes, prevents, diagnoses]
+  # legal: [binds, obligates, permits, prohibits]
+  # maintenance: [fails, requires, maintains, replaces]
+
+# Validation rules (domain-agnostic)
+validation_rules:
+  min_entities: 5
+  max_entities: 50
+  min_relationships: 3
+  max_relationships: 30
+  min_triplets_per_entity: 2
+  quality_threshold: 0.7
+
+# Mapping rules for existing systems
+legacy_mapping:
+  # Map to existing MaintenanceEntity types for compatibility
+  entity_type_mapping:
+    physical_object: "PHYSICAL_OBJECT"
+    process: "PROCESS"
+    activity: "ACTIVITY"
+    property: "PROPERTY"
+    state: "STATE"
+
+  relationship_type_mapping:
+    has_part: "HAS_PART"
+    has_property: "HAS_PROPERTY"
+    located_in: "LOCATED_IN"
+
+# LLM prompting configuration
+llm_extraction_config:
+  entity_discovery:
+    max_tokens: 200
+    temperature: 0.3
+    few_shot_examples: true
+    validation_passes: 3
+
+  relationship_discovery:
+    max_tokens: 150
+    temperature: 0.4
+    focus_on_common_patterns: true
+
+  triplet_extraction:
+    batch_size: 10
+    max_tokens: 300
+    temperature: 0.4
+    quality_filter: true
+
+# Performance optimization settings
+performance_config:
+  sampling_strategy: "stratified"
+  max_discovery_texts: 100
+  max_extraction_batches: 50
+  cache_enabled: true
+  parallel_processing: true
