@@ -3,6 +3,9 @@ Vector-based semantic search module
 Implements semantic similarity search using embeddings for maintenance documents
 """
 
+import os
+import json
+import time
 import logging
 import pickle
 from pathlib import Path
@@ -11,7 +14,7 @@ import numpy as np
 import faiss
 from openai import AzureOpenAI
 
-from src.models.maintenance_models import SearchResult, MaintenanceDocument
+from core.models.maintenance_models import SearchResult, MaintenanceDocument
 from config.settings import settings
 
 

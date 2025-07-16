@@ -26,8 +26,8 @@ import logging
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
-from src.pipeline.rag_structured import MaintIEStructuredRAG
-from src.models.maintenance_models import QueryAnalysis, EnhancedQuery
+from core.orchestration.rag_structured import MaintIEStructuredRAG
+from core.models.maintenance_models import QueryAnalysis, EnhancedQuery
 
 # Configure logging to capture step outputs
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -177,7 +177,7 @@ async def run_detailed_algorithm_flow() -> Tuple[Optional[DetailedQueryFlowTrack
             complexity = analyzer._assess_complexity(normalized_query, entities)
             urgency = analyzer._determine_urgency(normalized_query)
             intent = analyzer._detect_intent(normalized_query, query_type)
-            from src.models.maintenance_models import QueryAnalysis
+            from core.models.maintenance_models import QueryAnalysis
             analysis = QueryAnalysis(
                 original_query=test_query,
                 query_type=query_type,
@@ -217,7 +217,7 @@ async def run_detailed_algorithm_flow() -> Tuple[Optional[DetailedQueryFlowTrack
             structured_search = analyzer._build_structured_search(entities, expanded_concepts)
             safety_considerations = analyzer._identify_safety_considerations(entities, expanded_concepts)
             domain_context = analyzer._add_domain_context(analysis)
-            from src.models.maintenance_models import EnhancedQuery
+            from core.models.maintenance_models import EnhancedQuery
             enhanced_query = EnhancedQuery(
                 analysis=analysis,
                 expanded_concepts=expanded_concepts,
@@ -389,7 +389,7 @@ async def run_detailed_algorithm_flow() -> Tuple[Optional[DetailedQueryFlowTrack
                 enhanced_results = search_results  # No enhancement
         # Continue with LLM generation...
         query_time = time.time() - query_start
-        from src.models.maintenance_models import RAGResponse
+        from core.models.maintenance_models import RAGResponse
         response = RAGResponse(
             query=test_query,
             enhanced_query=enhanced_query if 'enhanced_query' in locals() else None,

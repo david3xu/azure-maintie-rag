@@ -11,10 +11,10 @@ from collections import defaultdict
 from pathlib import Path
 import json
 
-from src.models.maintenance_models import (
+from core.models.maintenance_models import (
     QueryAnalysis, EnhancedQuery, QueryType, MaintenanceEntity
 )
-from src.knowledge.data_transformer import MaintIEDataTransformer
+from core.knowledge.data_transformer import MaintIEDataTransformer
 from config.settings import settings
 
 
@@ -80,7 +80,7 @@ class MaintenanceQueryAnalyzer:
     def _init_gnn_expander(self, transformer: MaintIEDataTransformer):
         """Initialize GNN query expander if available"""
         try:
-            from src.gnn.gnn_query_expander import GNNQueryExpander
+            from core.gnn.gnn_query_expander import GNNQueryExpander
 
             # Check for pre-trained model
             model_path = Path("data/models/maintenance_gnn.pt")
@@ -195,7 +195,7 @@ class MaintenanceQueryAnalyzer:
 
     def analyze_query(self, query: str) -> QueryAnalysis:
         """Analyze maintenance query and extract key information"""
-        from src.monitoring.pipeline_monitor import get_monitor
+        from core.utilities.pipeline_monitor import get_monitor
 
         monitor = get_monitor()
 
@@ -292,7 +292,7 @@ class MaintenanceQueryAnalyzer:
 
     def enhance_query(self, analysis: QueryAnalysis) -> EnhancedQuery:
         """Enhanced query enhancement with domain intelligence"""
-        from src.monitoring.pipeline_monitor import get_monitor
+        from core.utilities.pipeline_monitor import get_monitor
 
         monitor = get_monitor()
 

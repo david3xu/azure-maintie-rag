@@ -18,7 +18,7 @@ Features:
 Usage:
 ------
 1. **Direct Python API:**
-    from src.gnn.comprehensive_trainer import run_comprehensive_gnn_training
+    from core.gnn.comprehensive_trainer import run_comprehensive_gnn_training
     results = run_comprehensive_gnn_training()
 
 2. **CLI Script:**
@@ -61,7 +61,7 @@ import time
 
 from .gnn_models import MaintenanceGNNModel
 from .data_preparation import MaintIEGNNDataProcessor
-from src.knowledge.data_transformer import MaintIEDataTransformer
+from core.knowledge.data_transformer import MaintIEDataTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -269,8 +269,8 @@ def run_comprehensive_gnn_training():
     """Run complete GNN training pipeline"""
 
     # Load data
-    from src.gnn.data_preparation import MaintIEGNNDataProcessor
-    from src.knowledge.data_transformer import MaintIEDataTransformer
+    from core.gnn.data_preparation import MaintIEGNNDataProcessor
+    from core.knowledge.data_transformer import MaintIEDataTransformer
 
     data_transformer = MaintIEDataTransformer()
     gnn_processor = MaintIEGNNDataProcessor(data_transformer)

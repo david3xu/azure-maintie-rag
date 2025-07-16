@@ -11,8 +11,8 @@ from typing import Dict, List, Set, Optional, Any
 from collections import defaultdict
 import re
 
-from src.models.maintenance_models import MaintenanceEntity, MaintenanceDocument
-from src.knowledge.data_transformer import MaintIEDataTransformer
+from core.models.maintenance_models import MaintenanceEntity, MaintenanceDocument
+from core.knowledge.data_transformer import MaintIEDataTransformer
 from config.settings import settings
 
 logger = logging.getLogger(__name__)

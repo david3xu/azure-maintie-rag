@@ -10,7 +10,7 @@ import asyncio
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 
-from src.models.maintenance_models import (
+from core.models.maintenance_models import (
     RAGResponse, EnhancedQuery, SearchResult, QueryAnalysis
 )
 from config.settings import settings

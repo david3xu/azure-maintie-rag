@@ -8,7 +8,7 @@ import time
 from typing import Dict, List, Any, Optional, Union
 from openai import AzureOpenAI
 
-from src.models.maintenance_models import SearchResult, EnhancedQuery, RAGResponse
+from core.models.maintenance_models import SearchResult, EnhancedQuery, RAGResponse
 from config.settings import settings
 
 from config.prompt_templates import template_manager
@@ -337,7 +337,7 @@ def create_llm_interface(api_key: Optional[str] = None, model: Optional[str] = N
 
 if __name__ == "__main__":
     # Example usage
-    from src.models.maintenance_models import QueryAnalysis, EnhancedQuery, QueryType
+    from core.models.maintenance_models import QueryAnalysis, EnhancedQuery, QueryType
 
     # Create sample enhanced query
     analysis = QueryAnalysis(

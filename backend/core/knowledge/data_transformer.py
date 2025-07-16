@@ -11,12 +11,12 @@ import pandas as pd
 import networkx as nx
 from collections import defaultdict, Counter
 
-from src.models.maintenance_models import (
+from core.models.maintenance_models import (
     MaintenanceEntity, MaintenanceRelation, MaintenanceDocument,
     EntityType, RelationType
 )
-from src.knowledge.schema_processor import SchemeProcessor
-from src.knowledge.metadata_manager import MetadataManager
+from core.knowledge.schema_processor import SchemeProcessor
+from core.knowledge.metadata_manager import MetadataManager
 from config.settings import settings
 
 
@@ -90,7 +90,7 @@ class MaintIEDataTransformer:
             # Load entities (saved as a list)
             with open(self.processed_dir / "maintenance_entities.json", 'r') as f:
                 entities_data = json.load(f)
-            from src.models.maintenance_models import MaintenanceEntity
+            from core.models.maintenance_models import MaintenanceEntity
             self.entities = {}
             for entity_data in entities_data:
                 entity = MaintenanceEntity.from_dict(entity_data) if hasattr(MaintenanceEntity, 'from_dict') else MaintenanceEntity(**entity_data)
@@ -99,7 +99,7 @@ class MaintIEDataTransformer:
             # Load documents (saved as a list)
             with open(self.processed_dir / "maintenance_documents.json", 'r') as f:
                 documents_data = json.load(f)
-            from src.models.maintenance_models import MaintenanceDocument
+            from core.models.maintenance_models import MaintenanceDocument
             self.documents = {}
             for doc_data in documents_data:
                 doc = MaintenanceDocument.from_dict(doc_data) if hasattr(MaintenanceDocument, 'from_dict') else MaintenanceDocument(**doc_data)

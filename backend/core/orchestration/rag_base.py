@@ -7,13 +7,13 @@ import logging
 import time
 from typing import Dict, List, Any, Optional
 
-from src.models.maintenance_models import (
+from core.models.maintenance_models import (
     RAGResponse, EnhancedQuery, SearchResult, QueryAnalysis
 )
-from src.knowledge.data_transformer import MaintIEDataTransformer
-from src.enhancement.query_analyzer import MaintenanceQueryAnalyzer
-from src.retrieval.vector_search import MaintenanceVectorSearch
-from src.generation.llm_interface import MaintenanceLLMInterface
+from core.knowledge.data_transformer import MaintIEDataTransformer
+from core.enhancement.query_analyzer import MaintenanceQueryAnalyzer
+from core.retrieval.vector_search import MaintenanceVectorSearch
+from core.generation.llm_interface import MaintenanceLLMInterface
 from config.settings import settings
 
 
@@ -127,7 +127,7 @@ class MaintIERAGBase:
     def _load_documents(self) -> Dict[str, Any]:
         """Load maintenance documents from processed data"""
         try:
-            from src.retrieval.vector_search import load_documents_from_processed_data
+            from core.retrieval.vector_search import load_documents_from_processed_data
             documents = load_documents_from_processed_data()
             logger.info(f"Loaded {len(documents)} documents for {self.pipeline_type} RAG pipeline")
             return documents

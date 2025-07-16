@@ -3,7 +3,7 @@ Metadata management for enhanced MaintIE features
 """
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
-from src.knowledge.schema_processor import SchemeProcessor
+from core.knowledge.schema_processor import SchemeProcessor
 
 @dataclass
 class TypeMetadata:
