@@ -1,0 +1,1440 @@
+# High quality maintenance texts (gold only)
+# Extracted on: 2025-07-16T12:09:59.328867
+# Total texts: 717
+# Source: MaintIE dataset
+#============================================================
+
+<id> air conditioner thermostat not working
+
+<id> air conditioner thermostat unserviceable
+
+<id> air conditioner unserviceable
+
+<id> air conditioner unserviceable when stationary
+
+<id> air freight bogger dogbones TBC
+
+<id> air horn not working compressor awaiting
+
+<id> air horn working intermittently
+
+<id> air leak near side of door
+
+<id> air leaking from line outside
+
+<id> air receiver safety valves to be replaced
+
+<id> alarm on VIMS doesn't work
+
+<id> alternator overcharge fault
+
+<id> analyse failed driveline component
+
+<id> and <id> lube system faults
+
+<id> auto-greaser control unit
+
+<id> auto-greaser unserviceable
+
+<id> auto-spray feature not working
+
+<id> auxiliary Cat engine lube service
+
+<id> axle temperature sensor fault
+
+<id> back rest unserviceable handle broken
+
+<id> backhoe windscreen to be fixed
+
+<id> backlight on dash unserviceable
+
+<id> battery cover hinges seized
+
+<id> bearing on air conditioner compressor unserviceable
+
+<id> blade light blown needs replacing
+
+<id> blade wear plates cracked and worn
+
+<id> blow out generators electrical
+
+<id> blown air conditioner hose
+
+<id> blown air conditioner hose to radiator
+
+<id> blown crowd cylinder hose
+
+<id> blown extension line from position <num>
+
+<id> blown lift cylinder o-ring
+
+<id> blown o-ring off steering hose
+
+<id> blown o-ring on left hand lift cylinder
+
+<id> blown o-ring on steering hose
+
+<id> blown oil cooler hose - <num> x <num> <num> metre
+
+<id> blown position <num> tyre
+
+<id> blown right hand bucket cylinder hose
+
+<id> boarding gate hinge broken
+
+<id> boarding gate latch not working
+
+<id> boarding ladder not working
+
+<id> boilermaker repairs to bucket assembly
+
+<id> boilermaker repairs to engine cover
+
+<id> boilermaker repairs to exhaust area
+
+<id> boilermakers to repair bucket
+
+<id> boilermakers to repair cooler frame
+
+<id> boilermakers to repair plate over proximity switch
+
+<id> both stick cylinders leaking
+
+<id> brake cooling hose leaking
+
+<id> brake cooling hose leaking rear
+
+<id> brake cooling return hose leaking
+
+<id> broken air conditioner guard
+
+<id> broken clamp on crowd cylinder hose TBC
+
+<id> broken fuel cooler mounts
+
+<id> broken left hand side mirror
+
+<id> broken right hand side door window
+
+<id> bucket cracked in arch near cancelled
+
+<id> cabin door window cracked
+
+<id> cabin seals leaking dust PO
+
+<id> cabin seals leaking dust bad
+
+<id> cabin seat needs replacing
+
+<id> cabin window needs resealing
+
+<id> carousel popped bolt needs Loctite
+
+<id> centrifugal oil filter fault
+
+<id> centrifugal oil filter leaking
+
+<id> change cutting edges outsides GET
+
+<id> change differential and final drive oils
+
+<id> change differential and hub oils
+
+<id> change engine oil and inspect cooling system
+
+<id> change out <id> thrust bearing oil
+
+<id> change out <num> x new tyres
+
+<id> change out all tyres for off hire
+
+<id> change out auxiliary water pump
+
+<id> change out blown o-ring on steering pump
+
+<id> change out blown position <num> tyre
+
+<id> change out blown steering hose
+
+<id> change out broken bolt on brake pump
+
+<id> change out broken prelube bracket
+
+<id> change out broken stabilizer bar
+
+<id> change out cracked pipe on valve bank
+
+<id> change out cracked position <num> adaptor and tooth
+
+<id> change out crowd cylinder
+
+<id> change out engine % more WOs
+
+<id> change out engine - costs
+
+<id> change out engine air cleaners
+
+<id> change out exhaust clamp broken on left hand side [t |]
+
+<id> change out front upper window cracked
+
+<id> change out jacket water pump
+
+<id> change out leak slew motor hose
+
+<id> change out leaking HMU on next
+
+<id> change out leaking fan hoses
+
+<id> change out leaking heater taps
+
+<id> change out leaking hydraulic hose
+
+<id> change out leaking implement pump
+
+<id> change out leaking relay valve
+
+<id> change out leaking steering hose
+
+<id> change out left hand engine servo pumps <num> x
+
+<id> change out left hand hoist cylinder with <id>
+
+<id> change out left hand lift cylinder
+
+<id> change out left hand steering cylinder
+
+<id> change out left hand steering cylinder leaking
+
+<id> change out left hand stick cylinder o-ring
+
+<id> change out position <num> <num> <num> and <num> tyres
+
+<id> change out position <num> <num> and <num> tyres
+
+<id> change out position <num> and <num> tyre worn out
+
+<id> change out position <num> and <num> tyres
+
+<id> change out position <num> and <num> tyres and rims
+
+<id> change out position <num> swing motor
+
+<id> change out position <num> tyre
+
+<id> change out position <num> tyre - sensor not reading
+
+<id> change out position <num> tyre damage
+
+<id> change out rear steering accumulator bladder
+
+<id> change out right hand steering cylinder
+
+<id> change out rotation shaft seal
+
+<id> change out steering hoses
+
+<id> change out unserviceable jacket water pump
+
+<id> change out unserviceable left hand bucket cylinder hose
+
+<id> change out unserviceable position <num> tyre
+
+<id> change out unserviceable right hand clam cylinder hose
+
+<id> change out unserviceable right hand tilt cylinder
+
+<id> change out unserviceable swing brake cylinder
+
+<id> change out weeping boom cylinder hose
+
+<id> change out worn position <num> tyre
+
+<id> change position <num> and <num> tyre and position <num> rim
+
+<id> change position <num> and <num> tyres
+
+<id> change position <num> and position <num> tyres
+
+<id> change position <num> flat tyre
+
+<id> change position <num> tyre
+
+<id> change position <num> tyre damage text
+
+<id> change tyre for run outs position <num>
+
+<id> change tyre position <num>
+
+<id> check / repair engine oil leak
+
+<id> check and repair auto-greaser unit
+
+<id> check and repair rear wiper motor
+
+<id> check left hand lift cylinder
+
+<id> check repair shutdown fault
+
+<id> chord leaking air found <id>
+
+<id> compressor oil pressure switch unserviceable
+
+<id> control valve unserviceable see long text
+
+<id> conveyor head pulley shaft modifications
+
+<id> coolant hose leaking at right hand bottom
+
+<id> coolant leak at engine oil cooler
+
+<id> coolant leak at jacket water pump
+
+<id> coolant pipe clamps needs fitting TBC
+
+<id> cooler return pipe coupling leak
+
+<id> cords cracked at <id> and <id>
+
+<id> crack in blade liner left hand side
+
+<id> crack in lower centre of windscreen
+
+<id> crack onside rock deflector
+
+<id> cracked steering tank suction tube
+
+<id> cracked walkway and handrails
+
+<id> cracks in back right hand side handrail
+
+<id> cracks in diagonal braces in front
+
+<id> cracks in fire suppression mounts
+
+<id> crowd cylinder creeping replace
+
+<id> cutting edges need change out
+
+<id> daily electrical inspections
+
+<id> damage to position <num> tyre
+
+<id> damaged position <num> tyre
+
+<id> damaged position <num> tyre and rim
+
+<id> diagnose / repair fuel fault
+
+<id> diagnose / repair slow steering
+
+<id> diagnose and repair spray faults
+
+<id> diagnose and repair torque converter temperature error
+
+<id> diagnose transmission overheat fault
+
+<id> diagnose transmission slipping fault
+
+<id> differential cooler fan hose leaking
+
+<id> differential cooler hose leaking
+
+<id> differential cooler pump leaking
+
+<id> differential lube pump leaking
+
+<id> differential lube pump leaking PO
+
+<id> differential pump motor hose leaking
+
+<id> drag number <num> input shaft front change out - mechanical
+
+<id> drag number <num> input shaft rear change out - mechanical
+
+<id> drag number <num> intermediate shaft change out - mechanical
+
+<id> dragline air conditioner units need cleaning
+
+<id> drain and sample engine oil
+
+<id> drill out broken bolt see text
+
+<id> driver's door top hinge broken
+
+<id> duo-cone seals leaking number <num> swing
+
+<id> dust leak operators side window
+
+<id> electrical fault in the <id>
+
+inspect and replace rollers as required
+
+<id> ripper control valve falling off
+
+<id> replace left hand crowd hose
+
+<id> replace faulty brake sensor <num> task
+
+<num> - cable gantry crack repairs
+
+<id> failed PTO and auxiliary drive PO
+
+<id> replace torque converter wiring harness
+
+<id> replace leaking transfer pipe
+
+<id> position <num> brake temperature error
+
+front revolving light not working
+
+operator cabin air conditioner air outlet modifications
+
+<id> repair AFFF system and recharge
+
+replace number <num> hoist brake cylinder
+
+<id> tub hook greasing and inspection
+
+adjust drag number <num> brakes to standard
+
+CW <id> replace slew brake right hand front <id>
+
+rear door limit switches to be modified
+
+general light inspection / cleaning
+
+hoist motor <num> RTD wired incorrectly
+
+<id> repair front light wiring
+
+<id> possible minor leak on fuel tank
+
+<id> replace blown implement hose
+
+<id> swing motor blower lube inspect
+
+<id> swing motor / blower lube inspection
+
+replace lube module location pins
+
+<id> replace light switch for side lamp
+
+left hand side front second level platform supports
+
+repair A-frame light not done on service
+
+<id> rear steering accumulator leak
+
+<id> replace blown right hand steering hose
+
+<id> replace bucket surf workshop
+
+transmission fill / drain plug unserviceable
+
+change pulley bearings on number <num> pulley
+
+replace transmission wiring harness
+
+<num> hour mechanical inspection idler right rear <id>
+
+<id> replace bucket tooth lock
+
+rear through shaft universal joint unserviceable
+
+repair leaking swing <num> pedestal seals
+
+all lighting requires testing and tagging
+
+drive package ribbon cable change out
+
+<id> replace steering control valve
+
+<id> replace front crankshaft TBC
+
+steering cylinder bearings have excess play
+
+<id> replace fire suppression actuator
+
+<num> hour mechanical service water truck <id> PO
+
+movement found right hand engine mount
+
+replace left hand travel motor
+
+<id> weekly mechanical inspection
+
+<id> rear wiper motor unserviceable
+
+front right hand roller need to be fitted
+
+<id> replace transmission - cracked
+
+<id> investigate and repair oil leak <id>
+
+<id> park brake alarm sounds continuously
+
+system <id> pump pressure gauge not working
+
+<id> replace unserviceable differential drain plugs
+
+drag tune roller bracket / bearings
+
+<id> repair right hand fuel tank crack
+
+<id> grease pump is bypassing air
+
+<id> replace auto-greaser vent valve
+
+<id> replace grommet / clamp right hand lift cylinder
+
+<id> replace oil cooler lock pins
+
+<id> repair boom cracks left hand side
+
+<id> replace steering pilot hoses
+
+<id> investigate / repair no gear fault
+
+handrail above battery box cracked
+
+<id> front window cracked replace
+
+replace bottom steering shaft universal joint
+
+<id> fit tilt cylinder cover and guard TBC
+
+<num> hour mechanical inspection track roller group left hand <id>
+
+<id> investigate engine oil leak
+
+<id> replace right hand lift cylinder leaking
+
+diagnose and repair ladder fault
+
+<id> replace damaged position <num> tyre and position <num>
+
+<id> grease gauges requires replacing
+
+<id> fire extinguisher bracket on deck loose
+
+rear door struts require replacing
+
+<id> oil leak at air compressor
+
+<id> replace leaking scavenge pump
+
+<id> repair transmission neutraliser
+
+change out leaking transmission hose
+
+<id> tail pulley has no grease lines
+
+swing brake <num> replace disc and pads
+
+replace hoist pony drive motor
+
+<num> hour mechanical inspection hydraulic cylinder bucket right hand <id>
+
+<id> replace position <num> <num> <num> tyres
+
+<id> replace <num> x cracked windows
+
+replace lube system <id> drag rope pump
+
+change out front steering accumulator
+
+<num> hour mechanical inspection carry roller number <num> right hand <id>
+
+<id> fit <num> new front tyres
+
+<id> replace crowd cylinder transfer pipe
+
+<id> replace tilt cylinder hose
+
+<id> engine oil leaks right hand side
+
+<num> hour mechanical inspection bucket <id>
+
+replace spacer clamp on main shaft
+
+<id> investigate auto-lube fault
+
+CW <id> - change out universal joints engine - pump drive PO
+
+<id> repair cover crowd cylinder
+
+<id> leaking brake cooling hose
+
+<id> faulty fuel pressure sensor
+
+bottom steering shaft universal joint worn
+
+right hand bobbin roller unserviceable
+
+<id> fit full set of lug tyres
+
+<id> replace damaged tyre on position <num>
+
+fabricate drop saw cutting bench
+
+replace hydraulic pump coupling
+
+left hand side pinion change out cover cracking
+
+<id> repair steering neutralizer system
+
+statutory electrical welder inspections
+
+clean all motor generator sets
+
+<id> left hand rear brake cooling hose leaking
+
+<id> replace engine timing sensor
+
+fitting leaking out of main air tanks
+
+<id> repair centre hitch oil leaks
+
+<id> repair oil leak position <num> wheel end
+
+<id> investigate / repair hydraulic fault
+
+steering hub caps require replacing
+
+<num> hour mechanical replace sprockets right hand <id>
+
+bulk fuel tank cracked and leaking
+
+hydraulic hose leaking in centre of machine
+
+<id> repair speed sensor wiring
+
+<id> repair air conditioner and wiring fault
+
+<id> replace damage auto-greaser door
+
+<id> investigate / repair joystick needs repair
+
+<id> swing number <num> motor change out
+
+<id> headboard welds broken / cracked
+
+replace bearing and taperlock on <id> roller
+
+statutory electrical <num> week high voltage service
+
+clean and seal electrical components
+
+hoist brake switches need adjusting
+
+change out position <num> tyre worn
+
+cabin jacking cylinder ends unserviceable
+
+<num> hour mechanical inspection slew ring <id>
+
+repair movement in left hand steering pin
+
+<id> remove electrical cabinet
+
+<id> replace blown main pump hose
+
+<num> hour mechanical inspection track chain left hand <id>
+
+park brake indicator light going on and off
+
+remove shims from behind drag <num> brake
+
+<id> replaced o-ring lift cylinder
+
+<id> replace cracked transmission dropbox
+
+front window roller blind broken
+
+<id> replace position <num> tyre damaged
+
+flush oil and clean site glass
+
+cabin seat unserviceable needs replacing
+
+oil leak from behind water pump
+
+<id> left hand luffing cylinder change
+
+<id> replace position <num> tyre - mismatched
+
+<id> hoist brake number <num> position out of adjustment
+
+<id> - <id> cluster inspect / repair
+
+<id> - <id> missing poppet valve
+
+<id> - A-frame safety ropes inspection
+
+<id> - AM / FM radio needs new aerial
+
+<id> - CW left hand hoist cylinder leaking plug
+
+<id> - CW right hand hoist cylinder leaking
+
+<id> - <sensitive> modifications to module
+
+<id> - NDT A-frame clevis weld and pin
+
+<id> - NDT boom foot clevis weld and pins
+
+<id> - PTO shaft input seal leaking
+
+<id> - Tele-Remote camera fault
+
+<id> - Tele-Remote cameras fault - text -
+
+<id> - Tele-Remote installation and tune
+
+<id> - Tele-Remote set-up in <id>
+
+<id> - W change out position <num> turbo
+
+<id> - air conditioner compressor
+
+<id> - air conditioner compressor corroded
+
+<id> - air conditioner compressor unserviceable
+
+<id> - air conditioner no good
+
+<id> - air conditioner system leaking
+
+<id> - brake hose needs to be replaced
+
+<id> - bucket carrying out repairs
+
+<id> - change differential oil
+
+<id> - change out - transmission controller filter hose
+
+<id> - change out <id> air compressor gauge
+
+<id> - change out <num> fuel injectors PO
+
+<id> - change out air conditioner belts
+
+<id> - change out air conditioner compressor
+
+<id> - change out air conditioner condenser
+
+<id> - change out battery right
+
+<id> - change out brake swing left front
+
+<id> - change out brake swing left rear
+
+<id> - change out brake swing right front
+
+<id> - change out brake swing right rear
+
+<id> - change out broken grease lines
+
+<id> - change out bucket assembly
+
+<id> - change out coolant flow switch
+
+<id> - change out coolant pump
+
+<id> - change out crowd cylinder
+
+<id> - change out crowd cylinder core return
+
+<id> - change out cutting edges
+
+<id> - change out dogbone bushes
+
+<id> - change out engine oil pump
+
+<id> - change out fire suppression switch on bottle
+
+<id> - change out fuel breather
+
+<id> - change out hydraulic cylinder steering left
+
+<id> - change out hydraulic motor cooler fan
+
+<id> - change out hydraulic motor cooler fan position <num>
+
+<id> - change out hydraulic motor engine fan position <num>
+
+<id> - change out jockey pulley bearing
+
+<id> - change out leaking transmission hose
+
+<id> - change out left hand bucket cylinder
+
+<id> - change out left hand lift cylinder
+
+<id> - change out left hand lift cylinder core return
+
+<id> - change out left hand stick cylinder
+
+<id> - change out low air pressure regulator PO
+
+<id> - change out number <num> air conditioner compressor
+
+<id> - change out number <num> faulty injector assembly
+
+<id> - change out plugged fuel filters
+
+<id> - change out pulley number <num>
+
+<id> - change out pump cooling fan engine
+
+<id> - change out right hand engine air conditioner compressor PO
+
+<id> - change out right hand stick cylinder
+
+<id> - change out starter motor
+
+<id> - change out starter motor lower
+
+<id> - change out starter motor upper
+
+<id> - change out steering ball studs
+
+<id> - change out steering ball studs PO
+
+<id> - change out swing box left front
+
+<id> - change out swing box left rear
+
+<id> - change out swing box right front
+
+<id> - change out swing box right rear
+
+<id> - change out transmission
+
+<id> - change out turbo primary left
+
+<id> - change out turbo primary left front
+
+<id> - change out turbo primary left rear
+
+<id> - change out turbo primary right
+
+<id> - change out turbo primary right front
+
+<id> - change out turbo primary right rear
+
+<id> - change out tyre position <num>
+
+<id> - change out universal joints engine - pump drag
+
+<id> - change out universal joints engine - pump drive
+
+<id> - change out universal joints engine - pump drive shaft
+
+<id> - change out worn ripper tip ripper tip
+
+<id> - cover steering ball studs
+
+<id> - differential lube hose leaking
+
+<id> - drag coupling lube and inspection
+
+<id> - drag motor / blower lube electrical
+
+<id> - drag motor blower lube electrical
+
+<id> - emergency gate latch broken
+
+<id> - engine fan hose weeping
+
+<id> - engine oil leak - inspection plate
+
+<id> - engine vibration <num>-<num> RPM
+
+<id> - fit and test Tele-Remote gear
+
+<id> - front differential pinion seal
+
+<id> - hoist coupling lube and inspection
+
+<id> - hoist motor blower lube electrical
+
+<id> - hydraulic oil leak from environmental
+
+<id> - inspect hydraulic cylinder boom lift right
+
+<id> - inspect hydraulic cylinder bucket left
+
+<id> - inspect rear brakes - changed oil
+
+<id> - inspect track roller <num> left
+
+<id> - inspect track roller <num> right
+
+<id> - inspection equalizer bar out bearing right
+
+<id> - inspection mast raise cylinder pin left lower
+
+<id> - inspection mast raise cylinder pin left upper
+
+<id> - inspection mast raise cylinder pin right lower
+
+<id> - inspection mast raise cylinder pin right upper
+
+<id> - inspection- inspection mast raise cylinder pin left low
+
+<id> - inspection- inspection mast raise cylinder pin left up
+
+<id> - inspection- inspection mast raise cylinder pin right low
+
+<id> - inspection- inspection mast raise cylinder pin right up
+
+<id> - install new emergency lights
+
+<id> - install pre-cleaner dust valves
+
+<id> - install pre-cleaner dust valves PO
+
+<id> - investigate torque converter fan pump oil leak
+
+<id> - left hand boom cylinder hose leaking PO
+
+<id> - left hand corner bonnet cracked
+
+<id> - left hand side boom foot crack repair
+
+<id> - lower left hand headlight blown
+
+<id> - machine <num> hour service
+
+Mercedes <id> - machine service
+
+<id> - minor transmission oil leak
+
+<id> - modular does not self assign
+
+<id> - no reception on AM / FM radio
+
+<id> - noisy hydraulic lift cylinder
+
+<id> - operators seat worn padding
+
+<id> - propel second / third intermediate pinions inspection
+
+<id> - radiator relief valves leaking
+
+<id> - rear steering accumulator leaking
+
+<id> - recharge fire suppression
+
+<id> - rectify low power fault
+
+<id> - remove Tele-Remote equipment
+
+<id> - repair / replace air conditioner blower fans
+
+<id> - repair blown air conditioner hose
+
+<id> - repair cracked steering tank mo
+
+<id> - repair engine oil leak and
+
+<id> - repair engine oil leaking
+
+<id> - repair grease system to bucket
+
+<id> - repair leaking centrifugal filter
+
+<id> - repair position <num> overstroke fault
+
+<id> - repair right hand track frame crack
+
+<id> - repair transmission fault
+
+<id> - repaired <num> x broken lines
+
+<id> - replace / fuel level sensor
+
+<id> - replace STIC steering control valve
+
+<id> - replace blown work lights
+
+<id> - replace boom cylinder hose
+
+<id> - replace both fan motor hoses
+
+<id> - replace brake cooling lines <num>
+
+<id> - replace broken onside mirror
+
+<id> - replace cracked exhaust shield
+
+<id> - replace exhaust manifold studs
+
+<id> - replace failed air conditioner compressor
+
+<id> - replace hydraulic cylinder hoist left
+
+<id> - replace leaking steering cylinder
+
+<id> - replace left hand side steering cylinder
+
+<id> - replace lift cylinder fittings left hand
+
+<id> - replace pressure sensor
+
+<id> - replace right hand bucket hydraulic cylinder
+
+<id> - replace right hand fuel level sensor
+
+<id> - replace right hand steering cylinder pin and bearing
+
+<id> - replace steering cylinder
+
+<id> - replace steering cylinder pins and bushes
+
+<id> - replace tilt cylinder guard
+
+<id> - replace tilt cylinder hose
+
+<id> - replace tyre position <num>
+
+<id> - replaced leaking steering hose
+
+<id> - replacement - left hand steering hoses
+
+<id> - rotate position <num> and <num> tyres
+
+<id> - set-up Tele-Remote bogging
+
+<id> - steering solenoid checks
+
+<id> - supply spare window rubber
+
+<id> - temperature readings swing motors <num> and <num>
+
+<id> - tighten bolts to transmission
+
+<id> - transmission charge hose leaking
+
+<id> - weekly tyre and rim repairs
+
+<id> - weekly tyre and rim repairs cancel
+
+<id> - weekly tyre inspections
+
+<id> <id> <id> <num> weekly lube service
+
+<id> <id> auto-lube repairs text
+
+<id> <id> chord is leaking air from crack
+
+<id> <id> engine shutdown fault
+
+<id> <id> exhaust repairs text
+
+<id> <id> fire extinguisher bracket replaced
+
+<id> <id> fit new left hand front mudflap
+
+<id> <id> grease system has intermittent fault
+
+<id> <id> oil leak pilot filter text
+
+<id> <id> repair engine oil leak text
+
+<id> <id> repair transmission oil leak text
+
+<id> <id> repair x <num> steering cylinders
+
+<id> <id> replace hydraulic oil leak text
+
+<id> <id> secure grease hoses see text
+
+<id> <id> steering pin no grease text
+
+<id> <id> transmission temperature fault
+
+<id> <num> pulley inspect / grease
+
+<id> <num> v supply error issue
+
+<id> <num> week air compressor service
+
+<id> <num> week electrical cabinet clean
+
+<id> <num> week hoist drag coupling service
+
+<id> <num> week mechanical inspection running
+
+<id> <num> week mechanical service
+
+<id> <num> week mechanical service running
+
+<id> Bradken to repair broken clam
+
+<id> CW PTO universal joint failed
+
+<id> CW engine oil leaks x <num>
+
+<id> CW engine water pump snapped shaft
+
+<id> CW rear steering accumulator number <num>
+
+<id> CW top radiator tank leak again
+
+<id> <sensitive> to fit coolant meters
+
+<id> GET change out worn cutting edges
+
+<id> GET replace cutting edges
+
+<id> <sensitive> to supply and fit cabin mounts
+
+<id> Loctite retension transmission mount
+
+<id> NDT <num> week hoist intermediate shaft UT
+
+<id> NDT <num> week pressure vessel inspection
+
+<id> SOS inspect engine oil filters for
+
+<id> adaptor leaking at implement valve
+
+<id> aftercooler tank gauge broken
+
+<id> aftercooler temperature error
+
+<id> air conditioner accessory drive leaking oil
+
+<id> air conditioner belt broken
+
+<id> air conditioner compressor not working
+
+<id> air conditioner compressor tripping out
+
+<id> air conditioner drive leaking
+
+<id> air conditioner drive leaking oil
+
+<id> air conditioner fan unserviceable - fit new
+
+<id> air conditioner needs a boost not cold
+
+<id> air conditioner not cold PO
+
+<id> air conditioner not cold electrical faults
+
+<id> air conditioner pressure switch unserviceable
+
+number <num> right hand air brake line needs replacing
+
+supply filtration unit ( number <num> swing )
+
+[REF] - replacement refrigerant
+
+[ shutdown ] vinyl flooring unserviceable
+
+air conditioner fan speed resistor not working <num> and <num>
+
+activate and calibrate loader payload system
+
+air brake line blown - requires replacing
+
+air pressure safety valve exhausting
+
+assemble machine and perform checks
+
+assist calibration of new pressure switch
+
+assist fitting wing shrouds <id>
+
+assist with isolations for handle change
+
+battery unserviceable dropped cell replace
+
+break cable for <id> to walk-through
+
+break down new hose cable reeler
+
+broken proximity sensor tag - carosell
+
+bypass the grease fill solenoid valve
+
+cabin side weightometer not working
+
+call <sensitive> to recharge fire suppression
+
+call out <sensitive> to modify hose
+
+carry out <num> hour air conditioner service
+
+carry out maintenance brake test
+
+centrifuge hose leaking - replace
+
+change right hand contamination switch
+
+changed out roofing interior of cabin
+
+check and sample both final drives
+
+check brushes on motors ( hoist )
+
+clean grass and debris from radiator
+
+clean mud and grass from radiator
+
+close and lock low voltage door on compressor
+
+complete <num> hour engine check
+
+compressor safety valve leaking
+
+connect harness to lower mast lights
+
+constant voltage transformer melted
+
+crack repairs left hand window frame
+
+dry cell not working properly <id>
+
+deisolate fire suppression from maintenance
+
+diagnose / repair right hand scoreboard not working
+
+disable and reset limits for rope change
+
+disable fire suppression - start of shift
+
+disconnect / isolate batteries
+
+disconnect motor and reconnect new motor
+
+disconnect motor and reconnect new motor
+
+disconnect motor for fitters to remove
+
+disconnect rear motors <num> and <num>
+
+<sensitive> depth counter not working
+
+dust flap on cabin side of mast needs extending
+
+electric propel siren not working
+
+earth wire broken on bottom of radiator
+
+engine oil blender running constantly
+
+<sensitive> repair rock breaker on bucket
+
+equipment damaged ( terminal box )
+
+fit audible alarm to grease timer
+
+fit de-ice unit to air conditioner unit
+
+fit new die inserts and heat and break steel
+
+fit new microwave oven to <id>
+
+front lights keep blowing fuse
+
+fuel filter water separator housing broken
+
+generator flow regulator unserviceable
+
+heater hose in cab roof unserviceable
+
+high voltage slip ring inspection - grease leak
+
+ignition switch broken replace
+
+inspect all alarm systems on drill
+
+install two-way radio power supply
+
+investigate main transformer overload fault
+
+isolate fire system for fitters
+
+isolate / deisolate fire system
+
+keeps blowing starter / horn fuse
+
+left hand chain guide unserviceable
+
+left hand chain guide worn at the top
+
+left hand engine starter refit diode to <id>
+
+left hand PTO pump chip sensor harness unserviceable
+
+measure brackets - left hand rear access
+
+modify low pressure pilot valve [ warranty ]
+
+number <num> pump contamination switch on
+
+<sensitive> install new <num>W speaker
+
+number <num> slew pump contamination switch unserviceable
+
+oil centrifuge gasket leaking right hand engine
+
+oil leak inlet to oil burner cover plate
+
+<num> glass window has large crack
+
+open travel motor guards to wash
+
+position <num> pressure compensator weeping
+
+position <num> chip sensor alarm
+
+position <num> pump cavity low
+
+power step control cable broken
+
+pressure control valve in cabin leaking
+
+<sensitive> to repair centrifuge
+
+pump drive box coupling and shaft unserviceable
+
+purge both hoist input shaft couplings
+
+right hand PTO cavity emptying
+
+radiator sight glasses unserviceable
+
+raised front levelling cylinder
+
+RCS <id> rerun coaxial for commercial radio
+
+re-terminate aerial connection
+
+recalibrate steering solenoids
+
+remove and replace expansion tank
+
+remove unserviceable air separator
+
+repair crack in right hand side of rear cross member
+
+repair air leak at air tank safety valve
+
+repair and replace chain guide
+
+repair chassis crack at right hand rear cross member
+
+repair crack in rear cross member
+
+repair crack on left hand front heat shield
+
+repair cracked baffle in hydraulic tank
+
+repair cracked roof skin left hand side exhaust
+
+repair cracks in mast cross braces
+
+repair earth terminal on air conditioner compressor
+
+repair expansion tank and hood
+
+repair left hand scoreboard base cracked
+
+repair leak in pilot valve solenoid
+
+repair rear junction box on tank
+
+repair transformer - quote number <num>
+
+repair water / oil separator on hydraulic tank
+
+repair wiring etc at engine junction box
+
+replace o-ring on centrifuge filter
+
+replace air conditioner louver
+
+replace all pump chip indicator cables
+
+replace brushes on condenser fan
+
+replace cabin air conditioner cover and louver
+
+replace chip indicators ( leaking )
+
+replace cracked glass in entry door
+
+replace cracked water separator
+
+replace engine oil centrifuge see attachment
+
+replace inductor in auxilliary blower assembly
+
+replace left hand front signal lamp
+
+replace left hand slew pump contamination switch
+
+replace main electrical isolator
+
+replace right hand swing pump chip sensor
+
+replace seized air conditioner control cable
+
+replace shorted diode RPC <num>
+
+replace steering pilot valve covers
+
+replace unserviceable grease distributor
+
+replace unserviceable chip indicators
+
+replace unserviceable ignition switch
+
+replace unserviceable transmission screen and magnet
+
+reseal left hand cab door frame
+
+reset auxilliary supply circuit breaker and booted computer
+
+resistor cabling to be replaced
+
+rework starter cables warranty
+
+rock breaker in bucket cracked at base
+
+run flushing filters in transmission
+
+run new aerial and replace head unit
+
+run new commercial radio aerial cable
+
+sample engine oil and inspect filters
+
+sample engine oil and replace oil and filter
+
+<id> replace ground fault relay
+
+start motorvator and set limits
+
+troubleshoot smart meter not communicating
+
+<sensitive> call out Saturday <date> <id>
+
+<sensitive> to repair power supply
+
+wash left hand cyclone tube . <sensitive> at <date>
+
+water separator filter leaking see photo
+
+weightometer display on trailer unserviceable
+
+weld stiffener plate to rear breakout fork
+
+will not start - batteries unserviceable
+
