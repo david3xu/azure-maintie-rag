@@ -53,11 +53,11 @@ jobs:
       - name: Set test environment variables
         run: |
           # Set default values for testing if secrets are not available
-          export OPENAI_API_VERSION=${OPENAI_API_VERSION:-"2024-02-15-preview"}
-          export OPENAI_MODEL=${OPENAI_MODEL:-"gpt-4"}
+          export OPENAI_API_VERSION=${OPENAI_API_VERSION:-"2025-03-01-preview"}
+          export OPENAI_MODEL=${OPENAI_MODEL:-"gpt-4.1"}
           export EMBEDDING_MODEL=${EMBEDDING_MODEL:-"text-embedding-ada-002"}
-          export EMBEDDING_API_BASE=${EMBEDDING_API_BASE:-"https://api.openai.com"}
-          export EMBEDDING_API_VERSION=${EMBEDDING_API_VERSION:-"2024-02-15-preview"}
+          export EMBEDDING_API_BASE=${EMBEDDING_API_BASE:-"https://clu-project-foundry-instance.openai.azure.com/"}
+          export EMBEDDING_API_VERSION=${EMBEDDING_API_VERSION:-"2025-03-01-preview"}
           echo "Test environment variables set"
 
       - name: Run all tests with coverage
