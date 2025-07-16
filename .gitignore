@@ -19,6 +19,7 @@ venv/
 backend/data/processed/
 backend/data/indices/
 backend/data/metrics/
+backend/data/models/
 logs/
 
 # Jupyter Notebook checkpoints
