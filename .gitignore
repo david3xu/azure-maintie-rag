@@ -83,3 +83,5 @@ wandb/
 
 # But do NOT ignore any .md files in the root directory
 !/*.md
+
+backend/build/

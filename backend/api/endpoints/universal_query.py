@@ -511,131 +511,79 @@ async def _process_streaming_query_with_workflow(
     Background task to process streaming query with detailed workflow tracking
 
     This function integrates the Universal Workflow Manager with the Enhanced
-    Universal RAG system to provide detailed, real-time progress updates.
+    Universal RAG system to provide the detailed 7-step workflow from README architecture.
+
+    Instead of generic 3-step workflow, this passes workflow_manager directly to
+    Enhanced RAG, allowing the Universal RAG Orchestrator to create the detailed
+    7-step workflow that matches the README "Workflow Components (Enhanced)" table.
     """
     try:
         logger.info(f"Starting workflow processing for query: {workflow_manager.query_id}")
 
-        # Step 1: Initialize Enhanced Universal RAG
-        step_1 = await workflow_manager.start_step(
-            step_name="initialize_enhanced_rag",
-            user_friendly_name="🔧 Setting up AI system...",
-            technology="Enhanced Universal RAG",
-            estimated_progress=10,
-            technical_data={"domain": request.domain, "component": "system_initialization"}
-        )
-
+        # Get Enhanced RAG instance
         enhanced_rag = get_enhanced_rag_instance(request.domain)
 
+        # Initialize components if needed (only show initialization step if needed)
         if not enhanced_rag.components_initialized:
-            await workflow_manager.update_step(
-                step_1,
-                "Initializing Universal RAG components...",
-                15,
-                {"status": "initializing_components"}
+            init_step = await workflow_manager.start_step(
+                step_name="initialize_components",
+                user_friendly_name="🔧 Initializing AI components...",
+                technology="Enhanced Universal RAG",
+                estimated_progress=5,
+                technical_data={"domain": request.domain, "component": "system_initialization"}
             )
 
             init_results = await enhanced_rag.initialize_components()
 
             if not init_results.get("success", False):
                 await workflow_manager.fail_step(
-                    step_1,
-                    f"System initialization failed: {init_results.get('error', 'Unknown error')}",
+                    init_step,
+                    f"Component initialization failed: {init_results.get('error', 'Unknown error')}",
                     {"init_results": init_results}
                 )
-                await workflow_manager.fail_workflow(f"System initialization failed")
+                await workflow_manager.fail_workflow("Component initialization failed")
                 return
 
-        await workflow_manager.complete_step(
-            step_1,
-            f"AI system ready for {request.domain} domain",
-            20,
-            {
-                "domain": request.domain,
-                "components_initialized": True,
-                "system_stats": init_results.get("system_stats", {}) if 'init_results' in locals() else {}
-            },
-            "Enhanced initialization"
-        )
-
-        # Step 2: Process Query with Enhanced RAG
-        step_2 = await workflow_manager.start_step(
-            step_name="process_enhanced_query",
-            user_friendly_name="🧠 Processing your question with AI...",
-            technology="GPT-4 + Universal RAG",
-            estimated_progress=50,
-            technical_data={"query": request.query, "max_results": request.max_results}
-        )
-
-        # Set up progress callback for Enhanced RAG
-        async def rag_progress_callback(step_name: str, progress: int):
-            await workflow_manager.update_step(
-                step_2,
-                step_name,
-                20 + (progress * 0.6),  # Map 0-100 to 20-80
-                {"rag_step": step_name, "rag_progress": progress}
+            await workflow_manager.complete_step(
+                init_step,
+                f"Components initialized for {request.domain} domain",
+                10,
+                {
+                    "domain": request.domain,
+                    "components_initialized": True,
+                    "initialization_time": init_results.get("processing_time", 0)
+                }
             )
 
-        # Process the query with detailed progress tracking
+        # ✅ CORE CHANGE: Pass workflow_manager directly to Enhanced RAG
+        # This allows the Universal RAG Orchestrator to create the detailed 7-step workflow
+        # that matches the README "Workflow Components (Enhanced)" table:
+        # 1. Data Ingestion, 2. Knowledge Extraction, 3. Vector Indexing,
+        # 4. Graph Construction, 5. Query Processing, 6. Retrieval, 7. Generation
         results = await enhanced_rag.process_query(
             query=request.query,
             max_results=request.max_results,
             include_explanations=request.include_explanations,
             enable_safety_warnings=request.enable_safety_warnings,
             stream_progress=True,
-            progress_callback=rag_progress_callback
+            workflow_manager=workflow_manager  # ✅ Pass workflow manager for detailed 7-step workflow
         )
 
         if not results.get("success", False):
-            await workflow_manager.fail_step(
-                step_2,
-                f"Query processing failed: {results.get('error', 'Unknown error')}",
-                {"query_results": results}
+            await workflow_manager.fail_workflow(
+                f"Query processing failed: {results.get('error', 'Unknown error')}"
             )
-            await workflow_manager.fail_workflow("Query processing failed")
             return
 
-        await workflow_manager.complete_step(
-            step_2,
-            f"Generated comprehensive response with {len(results.get('search_results', []))} sources",
-            85,
-            {
-                "search_results_count": len(results.get('search_results', [])),
-                "processing_time": results.get('processing_time', 0),
-                "confidence_indicators": results.get('system_stats', {})
-            },
-            "Advanced RAG processing"
+        # Complete the workflow with final results
+        await workflow_manager.complete_workflow(
+            results,
+            results.get("processing_time", 0)
         )
-
-        # Step 3: Finalize Response
-        step_3 = await workflow_manager.start_step(
-            step_name="finalize_response",
-            user_friendly_name="✨ Finalizing your answer...",
-            technology="Response Formatting",
-            estimated_progress=95,
-            technical_data={"response_type": "enhanced_universal_rag"}
-        )
-
-        # Calculate total processing time
-        total_processing_time = results.get("processing_time", 0)
-
-        await workflow_manager.complete_step(
-            step_3,
-            f"Response ready! Processed in {total_processing_time:.1f}s",
-            100,
-            {
-                "total_processing_time": total_processing_time,
-                "query_count": results.get("query_count", 0),
-                "average_processing_time": results.get("average_processing_time", 0)
-            },
-            "Response optimization"
-        )
-
-        # Complete the entire workflow
-        await workflow_manager.complete_workflow(results, total_processing_time)
 
         logger.info(f"Workflow completed successfully for query: {workflow_manager.query_id}")
 
     except Exception as e:
-        logger.error(f"Workflow processing failed for query {workflow_manager.query_id}: {e}", exc_info=True)
-        await workflow_manager.fail_workflow(str(e))
+        logger.error(f"Workflow processing failed: {e}", exc_info=True)
+        await workflow_manager.fail_workflow(f"Unexpected error: {str(e)}")
+        raise
