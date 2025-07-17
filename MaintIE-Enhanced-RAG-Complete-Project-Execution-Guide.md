@@ -69,13 +69,25 @@ make setup
 
 ## 📊 **Phase 2: Data Preparation & Knowledge Extraction**
 
-### **2.1 Data Setup (If you have MaintIE data)**
+### **2.1 Universal RAG Data Setup (Text Files)**
 ```bash
-# Place your MaintIE data files in backend/data/raw/
-# Required files: gold_release.json, silver_release.json
+# Universal RAG works directly with raw text files - no JSON format required!
+# Simply place .txt or .md files in backend/data/raw/
 
-# Or setup from external source
-make data-setup SOURCE=/path/to/your/maintie/data
+# Examples of text files you can use:
+# - Maintenance procedures (.txt)
+# - Equipment manuals (.md)
+# - Troubleshooting guides (.txt)
+# - Technical documentation (.md)
+
+# Check what text files you have:
+ls backend/data/raw/*.txt backend/data/raw/*.md
+
+# Universal RAG will automatically:
+# ✅ Extract knowledge from any text
+# ✅ Build vector indices with FAISS
+# ✅ Create knowledge graphs
+# ✅ Enable real-time workflow progress
 ```
 
 ### **2.2 Knowledge Extraction**

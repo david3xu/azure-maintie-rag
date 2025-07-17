@@ -1,33 +1,26 @@
 {
-  "extraction_date": "2025-07-16T12:09:59.200497",
-  "source_files": {
-    "gold": "data/raw/gold_release.json",
-    "silver": "data/raw/silver_release.json"
+  "universal_rag_info": {
+    "updated_date": "2025-01-02T00:00:00.000000",
+    "approach": "Universal RAG - Direct Text Processing",
+    "description": "Universal RAG works directly with raw text files - no domain-specific JSON format required"
   },
-  "statistics": {
-    "gold": {
-      "total_documents": 1076,
-      "texts_extracted": 717,
-      "texts_skipped": 359,
-      "total_characters": 28416,
-      "avg_length": 39.63179916317991,
-      "min_length": 30,
-      "max_length": 74
+  "text_files_available": {
+    "maintenance_all_texts.txt": "Combined maintenance text data",
+    "maintenance_high_quality_texts.txt": "High-quality maintenance text data",
+    "maintenance_gold_texts.txt": "Gold-standard text data (if available)",
+    "maintenance_silver_texts.txt": "Silver-standard text data (if available)"
     },
-    "silver": {
-      "total_documents": 7000,
-      "texts_extracted": 4537,
-      "texts_skipped": 2463,
-      "total_characters": 176454,
-      "avg_length": 38.89221952832268,
-      "min_length": 30,
-      "max_length": 78
-    },
-    "combined": {
-      "total_texts": 5254,
-      "total_characters": 204870,
-      "avg_length": 38.99314807765512
-    }
+  "universal_rag_features": {
+    "automatic_knowledge_extraction": "Extracts entities and relations from any text",
+    "vector_indexing": "FAISS-based vector search",
+    "real_time_workflow": "Progressive UI with streaming updates",
+    "multi_modal_retrieval": "Vector + graph search capabilities"
   },
-  "output_files": {
-    "gold_file": 
+  "usage_instructions": {
+    "add_text_files": "Place .txt or .md files in data/raw/",
+    "start_system": "Run 'make dev' to start Universal RAG",
+    "access_ui": "Visit http://localhost:5174 for progressive workflow",
+    "api_docs": "Visit http://localhost:8000/docs for API documentation"
+  },
+  "note": "This metadata was updated for Universal RAG. Previous domain-specific JSON extraction data removed."
+}

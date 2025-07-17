@@ -11,7 +11,7 @@ import random
 from datetime import datetime
 from openai import AzureOpenAI
 
-from universal.llm_knowledge_extractor import LLMKnowledgeExtractor
+from core.extraction.llm_knowledge_extractor import LLMKnowledgeExtractor
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -288,12 +288,32 @@ class OptimizedLLMExtractor(LLMKnowledgeExtractor):
         except Exception as e:
             logger.warning(f"Cache save failed: {e}")
 
+    def _extract_entities(self, texts: List[str]) -> List[str]:
+        """Extract entities from texts using LLM"""
+        entities = set()
+
+        # Use the optimized entity discovery
+        discovered_entities = self._discover_entities_optimized(texts)
+        entities.update(discovered_entities)
+
+        return list(entities)
+
+    def _extract_relationships(self, texts: List[str]) -> List[str]:
+        """Extract relationships from texts using LLM"""
+        relationships = set()
+
+        # Use the optimized relationship discovery
+        discovered_relationships = self._discover_relationships_optimized(texts, [])
+        relationships.update(discovered_relationships)
+
+        return list(relationships)
+
     def extract_entities_and_relations(self, texts: List[str]) -> Dict[str, Any]:
         """Extract entities and relations from texts using optimized LLM approach"""
         logger.info(f"Starting optimized extraction for {len(texts)} texts")
 
         # Use sampling strategy for discovery
-        sample_texts = self._sample_for_discovery(texts)
+        sample_texts = self._sample_texts_for_discovery(texts)
         logger.info(f"Using {len(sample_texts)} texts for knowledge discovery")
 
         # Extract entities and relationships

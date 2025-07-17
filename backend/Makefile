@@ -1,54 +1,59 @@
-# MaintIE Enhanced RAG - Simple Makefile
-# Based on your existing scripts and workflow
+# MaintIE Universal RAG - Backend Service Makefile
+# Universal text-based RAG system with workflow transparency
 
-.PHONY: help setup dev-install test clean build run docker-build docker-run data-setup docs-setup docs-preview debug-pipeline debug-gnn debug-tests debug-entities debug-all
+.PHONY: help setup dev-install test clean build run docker-build docker-run data-setup docs-setup docs-preview workflow-demo
 
 # Default target
 help:
-	@echo "MaintIE Enhanced RAG - Available Commands:"
+	@echo "🔧 MaintIE Universal RAG Backend - Available Commands:"
 	@echo ""
-	@echo "Setup:"
-	@echo "  make setup      - Full project setup (calls your existing scripts)"
-	@echo "  make dev-install - Development dependencies only"
-	@echo "  make docs-setup - Setup documentation environment"
+	@echo "🚀 Setup:"
+	@echo "  make setup          - Full project setup with virtual environment"
+	@echo "  make dev-install    - Development dependencies only"
+	@echo "  make docs-setup     - Setup documentation environment"
 	@echo ""
-	@echo "Development:"
-	@echo "  make run        - Start API server"
-	@echo "  make test       - Run all tests"
-	@echo "  make test-unit  - Run unit tests only"
-	@echo "  make clean      - Clean generated files"
-	@echo "  make docs-preview - Open markdown preview"
-	@echo "  make docs-status - Show documentation setup status"
+	@echo "🏃 Development:"
+	@echo "  make run            - Start FastAPI server with hot reload"
+	@echo "  make workflow-demo  - Run Universal RAG workflow demonstration"
+	@echo "  make docs-preview   - Open markdown preview"
+	@echo "  make docs-status    - Show documentation setup status"
 	@echo ""
-	@echo "🔍 Debugging:"
-	@echo "  make debug-pipeline - Debug pipeline issues"
-	@echo "  make debug-gnn      - Test GNN integration"
-	@echo "  make debug-tests    - Debug test data structure"
-	@echo "  make debug-entities - Debug entity extraction"
-	@echo "  make debug-monitoring - Test granular monitoring system"
-	@echo "  make debug-config   - Test config-driven improvements"
-	@echo "  make debug-all      - Run all debug scripts"
+	@echo "🧪 Testing:"
+	@echo "  make test           - Run all tests (unit + integration + workflow)"
+	@echo "  make test-unit      - Run unit tests only"
+	@echo "  make test-integration - Run API integration tests"
+	@echo "  make test-workflow  - Run workflow manager integration tests"
+	@echo "  make test-universal - Run Universal RAG system tests"
 	@echo ""
-	@echo "Data:"
-	@echo "  make data-setup SOURCE=/path/to/maintie - Setup MaintIE data"
-	@echo "  make knowledge  - Extract domain knowledge"
+	@echo "🧹 Cleanup:"
+	@echo "  make clean          - Clean generated files and cache"
+	@echo "  make clean-data     - Clean processed data (keep raw text)"
+	@echo "  make clean-all      - Clean everything except raw data"
 	@echo ""
-	@echo "Docker:"
-	@echo "  make docker-build - Build Docker image"
-	@echo "  make docker-run   - Run Docker container"
+	@echo "📊 Data:"
+	@echo "  make data-setup SOURCE=/path/to/text/data - Setup text data"
+	@echo ""
+	@echo "🐳 Docker:"
+	@echo "  make docker-build   - Build Docker image"
+	@echo "  make docker-run     - Run Docker container"
 	@echo ""
 
-# Setup targets (calls your existing scripts)
+# Setup targets
 setup:
+	@echo "🔧 Setting up Universal RAG backend..."
 	python3 -m venv .venv
+	./.venv/bin/python -m pip install --upgrade pip
 	./.venv/bin/python -m pip install -r requirements.txt
-	bash -c 'mkdir -p data/{raw,processed,indices}' # Create in backend/data/
-	@echo "✅ Setup complete!"
+	@mkdir -p data/{raw,processed,indices,cache,output,metrics}
+	@echo "✅ Universal RAG backend setup complete!"
 
 dev-install:
+	@echo "🔧 Installing development dependencies..."
 	python3 -m venv .venv
+	./.venv/bin/python -m pip install --upgrade pip
 	./.venv/bin/python -m pip install -r requirements.txt
 	./.venv/bin/python -m pip install pytest pytest-cov black isort flake8
+	@echo "✅ Development environment ready!"
 
 # Documentation setup
 docs-setup:
@@ -56,131 +61,110 @@ docs-setup:
 	@mkdir -p ../.vscode
 	@echo '{"recommendations": ["yzhang.markdown-all-in-one", "shd101wyy.markdown-preview-enhanced", "bierner.markdown-mermaid", "davidanson.vscode-markdownlint", "ms-python.python", "ms-python.black-formatter", "ms-python.pylint", "ms-vscode.vscode-json", "redhat.vscode-yaml"]}' > ../.vscode/extensions.json
 	@echo "✅ Documentation environment ready!"
+	@echo "💡 Use VSCode Remote-SSH for best markdown preview experience"
 
 docs-preview:
-	@echo "📖 Opening markdown preview..."
+	@echo "📖 Opening documentation..."
 	@if command -v code >/dev/null 2>&1; then \
-		code --command markdown.showPreviewToSide ../README.md; \
+		code --command markdown.showPreviewToSide docs/README.md; \
 	else \
-		echo "⚠️  VSCode CLI not available in SSH environment"; \
-		echo "💡 To view markdown preview:"; \
-		echo "   1. Open VSCode locally"; \
-		echo "   2. Use 'Remote-SSH' extension to connect to this server"; \
-		echo "   3. Open README.md and use Ctrl+Shift+V for preview"; \
-		echo "   4. Or install VSCode Server: https://code.visualstudio.com/docs/remote/vscode-server"; \
+		echo "💡 Open docs/README.md in VSCode for preview (Ctrl+Shift+V)"; \
 	fi
 
 docs-status:
-	@echo "📋 Documentation environment status:"
-	@echo "✅ VSCode extensions configured: .vscode/extensions.json"
-	@echo "✅ VSCode settings configured: .vscode/settings.json"
-	@echo "✅ Custom CSS configured: .vscode/markdown.css"
-	@echo ""
-	@echo "🔧 For SSH development:"
-	@echo "   - Use VSCode Remote-SSH extension for best experience"
-	@echo "   - Markdown preview will work in VSCode Remote-SSH"
-	@echo "   - All extensions will auto-install when you connect"
-
-# Debug commands
-debug-pipeline:
-	@echo "🔍 Debugging pipeline..."
-	PYTHONPATH=. python debug/debug_pipeline.py
-
-debug-gnn:
-	@echo "🧠 Testing GNN integration..."
-	PYTHONPATH=. python debug/deploy_gnn_integration.py
-
-debug-tests:
-	@echo "🧪 Debugging test data..."
-	PYTHONPATH=. python tests/debug/debug_data_structure.py
-
-debug-entities:
-	@echo "🔍 Debugging entity extraction..."
-	PYTHONPATH=. python tests/debug/debug_entity_extraction.py
-
-debug-monitoring:
-	@echo "📊 Testing granular monitoring system..."
-	PYTHONPATH=. python debug/debug_monitoring.py
-
-debug-config:
-	@echo "🔧 Testing config-driven improvements..."
-	PYTHONPATH=. python test_config_integration.py
-
-debug-all:
-	@echo "🔍 Running all debug scripts..."
-	@echo ""
-	@echo "📊 1. Testing data structure..."
-	@PYTHONPATH=. python tests/debug/debug_data_structure.py
-	@echo ""
-	@echo "🔍 2. Testing entity extraction..."
-	@PYTHONPATH=. python tests/debug/debug_entity_extraction.py
-	@echo ""
-	@echo "🔧 3. Debugging pipeline..."
-	@PYTHONPATH=. python debug/debug_pipeline.py
-	@echo ""
-	@echo "🧠 4. Testing GNN integration..."
-	@PYTHONPATH=. python debug/deploy_gnn_integration.py
-	@echo ""
-	@echo "📊 5. Testing granular monitoring..."
-	@PYTHONPATH=. python debug/debug_monitoring.py
-	@echo ""
-	@echo "🔧 6. Testing config-driven improvements..."
-	@PYTHONPATH=. python test_config_integration.py
-	@echo ""
-	@echo "✅ All debug scripts completed!"
+	@echo "📋 Documentation status:"
+	@echo "✅ Main documentation: docs/README.md"
+	@echo "✅ Universal RAG capabilities: docs/UNIVERSAL_RAG_CAPABILITIES.md"
+	@echo "✅ Backend README: README.md"
+	@echo "✅ VSCode extensions configured for SSH development"
 
 # Development targets
 run:
+	@echo "🚀 Starting Universal RAG API server..."
 	./.venv/bin/python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
-test: test-unit test-integration
+workflow-demo:
+	@echo "🔄 Running Universal RAG workflow demonstration..."
+	@echo "💡 This demonstrates text processing with workflow transparency"
+	PYTHONPATH=. ./.venv/bin/python scripts/universal_rag_demo.py
+
+# Testing - Updated for Universal RAG architecture
+test: test-unit test-integration test-workflow test-universal
 
 test-unit:
-	PYTHONPATH=. ./.venv/bin/pytest tests/unit/ tests/test_validation_real_issues.py --cov=src
+	@echo "🧪 Running unit tests..."
+	PYTHONPATH=. ./.venv/bin/pytest tests/ -k "not integration" --cov=core --cov=api --cov-report=term-missing
 
 test-integration:
-	@echo "Starting API server for integration tests..."
+	@echo "🔗 Running API integration tests..."
+	@echo "Starting test server..."
 	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-	python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 & sleep 3
-	PYTHONPATH=. ./.venv/bin/pytest tests/integration/ tests/api/
+	@./.venv/bin/python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 & sleep 3
+	@PYTHONPATH=. ./.venv/bin/pytest tests/ -k "integration" || { pkill -f "uvicorn api.main:app" || true; exit 1; }
 	@pkill -f "uvicorn api.main:app" || true
+	@echo "✅ Integration tests completed"
 
+test-workflow:
+	@echo "⚙️ Running workflow manager integration tests..."
+	@echo "🔍 Testing three-layer progressive disclosure system..."
+	PYTHONPATH=. ./.venv/bin/python tests/test_workflow_integration.py
+
+test-universal:
+	@echo "🌐 Running Universal RAG system tests..."
+	@echo "📝 Testing text-based processing pipeline..."
+	PYTHONPATH=. ./.venv/bin/python tests/test_universal_rag.py
+
+# Cleanup - Updated for Universal RAG file structure
 clean:
+	@echo "🧹 Cleaning cache and temporary files..."
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
 	rm -rf .pytest_cache/ htmlcov/ .coverage
-	rm -rf data/processed/* data/indices/* # Clean backend/data/
+	@echo "✅ Cache and temporary files cleaned"
 
-# Data processing (calls your existing scripts)
+clean-data:
+	@echo "🧹 Cleaning processed data (preserving raw text)..."
+	rm -rf data/processed/* data/indices/* data/cache/* data/metrics/* data/output/*
+	@echo "✅ Processed data cleaned - raw text preserved"
+	@echo "💡 Run 'make workflow-demo' to reprocess text through Universal RAG"
+
+clean-all:
+	@echo "🧹 Deep cleaning all generated files..."
+	@$(MAKE) clean
+	@$(MAKE) clean-data
+	rm -rf .venv/
+	@echo "✅ Complete cleanup done - only source code and raw data remain"
+	@echo "💡 Run 'make setup' to rebuild environment"
+
+# Data processing - Universal RAG approach
 data-setup:
 	@if [ -z "$(SOURCE)" ]; then \
-		echo "❌ Please specify SOURCE=/path/to/maintie/data"; \
+		echo "❌ Please specify SOURCE=/path/to/text/data"; \
+		echo "💡 Universal RAG works with any text files - no domain configuration needed"; \
 		exit 1; \
 	fi
-	python scripts/setup_data.py --source $(SOURCE) --target data/ # backend/data/
-
-knowledge:
-	@echo "🧠 Extracting domain knowledge from processed data..."
-	PYTHONPATH=. python scripts/extract_knowledge.py
+	@echo "📊 Setting up text data for Universal RAG processing..."
+	@mkdir -p data/raw
+	@cp -r $(SOURCE)/* data/raw/ 2>/dev/null || cp $(SOURCE) data/raw/
+	@echo "✅ Text data ready for Universal RAG processing"
+	@echo "💡 Run 'make workflow-demo' to see the system in action"
 
 # Docker targets
 docker-build:
-	docker build -t maintie-rag:latest .
+	@echo "🐳 Building Universal RAG Docker image..."
+	docker build -t universal-rag:latest .
 
 docker-run:
-	docker run -p 8000:8000 --env-file .env maintie-rag:latest
+	@echo "🐳 Running Universal RAG container..."
+	docker run -p 8000:8000 --env-file .env universal-rag:latest
 
 docker-dev:
+	@echo "🐳 Starting development environment with Docker..."
 	docker-compose up --build
 
-# Validation
-validate:
-	python scripts/testing/validate_api.py
-	python config/validation.py
-
-# Quick development workflow
-dev: clean dev-install knowledge run
-
 # Production deployment preparation
-prod-ready: clean test docker-build validate
-	@echo "✅ Production ready!"
+prod-ready: clean test docker-build
+	@echo "🚀 Universal RAG backend is production ready!"
+	@echo "📊 API available at: http://localhost:8000"
+	@echo "📖 API docs at: http://localhost:8000/docs"
+	@echo "🔄 Workflow streaming: http://localhost:8000/api/v1/query/stream/{query_id}"

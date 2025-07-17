@@ -1,4 +1,0 @@
-{
-  "success": false,
-  "error": "'OptimizedLLMExtractor' object has no attribute '_discover_relationships_optimized'"
-}
