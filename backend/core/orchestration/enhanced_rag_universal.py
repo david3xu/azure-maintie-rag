@@ -134,10 +134,11 @@ class EnhancedUniversalRAG:
         include_explanations: bool = True,
         enable_safety_warnings: bool = True,
         stream_progress: bool = False,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
+        workflow_manager = None  # ✅ ADD: Accept workflow manager parameter
     ) -> Dict[str, Any]:
         """
-        Process a query using Enhanced Universal RAG with optional workflow progress tracking
+        Process a query using Enhanced Universal RAG with detailed workflow progress tracking
 
         Args:
             query: User query to process
@@ -145,7 +146,8 @@ class EnhancedUniversalRAG:
             include_explanations: Whether to include explanations
             enable_safety_warnings: Whether to enable safety warnings
             stream_progress: Whether to stream progress updates
-            progress_callback: Optional callback for progress updates (workflow manager)
+            progress_callback: Optional callback for progress updates (legacy support)
+            workflow_manager: Optional workflow manager for detailed step tracking
 
         Returns:
             Comprehensive query processing results
@@ -162,17 +164,14 @@ class EnhancedUniversalRAG:
         start_time = datetime.now()
 
         try:
-            # Progress tracking with workflow manager integration
-            if progress_callback:
-                await progress_callback("🔍 Analyzing your question...", 10)
-
-            # Process query using universal orchestrator with detailed progress
+            # ✅ CHANGE: Pass workflow_manager to universal orchestrator for detailed 7-step workflow
             query_results = await self.universal_orchestrator.process_query(
                 query=query,
                 max_results=max_results,
                 include_explanations=include_explanations,
                 stream_progress=stream_progress,
-                progress_callback=progress_callback
+                progress_callback=progress_callback,  # Legacy support
+                workflow_manager=workflow_manager  # ✅ Pass workflow manager for detailed steps
             )
 
             if not query_results.get("success", False):
@@ -183,10 +182,7 @@ class EnhancedUniversalRAG:
                     "domain": self.domain_name
                 }
 
-            # Enhanced results processing with progress updates
-            if progress_callback:
-                await progress_callback("🧠 Enhancing results with AI optimizations...", 85)
-
+            # Enhanced results processing (post-processing)
             enhanced_results = await self._enhance_query_results(
                 query_results,
                 enable_safety_warnings,
@@ -197,37 +193,43 @@ class EnhancedUniversalRAG:
             processing_time = (datetime.now() - start_time).total_seconds()
             self._update_performance_metrics(processing_time)
 
-            if progress_callback:
-                await progress_callback("✅ Query processing complete!", 100)
-
-            # Compile comprehensive final response
-            final_response = {
-                "success": True,
-                "query": query,
-                "domain": self.domain_name,
-                "strategy": self.active_strategy,
-                "query_analysis": enhanced_results.get("analysis", {}),
-                "enhanced_query": enhanced_results.get("enhanced_query", {}),
-                "search_results": enhanced_results.get("search_results", []),
-                "generated_response": enhanced_results.get("response", {}),
-                "processing_time": processing_time,
-                "query_count": self.query_count,
-                "average_processing_time": self.average_processing_time,
-                "system_stats": self.universal_orchestrator.get_system_status()["system_stats"],
-                "performance_metrics": {
-                    "total_queries": self.query_count,
-                    "average_time": self.average_processing_time,
-                    "current_time": processing_time,
-                    "strategy_used": self.active_strategy
-                },
-                "timestamp": datetime.now().isoformat()
-            }
-
-            logger.info(f"Enhanced Universal RAG query completed in {processing_time:.2f}s")
-            return final_response
+            # Return enhanced results - handle both dict and UniversalRAGResponse formats
+            if hasattr(enhanced_results, 'answer'):
+                # UniversalRAGResponse format
+                return {
+                    "success": True,
+                    "query": query,
+                    "domain": self.domain_name,
+                    "generated_response": {"answer": enhanced_results.answer, "confidence": enhanced_results.confidence},
+                    "search_results": getattr(enhanced_results, 'sources', []),
+                    "processing_time": processing_time,
+                    "system_stats": getattr(enhanced_results, 'processing_metadata', {}),
+                    "safety_warnings": [],
+                    "enhancement_metrics": {"citations": len(getattr(enhanced_results, 'citations', []))},
+                    "timestamp": datetime.now().isoformat()
+                }
+            else:
+                # Dictionary format
+                return {
+                    "success": True,
+                    "query": query,
+                    "domain": self.domain_name,
+                    "generated_response": enhanced_results.get("response", {}),
+                    "search_results": enhanced_results.get("search_results", []),
+                    "processing_time": processing_time,
+                    "system_stats": enhanced_results.get("system_stats", {}),
+                    "safety_warnings": enhanced_results.get("safety_warnings", []),
+                    "enhancement_metrics": enhanced_results.get("enhancement_metrics", {}),
+                    "timestamp": datetime.now().isoformat()
+                }
 
         except Exception as e:
             logger.error(f"Enhanced Universal RAG query processing failed: {e}", exc_info=True)
+
+            # Handle workflow failure
+            if workflow_manager:
+                await workflow_manager.fail_workflow(f"Enhanced RAG processing failed: {str(e)}")
+
             return {
                 "success": False,
                 "error": str(e),
@@ -258,16 +260,22 @@ class EnhancedUniversalRAG:
             if progress_callback:
                 await progress_callback("🔧 Applying advanced optimizations...", 90)
 
-            enhanced = {
-                "analysis": query_results.get("analysis", {}),
-                "enhanced_query": query_results.get("enhanced_query", {}),
-                "search_results": query_results.get("search_results", []),
-                "response": query_results.get("response", {})
-            }
+            # Handle both dict and UniversalRAGResponse formats
+            if hasattr(query_results, 'to_dict'):
+                # UniversalRAGResponse object
+                enhanced = query_results.to_dict()
+            elif isinstance(query_results, dict):
+                # Dictionary format
+                enhanced = query_results.copy()
+            else:
+                # Convert to dict format
+                enhanced = {
+                    "response": query_results,
+                    "success": True
+                }
 
             # Add safety warnings if enabled
-            if enable_safety_warnings:
-                enhanced["safety_warnings"] = self._generate_safety_warnings(query_results)
+            enhanced["safety_warnings"] = self._generate_safety_warnings(query_results) if enable_safety_warnings else []
 
             # Add quality indicators
             enhanced["quality_indicators"] = self._calculate_quality_indicators(query_results)
@@ -288,14 +296,20 @@ class EnhancedUniversalRAG:
         except Exception as e:
             logger.error(f"Error enhancing query results: {e}", exc_info=True)
             # Return original results if enhancement fails
-            return query_results
+            return enhanced
 
     def _generate_safety_warnings(self, query_results: Dict[str, Any]) -> List[str]:
-        """Generate relevant safety warnings based on query results"""
         warnings = []
-
         # Check response content for safety considerations
-        response_text = str(query_results.get("response", {}).get("content", "")).lower()
+        # Handle both dict and UniversalRAGResponse formats
+        if hasattr(query_results, 'answer'):
+            # UniversalRAGResponse object
+            response_text = str(query_results.answer).lower()
+        elif isinstance(query_results, dict):
+            # Dictionary format
+            response_text = str(query_results.get("response", {}).get("content", "")).lower()
+        else:
+            response_text = str(query_results).lower()
 
         if any(term in response_text for term in ["danger", "risk", "hazard", "safety"]):
             warnings.append("This response contains safety-related information. Please follow all safety protocols.")
@@ -305,7 +319,6 @@ class EnhancedUniversalRAG:
 
         if any(term in response_text for term in ["chemical", "toxic", "corrosive"]):
             warnings.append("Handle chemical substances according to safety data sheets and regulations.")
-
         return warnings
 
     def _calculate_quality_indicators(self, query_results: Dict[str, Any]) -> Dict[str, Any]:

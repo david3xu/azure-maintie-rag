@@ -165,7 +165,7 @@ class UniversalKnowledgeExtractor:
 
             # Create universal document
             document = UniversalDocument(
-                document_id=doc_id,
+                doc_id=doc_id,
                 text=cleaned_text,
                 title=f"Document {i+1}: {source[:50]}..." if len(source) > 50 else source,
                 metadata={
@@ -188,36 +188,71 @@ class UniversalKnowledgeExtractor:
 
         # Process extracted entities
         for entity_data in extraction_results.get("entities", []):
-            entity = UniversalEntity(
-                entity_id=f"entity_{len(self.entities)}",
-                text=entity_data.get("text", ""),
-                entity_type=entity_data.get("type", "unknown"),
-                confidence=entity_data.get("confidence", 0.5),
-                context=entity_data.get("context", ""),
-                metadata={
-                    "extraction_method": "llm",
-                    "domain": self.domain_name,
-                    "extracted_at": datetime.now().isoformat()
-                }
-            )
+            # Handle both string and dictionary formats
+            if isinstance(entity_data, str):
+                # OptimizedLLMExtractor returns strings
+                entity = UniversalEntity(
+                    entity_id=f"entity_{len(self.entities)}",
+                    text=entity_data,
+                    entity_type=entity_data,  # Use the string as both text and type
+                    confidence=0.8,  # Default confidence for LLM-discovered entities
+                    context="",
+                    metadata={
+                        "extraction_method": "llm",
+                        "domain": self.domain_name,
+                        "extracted_at": datetime.now().isoformat()
+                    }
+                )
+            else:
+                # Handle dictionary format (for backward compatibility)
+                entity = UniversalEntity(
+                    entity_id=f"entity_{len(self.entities)}",
+                    text=entity_data.get("text", ""),
+                    entity_type=entity_data.get("type", "unknown"),
+                    confidence=entity_data.get("confidence", 0.5),
+                    context=entity_data.get("context", ""),
+                    metadata={
+                        "extraction_method": "llm",
+                        "domain": self.domain_name,
+                        "extracted_at": datetime.now().isoformat()
+                    }
+                )
             self.entities[entity.entity_id] = entity
             self.discovered_entity_types.add(entity.entity_type)
 
         # Process extracted relations
         for relation_data in extraction_results.get("relations", []):
-            relation = UniversalRelation(
-                relation_id=f"relation_{len(self.relations)}",
-                source_entity_id=relation_data.get("source_entity", ""),
-                target_entity_id=relation_data.get("target_entity", ""),
-                relation_type=relation_data.get("type", "unknown"),
-                confidence=relation_data.get("confidence", 0.5),
-                context=relation_data.get("context", ""),
-                metadata={
-                    "extraction_method": "llm",
-                    "domain": self.domain_name,
-                    "extracted_at": datetime.now().isoformat()
-                }
-            )
+            # Handle both string and dictionary formats
+            if isinstance(relation_data, str):
+                # OptimizedLLMExtractor returns strings
+                relation = UniversalRelation(
+                    relation_id=f"relation_{len(self.relations)}",
+                    source_entity_id="",  # Will be populated later during graph construction
+                    target_entity_id="",  # Will be populated later during graph construction
+                    relation_type=relation_data,  # Use the string as relation type
+                    confidence=0.8,  # Default confidence for LLM-discovered relations
+                    context="",
+                    metadata={
+                        "extraction_method": "llm",
+                        "domain": self.domain_name,
+                        "extracted_at": datetime.now().isoformat()
+                    }
+                )
+            else:
+                # Handle dictionary format (for backward compatibility)
+                relation = UniversalRelation(
+                    relation_id=f"relation_{len(self.relations)}",
+                    source_entity_id=relation_data.get("source_entity", ""),
+                    target_entity_id=relation_data.get("target_entity", ""),
+                    relation_type=relation_data.get("type", "unknown"),
+                    confidence=relation_data.get("confidence", 0.5),
+                    context=relation_data.get("context", ""),
+                    metadata={
+                        "extraction_method": "llm",
+                        "domain": self.domain_name,
+                        "extracted_at": datetime.now().isoformat()
+                    }
+                )
             self.relations.append(relation)
             self.discovered_relation_types.add(relation.relation_type)
 
