@@ -65,31 +65,52 @@ class UniversalQueryAnalyzer:
     def _discover_domain_knowledge(self):
         """Discover domain-specific knowledge from text content using LLM"""
         try:
-            if not self.text_processor or not self.text_processor.documents:
-                logger.info("No text content available for domain discovery")
+            if not self.text_processor:
+                logger.info("No text processor available for domain discovery")
                 return
 
-            logger.info(f"Discovering domain knowledge for: {self.domain}")
+            if not hasattr(self.text_processor, 'documents') or not self.text_processor.documents:
+                logger.info("No documents available in text processor for domain discovery")
+                return
 
-            # Get text corpus from processed documents
-            text_corpus = [doc.text for doc in self.text_processor.documents.values()]
+            documents = self.text_processor.documents
+            if isinstance(documents, dict) and documents:
+                sample_texts = []
+                for doc_id, doc in list(documents.items())[:10]:
+                    if hasattr(doc, 'text') and doc.text:
+                        sample_texts.append(doc.text[:500])
 
-            if text_corpus:
-                # Use LLM to discover domain concepts
-                extraction_results = self.llm_extractor.extract_entities_and_relations(text_corpus[:10])  # Sample for discovery
+                if sample_texts:
+                    logger.info(f"Discovering domain knowledge from {len(sample_texts)} document samples")
+                    # Use LLM to discover domain concepts
+                    extraction_results = self.llm_extractor.extract_entities_and_relations(sample_texts)  # Sample for discovery
 
-                # Store discovered knowledge
-                self.discovered_entities.update(extraction_results.get('entities', []))
-                self.discovered_relations.update(extraction_results.get('relations', []))
+                    # Store discovered knowledge
+                    self.discovered_entities.update(extraction_results.get('entities', []))
+                    self.discovered_relations.update(extraction_results.get('relations', []))
 
-                # Build universal query patterns from discovered content
-                self._build_universal_patterns(text_corpus[:5])  # Sample for pattern building
+                    # Build universal query patterns from discovered content
+                    self._build_universal_patterns(sample_texts)  # Sample for pattern building
 
-                logger.info(f"Discovered {len(self.discovered_entities)} entity types, "
-                          f"{len(self.discovered_relations)} relation types for domain: {self.domain}")
+                    logger.info(f"Discovered {len(self.discovered_entities)} entity types, "
+                              f"{len(self.discovered_relations)} relation types for domain: {self.domain}")
+                else:
+                    logger.warning("No valid text content found for domain discovery")
+            else:
+                logger.warning(f"Invalid documents structure: {type(documents)}")
 
         except Exception as e:
-            logger.warning(f"Domain discovery failed, using universal patterns: {e}")
+            logger.error(f"Domain discovery failed: {e}")
+            self._load_universal_patterns()
+
+    def _load_universal_patterns(self):
+        """Load universal query patterns when domain discovery fails"""
+        self.query_patterns = {
+            "factual": ["what", "which", "who", "where", "when"],
+            "procedural": ["how", "steps", "process", "procedure"],
+            "troubleshooting": ["problem", "issue", "error", "fix"]
+        }
+        logger.info("Loaded universal query patterns")
 
     def _build_universal_patterns(self, text_samples: List[str]):
         """Build query patterns dynamically from text content"""

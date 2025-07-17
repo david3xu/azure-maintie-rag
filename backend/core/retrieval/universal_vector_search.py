@@ -56,26 +56,65 @@ class UniversalVectorSearch:
 
         logger.info(f"UniversalVectorSearch initialized for domain: {self.domain}")
 
-    def get_embedding(self, text: str) -> np.ndarray:
-        """Get embedding for text using Azure OpenAI (universal - works with any text)"""
+    def chunk_text_for_embedding(self, text: str, max_tokens: int = 8000) -> List[str]:
+        """Chunk text to fit within embedding model token limits"""
+        max_chars = max_tokens * 4  # Approximation: 1 token ≈ 4 characters
+
+        if len(text) <= max_chars:
+            return [text]
+
+        chunks = []
+        words = text.split()
+        current_chunk = []
+        current_length = 0
+
+        for word in words:
+            word_length = len(word) + 1
+
+            if current_length + word_length > max_chars and current_chunk:
+                chunks.append(" ".join(current_chunk))
+                current_chunk = [word]
+                current_length = word_length
+            else:
+                current_chunk.append(word)
+                current_length += word_length
+
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+
+        return chunks
+
+    def get_embedding(self, text: str) -> List[float]:
+        """Get embedding for text with automatic chunking"""
         try:
-            # Clean and validate text
-            text = text.strip()
-            if not text:
-                raise ValueError("Empty text provided for embedding")
+            text_chunks = self.chunk_text_for_embedding(text, max_tokens=8000)
 
-            # Azure OpenAI embedding request
-            response = self.client.embeddings.create(
-                input=[text],
-                model=self.embedding_deployment
-            )
+            if len(text_chunks) == 1:
+                response = self.client.embeddings.create(
+                    input=[text_chunks[0]],
+                    model=self.embedding_deployment
+                )
+                return response.data[0].embedding
+            else:
+                chunk_embeddings = []
+                for chunk in text_chunks:
+                    if chunk.strip():
+                        response = self.client.embeddings.create(
+                            input=[chunk],
+                            model=self.embedding_deployment
+                        )
+                        chunk_embeddings.append(response.data[0].embedding)
 
-            embedding = np.array(response.data[0].embedding, dtype=np.float32)
-            return embedding
+                if not chunk_embeddings:
+                    raise ValueError("No valid chunks to embed")
+
+                import numpy as np
+                avg_embedding = np.mean(chunk_embeddings, axis=0)
+                return avg_embedding.tolist()
 
         except Exception as e:
             logger.error(f"Embedding generation failed for text: {text[:100]}... Error: {e}")
-            raise RuntimeError(f"Embedding retrieval failed: {e if e else 'Unknown error'}") from e
+            raise
 
     def build_index_universal(self, documents: Dict[str, UniversalDocument]) -> Dict[str, Any]:
         """Build FAISS index from universal documents"""
@@ -85,80 +124,90 @@ class UniversalVectorSearch:
         doc_texts = []
         doc_ids = []
 
-        # Extract text from universal documents (works with any content)
+        # Extract text from universal documents
         for doc_id, doc in documents.items():
-            # Universal text extraction - works with any document structure
             full_text = f"{doc.title or ''} {doc.text}".strip()
-
             if full_text and len(full_text) > 10:
                 doc_texts.append(full_text)
                 doc_ids.append(doc_id)
-            else:
-                logger.warning(f"Skipping document {doc_id} with empty or too short text")
 
         if not doc_texts:
             logger.error("No valid documents found for indexing")
             return {"success": False, "error": "No valid documents"}
 
         try:
-            # Batch processing respecting Azure OpenAI limits
-            max_azure_batch = 2048
-            configured_batch = getattr(settings, 'embedding_batch_size', 32)
-            batch_size = min(configured_batch, max_azure_batch)
-
-            logger.info(f"Processing {len(doc_texts)} documents in batches of {batch_size}")
-
+            # Process documents individually to handle chunking
             all_embeddings = []
-            for i in range(0, len(doc_texts), batch_size):
-                batch_texts = doc_texts[i:i + batch_size]
-                batch_doc_ids = doc_ids[i:i + batch_size]
 
-                logger.info(f"Processing batch {i//batch_size + 1}/{(len(doc_texts) + batch_size - 1)//batch_size}")
+            for i, (doc_id, text) in enumerate(zip(doc_ids, doc_texts)):
+                logger.info(f"Processing document {i+1}/{len(doc_texts)}: {doc_id}")
 
-                # Get embeddings for batch
-                batch_embeddings = []
-                for text in batch_texts:
-                    embedding = self.get_embedding(text)
-                    batch_embeddings.append(embedding)
+                try:
+                    # Use text chunking to handle large documents
+                    chunks = self.chunk_text_for_embedding(text, max_tokens=8000)
 
-                all_embeddings.extend(batch_embeddings)
+                    if len(chunks) == 1:
+                        # Single chunk
+                        embedding = self.get_embedding(chunks[0])
+                    else:
+                        # Multiple chunks - average embeddings
+                        chunk_embeddings = []
+                        for chunk in chunks:
+                            if chunk.strip():
+                                chunk_emb = self.get_embedding(chunk)
+                                if isinstance(chunk_emb, list):
+                                    chunk_emb = np.array(chunk_emb, dtype=np.float32)
+                                chunk_embeddings.append(chunk_emb)
 
-                # Store individual embeddings
-                for doc_id, embedding in zip(batch_doc_ids, batch_embeddings):
+                        if chunk_embeddings:
+                            embedding = np.mean(chunk_embeddings, axis=0)
+                        else:
+                            logger.warning(f"No valid chunks for document {doc_id}")
+                            continue
+
+                    # Ensure embedding is numpy array
+                    if isinstance(embedding, list):
+                        embedding = np.array(embedding, dtype=np.float32)
+
+                    all_embeddings.append(embedding)
                     self.document_embeddings[doc_id] = embedding
 
-                # Add small delay between batches
-                if i + batch_size < len(doc_texts):
-                    time.sleep(0.1)
+                except Exception as e:
+                    logger.error(f"Failed to process document {doc_id}: {e}")
+                    continue
 
-            # Build FAISS index
-            embeddings_matrix = np.array(all_embeddings)
+            if not all_embeddings:
+                logger.error("No embeddings generated")
+                return {"success": False, "error": "No embeddings generated"}
 
             # Create FAISS index
-            embedding_dim = embeddings_matrix.shape[1]
-            self.faiss_index = faiss.IndexFlatIP(embedding_dim)  # Inner Product (cosine similarity)
+            embeddings_matrix = np.vstack(all_embeddings)
+
+            # Fix: Ensure float32 type for FAISS
+            embeddings_matrix = embeddings_matrix.astype(np.float32)
 
             # Normalize embeddings for cosine similarity
             faiss.normalize_L2(embeddings_matrix)
+
+            # Create FAISS index
+            dimension = embeddings_matrix.shape[1]
+            self.faiss_index = faiss.IndexFlatIP(dimension)  # Inner product for cosine similarity
             self.faiss_index.add(embeddings_matrix)
 
             # Update mappings
-            self.doc_id_to_index = {doc_id: idx for idx, doc_id in enumerate(doc_ids)}
-            self.index_to_doc_id = {idx: doc_id for idx, doc_id in enumerate(doc_ids)}
+            self.doc_id_to_index = {doc_id: i for i, doc_id in enumerate(doc_ids[:len(all_embeddings)])}
+            self.index_to_doc_id = {i: doc_id for doc_id, i in self.doc_id_to_index.items()}
 
             # Save index
             self._save_index()
 
-            result = {
+            logger.info(f"Universal FAISS index built successfully with {len(all_embeddings)} documents")
+            return {
                 "success": True,
-                "documents_indexed": len(doc_ids),
-                "embedding_dimension": embedding_dim,
-                "domain": self.domain,
-                "index_type": "FAISS_IndexFlatIP"
+                "total_documents": len(all_embeddings),
+                "embedding_dimension": dimension,
+                "index_type": "universal_vector_search"
             }
-
-            logger.info(f"Universal vector index built successfully: {result}")
-            return result
 
         except Exception as e:
             logger.error(f"Universal index building failed: {e}")
@@ -212,16 +261,22 @@ class UniversalVectorSearch:
                 "fallback_message": "Universal RAG indexing encountered an error"
             }
 
-    def search_universal(self, query: str, top_k: int = 5) -> List[UniversalSearchResult]:
-        """Universal semantic search that works with any domain"""
-
+    def search_universal(self, query: str, top_k: int = 10) -> List[UniversalSearchResult]:
+        """Universal semantic search across all documents"""
         if not self.faiss_index:
-            logger.warning("No index available for search")
+            logger.warning(f"No universal index available for domain: {self.domain}")
             return []
 
         try:
             # Get query embedding
             query_embedding = self.get_embedding(query)
+
+            # Fix: Ensure embedding is numpy array before reshape
+            if isinstance(query_embedding, list):
+                query_embedding = np.array(query_embedding, dtype=np.float32)
+            elif not isinstance(query_embedding, np.ndarray):
+                query_embedding = np.array(query_embedding, dtype=np.float32)
+
             query_embedding = query_embedding.reshape(1, -1)
 
             # Normalize for cosine similarity

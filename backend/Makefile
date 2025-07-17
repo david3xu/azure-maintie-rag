@@ -18,6 +18,12 @@ help:
 	@echo "  make docs-preview   - Open markdown preview"
 	@echo "  make docs-status    - Show documentation setup status"
 	@echo ""
+	@echo "🔄 Workflows:"
+	@echo "  make data-prep      - WORKFLOW 1: Raw text → knowledge base"
+	@echo "  make query-demo     - WORKFLOW 2: Query → intelligent response"
+	@echo "  make lifecycle-demo - Complete RAG lifecycle demonstration"
+	@echo "  make workflow-analysis - Analyze core file usage patterns"
+	@echo ""
 	@echo "🧪 Testing:"
 	@echo "  make test           - Run all tests (unit + integration + workflow)"
 	@echo "  make test-unit      - Run unit tests only"
@@ -83,6 +89,45 @@ run:
 	@echo "🚀 Starting Universal RAG API server..."
 	./.venv/bin/python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
+# =============================================================================
+# UNIVERSAL RAG WORKFLOW TARGETS - Based on Real Core File Usage Analysis
+# =============================================================================
+
+# WORKFLOW 1: Raw Text Data Handling (Data Preparation)
+# Uses: 8/12 core files for text → knowledge conversion
+data-prep:
+	@echo "🔄 WORKFLOW 1: Raw Text Data Handling"
+	@echo "📊 Core Files: universal_text_processor, knowledge_extractor, classifier, vector_search"
+	@echo "🎯 Purpose: Convert raw text files into searchable knowledge base"
+	PYTHONPATH=. ./.venv/bin/python scripts/data_preparation_workflow.py
+
+# WORKFLOW 2: User Query Processing (Runtime)
+# Uses: 7/12 core files for query → response generation
+query-demo:
+	@echo "🔄 WORKFLOW 2: User Query Processing"
+	@echo "📊 Core Files: enhanced_rag, workflow_manager, query_analyzer, llm_interface"
+	@echo "🎯 Purpose: Process user queries against pre-built knowledge base"
+	PYTHONPATH=. ./.venv/bin/python scripts/query_processing_workflow.py
+
+# Combined lifecycle demonstration
+lifecycle-demo:
+	@echo "🌟 COMPLETE UNIVERSAL RAG LIFECYCLE"
+	@echo "🔄 Demonstrates both data preparation and query processing workflows"
+	@$(MAKE) data-prep
+	@echo ""
+	@echo "⏳ Data preparation complete. Starting query processing..."
+	@echo ""
+	@$(MAKE) query-demo
+
+# Workflow analysis and validation
+workflow-analysis:
+	@echo "📊 CORE FILES USAGE ANALYSIS"
+	@echo "Data Preparation Workflow: 8/12 core files"
+	@echo "Query Processing Workflow: 7/12 core files"
+	@echo "Total Active Files: 10/12 core files (83% utilization)"
+	PYTHONPATH=. ./.venv/bin/python scripts/workflow_analysis.py
+
+# Legacy workflow demo (kept for backward compatibility)
 workflow-demo:
 	@echo "🔄 Running Universal RAG workflow demonstration..."
 	@echo "💡 This demonstrates text processing with workflow transparency"
@@ -118,13 +163,14 @@ test-universal:
 clean:
 	@echo "🧹 Cleaning cache and temporary files..."
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete
-	rm -rf .pytest_cache/ htmlcov/ .coverage
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type f -name "*.pyo" -delete 2>/dev/null || true
+	rm -rf .pytest_cache/ htmlcov/ .coverage build/ dist/ *.egg-info/ 2>/dev/null || true
 	@echo "✅ Cache and temporary files cleaned"
 
 clean-data:
 	@echo "🧹 Cleaning processed data (preserving raw text)..."
-	rm -rf data/processed/* data/indices/* data/cache/* data/metrics/* data/output/*
+	rm -rf data/processed/* data/indices/* data/cache/* data/metrics/* data/output/* 2>/dev/null || true
 	@echo "✅ Processed data cleaned - raw text preserved"
 	@echo "💡 Run 'make workflow-demo' to reprocess text through Universal RAG"
 
@@ -132,7 +178,10 @@ clean-all:
 	@echo "🧹 Deep cleaning all generated files..."
 	@$(MAKE) clean
 	@$(MAKE) clean-data
-	rm -rf .venv/
+	rm -rf .venv/ build/ dist/ *.egg-info/ .pytest_cache/ htmlcov/ .coverage 2>/dev/null || true
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	@echo "✅ Complete cleanup done - only source code and raw data remain"
 	@echo "💡 Run 'make setup' to rebuild environment"
 
