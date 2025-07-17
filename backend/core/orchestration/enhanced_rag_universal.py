@@ -298,39 +298,66 @@ class EnhancedUniversalRAG:
             # Return original results if enhancement fails
             return enhanced
 
-    def _generate_safety_warnings(self, query_results: Dict[str, Any]) -> List[str]:
+    def _generate_safety_warnings(self, query_results) -> List[str]:
+        """Generate safety warnings based on response content"""
         warnings = []
-        # Check response content for safety considerations
-        # Handle both dict and UniversalRAGResponse formats
+
+        # Handle different query_results types
         if hasattr(query_results, 'answer'):
-            # UniversalRAGResponse object
             response_text = str(query_results.answer).lower()
+        elif hasattr(query_results, 'to_dict'):
+            result_dict = query_results.to_dict()
+            response_text = str(result_dict.get("answer", "")).lower()
         elif isinstance(query_results, dict):
-            # Dictionary format
-            response_text = str(query_results.get("response", {}).get("content", "")).lower()
+            response_content = query_results.get("response", {})
+            if isinstance(response_content, dict):
+                response_text = str(response_content.get("content", "")).lower()
+            else:
+                response_text = str(response_content).lower()
         else:
             response_text = str(query_results).lower()
 
+        # Generate domain-appropriate safety warnings
         if any(term in response_text for term in ["danger", "risk", "hazard", "safety"]):
-            warnings.append("This response contains safety-related information. Please follow all safety protocols.")
+            warnings.append("⚠️ This response contains safety-related information. Follow all safety protocols.")
 
         if any(term in response_text for term in ["electrical", "voltage", "current"]):
-            warnings.append("Electrical work should only be performed by qualified personnel.")
+            warnings.append("⚡ Electrical work should only be performed by qualified personnel.")
 
         if any(term in response_text for term in ["chemical", "toxic", "corrosive"]):
-            warnings.append("Handle chemical substances according to safety data sheets and regulations.")
+            warnings.append("🧪 Handle chemical substances according to safety data sheets.")
+
         return warnings
 
-    def _calculate_quality_indicators(self, query_results: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_quality_indicators(self, query_results) -> Dict[str, Any]:
         """Calculate quality indicators for the response"""
-        search_results = query_results.get("search_results", [])
-        response = query_results.get("response", {})
+
+        # Handle different query_results types
+        if hasattr(query_results, 'sources'):
+            # UniversalRAGResponse object
+            search_results = query_results.sources or []
+            response_length = len(str(query_results.answer)) if hasattr(query_results, 'answer') else 0
+            confidence_score = getattr(query_results, 'confidence', 0.0)
+        elif isinstance(query_results, dict):
+            # Dictionary format
+            search_results = query_results.get("search_results", [])
+            response_content = query_results.get("response", {})
+            if isinstance(response_content, dict):
+                response_length = len(str(response_content.get("content", "")))
+            else:
+                response_length = len(str(response_content))
+            confidence_score = query_results.get("confidence_score", 0.0)
+        else:
+            # Fallback
+            search_results = []
+            response_length = len(str(query_results))
+            confidence_score = 0.0
 
         return {
-            "source_diversity": len(set(r.get("source", "") for r in search_results)),
+            "source_diversity": len(set(r.get("source", "") if isinstance(r, dict) else getattr(r, 'source', '') for r in search_results)),
             "result_count": len(search_results),
-            "response_length": len(str(response.get("content", ""))),
-            "confidence_score": response.get("confidence", 0.0),
+            "response_length": response_length,
+            "confidence_score": confidence_score,
             "processing_strategy": self.active_strategy
         }
 

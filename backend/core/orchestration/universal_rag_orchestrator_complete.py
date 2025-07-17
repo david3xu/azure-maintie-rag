@@ -491,35 +491,25 @@ class UniversalRAGOrchestrator:
         return extraction_results
 
     async def _build_search_indices(self) -> Dict[str, Any]:
-        """Build search indices for documents and entities"""
+        """Build search indices from extracted knowledge"""
         logger.info("Building search indices...")
 
         try:
-            # Build vector index for documents - convert UniversalDocument objects to dict format
-            documents_list = []
-            for doc in self.documents.values():
-                documents_list.append({
-                    "doc_id": doc.doc_id,
-                    "content": doc.text,
-                    "title": doc.title,
-                    "metadata": doc.metadata
-                })
-            vector_results = self.vector_search.build_index_from_documents(documents_list)  # Remove await
+            # Fix: Use correct method name
+            vector_results = await self.vector_search.build_index_universal(
+                documents=self.documents
+            )
 
-            # Build GNN features if we have a knowledge graph
-            gnn_results = {}
-            if self.knowledge_extractor and self.knowledge_extractor.knowledge_graph:
-                gnn_results = await self.gnn_processor.prepare_gnn_data(
-                    entities=list(self.entities.values()),
-                    relations=self.relations,
-                    documents=list(self.documents.values())
-                )
+            # Fix: Only pass valid parameters to GNN processor
+            gnn_results = self.gnn_processor.prepare_universal_gnn_data(
+                use_cache=True  # Only parameter the method accepts
+            )
 
             return {
                 "success": True,
                 "vector_index": vector_results,
                 "gnn_features": gnn_results,
-                "total_indexed_documents": len(documents_list)
+                "total_indexed_documents": len(self.documents)
             }
 
         except Exception as e:
@@ -534,32 +524,30 @@ class UniversalRAGOrchestrator:
         logger.info("Initializing query processing components...")
 
         try:
-            # UniversalQueryAnalyzer doesn't have configure_domain_knowledge method
-            # It auto-discovers domain knowledge, so we can skip this step
-            # or call the existing _discover_domain_knowledge method
             if hasattr(self.query_analyzer, '_discover_domain_knowledge'):
                 self.query_analyzer._discover_domain_knowledge()
+            else:
+                logger.info("Query analyzer does not support domain discovery")
 
-            # Configure LLM interface with domain knowledge
-            await self.llm_interface.configure_domain_knowledge(
-                entities=list(self.entities.values()),
-                relations=self.relations,
-                discovered_types=self.discovered_types,
-                domain_context=self.domain_name
-            )
+            if hasattr(self.llm_interface, 'configure_domain_knowledge'):
+                await self.llm_interface.configure_domain_knowledge(
+                    entities=list(self.entities.values()) if hasattr(self, 'entities') else [],
+                    relations=getattr(self, 'relations', []),
+                    discovered_types=getattr(self, 'discovered_types', {}),
+                    domain_context=self.domain_name
+                )
+            else:
+                logger.info("LLM interface does not support domain configuration")
 
             return {
                 "success": True,
-                "configured_entity_types": len(self.discovered_types.get("entity_types", [])),
-                "configured_relation_types": len(self.discovered_types.get("relation_types", []))
+                "configured_entity_types": len(getattr(self, 'discovered_types', {}).get("entity_types", [])),
+                "configured_relation_types": len(getattr(self, 'discovered_types', {}).get("relation_types", []))
             }
 
         except Exception as e:
             logger.error(f"Query processing initialization failed: {e}", exc_info=True)
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def _enhance_with_graph_knowledge(
         self,

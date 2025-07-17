@@ -287,6 +287,34 @@ Context:
             domain=self.domain
         )
 
+    async def configure_domain_knowledge(self,
+                                       entities: List[Any] = None,
+                                       relations: List[Any] = None,
+                                       discovered_types: Dict[str, Any] = None,
+                                       domain_context: str = "general") -> Dict[str, Any]:
+        """Configure LLM interface with discovered domain knowledge"""
+        try:
+            self.domain_entities = entities or []
+            self.domain_relations = relations or []
+            self.discovered_types = discovered_types or {}
+            self.domain_context = domain_context
+
+            if discovered_types:
+                entity_types = discovered_types.get("entity_types", [])
+                relation_types = discovered_types.get("relation_types", [])
+                logger.info(f"Configured domain knowledge: {len(entity_types)} entity types, {len(relation_types)} relation types")
+
+            return {
+                "success": True,
+                "configured_entities": len(self.domain_entities),
+                "configured_relations": len(self.domain_relations),
+                "domain": domain_context
+            }
+
+        except Exception as e:
+            logger.error(f"Domain knowledge configuration failed: {e}")
+            return {"success": False, "error": str(e)}
+
 
 # Legacy compatibility alias
 MaintenanceLLMInterface = UniversalLLMInterface

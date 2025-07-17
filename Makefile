@@ -123,8 +123,14 @@ clean:
 	@echo "  Preserves: Raw text data + trained models"
 	@echo "  Cleans: Processed indices + cache + build artifacts"
 	cd backend && make clean-data
+	@echo "🧹 Cleaning Python cache files..."
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	@echo "🧹 Cleaning frontend build artifacts..."
-	cd frontend && rm -rf dist/ node_modules/.vite/ .vite/
+	cd frontend && rm -rf dist/ node_modules/.vite/ .vite/ build/ 2>/dev/null || true
+	@echo "🧹 Cleaning backend build artifacts..."
+	cd backend && rm -rf build/ dist/ *.egg-info/ .pytest_cache/ htmlcov/ .coverage 2>/dev/null || true
 	@echo "✅ Clean complete! Raw text and models preserved."
 	@echo "💡 Run 'make dev' to reprocess through Universal RAG pipeline"
 
@@ -134,7 +140,11 @@ clean-all:
 	@echo "  Cleans: All processed data + models + dependencies"
 	cd backend && make clean-all
 	@echo "🧹 Cleaning frontend completely..."
-	cd frontend && rm -rf dist/ node_modules/.vite/ .vite/ build/
+	cd frontend && rm -rf dist/ node_modules/.vite/ .vite/ build/ node_modules/ 2>/dev/null || true
+	@echo "🧹 Cleaning all Python cache..."
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	@echo "✅ Deep clean complete! Only raw text data remains."
 	@echo "💡 Run 'make setup && make dev' to rebuild Universal RAG system"
 
@@ -143,7 +153,15 @@ clean-models:
 	@echo "  Preserves: Source code only"
 	@echo "  Cleans: ALL data + models + dependencies + cache"
 	cd backend && make clean-all
-	cd frontend && rm -rf dist/ node_modules/.vite/ .vite/ build/ node_modules/
+	cd frontend && rm -rf dist/ node_modules/.vite/ .vite/ build/ node_modules/ 2>/dev/null || true
+	@echo "🧹 Cleaning all Python cache and build artifacts..."
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type f -name "*.pyo" -delete 2>/dev/null || true
+	find . -name "*.egg-info" -type d -exec rm -rf {} + 2>/dev/null || true
+	find . -name ".pytest_cache" -type d -exec rm -rf {} + 2>/dev/null || true
+	find . -name "htmlcov" -type d -exec rm -rf {} + 2>/dev/null || true
+	find . -name ".coverage" -type f -delete 2>/dev/null || true
 	@echo "⚠️  COMPLETE RESET DONE! Only source code remains."
 	@echo "💡 Run 'make setup && make dev' to rebuild from scratch"
 	@echo "📝 Universal RAG works with any text data - no domain setup needed"
