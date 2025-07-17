@@ -1,0 +1,24 @@
+# Pump Maintenance Procedures
+
+## Centrifugal Pump P-101
+The centrifugal pump P-101 is a critical component in the cooling water system. Regular maintenance is essential for optimal performance.
+
+### Inspection Checklist
+- Check pump seal condition daily
+- Monitor vibration levels weekly
+- Inspect coupling alignment monthly
+- Verify proper lubrication quarterly
+
+### Common Issues
+1. **Cavitation**: Caused by insufficient NPSH or blocked suction
+2. **Seal Leakage**: Usually indicates worn mechanical seal
+3. **Excessive Vibration**: Often due to misalignment or bearing wear
+
+### Troubleshooting Guide
+If pump efficiency drops below 80%, check:
+- Impeller wear
+- Volute casing erosion
+- Bearing condition
+- Motor coupling alignment
+
+Contact maintenance team if issues persist.

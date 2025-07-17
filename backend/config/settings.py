@@ -24,19 +24,19 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000, env="API_PORT")
     api_prefix: str = "/api/v1"
 
-    # Azure OpenAI Settings
+    # Azure OpenAI Settings (optional for testing)
     openai_api_type: str = Field(default="azure", env="OPENAI_API_TYPE")
-    openai_api_key: str = Field(env="OPENAI_API_KEY")
-    openai_api_base: str = Field(env="OPENAI_API_BASE")
-    openai_api_version: str = Field(env="OPENAI_API_VERSION")
-    openai_deployment_name: str = Field(env="OPENAI_DEPLOYMENT_NAME")
-    openai_model: str = Field(env="OPENAI_MODEL")
+    openai_api_key: str = Field(default="test-key", env="OPENAI_API_KEY")
+    openai_api_base: str = Field(default="https://test.openai.azure.com/", env="OPENAI_API_BASE")
+    openai_api_version: str = Field(default="2023-12-01-preview", env="OPENAI_API_VERSION")
+    openai_deployment_name: str = Field(default="gpt-4", env="OPENAI_DEPLOYMENT_NAME")
+    openai_model: str = Field(default="gpt-4", env="OPENAI_MODEL")
 
-    # Embedding Settings (Azure)
-    embedding_model: str = Field(env="EMBEDDING_MODEL")
-    embedding_deployment_name: str = Field(env="EMBEDDING_DEPLOYMENT_NAME")
-    embedding_api_base: str = Field(env="EMBEDDING_API_BASE")
-    embedding_api_version: str = Field(env="EMBEDDING_API_VERSION")
+    # Embedding Settings (Azure) - optional for testing
+    embedding_model: str = Field(default="text-embedding-ada-002", env="EMBEDDING_MODEL")
+    embedding_deployment_name: str = Field(default="text-embedding-ada-002", env="EMBEDDING_DEPLOYMENT_NAME")
+    embedding_api_base: str = Field(default="https://test.openai.azure.com/", env="EMBEDDING_API_BASE")
+    embedding_api_version: str = Field(default="2023-12-01-preview", env="EMBEDDING_API_VERSION")
     embedding_dimension: int = Field(default=1536, env="EMBEDDING_DIMENSION")
 
     # Data Paths
@@ -48,8 +48,7 @@ class Settings(BaseSettings):
     config_dir: Path = Field(default=BASE_DIR / "config", env="CONFIG_DIR")
 
     # Data Processing Settings
-    gold_data_filename: str = Field(default="gold_release.json", env="GOLD_DATA_FILENAME")
-    silver_data_filename: str = Field(default="silver_release.json", env="SILVER_DATA_FILENAME")
+    # Note: Universal RAG now works with raw text files - no domain-specific JSON format required
     gold_confidence_base: float = Field(default=0.9, env="GOLD_CONFIDENCE_BASE")
     silver_confidence_base: float = Field(default=0.7, env="SILVER_CONFIDENCE_BASE")
 

@@ -1,6 +1,6 @@
 """
-FastAPI application for MaintIE Enhanced RAG
-Production-ready API with authentication, monitoring, and error handling
+FastAPI application for Universal Enhanced RAG
+Production-ready API with universal domain support, streaming, and real-time progress
 """
 
 import logging
@@ -14,10 +14,12 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
-from src.pipeline.enhanced_rag import get_rag_instance, initialize_rag_system
+# Universal components
+from core.orchestration.enhanced_rag_universal import (
+    get_enhanced_rag_instance, initialize_enhanced_rag_system
+)
 from config.settings import settings
-from api.endpoints import health
-
+from api.endpoints import health, universal_query
 
 # Configure logging
 logging.basicConfig(
@@ -29,44 +31,52 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager"""
+    """Application lifespan manager with Universal RAG initialization"""
     # Startup
-    logger.info("Starting MaintIE Enhanced RAG API...")
+    logger.info("Starting Universal Enhanced RAG API...")
 
     try:
-        # Initialize RAG system
-        init_results = initialize_rag_system()
+        # Initialize Universal RAG system for default domain
+        logger.info("Initializing Universal RAG system...")
+        init_results = await initialize_enhanced_rag_system(
+            domain_name="general",
+            force_rebuild=False
+        )
+
         app.state.initialization_results = init_results
 
-        if not init_results.get("data_transformer", False):
-            logger.warning("RAG system initialization incomplete - some features may not work")
+        if not init_results.get("success", False):
+            logger.warning("Universal RAG system initialization incomplete - some features may not work")
+            logger.warning(f"Initialization error: {init_results.get('error', 'Unknown error')}")
         else:
-            logger.info("RAG system initialized successfully")
+            logger.info("Universal RAG system initialized successfully")
+            logger.info(f"System stats: {init_results['system_stats']}")
 
-        app.state.rag_system = get_rag_instance()
+        # Store the Universal RAG instance
+        app.state.universal_rag_system = get_enhanced_rag_instance("general")
 
     except Exception as e:
-        logger.error(f"Failed to initialize RAG system: {e}", exc_info=True)
-        app.state.rag_system = None
-        app.state.initialization_results = {"error": str(e)}
+        logger.error(f"Failed to initialize Universal RAG system: {e}", exc_info=True)
+        app.state.universal_rag_system = None
+        app.state.initialization_results = {"success": False, "error": str(e)}
 
     yield
 
     # Shutdown
-    logger.info("Shutting down MaintIE Enhanced RAG API...")
+    logger.info("Shutting down Universal Enhanced RAG API...")
 
 
-# Create FastAPI application
+# Create FastAPI app with Universal RAG support
 app = FastAPI(
-    title="MaintIE Enhanced RAG API",
-    description="Enterprise maintenance intelligence powered by enhanced RAG",
-    version="1.0.0",
+    title="Universal Enhanced RAG API",
+    description="Universal Retrieval-Augmented Generation system that works with any domain",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan
 )
 
-# Add middleware
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Configure appropriately for production
@@ -75,219 +85,140 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=["*"]  # Configure appropriately for production
-)
+# Add trusted host middleware for security (if configured)
+if hasattr(settings, 'trusted_hosts') and settings.trusted_hosts:
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=settings.trusted_hosts
+    )
 
+# Include routers
+app.include_router(health.router)
+app.include_router(universal_query.router)
 
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    """Add processing time header to responses"""
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
+# Error handlers
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions"""
+    logger.warning(f"HTTP {exc.status_code}: {exc.detail}")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.detail, "status_code": exc.status_code}
+    )
 
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle general exceptions"""
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal server error", "status_code": 500}
+    )
 
+# Middleware for request logging
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     """Log all requests"""
     start_time = time.time()
 
-    # Log request
-    logger.info(f"Request: {request.method} {request.url}")
+    # Skip logging for health checks and static files
+    if request.url.path in ["/api/v1/health", "/favicon.ico"]:
+        response = await call_next(request)
+        return response
 
-    # Process request
-    response = await call_next(request)
+    logger.info(f"Request: {request.method} {request.url.path}")
 
-    # Log response
-    process_time = time.time() - start_time
-    logger.info(f"Response: {response.status_code} - {process_time:.3f}s")
+    try:
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        logger.info(f"Response: {response.status_code} - {process_time:.3f}s")
+        return response
+    except Exception as e:
+        process_time = time.time() - start_time
+        logger.error(f"Request failed: {e} - {process_time:.3f}s")
+        raise
 
-    return response
-
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    """Custom HTTP exception handler"""
-    logger.error(f"HTTP error {exc.status_code}: {exc.detail}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "error": exc.detail,
-            "status_code": exc.status_code,
-            "timestamp": time.time()
-        }
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    """General exception handler"""
-    logger.error(f"Unexpected error: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Internal server error",
-            "status_code": 500,
-            "timestamp": time.time()
-        }
-    )
-
-
-def get_rag_system():
-    """Dependency to get RAG system instance"""
-    if not hasattr(app.state, 'rag_system') or app.state.rag_system is None:
-        raise HTTPException(
-            status_code=503,
-            detail="RAG system not available - please check system initialization"
-        )
-    return app.state.rag_system
-
-
+# Root endpoint
 @app.get("/")
 async def root():
     """Root endpoint with API information"""
     return {
-        "message": "MaintIE Enhanced RAG API",
-        "version": "1.0.0",
-        "status": "operational",
-        "architecture": "dual-api",
-        "endpoints": {
-            "multi_modal": "/api/v1/query/multi-modal",
-            "structured": "/api/v1/query/structured",
-            "comparison": "/api/v1/query/compare",
-            "health": "/api/v1/health",
-            "metrics": "/api/v1/metrics",
-            "docs": "/docs"
-        },
-        "description": "Dual API architecture with multi-modal and structured RAG approaches"
+        "message": "Universal Enhanced RAG API",
+        "version": "2.0.0",
+        "description": "Universal Retrieval-Augmented Generation system that works with any domain",
+        "docs_url": "/docs",
+        "health_check": "/api/v1/health",
+        "universal_query": "/api/v1/query/universal",
+        "streaming_query": "/api/v1/query/streaming",
+        "domain_management": "/api/v1/domain/",
+        "features": [
+            "Universal domain support",
+            "Real-time streaming queries",
+            "Dynamic entity/relation discovery",
+            "No configuration files required",
+            "Pure text file processing",
+            "Multi-domain batch processing"
+        ]
     }
 
-
-@app.get("/api/v1/health")
-async def health_check():
-    """System health check endpoint"""
+# System info endpoint
+@app.get("/api/v1/info")
+async def get_system_info():
+    """Get system information and status"""
     try:
-        # Check if RAG system is available
-        if not hasattr(app.state, 'rag_system') or app.state.rag_system is None:
-            return JSONResponse(
-                status_code=503,
-                content={
-                    "status": "unhealthy",
-                    "message": "RAG system not initialized",
-                    "timestamp": time.time()
-                }
-            )
+        # Get initialization results
+        init_results = getattr(app.state, 'initialization_results', {})
 
-        # Get detailed health status
-        rag_system = app.state.rag_system
-        health_status = rag_system.validate_pipeline_health()
-        system_status = rag_system.get_system_status()
+        # Get current system status if available
+        system_status = {}
+        if hasattr(app.state, 'universal_rag_system') and app.state.universal_rag_system:
+            system_status = app.state.universal_rag_system.get_system_status()
 
-        # Determine overall health
-        overall_status = "healthy"
-        if health_status["overall_status"] == "unhealthy":
-            status_code = 503
-            overall_status = "unhealthy"
-        elif health_status["overall_status"] == "degraded":
-            status_code = 200
-            overall_status = "degraded"
-        else:
-            status_code = 200
-
-        response_data = {
-            "status": overall_status,
-            "timestamp": time.time(),
-            "components": {
-                "multi_modal_rag": health_status.get("multi_modal_rag", {}),
-                "structured_rag": health_status.get("structured_rag", {}),
-                "active_implementation": health_status.get("active_implementation", "unknown")
+        return {
+            "api_version": "2.0.0",
+            "system_type": "Universal Enhanced RAG",
+            "initialization_status": init_results.get("success", False),
+            "initialization_error": init_results.get("error"),
+            "system_stats": init_results.get("system_stats", {}),
+            "discovered_types": init_results.get("discovered_types", {}),
+            "current_status": system_status,
+            "features": {
+                "universal_domain_support": True,
+                "streaming_queries": True,
+                "real_time_progress": True,
+                "dynamic_type_discovery": True,
+                "schema_free_processing": True,
+                "multi_domain_batch": True
             },
-            "system_stats": {
-                "queries_processed": system_status.get("total_queries_processed", 0),
-                "average_response_time": system_status.get("average_processing_time", 0),
-                "components_initialized": system_status.get("components_initialized", False)
-            },
-            "issues": health_status.get("issues", []),
-            "recommendations": health_status.get("recommendations", [])
-        }
-
-        return JSONResponse(status_code=status_code, content=response_data)
-
-    except Exception as e:
-        logger.error(f"Health check failed: {e}", exc_info=True)
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "unhealthy",
-                "message": f"Health check failed: {str(e)}",
-                "timestamp": time.time()
-            }
-        )
-
-
-@app.get("/api/v1/metrics")
-async def get_metrics(rag_system=Depends(get_rag_system)):
-    """Get system performance metrics"""
-    try:
-        performance_metrics = rag_system.get_performance_metrics()
-        system_status = rag_system.get_system_status()
-
-        metrics = {
-            "timestamp": time.time(),
-            "performance": performance_metrics,
-            "system": system_status,
-            "api_info": {
-                "version": "1.0.0",
-                "environment": settings.environment
+            "endpoints": {
+                "universal_query": "/api/v1/query/universal",
+                "streaming_query": "/api/v1/query/streaming",
+                "batch_query": "/api/v1/query/batch",
+                "domain_initialization": "/api/v1/domain/initialize",
+                "domain_status": "/api/v1/domain/{domain_name}/status",
+                "list_domains": "/api/v1/domains/list"
             }
         }
-
-        return metrics
-
     except Exception as e:
-        logger.error(f"Error retrieving metrics: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error retrieving metrics: {str(e)}")
+        logger.error(f"Failed to get system info: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.get("/api/v1/system/status")
-async def get_system_status(rag_system=Depends(get_rag_system)):
-    """Get detailed system status"""
+# Dependency to get Universal RAG instance
+async def get_universal_rag_instance(domain: str = "general"):
+    """Dependency to get Universal RAG instance"""
     try:
-        status = rag_system.get_system_status()
-
-        # Add initialization results if available
-        if hasattr(app.state, 'initialization_results'):
-            status["initialization"] = app.state.initialization_results
-
-        return status
-
+        return get_enhanced_rag_instance(domain)
     except Exception as e:
-        logger.error(f"Error retrieving system status: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error retrieving system status: {str(e)}")
-
-
-# Include query endpoints with new separated structure
-from api.endpoints.query_multi_modal import router as multi_modal_router
-from api.endpoints.query_structured import router as structured_router
-from api.endpoints.query_comparison import router as comparison_router
-
-# Mount the routers with clear path prefixes
-app.include_router(multi_modal_router, prefix="/api/v1/query/multi-modal", tags=["Multi-Modal RAG"])
-app.include_router(structured_router, prefix="/api/v1/query/structured", tags=["Structured RAG"])
-app.include_router(comparison_router, prefix="/api/v1/query/compare", tags=["A/B Testing"])
-app.include_router(health.router, prefix="/api/v1/health", tags=["health"])
+        logger.error(f"Failed to get Universal RAG instance: {e}")
+        raise HTTPException(status_code=500, detail="Universal RAG system not available")
 
 
 if __name__ == "__main__":
     # Run the application
     uvicorn.run(
-        "api.main:app",
+        "main:app",
         host=settings.api_host,
         port=settings.api_port,
-        reload=settings.debug,
+        reload=settings.environment == "development",
         log_level=settings.log_level.lower()
     )

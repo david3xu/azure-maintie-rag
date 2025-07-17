@@ -1,17 +1,15 @@
 """
-GNN Integration Module for MaintIE Enhanced RAG
-Weeks 9-12: Neural Intelligence Implementation
+GNN Integration Module for Universal RAG
+Neural Intelligence Implementation for Universal Domain Support
 """
 
-from .data_preparation import MaintIEGNNDataProcessor
-from .graph_dataset import MaintIEGraphDataset
+from .universal_gnn_processor import UniversalGNNDataProcessor
 from .gnn_models import MaintenanceGNNModel, GNNTrainer
-from .gnn_query_expander import GNNQueryExpander
+from .graph_dataset import MaintIEGraphDataset
 
 __all__ = [
-    'MaintIEGNNDataProcessor',
-    'MaintIEGraphDataset',
+    'UniversalGNNDataProcessor',
     'MaintenanceGNNModel',
     'GNNTrainer',
-    'GNNQueryExpander'
+    'MaintIEGraphDataset'
 ]

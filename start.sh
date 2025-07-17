@@ -29,11 +29,12 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-# Check for MaintIE data
-if [ ! -f "data/raw/gold_release.json" ]; then
-    echo "⚠️  MaintIE data not found in data/raw/"
-    echo "Please place gold_release.json and silver_release.json in data/raw/ directory"
-    echo "You can create sample data for testing if needed"
+# Check for raw text data (Universal RAG)
+TEXT_FILES=$(find data/raw/ -name "*.txt" -o -name "*.md" 2>/dev/null | wc -l)
+if [ "$TEXT_FILES" -eq 0 ]; then
+    echo "⚠️  No text data found in data/raw/"
+    echo "Please place .txt or .md files in data/raw/ directory for Universal RAG processing"
+    echo "Universal RAG works with any raw text files - no specific JSON format required"
 fi
 
 # Start the API server

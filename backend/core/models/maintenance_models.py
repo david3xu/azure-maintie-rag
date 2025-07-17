@@ -1,260 +1,76 @@
 """
-Core data models for MaintIE Enhanced RAG system
-Defines fundamental structures for maintenance entities, relations, and documents
+Cleaned Universal RAG Models
+Legacy maintenance models cleaned up for Universal RAG system.
+All hardcoded enums and domain-specific classes removed.
 """
 
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 import json
-import numpy as np
 
-
-class EntityType(str, Enum):
-    """MaintIE entity types based on schema"""
-    PHYSICAL_OBJECT = "PhysicalObject"
-    STATE = "State"
-    PROCESS = "Process"
-    ACTIVITY = "Activity"
-    PROPERTY = "Property"
-    PROBLEM = "Problem"
-    # Add hierarchy types from scheme.json
-    SUBSTANCE = "PhysicalObject/Substance"
-    GAS = "PhysicalObject/Substance/Gas"
-    LIQUID = "PhysicalObject/Substance/Liquid"
-    SOLID = "PhysicalObject/Substance/Solid"
-    MIXTURE = "PhysicalObject/Substance/Mixture"
-    ORGANISM = "PhysicalObject/Organism"
-    PERSON = "PhysicalObject/Organism/Person"
-    SENSING_OBJECT = "PhysicalObject/SensingObject"
-    STORING_OBJECT = "PhysicalObject/StoringObject"
-    EMITTING_OBJECT = "PhysicalObject/EmittingObject"
-    PROTECTING_OBJECT = "PhysicalObject/ProtectingObject"
-    GENERATING_OBJECT = "PhysicalObject/GeneratingObject"
-    MATTER_PROCESSING_OBJECT = "PhysicalObject/MatterProcessingObject"
-    INFORMATION_PROCESSING_OBJECT = "PhysicalObject/InformationProcessingObject"
-    DRIVING_OBJECT = "PhysicalObject/DrivingObject"
-    COVERING_OBJECT = "PhysicalObject/CoveringObject"
-    PRESENTING_OBJECT = "PhysicalObject/PresentingObject"
-    CONTROLLING_OBJECT = "PhysicalObject/ControllingObject"
-    RESTRICTING_OBJECT = "PhysicalObject/RestrictingObject"
-    HUMAN_INTERACTION_OBJECT = "PhysicalObject/HumanInteractionObject"
-    TRANSFORMING_OBJECT = "PhysicalObject/TransformingObject"
-    HOLDING_OBJECT = "PhysicalObject/HoldingObject"
-    GUIDING_OBJECT = "PhysicalObject/GuidingObject"
-    INTERFACING_OBJECT = "PhysicalObject/InterfacingObject"
-    DESIRABLE_STATE = "State/DesirableState"
-    NORMAL_STATE = "State/DesirableState/NormalState"
-    UNDESIRABLE_STATE = "State/UndesirableState"
-    DEGRADED_STATE = "State/UndesirableState/DegradedState"
-    FAILED_STATE = "State/UndesirableState/FailedState"
-    DESIRABLE_PROCESS = "Process/DesirableProcess"
-    UNDESIRABLE_PROCESS = "Process/UndesirableProcess"
-    DESIRABLE_PROPERTY = "Property/DesirableProperty"
-    UNDESIRABLE_PROPERTY = "Property/UndesirableProperty"
-    MAINTENANCE_ACTIVITY = "Activity/MaintenanceActivity"
-    ADJUST = "Activity/MaintenanceActivity/Adjust"
-    CALIBRATE = "Activity/MaintenanceActivity/Calibrate"
-    DIAGNOSE = "Activity/MaintenanceActivity/Diagnose"
-    INSPECT = "Activity/MaintenanceActivity/Inspect"
-    REPLACE = "Activity/MaintenanceActivity/Replace"
-    REPAIR = "Activity/MaintenanceActivity/Repair"
-    SERVICE = "Activity/MaintenanceActivity/Service"
-    SUPPORTING_ACTIVITY = "Activity/SupportingActivity"
-    ADMIN = "Activity/SupportingActivity/Admin"
-    ASSEMBLE = "Activity/SupportingActivity/Assemble"
-    ISOLATE = "Activity/SupportingActivity/Isolate"
-    MEASURE = "Activity/SupportingActivity/Measure"
-    MODIFY = "Activity/SupportingActivity/Modify"
-    MOVE = "Activity/SupportingActivity/Move"
-    OPERATE = "Activity/SupportingActivity/Operate"
-    PERFORM = "Activity/SupportingActivity/Perform"
-    TEAMWORK = "Activity/SupportingActivity/Teamwork"
-
-
-class RelationType(str, Enum):
-    """MaintIE relation types based on schema"""
-    HAS_PART = "hasPart"
-    HAS_PROPERTY = "hasProperty"
-    # Add types from scheme.json
-    IS_A = "isA"
-    CONTAINS = "contains"
-    HAS_PARTICIPANT = "hasParticipant"
-    HAS_PATIENT = "hasParticipant/hasPatient"
-    HAS_AGENT = "hasParticipant/hasAgent"
+# Import universal models for legacy compatibility
+from core.models.universal_models import (
+    UniversalEntity, UniversalRelation, UniversalDocument,
+    UniversalQueryAnalysis, UniversalEnhancedQuery,
+    UniversalSearchResult, UniversalRAGResponse
+)
 
 
 class QueryType(str, Enum):
-    """Maintenance query categories"""
+    """Universal query categories (domain-agnostic)"""
     TROUBLESHOOTING = "troubleshooting"
     PROCEDURAL = "procedural"
     PREVENTIVE = "preventive"
     INFORMATIONAL = "informational"
     SAFETY = "safety"
-
-
-@dataclass
-class MaintenanceEntity:
-    """Core maintenance entity from MaintIE annotations"""
-
-    entity_id: str
-    text: str
-    entity_type: EntityType
-    confidence: float = 1.0
-    context: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    embedding: Optional[np.ndarray] = None
-
-    def __post_init__(self):
-        """Validate entity after creation"""
-        if self.confidence < 0 or self.confidence > 1:
-            raise ValueError("Confidence must be between 0 and 1")
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert entity to dictionary"""
-        return {
-            "entity_id": self.entity_id,
-            "text": self.text,
-            "entity_type": self.entity_type.value,
-            "confidence": self.confidence,
-            "context": self.context,
-            "metadata": self.metadata
-        }
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MaintenanceEntity':
-        """Create entity from dictionary"""
-        return cls(
-            entity_id=data["entity_id"],
-            text=data["text"],
-            entity_type=EntityType(data["entity_type"]),
-            confidence=data.get("confidence", 1.0),
-            context=data.get("context"),
-            metadata=data.get("metadata", {})
-        )
-
-
-@dataclass
-class MaintenanceRelation:
-    """Relationship between maintenance entities"""
-
-    relation_id: str
-    source_entity: str
-    target_entity: str
-    relation_type: RelationType
-    confidence: float = 1.0
-    context: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert relation to dictionary"""
-        return {
-            "relation_id": self.relation_id,
-            "source_entity": self.source_entity,
-            "target_entity": self.target_entity,
-            "relation_type": self.relation_type.value,
-            "confidence": self.confidence,
-            "context": self.context,
-            "metadata": self.metadata
-        }
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MaintenanceRelation':
-        """Create relation from dictionary"""
-        return cls(
-            relation_id=data["relation_id"],
-            source_entity=data["source_entity"],
-            target_entity=data["target_entity"],
-            relation_type=RelationType(data["relation_type"]),
-            confidence=data.get("confidence", 1.0),
-            context=data.get("context"),
-            metadata=data.get("metadata", {})
-        )
-
-
-@dataclass
-class MaintenanceDocument:
-    """Single maintenance work order or document"""
-
-    doc_id: str
-    text: str
-    title: Optional[str] = None
-    entities: List[MaintenanceEntity] = field(default_factory=list)
-    relations: List[MaintenanceRelation] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    embedding: Optional[np.ndarray] = None
-    created_at: datetime = field(default_factory=datetime.now)
-
-    def add_entity(self, entity: MaintenanceEntity) -> None:
-        """Add entity to document"""
-        self.entities.append(entity)
-
-    def add_relation(self, relation: MaintenanceRelation) -> None:
-        """Add relation to document"""
-        self.relations.append(relation)
-
-    def get_entity_texts(self) -> List[str]:
-        """Get all entity texts in document"""
-        return [entity.text for entity in self.entities]
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert document to dictionary"""
-        return {
-            "doc_id": self.doc_id,
-            "text": self.text,
-            "title": self.title,
-            "entities": [entity.to_dict() for entity in self.entities],
-            "relations": [relation.to_dict() for relation in self.relations],
-            "metadata": self.metadata,
-            "created_at": self.created_at.isoformat()
-        }
+    EXPLANATION = "explanation"
+    COMPARISON = "comparison"
+    CLASSIFICATION = "classification"
 
 
 @dataclass
 class QueryAnalysis:
-    """Results of query analysis"""
+    """Query analysis result (universal)"""
 
     original_query: str
     query_type: QueryType
-    entities: List[str]
+    keywords: List[str]
+    concepts: List[str]
     intent: str
-    complexity: str
-    urgency: str = "medium"
-    equipment_category: Optional[str] = None
-    confidence: float = 1.0
+    complexity: str = "medium"
+    domain_indicators: List[str] = field(default_factory=list)
+    confidence: float = 0.8
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert analysis to dictionary"""
+        """Convert to dictionary"""
         return {
             "original_query": self.original_query,
             "query_type": self.query_type.value,
-            "entities": self.entities,
+            "keywords": self.keywords,
+            "concepts": self.concepts,
             "intent": self.intent,
             "complexity": self.complexity,
-            "urgency": self.urgency,
-            "equipment_category": self.equipment_category,
+            "domain_indicators": self.domain_indicators,
             "confidence": self.confidence
         }
 
 
 @dataclass
 class EnhancedQuery:
-    """Enhanced query with expanded concepts"""
+    """Enhanced query with universal analysis"""
 
     analysis: QueryAnalysis
-    expanded_concepts: List[str]
-    related_entities: List[str]
-    domain_context: Dict[str, Any]
-    structured_search: str
+    expanded_concepts: List[str] = field(default_factory=list)
+    related_entities: List[str] = field(default_factory=list)
+    domain_context: Dict[str, Any] = field(default_factory=dict)
+    structured_search: Dict[str, Any] = field(default_factory=dict)
     safety_considerations: List[str] = field(default_factory=list)
     safety_critical: bool = False
-    safety_warnings: List[str] = field(default_factory=list)
-    equipment_category: Optional[str] = None
-    maintenance_context: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert enhanced query to dictionary"""
+        """Convert to dictionary"""
         return {
             "analysis": self.analysis.to_dict(),
             "expanded_concepts": self.expanded_concepts,
@@ -262,27 +78,24 @@ class EnhancedQuery:
             "domain_context": self.domain_context,
             "structured_search": self.structured_search,
             "safety_considerations": self.safety_considerations,
-            "safety_critical": self.safety_critical,
-            "safety_warnings": self.safety_warnings,
-            "equipment_category": self.equipment_category,
-            "maintenance_context": self.maintenance_context
+            "safety_critical": self.safety_critical
         }
 
 
 @dataclass
 class SearchResult:
-    """Individual search result"""
+    """Universal search result"""
 
     doc_id: str
     title: str
     content: str
     score: float
-    source: str  # 'vector', 'entity', 'graph'
+    source: str  # 'vector', 'entity', 'graph', 'universal'
     metadata: Dict[str, Any] = field(default_factory=dict)
     entities: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert search result to dictionary"""
+        """Convert to dictionary"""
         return {
             "doc_id": self.doc_id,
             "title": self.title,
@@ -296,7 +109,7 @@ class SearchResult:
 
 @dataclass
 class RAGResponse:
-    """Complete RAG system response"""
+    """Universal RAG system response"""
 
     query: str
     enhanced_query: EnhancedQuery
@@ -305,11 +118,12 @@ class RAGResponse:
     confidence_score: float
     processing_time: float
     sources: List[str]
+    domain: str = "general"
     safety_warnings: List[str] = field(default_factory=list)
     citations: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert RAG response to dictionary"""
+        """Convert to dictionary"""
         return {
             "query": self.query,
             "enhanced_query": self.enhanced_query.to_dict(),
@@ -318,6 +132,140 @@ class RAGResponse:
             "confidence_score": self.confidence_score,
             "processing_time": self.processing_time,
             "sources": self.sources,
+            "domain": self.domain,
             "safety_warnings": self.safety_warnings,
             "citations": self.citations
         }
+
+
+# ================================
+# LEGACY COMPATIBILITY ALIASES
+# ================================
+# These aliases allow existing code to continue working while we complete the migration
+# All old domain-specific classes now point to universal equivalents
+
+# Entity and relation aliases
+MaintenanceEntity = UniversalEntity
+MaintenanceRelation = UniversalRelation
+MaintenanceDocument = UniversalDocument
+
+# Query analysis aliases
+MaintenanceQueryAnalysis = UniversalQueryAnalysis
+MaintenanceEnhancedQuery = UniversalEnhancedQuery
+
+# Search result aliases
+MaintenanceSearchResult = UniversalSearchResult
+MaintenanceRAGResponse = UniversalRAGResponse
+
+# For backward compatibility with enum usage
+# Since we removed hardcoded enums, provide dynamic type creation functions
+def create_entity_type(type_name: str) -> str:
+    """Create dynamic entity type (replaces EntityType enum)"""
+    return type_name.lower().replace(' ', '_')
+
+def create_relation_type(type_name: str) -> str:
+    """Create dynamic relation type (replaces RelationType enum)"""
+    return type_name.lower().replace(' ', '_')
+
+# Common entity types for backward compatibility (no longer hardcoded)
+COMMON_ENTITY_TYPES = {
+    "PHYSICAL_OBJECT": "physical_object",
+    "STATE": "state",
+    "PROCESS": "process",
+    "ACTIVITY": "activity",
+    "PROPERTY": "property",
+    "CONCEPT": "concept"
+}
+
+# Common relation types for backward compatibility (no longer hardcoded)
+COMMON_RELATION_TYPES = {
+    "HAS_PART": "has_part",
+    "HAS_PROPERTY": "has_property",
+    "IS_A": "is_a",
+    "CONTAINS": "contains",
+    "RELATES_TO": "relates_to"
+}
+
+
+def get_entity_type(type_name: str) -> str:
+    """Get entity type dynamically (replaces EntityType enum lookup)"""
+    return COMMON_ENTITY_TYPES.get(type_name.upper(), create_entity_type(type_name))
+
+def get_relation_type(type_name: str) -> str:
+    """Get relation type dynamically (replaces RelationType enum lookup)"""
+    return COMMON_RELATION_TYPES.get(type_name.upper(), create_relation_type(type_name))
+
+
+# ================================
+# MIGRATION HELPER FUNCTIONS
+# ================================
+
+def convert_legacy_entity(legacy_entity: Dict[str, Any]) -> UniversalEntity:
+    """Convert legacy entity dict to UniversalEntity"""
+    return UniversalEntity(
+        entity_id=legacy_entity.get("entity_id", ""),
+        text=legacy_entity.get("text", ""),
+        entity_type=str(legacy_entity.get("entity_type", "unknown")),
+        confidence=legacy_entity.get("confidence", 1.0),
+        context=legacy_entity.get("context"),
+        metadata=legacy_entity.get("metadata", {})
+    )
+
+def convert_legacy_relation(legacy_relation: Dict[str, Any]) -> UniversalRelation:
+    """Convert legacy relation dict to UniversalRelation"""
+    return UniversalRelation(
+        relation_id=legacy_relation.get("relation_id", ""),
+        source_entity_id=legacy_relation.get("source_entity", ""),
+        target_entity_id=legacy_relation.get("target_entity", ""),
+        relation_type=str(legacy_relation.get("relation_type", "unknown")),
+        confidence=legacy_relation.get("confidence", 1.0),
+        context=legacy_relation.get("context"),
+        metadata=legacy_relation.get("metadata", {})
+    )
+
+def convert_legacy_document(legacy_document: Dict[str, Any]) -> UniversalDocument:
+    """Convert legacy document dict to UniversalDocument"""
+    universal_doc = UniversalDocument(
+        document_id=legacy_document.get("doc_id", ""),
+        text=legacy_document.get("text", ""),
+        title=legacy_document.get("title", ""),
+        metadata=legacy_document.get("metadata", {})
+    )
+
+    # Add entities and relations if present
+    for entity_data in legacy_document.get("entities", []):
+        if isinstance(entity_data, dict):
+            entity = convert_legacy_entity(entity_data)
+            universal_doc.add_entity(entity)
+
+    for relation_data in legacy_document.get("relations", []):
+        if isinstance(relation_data, dict):
+            relation = convert_legacy_relation(relation_data)
+            universal_doc.add_relation(relation)
+
+    return universal_doc
+
+
+# ================================
+# DEPRECATION WARNINGS (OPTIONAL)
+# ================================
+
+import warnings
+
+def deprecated_entity_type_enum_warning():
+    """Warn about deprecated EntityType enum usage"""
+    warnings.warn(
+        "EntityType enum is deprecated. Use dynamic string types instead. "
+        "See Universal RAG documentation for migration guide.",
+        DeprecationWarning,
+        stacklevel=3
+    )
+
+def deprecated_relation_type_enum_warning():
+    """Warn about deprecated RelationType enum usage"""
+    warnings.warn(
+        "RelationType enum is deprecated. Use dynamic string types instead. "
+        "See Universal RAG documentation for migration guide.",
+        DeprecationWarning,
+        stacklevel=3
+    )
