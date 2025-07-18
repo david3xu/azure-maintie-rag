@@ -1,25 +1,30 @@
-import { useCallback, useState } from 'react';
-import { fetchUniversalRAG } from '../services/universal-rag';
-import type { UniversalRAGRequest, UniversalRAGResponse } from '../types/domain';
+import { useState } from 'react';
+import { postUniversalQuery } from '../services/api';
 
-// Hook for orchestrating Universal RAG API calls and state
-export function useUniversalRAG() {
+export const useUniversalRAG = () => {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<UniversalRAGResponse | null>(null);
+  const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const runUniversalRAG = useCallback(async (request: UniversalRAGRequest) => {
+  const runUniversalRAG = async (request: { query: string; domain: string }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetchUniversalRAG(request);
+      const response = await postUniversalQuery(request.query, request.domain);
       setResult(response);
+      return response;
     } catch (err: any) {
-      setError(err.message || 'Unknown error');
+      setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  return { loading, result, error, runUniversalRAG };
-}
+  return {
+    loading,
+    result,
+    error,
+    runUniversalRAG
+  };
+};
