@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple, Set
 from datetime import datetime
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class LLMKnowledgeExtractor(ABC):
     def __init__(self, domain_name: str, cache_dir: Optional[Path] = None):
         """Initialize LLM knowledge extractor"""
         self.domain_name = domain_name
-        self.cache_dir = cache_dir or Path("data/cache/llm_extraction")
+        self.cache_dir = cache_dir or (settings.BASE_DIR / "data" / "cache" / "llm_extraction")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Knowledge storage

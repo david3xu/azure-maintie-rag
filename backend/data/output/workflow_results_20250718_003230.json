@@ -1,0 +1,63 @@
+{
+  "workflow_results": {
+    "step_1": {
+      "success": true,
+      "processing_time": 2.617945671081543,
+      "total_documents": 6,
+      "total_entities": 27,
+      "total_relations": 37,
+      "method": "extract_universal_knowledge"
+    },
+    "step_2": {
+      "success": true,
+      "processing_time": 2.069185495376587,
+      "total_entities": 12,
+      "total_relations": 9,
+      "discovered_entity_types": [
+        "entity_types",
+        "relation_types"
+      ]
+    },
+    "vector_search_instance": "<core.retrieval.universal_vector_search.UniversalVectorSearch object at 0x7006924c1bd0>",
+    "step_3": {
+      "success": true,
+      "processing_time": 1.824681282043457,
+      "documents_processed": 5,
+      "index_built": true
+    },
+    "step_4": {
+      "success": true,
+      "processing_time": 2.384185791015625e-07,
+      "graph_method": "NetworkX via knowledge extractor"
+    },
+    "step_5": {
+      "success": true,
+      "processing_time": 0.00011134147644042969,
+      "query_type": "troubleshooting",
+      "entities_detected": 0,
+      "concepts_detected": 0
+    },
+    "search_results": [
+      "UniversalSearchResult(doc_id='doc_0', content='Pump impeller damage can cause vibration and reduced flow rate. Regular inspection prevents costly repairs.', score=0.8434188961982727, metadata={'source': 'demo', 'domain': 'maintenance', 'processing_method': 'universal_vector_search', 'title': 'Document 1', 'search_method': 'universal_vector_search'}, entities=[], source='universal_vector_index')",
+      "UniversalSearchResult(doc_id='doc_1', content='Bearing lubrication must be checked monthly. Proper oil levels ensure smooth operation and extend equipment life.', score=0.7978857755661011, metadata={'source': 'demo', 'domain': 'maintenance', 'processing_method': 'universal_vector_search', 'title': 'Document 2', 'search_method': 'universal_vector_search'}, entities=[], source='universal_vector_index')",
+      "UniversalSearchResult(doc_id='doc_3', content='Valve seals deteriorate over time, causing leaks. Replace seals when pressure drops are observed.', score=0.7718623280525208, metadata={'source': 'demo', 'domain': 'maintenance', 'processing_method': 'universal_vector_search', 'title': 'Document 4', 'search_method': 'universal_vector_search'}, entities=[], source='universal_vector_index')"
+    ],
+    "step_6": {
+      "success": true,
+      "processing_time": 0.23809194564819336,
+      "results_found": 3,
+      "retrieval_method": "FAISS vector search"
+    },
+    "step_7": {
+      "success": true,
+      "processing_time": 5.4846436977386475,
+      "response_generated": true,
+      "llm_model": "Azure OpenAI GPT-4"
+    }
+  },
+  "metadata": {
+    "domain": "maintenance",
+    "completion_time": "2025-07-18T00:32:30.792082",
+    "success_rate": "100.0%"
+  }
+}
