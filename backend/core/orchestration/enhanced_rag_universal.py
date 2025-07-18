@@ -189,6 +189,13 @@ class EnhancedUniversalRAG:
                 progress_callback
             )
 
+            # Convert search_results to dicts if present and not already dicts
+            if hasattr(enhanced_results, 'get') and "search_results" in enhanced_results:
+                enhanced_results["search_results"] = [
+                    r.to_dict() if hasattr(r, 'to_dict') else r
+                    for r in enhanced_results["search_results"]
+                ]
+
             # Calculate performance metrics
             processing_time = (datetime.now() - start_time).total_seconds()
             self._update_performance_metrics(processing_time)
