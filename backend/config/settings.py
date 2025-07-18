@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     app_name: str = "MaintIE Enhanced RAG"
     app_version: str = "1.0.0"
     environment: str = Field(default="development", env="ENVIRONMENT")
-    debug: bool = Field(default=False, env="DEBUG")
+    debug: bool = Field(default=True, env="DEBUG")
 
     # API Settings
     api_host: str = Field(default="0.0.0.0", env="API_HOST")
@@ -26,17 +26,17 @@ class Settings(BaseSettings):
 
     # Azure OpenAI Settings (optional for testing)
     openai_api_type: str = Field(default="azure", env="OPENAI_API_TYPE")
-    openai_api_key: str = Field(default="test-key", env="OPENAI_API_KEY")
-    openai_api_base: str = Field(default="https://test.openai.azure.com/", env="OPENAI_API_BASE")
-    openai_api_version: str = Field(default="2023-12-01-preview", env="OPENAI_API_VERSION")
-    openai_deployment_name: str = Field(default="gpt-4", env="OPENAI_DEPLOYMENT_NAME")
-    openai_model: str = Field(default="gpt-4", env="OPENAI_MODEL")
+    openai_api_key: str = Field(default="1234567890", env="OPENAI_API_KEY")
+    openai_api_base: str = Field(default="https://clu-project-foundry-instance.openai.azure.com/", env="OPENAI_API_BASE")
+    openai_api_version: str = Field(default="2025-03-01-preview", env="OPENAI_API_VERSION")
+    openai_deployment_name: str = Field(default="gpt-4.1", env="OPENAI_DEPLOYMENT_NAME")
+    openai_model: str = Field(default="gpt-4.1", env="OPENAI_MODEL")
 
     # Embedding Settings (Azure) - optional for testing
     embedding_model: str = Field(default="text-embedding-ada-002", env="EMBEDDING_MODEL")
     embedding_deployment_name: str = Field(default="text-embedding-ada-002", env="EMBEDDING_DEPLOYMENT_NAME")
-    embedding_api_base: str = Field(default="https://test.openai.azure.com/", env="EMBEDDING_API_BASE")
-    embedding_api_version: str = Field(default="2023-12-01-preview", env="EMBEDDING_API_VERSION")
+    embedding_api_base: str = Field(default="https://clu-project-foundry-instance.openai.azure.com/", env="EMBEDDING_API_BASE")
+    embedding_api_version: str = Field(default="2025-03-01-preview", env="EMBEDDING_API_VERSION")
     embedding_dimension: int = Field(default=1536, env="EMBEDDING_DIMENSION")
 
     # Data Paths
