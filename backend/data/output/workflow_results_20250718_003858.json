@@ -1,0 +1,59 @@
+{
+  "workflow_results": {
+    "step_1": {
+      "success": true,
+      "processing_time": 1.3290526866912842,
+      "total_documents": 6,
+      "total_entities": 0,
+      "total_relations": 0,
+      "method": "extract_universal_knowledge"
+    },
+    "step_2": {
+      "success": true,
+      "processing_time": 1.0224807262420654,
+      "total_entities": 0,
+      "total_relations": 0,
+      "discovered_entity_types": [
+        "entity_types",
+        "relation_types"
+      ]
+    },
+    "vector_search_instance": "<core.retrieval.universal_vector_search.UniversalVectorSearch object at 0x7fbb5bce1ae0>",
+    "step_3": {
+      "success": true,
+      "processing_time": 1.6271543502807617,
+      "documents_processed": 5,
+      "index_built": true
+    },
+    "step_4": {
+      "success": true,
+      "processing_time": 2.384185791015625e-07,
+      "graph_method": "NetworkX via knowledge extractor"
+    },
+    "step_5": {
+      "success": true,
+      "processing_time": 9.870529174804688e-05,
+      "query_type": "troubleshooting",
+      "entities_detected": 0,
+      "concepts_detected": 0
+    },
+    "search_results": [],
+    "step_6": {
+      "success": true,
+      "processing_time": 0.2017049789428711,
+      "results_found": 0,
+      "retrieval_method": "FAISS vector search"
+    },
+    "step_7": {
+      "success": true,
+      "processing_time": 0.7968759536743164,
+      "response_generated": true,
+      "llm_model": "Azure OpenAI GPT-4"
+    }
+  },
+  "metadata": {
+    "domain": "maintenance",
+    "completion_time": "2025-07-18T00:38:58.300460",
+    "success_rate": "100.0%"
+  }
+}
