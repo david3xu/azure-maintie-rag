@@ -27,11 +27,13 @@ from datetime import datetime
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
-# Import actual components used in data preparation
+# FIXED: Import actual components used in data preparation
 from core.orchestration.universal_rag_orchestrator_complete import UniversalRAGOrchestrator
 from core.knowledge.universal_text_processor import UniversalTextProcessor
 from core.extraction.universal_knowledge_extractor import UniversalKnowledgeExtractor
-from core.classification.universal_classifier import UniversalClassifier
+from core.classification.universal_classifier import (
+    UniversalEntityClassifier, UniversalRelationClassifier, UniversalClassificationPipeline
+)  # FIXED: Use actual class names
 from core.retrieval.universal_vector_search import UniversalVectorSearch
 from core.gnn.universal_gnn_processor import UniversalGNNDataProcessor
 
@@ -58,9 +60,22 @@ async def main():
 
         processing_time = time.time() - start_time
 
-        if initialization_results.get("success", False):
+        # FIXED: Handle different result types properly
+        if hasattr(initialization_results, 'get'):
+            # If it's a dictionary
+            success = initialization_results.get("success", False)
             stats = initialization_results.get("system_stats", {})
+        elif hasattr(initialization_results, 'to_dict'):
+            # If it's a class instance with to_dict method
+            result_dict = initialization_results.to_dict()
+            success = result_dict.get("success", False)
+            stats = result_dict.get("system_stats", {})
+        else:
+            # If it's a boolean or other type
+            success = bool(initialization_results)
+            stats = {}
 
+        if success:
             print(f"\n✅ Data preparation completed successfully!")
             print(f"⏱️  Processing time: {processing_time:.2f}s")
             print(f"📊 Documents processed: {stats.get('total_documents', 0)}")
@@ -83,7 +98,13 @@ async def main():
             print(f"\n🚀 System Status: Ready for user queries!")
 
         else:
-            print(f"❌ Data preparation failed: {initialization_results.get('error', 'Unknown error')}")
+            error_msg = "Unknown error"
+            if hasattr(initialization_results, 'get'):
+                error_msg = initialization_results.get('error', 'Unknown error')
+            elif hasattr(initialization_results, 'to_dict'):
+                result_dict = initialization_results.to_dict()
+                error_msg = result_dict.get('error', 'Unknown error')
+            print(f"❌ Data preparation failed: {error_msg}")
 
     except Exception as e:
         print(f"❌ Data preparation workflow failed: {e}")
