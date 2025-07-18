@@ -139,7 +139,10 @@ async def process_universal_query(request: UniversalQueryRequest) -> Dict[str, A
             "query": results["query"],
             "domain": results["domain"],
             "generated_response": results["generated_response"],
-            "search_results": results["search_results"],
+            "search_results": [
+                result.to_dict() if hasattr(result, 'to_dict') else result
+                for result in results["search_results"]
+            ],
             "processing_time": results["processing_time"],
             "system_stats": results["system_stats"],
             "timestamp": results["timestamp"]
