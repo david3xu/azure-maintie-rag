@@ -404,12 +404,7 @@ def create_universal_analyzer(text_processor: Optional[UniversalTextProcessor] =
     return UniversalQueryAnalyzer(text_processor, domain)
 
 
-# Legacy compatibility alias
-def create_analyzer(transformer: Optional[Any] = None) -> UniversalQueryAnalyzer:
-    """Legacy compatibility function"""
-    # Convert MaintIE transformer to universal if needed
-    domain = "maintenance" if transformer else "general"
-    return UniversalQueryAnalyzer(None, domain)
+# Universal RAG - no backward compatibility needed
 
 
 if __name__ == "__main__":

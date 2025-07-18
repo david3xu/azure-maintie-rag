@@ -44,7 +44,7 @@ async def main():
     print("⏱️  Frequency: Every user request (runtime)")
 
     domain = "general"
-    test_query = "What causes pump failures and how to prevent them?"
+    test_query = "What are common issues and how to prevent them?"
 
     print(f"\n❓ Test Query: '{test_query}'")
 

@@ -388,8 +388,7 @@ class UniversalVectorSearch:
         }
 
 
-# Legacy compatibility alias for gradual migration
-MaintenanceVectorSearch = UniversalVectorSearch
+# Universal RAG - no backward compatibility needed
 
 
 def create_universal_vector_search(domain: str = "general") -> UniversalVectorSearch:
