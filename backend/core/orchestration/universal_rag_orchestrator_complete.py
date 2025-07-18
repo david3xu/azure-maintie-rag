@@ -495,14 +495,14 @@ class UniversalRAGOrchestrator:
         logger.info("Building search indices...")
 
         try:
-            # Fix: Use correct method name
-            vector_results = await self.vector_search.build_index_universal(
+            # Fix: Remove await - build_index_universal is not async
+            vector_results = self.vector_search.build_index_universal(
                 documents=self.documents
             )
 
             # Fix: Only pass valid parameters to GNN processor
             gnn_results = self.gnn_processor.prepare_universal_gnn_data(
-                use_cache=True  # Only parameter the method accepts
+                use_cache=True
             )
 
             return {

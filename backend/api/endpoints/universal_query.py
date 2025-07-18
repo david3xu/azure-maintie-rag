@@ -10,6 +10,7 @@ import asyncio
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from pathlib import Path
+import time
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
 from fastapi.responses import StreamingResponse
@@ -206,68 +207,94 @@ async def stream_query_progress(query_id: str) -> StreamingResponse:
     """
     workflow_manager = get_workflow_manager(query_id)
     if not workflow_manager:
+        logger.warning(f"Workflow not found for query_id: {query_id}")
         raise HTTPException(status_code=404, detail="Query not found")
 
     async def generate_detailed_progress_events():
         """Generate detailed SSE events with WorkflowStep objects"""
-        last_step_count = 0
-        event_buffer = []
-
-        # Set up event subscription
-        async def workflow_event_handler(event_type: str, data: Any):
-            """Handle workflow events and convert to SSE format"""
-            try:
-                if event_type in ["step_started", "step_updated", "step_completed", "step_failed"]:
-                    # Convert WorkflowStep to dict (matches frontend interface exactly)
-                    step_data = data.to_dict() if hasattr(data, 'to_dict') else data
+        try:
+            # If workflow is already completed, send all steps at once
+            if workflow_manager.is_completed:
+                logger.info(f"Streaming completed workflow: {query_id}")
+                # Send each step as a separate event
+                for step in workflow_manager.steps:
+                    step_data = step.to_layer_dict(2) if hasattr(step, 'to_layer_dict') else (step.to_dict() if hasattr(step, 'to_dict') else step)
                     event_data = {
                         "event_type": "progress",
-                        **step_data  # Include all WorkflowStep fields
+                        **step_data
                     }
-                    event_buffer.append(event_data)
+                    yield f"data: {json.dumps(event_data)}\n\n"
+                    await asyncio.sleep(0.1)  # Small delay for frontend processing
+                # Send completion event
+                completion_data = {
+                    "event_type": "workflow_completed",
+                    "query_id": query_id,
+                    "total_steps": len(workflow_manager.steps),
+                    "performance_metrics": workflow_manager.performance_metrics,
+                    "success": True
+                }
+                yield f"data: {json.dumps(completion_data)}\n\n"
+                return
 
-                elif event_type == "workflow_completed":
-                    completion_data = {
-                        "event_type": "completion",
-                        "query_id": query_id,
-                        "response": data.get("results", {}),
-                        "performance": data.get("performance", {}),
-                        "timestamp": data.get("timestamp", datetime.now().isoformat())
+            # If workflow is still running, stream real-time updates
+            last_step_count = 0
+            max_wait_time = 300  # 5 minutes timeout
+            start_time = time.time()
+
+            while not workflow_manager.is_completed and not workflow_manager.has_error:
+                current_time = time.time()
+                # Check timeout
+                if current_time - start_time > max_wait_time:
+                    timeout_data = {
+                        "event_type": "timeout",
+                        "message": "Workflow timeout - please refresh to check status"
                     }
-                    event_buffer.append(completion_data)
-
-                elif event_type == "workflow_failed":
-                    error_data = {
-                        "event_type": "error",
-                        "query_id": query_id,
-                        "error": data.get("error", "Unknown error"),
-                        "timestamp": data.get("timestamp", datetime.now().isoformat())
-                    }
-                    event_buffer.append(error_data)
-
-            except Exception as e:
-                logger.error(f"Error handling workflow event: {e}", exc_info=True)
-
-        # Subscribe to workflow events
-        workflow_manager.subscribe_to_events(workflow_event_handler)
-
-        # Stream events
-        while not workflow_manager.is_completed and not workflow_manager.has_error:
-            # Send buffered events
-            while event_buffer:
-                event_data = event_buffer.pop(0)
-                yield f"data: {json.dumps(event_data)}\n\n"
-
-            # Wait before next check
-            await asyncio.sleep(0.1)
-
-        # Send any remaining buffered events
-        while event_buffer:
-            event_data = event_buffer.pop(0)
-            yield f"data: {json.dumps(event_data)}\n\n"
-
-        # Clean up workflow after completion
-        workflow_registry.unregister_workflow(query_id)
+                    yield f"data: {json.dumps(timeout_data)}\n\n"
+                    break
+                # Send new steps if available
+                current_step_count = len(workflow_manager.steps)
+                if current_step_count > last_step_count:
+                    for i in range(last_step_count, current_step_count):
+                        step = workflow_manager.steps[i]
+                        step_data = step.to_layer_dict(2) if hasattr(step, 'to_layer_dict') else (step.to_dict() if hasattr(step, 'to_dict') else step)
+                        event_data = {
+                            "event_type": "progress",
+                            **step_data
+                        }
+                        yield f"data: {json.dumps(event_data)}\n\n"
+                    last_step_count = current_step_count
+                # Send heartbeat
+                heartbeat_data = {
+                    "event_type": "heartbeat",
+                    "timestamp": current_time,
+                    "steps_completed": current_step_count
+                }
+                yield f"data: {json.dumps(heartbeat_data)}\n\n"
+                await asyncio.sleep(0.5)  # Check every 500ms
+            # Send final completion or error event
+            if workflow_manager.is_completed:
+                completion_data = {
+                    "event_type": "workflow_completed",
+                    "query_id": query_id,
+                    "total_steps": len(workflow_manager.steps),
+                    "performance_metrics": workflow_manager.performance_metrics,
+                    "success": True
+                }
+            else:
+                completion_data = {
+                    "event_type": "workflow_failed",
+                    "query_id": query_id,
+                    "error": workflow_manager.error_message or "Unknown error",
+                    "success": False
+                }
+            yield f"data: {json.dumps(completion_data)}\n\n"
+        except Exception as e:
+            logger.error(f"Streaming error for query {query_id}: {e}", exc_info=True)
+            error_data = {
+                "event_type": "error",
+                "message": f"Streaming error: {str(e)}"
+            }
+            yield f"data: {json.dumps(error_data)}\n\n"
 
     return StreamingResponse(
         generate_detailed_progress_events(),
@@ -276,7 +303,7 @@ async def stream_query_progress(query_id: str) -> StreamingResponse:
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "*"
+            "Access-Control-Allow-Headers": "Cache-Control"
         }
     )
 
@@ -512,67 +539,56 @@ async def _process_streaming_query_with_workflow(
 
     This function integrates the Universal Workflow Manager with the Enhanced
     Universal RAG system to provide the detailed 7-step workflow from README architecture.
-
-    Instead of generic 3-step workflow, this passes workflow_manager directly to
-    Enhanced RAG, allowing the Universal RAG Orchestrator to create the detailed
-    7-step workflow that matches the README "Workflow Components (Enhanced)" table.
     """
+    from core.workflow.universal_workflow_manager import workflow_registry
+
     try:
         logger.info(f"Starting workflow processing for query: {workflow_manager.query_id}")
 
         # Get Enhanced RAG instance
         enhanced_rag = get_enhanced_rag_instance(request.domain)
 
-        # Initialize components if needed (only show initialization step if needed)
+        # Ensure system is initialized
         if not enhanced_rag.components_initialized:
-            init_step = await workflow_manager.start_step(
-                step_name="initialize_components",
-                user_friendly_name="🔧 Initializing AI components...",
-                technology="Enhanced Universal RAG",
-                estimated_progress=5,
-                technical_data={"domain": request.domain, "component": "system_initialization"}
-            )
-
+            logger.info(f"Initializing Enhanced Universal RAG for domain: {request.domain}")
             init_results = await enhanced_rag.initialize_components()
 
             if not init_results.get("success", False):
-                await workflow_manager.fail_step(
-                    init_step,
-                    f"Component initialization failed: {init_results.get('error', 'Unknown error')}",
-                    {"init_results": init_results}
+                await workflow_manager.fail_workflow(
+                    f"Failed to initialize Universal RAG system: {init_results.get('error', 'Unknown error')}"
                 )
-                await workflow_manager.fail_workflow("Component initialization failed")
+                # Store failed workflow in registry for debugging
+                error_results = {
+                    "success": False,
+                    "error": init_results.get('error', 'Unknown error'),
+                    "query": request.query,
+                    "domain": request.domain
+                }
+                workflow_registry.complete_workflow(workflow_manager.query_id, error_results)
                 return
 
-            await workflow_manager.complete_step(
-                init_step,
-                f"Components initialized for {request.domain} domain",
-                10,
-                {
-                    "domain": request.domain,
-                    "components_initialized": True,
-                    "initialization_time": init_results.get("processing_time", 0)
-                }
-            )
-
-        # ✅ CORE CHANGE: Pass workflow_manager directly to Enhanced RAG
-        # This allows the Universal RAG Orchestrator to create the detailed 7-step workflow
-        # that matches the README "Workflow Components (Enhanced)" table:
-        # 1. Data Ingestion, 2. Knowledge Extraction, 3. Vector Indexing,
-        # 4. Graph Construction, 5. Query Processing, 6. Retrieval, 7. Generation
+        # Process query with 7-step workflow
         results = await enhanced_rag.process_query(
             query=request.query,
             max_results=request.max_results,
             include_explanations=request.include_explanations,
             enable_safety_warnings=request.enable_safety_warnings,
             stream_progress=True,
-            workflow_manager=workflow_manager  # ✅ Pass workflow manager for detailed 7-step workflow
+            workflow_manager=workflow_manager
         )
 
         if not results.get("success", False):
             await workflow_manager.fail_workflow(
                 f"Query processing failed: {results.get('error', 'Unknown error')}"
             )
+            # Store failed workflow in registry for debugging
+            error_results = {
+                "success": False,
+                "error": results.get('error', 'Unknown error'),
+                "query": request.query,
+                "domain": request.domain
+            }
+            workflow_registry.complete_workflow(workflow_manager.query_id, error_results)
             return
 
         # Complete the workflow with final results
@@ -581,9 +597,19 @@ async def _process_streaming_query_with_workflow(
             results.get("processing_time", 0)
         )
 
+        # Store completed workflow in registry for frontend access
+        workflow_registry.complete_workflow(workflow_manager.query_id, results)
+
         logger.info(f"Workflow completed successfully for query: {workflow_manager.query_id}")
 
     except Exception as e:
         logger.error(f"Workflow processing failed: {e}", exc_info=True)
         await workflow_manager.fail_workflow(f"Unexpected error: {str(e)}")
-        raise
+        # Even failed workflows should be accessible for debugging
+        error_results = {
+            "success": False,
+            "error": str(e),
+            "query": request.query,
+            "domain": request.domain
+        }
+        workflow_registry.complete_workflow(workflow_manager.query_id, error_results)

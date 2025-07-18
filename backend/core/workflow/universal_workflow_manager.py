@@ -447,38 +447,102 @@ class WorkflowManagerRegistry:
 
     def __init__(self):
         self.active_workflows: Dict[str, UniversalWorkflowManager] = {}
-        self.cleanup_threshold = 3600  # 1 hour in seconds
+        self.cleanup_threshold = 7200  # 2 hours instead of 1 hour
+        self.completed_workflows: Dict[str, Dict[str, Any]] = {}  # Store completed results
 
     def register_workflow(self, workflow_manager: UniversalWorkflowManager) -> None:
-        """Register a new workflow manager"""
         self.active_workflows[workflow_manager.query_id] = workflow_manager
         logger.debug(f"Registered workflow: {workflow_manager.query_id}")
 
     def get_workflow(self, query_id: str) -> Optional[UniversalWorkflowManager]:
-        """Get workflow manager by query ID"""
-        return self.active_workflows.get(query_id)
+        workflow = self.active_workflows.get(query_id)
+        if workflow:
+            return workflow
+        # Check completed workflows and restore if needed
+        if query_id in self.completed_workflows:
+            logger.info(f"Restoring completed workflow for streaming: {query_id}")
+            completed_data = self.completed_workflows[query_id]
+            restored_workflow = UniversalWorkflowManager(
+                query_id=query_id,
+                query_text=completed_data.get("query_text", ""),
+                domain=completed_data.get("domain", "general")
+            )
+            restored_workflow.is_completed = True
+            restored_workflow.performance_metrics = completed_data.get("performance_metrics", {})
+            # Rehydrate steps as WorkflowStep objects from dicts
+            step_dicts = completed_data.get("steps", [])
+            restored_steps = []
+            for step_dict in step_dicts:
+                try:
+                    step = WorkflowStep(
+                        query_id=step_dict.get("query_id", query_id),
+                        step_number=step_dict.get("step_number", 0),
+                        step_name=step_dict.get("step_name", "unknown"),
+                        user_friendly_name=step_dict.get("user_friendly_name", "Processing..."),
+                        status=step_dict.get("status", "completed"),
+                        progress_percentage=step_dict.get("progress_percentage", 100),
+                        technology=step_dict.get("technology", "Universal RAG"),
+                        details=step_dict.get("details", "Step completed"),
+                        processing_time_ms=step_dict.get("processing_time_ms"),
+                        fix_applied=step_dict.get("fix_applied"),
+                        technical_data=step_dict.get("technical_data"),
+                        timestamp=step_dict.get("timestamp")
+                    )
+                    restored_steps.append(step)
+                except Exception as e:
+                    logger.warning(f"Failed to restore step from dict: {e}")
+                    logger.debug(f"Problematic step dict: {step_dict}")
+                    continue
+            restored_workflow.steps = restored_steps
+            self.active_workflows[query_id] = restored_workflow
+            return restored_workflow
+        return None
+
+    def complete_workflow(self, query_id: str, results: Dict[str, Any]) -> None:
+        if query_id in self.active_workflows:
+            workflow = self.active_workflows[query_id]
+            steps_data = []
+            for step in workflow.steps:
+                try:
+                    step_dict = step.to_dict()
+                    steps_data.append(step_dict)
+                except Exception as e:
+                    logger.warning(f"Failed to serialize step {step.step_number}: {e}")
+                    continue
+            self.completed_workflows[query_id] = {
+                "query_text": workflow.query_text,
+                "domain": workflow.domain,
+                "steps": steps_data,
+                "performance_metrics": workflow.performance_metrics,
+                "results": results,
+                "completed_at": time.time()
+            }
+            logger.info(f"Completed workflow stored for streaming: {query_id}")
 
     def unregister_workflow(self, query_id: str) -> None:
-        """Unregister a workflow manager"""
         if query_id in self.active_workflows:
             del self.active_workflows[query_id]
             logger.debug(f"Unregistered workflow: {query_id}")
 
     def cleanup_old_workflows(self) -> None:
-        """Clean up old completed workflows"""
         current_time = time.time()
-        to_remove = []
-
+        to_remove_active = []
+        to_remove_completed = []
         for query_id, workflow in self.active_workflows.items():
             age = current_time - workflow.start_time
             if age > self.cleanup_threshold and (workflow.is_completed or workflow.has_error):
-                to_remove.append(query_id)
-
-        for query_id in to_remove:
+                to_remove_active.append(query_id)
+        for query_id, completed_data in self.completed_workflows.items():
+            age = current_time - completed_data.get("completed_at", current_time)
+            if age > (self.cleanup_threshold * 2):
+                to_remove_completed.append(query_id)
+        for query_id in to_remove_active:
             self.unregister_workflow(query_id)
-
-        if to_remove:
-            logger.info(f"Cleaned up {len(to_remove)} old workflows")
+        for query_id in to_remove_completed:
+            if query_id in self.completed_workflows:
+                del self.completed_workflows[query_id]
+        if to_remove_active or to_remove_completed:
+            logger.info(f"Cleaned up {len(to_remove_active)} active and {len(to_remove_completed)} completed workflows")
 
 
 # Global workflow registry

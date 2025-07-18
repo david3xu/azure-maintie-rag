@@ -82,23 +82,20 @@ class UniversalQueryAnalyzer:
 
                 if sample_texts:
                     logger.info(f"Discovering domain knowledge from {len(sample_texts)} document samples")
-                # Use LLM to discover domain concepts
+                    # Use LLM to discover domain concepts
                     extraction_results = self.llm_extractor.extract_entities_and_relations(sample_texts)  # Sample for discovery
 
-                # Store discovered knowledge
-                self.discovered_entities.update(extraction_results.get('entities', []))
-                self.discovered_relations.update(extraction_results.get('relations', []))
+                    # Store discovered knowledge
+                    self.discovered_entities.update(extraction_results.get('entities', []))
+                    self.discovered_relations.update(extraction_results.get('relations', []))
 
-                # Build universal query patterns from discovered content
+                    # Build universal query patterns from discovered content
                     self._build_universal_patterns(sample_texts)  # Sample for pattern building
 
-                logger.info(f"Discovered {len(self.discovered_entities)} entity types, "
-                          f"{len(self.discovered_relations)} relation types for domain: {self.domain}")
-                else:
-                    logger.warning("No valid text content found for domain discovery")
+                    logger.info(f"Discovered {len(self.discovered_entities)} entity types, "
+                              f"{len(self.discovered_relations)} relation types for domain: {self.domain}")
             else:
-                logger.warning(f"Invalid documents structure: {type(documents)}")
-
+                logger.warning("No valid text content found for domain discovery")
         except Exception as e:
             logger.error(f"Domain discovery failed: {e}")
             self._load_universal_patterns()

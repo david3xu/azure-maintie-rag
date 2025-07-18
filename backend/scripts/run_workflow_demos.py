@@ -32,7 +32,7 @@ async def main():
 
     # Check if we can import the required modules
     try:
-        from universal_rag_workflow_demo import UniversalRAGWorkflowDemo
+        from universal_rag_workflow_demo import CompletelyFixedUniversalRAGWorkflowDemo
         from workflow_manager_demo import WorkflowManagerDemo
 
         print(f"\n✅ Successfully imported demo modules")
@@ -52,7 +52,7 @@ async def main():
     print(f"=" * 80)
 
     try:
-        demo1 = UniversalRAGWorkflowDemo("maintenance")
+        demo1 = CompletelyFixedUniversalRAGWorkflowDemo("maintenance")
         await demo1.demonstrate_complete_workflow(
             "How do I diagnose and fix pump vibration issues in industrial equipment?"
         )

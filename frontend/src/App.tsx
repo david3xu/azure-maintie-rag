@@ -61,11 +61,19 @@ function App() {
           } as QueryRequest
         );
 
-        setQueryId(streamingResponse.data.query_id);
+        const receivedQueryId = streamingResponse.data.query_id;
+        setQueryId(receivedQueryId);
         setIsStreaming(true);
-        setLoading(false); // Let WorkflowProgress handle the loading state
+        setLoading(false);
+
+        // Add delay before starting to poll to give backend time to register workflow
+        setTimeout(() => {
+          // Start polling with better error handling
+          pollWorkflowStatus(receivedQueryId);
+        }, 1000); // 1 second delay
 
       } catch (err: any) {
+        console.error("Streaming query failed:", err);
         setError(err.response?.data?.error || "Failed to start streaming query");
         setLoading(false);
         setIsStreaming(false);
@@ -85,10 +93,99 @@ function App() {
 
         setResponse(result.data);
       } catch (err: any) {
-        setError(err.response?.data?.error || "Query failed");
+        console.error("Structured query failed:", err);
+        setError(err.response?.data?.error || "Failed to process query");
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  // Add new polling function with exponential backoff
+  const pollWorkflowStatus = async (queryId: string, maxRetries: number = 30) => {
+    let retryCount = 0;
+    let backoffDelay = 1000; // Start with 1 second
+
+    const poll = async (): Promise<void> => {
+      try {
+        // Try to access the streaming endpoint
+        const eventSource = new EventSource(`http://localhost:8000/api/v1/query/stream/${queryId}`);
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log("Received workflow event:", data);
+
+            if (data.event_type === "workflow_completed") {
+              setIsStreaming(false);
+              eventSource.close();
+
+              // Fetch final results if needed
+              fetchFinalResults(queryId);
+            } else if (data.event_type === "error" || data.event_type === "workflow_failed") {
+              setError(data.message || "Workflow failed");
+              setIsStreaming(false);
+              eventSource.close();
+            }
+          } catch (parseError) {
+            console.error("Failed to parse event data:", parseError);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error("EventSource error:", error);
+          eventSource.close();
+
+          // Retry with exponential backoff
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`Retrying in ${backoffDelay}ms (attempt ${retryCount}/${maxRetries})`);
+
+            setTimeout(() => {
+              backoffDelay = Math.min(backoffDelay * 1.5, 10000); // Max 10 seconds
+              poll();
+            }, backoffDelay);
+          } else {
+            setError(`Failed to connect to workflow stream after ${maxRetries} attempts`);
+            setIsStreaming(false);
+          }
+        };
+
+      } catch (error) {
+        console.error("Failed to start polling:", error);
+        setError("Failed to start workflow monitoring");
+        setIsStreaming(false);
+      }
+    };
+
+    // Start polling
+    poll();
+  };
+
+  // Add function to fetch final results
+  const fetchFinalResults = async (queryId: string) => {
+    try {
+      const response = await axios.get(`http://localhost:8000/api/v1/workflow/${queryId}/summary`);
+
+      if (response.data.success) {
+        const summary = response.data.workflow_summary;
+
+        // Convert workflow summary to QueryResponse format for display
+        const queryResponse: QueryResponse = {
+          query: summary.query_text || query,
+          generated_response: summary.final_response || "Workflow completed successfully",
+          confidence_score: summary.confidence_score || 0.9,
+          processing_time: summary.total_processing_time || 0,
+          safety_warnings: summary.safety_warnings || [],
+          sources: summary.sources || [],
+          citations: summary.citations || []
+        };
+
+        setResponse(queryResponse);
+      }
+    } catch (error) {
+      console.error("Failed to fetch final results:", error);
+      setError("Workflow completed but failed to fetch results");
     }
   };
 
