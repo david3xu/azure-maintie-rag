@@ -173,9 +173,10 @@ function App() {
         // Convert workflow summary to QueryResponse format for display
         const queryResponse: QueryResponse = {
           query: summary.query_text || query,
-          generated_response: summary.final_response || "Workflow completed successfully",
+          // FIX: Check both final_response and generated_response fields
+          generated_response: summary.final_response || summary.generated_response || "Workflow completed successfully",
           confidence_score: summary.confidence_score || 0.9,
-          processing_time: summary.total_processing_time || 0,
+          processing_time: summary.total_time_ms !== undefined ? (summary.total_time_ms / 1000) : (summary.total_processing_time || 0),
           safety_warnings: summary.safety_warnings || [],
           sources: summary.sources || [],
           citations: summary.citations || []
@@ -204,8 +205,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🔧 MaintIE Enhanced RAG</h1>
-        <p>Intelligent Maintenance Assistance with Real-Time Processing</p>
+        <h1>🤖 Universal Enhanced RAG</h1>
+        <p>Intelligent Knowledge Assistant with Real-Time Processing</p>
       </header>
 
       <main className="main-content">
@@ -214,7 +215,7 @@ function App() {
             <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask your maintenance question... (e.g., 'What causes pump bearing failure?')"
+              placeholder="Ask any question about your domain... (e.g., 'What causes pump bearing failure?')"
               className="query-input"
               rows={3}
               disabled={loading || isStreaming}
@@ -294,7 +295,7 @@ function App() {
                   🎯 Confidence: {Math.round(response.confidence_score * 100)}%
                 </span>
                 <span className="processing-time">
-                  ⏱️ Time: {response.processing_time.toFixed(1)}s
+                  ⏱️ Time: {(response.processing_time || 0).toFixed(1)}s
                 </span>
               </div>
             </div>
@@ -303,7 +304,7 @@ function App() {
               <div className="generated-response">
                 <h3>Answer:</h3>
                 <div className="response-text">
-                  {response.generated_response.split('\n').map((line, index) => (
+                  {(typeof response.generated_response === 'string' ? response.generated_response : "").split('\n').map((line, index) => (
                     <p key={index}>{line}</p>
                   ))}
                 </div>
