@@ -8,13 +8,13 @@ from pydantic import BaseModel, Field, validator
 
 
 class QueryRequest(BaseModel):
-    """Request model for maintenance queries"""
+    """Request model for universal queries"""
 
     query: str = Field(
         ...,
         min_length=3,
         max_length=500,
-        description="Maintenance query in natural language"
+        description="Query in natural language"
     )
     max_results: int = Field(
         default=10,
@@ -52,10 +52,10 @@ class QueryRequest(BaseModel):
 
 
 class QueryResponse(BaseModel):
-    """Response model for maintenance queries"""
+    """Response model for universal queries"""
 
     query: str = Field(description="Original query")
-    generated_response: str = Field(description="Generated maintenance response")
+    generated_response: str = Field(description="Generated response")
     confidence_score: float = Field(
         ge=0.0,
         le=1.0,
@@ -65,7 +65,7 @@ class QueryResponse(BaseModel):
 
     # Enhanced query information
     query_analysis: Dict[str, Any] = Field(description="Query analysis results")
-    expanded_concepts: List[str] = Field(description="Expanded maintenance concepts")
+    expanded_concepts: List[str] = Field(description="Expanded concepts")
 
     # Search and sources
     sources: List[str] = Field(description="Source document IDs")
@@ -95,7 +95,7 @@ class ComparisonRequest(BaseModel):
         ...,
         min_length=3,
         max_length=500,
-        description="Maintenance query to compare between methods"
+        description="Query to compare between methods"
     )
     max_results: int = Field(
         default=10,

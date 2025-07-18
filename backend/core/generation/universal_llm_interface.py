@@ -316,8 +316,7 @@ Context:
             return {"success": False, "error": str(e)}
 
 
-# Legacy compatibility alias
-MaintenanceLLMInterface = UniversalLLMInterface
+# Universal RAG - no backward compatibility needed
 
 
 def create_universal_llm_interface(domain: str = "general") -> UniversalLLMInterface:

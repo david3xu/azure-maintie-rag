@@ -36,14 +36,14 @@ class UniversalRAGWorkflowDemo:
     Shows actual output at each step to build user trust
     """
 
-    def __init__(self, domain: str = "maintenance"):
+    def __init__(self, domain: str = "general"):
         self.domain = domain
         self.demo_texts = [
-            "Pump impeller damage can cause vibration and reduced flow rate. Regular inspection prevents costly repairs.",
-            "Bearing lubrication must be checked monthly. Proper oil levels ensure smooth operation and extend equipment life.",
-            "Motor overheating may indicate blocked ventilation or electrical issues. Check cooling systems and connections.",
-            "Valve seals deteriorate over time, causing leaks. Replace seals when pressure drops are observed.",
-            "Pressure gauge calibration is critical for accurate readings. Calibrate instruments every six months."
+            "Regular system monitoring helps prevent issues and ensures optimal performance.",
+            "Documentation and record keeping are essential for tracking operational history.",
+            "Proper training and procedures ensure consistent and safe operations.",
+            "Quality control measures verify that standards and requirements are met.",
+            "Preventive measures and regular checks help identify potential problems early."
         ]
 
         self.results = {}
