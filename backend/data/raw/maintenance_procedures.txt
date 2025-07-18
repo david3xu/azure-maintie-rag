@@ -1,0 +1,16 @@
+# Equipment Maintenance Procedures
+
+## Daily Inspection Checklist
+Check all equipment for unusual noises, vibrations, or leaks.
+Monitor pressure gauges and temperature readings.
+Verify safety systems are operational.
+
+## Common Issues and Solutions
+1. Pump cavitation - Check suction line for blockages
+2. Motor overheating - Verify cooling system operation
+3. Seal leakage - Inspect mechanical seals for wear
+
+## Safety Procedures
+Always isolate equipment before maintenance.
+Use proper lockout/tagout procedures.
+Wear appropriate personal protective equipment.

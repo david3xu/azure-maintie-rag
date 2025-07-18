@@ -1,0 +1,12 @@
+# Troubleshooting Guide
+
+## Problem Diagnosis Steps
+1. Identify symptoms and gather information
+2. Check recent changes or maintenance activities  
+3. Review equipment history and documentation
+4. Perform systematic testing and inspection
+
+## Root Cause Analysis
+Use structured approaches like 5-why analysis.
+Document findings and corrective actions.
+Update maintenance procedures based on lessons learned.
