@@ -6,3 +6,5 @@ export const API_CONFIG = {
     STREAM: '/api/v1/query/stream'
   }
 };
+
+console.log('API URL:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UNIVERSAL_QUERY}`);
