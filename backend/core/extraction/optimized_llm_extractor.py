@@ -22,7 +22,7 @@ class OptimizedLLMExtractor(LLMKnowledgeExtractor):
 
     def __init__(self, domain_name: str, cache_dir: Optional[Path] = None):
         super().__init__(domain_name, cache_dir)
-        self.cache_dir = cache_dir or Path("data/cache/llm_extractions")
+        self.cache_dir = cache_dir or (settings.BASE_DIR / "data" / "cache" / "llm_extractions")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Performance settings
