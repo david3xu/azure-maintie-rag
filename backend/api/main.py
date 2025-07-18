@@ -187,7 +187,6 @@ async def get_system_info():
                 "streaming_queries": True,
                 "real_time_progress": True,
                 "dynamic_type_discovery": True,
-                "schema_free_processing": True,
                 "multi_domain_batch": True
             },
             "endpoints": {

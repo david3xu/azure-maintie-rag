@@ -47,14 +47,11 @@ class Settings(BaseSettings):
     indices_dir: Path = Field(default=BASE_DIR / "data" / "indices", env="INDICES_DIR")
     config_dir: Path = Field(default=BASE_DIR / "config", env="CONFIG_DIR")
 
-    # Universal RAG Settings
-    enable_universal_rag: bool = Field(default=True, env="ENABLE_UNIVERSAL_RAG")
-    default_domain: str = Field(default="general", env="DEFAULT_DOMAIN")
-    enable_dynamic_discovery: bool = Field(default=True, env="ENABLE_DYNAMIC_DISCOVERY")
+    # Universal RAG Configuration (no toggles - always universal)
     discovery_sample_size: int = Field(default=10, env="DISCOVERY_SAMPLE_SIZE")
     pattern_confidence_threshold: float = Field(default=0.7, env="PATTERN_CONFIDENCE_THRESHOLD")
-    universal_text_processing: bool = Field(default=True, env="UNIVERSAL_TEXT_PROCESSING")
-    schema_free_processing: bool = Field(default=True, env="SCHEMA_FREE_PROCESSING")
+    discovery_min_confidence: float = Field(default=0.6, env="DISCOVERY_MIN_CONFIDENCE")
+    discovery_max_patterns: int = Field(default=50, env="DISCOVERY_MAX_PATTERNS")
 
     # Query Analysis Settings
     max_related_entities: int = Field(default=15, env="MAX_RELATED_ENTITIES")
@@ -90,21 +87,7 @@ class Settings(BaseSettings):
         env="LOG_FORMAT"
     )
 
-    # Universal Domain Context Mappings
-    universal_domain_contexts: Dict[str, str] = Field(
-        default={
-            "maintenance": "industrial equipment maintenance and troubleshooting",
-            "medical": "medical information and healthcare guidance",
-            "legal": "legal information and document analysis",
-            "finance": "financial analysis and business guidance",
-            "education": "educational content and learning materials",
-            "general": "general knowledge and information"
-        }
-    )
-
     # Dynamic Discovery Settings
-    discovery_min_confidence: float = Field(default=0.6, env="DISCOVERY_MIN_CONFIDENCE")
-    discovery_max_patterns: int = Field(default=50, env="DISCOVERY_MAX_PATTERNS")
     discovery_enable_ner: bool = Field(default=True, env="DISCOVERY_ENABLE_NER")
     discovery_enable_relations: bool = Field(default=True, env="DISCOVERY_ENABLE_RELATIONS")
 
