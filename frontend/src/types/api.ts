@@ -1,6 +1,7 @@
 // API request/response types for Universal RAG
 export interface QueryRequest {
   query: string;
+  domain?: string;
   max_results?: number;
   include_explanations?: boolean;
   enable_safety_warnings?: boolean;
@@ -19,5 +20,13 @@ export interface QueryResponse {
 export interface StreamingQueryResponse {
   query_id: string;
   status: string;
-  stream_url: string;
+  stream_url?: string;
+}
+
+export interface UniversalQueryRequest {
+  query: string;
+  domain: string;
+  max_results: number;
+  include_explanations: boolean;
+  enable_safety_warnings: boolean;
 }
