@@ -5,6 +5,10 @@ Shows how the Universal RAG workflow integrates with the workflow manager
 for real-time progress tracking and three-layer progressive disclosure
 """
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import asyncio
 import json
 import logging

@@ -37,10 +37,13 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
   useEffect(() => {
     if (!queryId) return;
 
+    console.log('Received workflow event:', 'Starting new connection for queryId:', queryId);
+
     setIsStreaming(true);
     setSteps([]);
     setCurrentProgress(0);
-    setStartTime(Date.now());
+    const connectionStartTime = Date.now();
+    setStartTime(connectionStartTime);
 
     // Establish Server-Sent Events connection
     const eventSource = new EventSource(`http://localhost:8000/api/v1/query/stream/${queryId}`);
@@ -48,38 +51,49 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log('Received workflow event:', data);
 
-        if (data.event_type === 'completion') {
-          // Final response received
+        if (data.event_type === 'workflow_completed') {
+          // Final completion event
           setCurrentProgress(100);
           setIsStreaming(false);
-          if (startTime) {
-            setTotalTime(Date.now() - startTime);
-          }
+          setTotalTime(Date.now() - connectionStartTime);
+
           if (onComplete) {
-            onComplete(data.response);
+            onComplete(data);
           }
           eventSource.close();
-        } else if (data.event_type === 'error') {
+
+        } else if (data.event_type === 'workflow_failed' || data.event_type === 'error') {
           // Error occurred
           setIsStreaming(false);
           if (onError) {
-            onError(data.error);
+            onError(data.error || data.message || 'Workflow failed');
           }
           eventSource.close();
-        } else {
-          // Regular step update
+
+        } else if (data.event_type === 'progress') {
+          // Regular step update - use step_number + query_id for unique identification
           const stepData = data as WorkflowStep;
           setSteps(prev => {
-            const existing = prev.find(s => s.step_name === stepData.step_name);
+            // Fix: Use step_number for more reliable identification
+            const existing = prev.find(s => s.step_number === stepData.step_number);
             if (existing) {
-              return prev.map(s => s.step_name === stepData.step_name ? stepData : s);
+              // Update existing step
+              return prev.map(s => s.step_number === stepData.step_number ? stepData : s);
             } else {
-              return [...prev, stepData];
+              // Add new step and sort by step_number
+              const newSteps = [...prev, stepData];
+              return newSteps.sort((a, b) => a.step_number - b.step_number);
             }
           });
           setCurrentProgress(stepData.progress_percentage);
+
+        } else if (data.event_type === 'heartbeat') {
+          // Heartbeat - just log, don't process
+          console.log('Heartbeat received');
         }
+
       } catch (error) {
         console.error('Error parsing SSE data:', error);
       }
@@ -88,18 +102,29 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
     eventSource.onerror = (error) => {
       console.error('SSE connection error:', error);
       setIsStreaming(false);
-      if (onError) {
-        onError('Connection to server lost');
+
+      // Only call onError if we haven't completed successfully
+      if (currentProgress < 100) {
+        if (onError) {
+          onError('Connection to server lost');
+        }
       }
       eventSource.close();
     };
 
-    // Cleanup
+    // Cleanup function
     return () => {
       eventSource.close();
       setIsStreaming(false);
     };
-  }, [queryId, onComplete, onError, startTime]);
+
+    // Fix: Remove startTime from dependencies to prevent infinite loop
+  }, [queryId]); // Only depend on queryId, not onComplete, onError, or startTime
+
+  // Separate useEffect for callback dependencies to avoid infinite loops
+  useEffect(() => {
+    // This effect only runs when callback functions change, not on every render
+  }, [onComplete, onError]);
 
   if (!queryId || steps.length === 0) {
     return null;
@@ -125,9 +150,9 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
       </div>
 
       <div className="workflow-steps">
-        {steps.map((step, index) => (
+        {steps.map((step) => (
           <WorkflowStepCard
-            key={step.step_name}
+            key={`${step.query_id}-${step.step_number}`}
             step={step}
             viewLayer={viewLayer}
           />
@@ -175,7 +200,10 @@ const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({ step, viewLayer }) 
         <div className="step-title">
           <span className="status-icon">{getStatusIcon(step.status)}</span>
           <span className="step-name">
-            {viewLayer === 1 ? step.user_friendly_name : `Step ${step.step_number}: ${step.step_name}`}
+            {viewLayer === 1 ?
+              step.user_friendly_name :
+              `Step ${step.step_number}: ${step.step_name}`
+            }
           </span>
           {step.fix_applied && (
             <span className="fix-badge">{step.fix_applied}</span>

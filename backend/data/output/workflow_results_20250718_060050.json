@@ -1,0 +1,63 @@
+{
+  "workflow_results": {
+    "step_1": {
+      "success": true,
+      "processing_time": 2.6075100898742676,
+      "total_documents": 6,
+      "total_entities": 31,
+      "total_relations": 44,
+      "method": "extract_universal_knowledge"
+    },
+    "step_2": {
+      "success": true,
+      "processing_time": 2.343386650085449,
+      "total_entities": 15,
+      "total_relations": 10,
+      "discovered_entity_types": [
+        "entity_types",
+        "relation_types"
+      ]
+    },
+    "vector_search_instance": "<core.retrieval.universal_vector_search.UniversalVectorSearch object at 0x71a9dc4f2470>",
+    "step_3": {
+      "success": true,
+      "processing_time": 1.852985143661499,
+      "documents_processed": 5,
+      "index_built": true
+    },
+    "step_4": {
+      "success": true,
+      "processing_time": 2.384185791015625e-07,
+      "graph_method": "NetworkX via knowledge extractor"
+    },
+    "step_5": {
+      "success": true,
+      "processing_time": 0.00011420249938964844,
+      "query_type": "troubleshooting",
+      "entities_detected": 0,
+      "concepts_detected": 0
+    },
+    "search_results": [
+      "UniversalSearchResult(doc_id='doc_0', content='Regular system monitoring helps prevent issues and ensures optimal performance.', score=0.7645708322525024, metadata={'source': 'demo', 'domain': 'maintenance', 'processing_method': 'universal_vector_search', 'title': 'Document 1', 'search_method': 'universal_vector_search'}, entities=[], source='universal_vector_index')",
+      "UniversalSearchResult(doc_id='doc_4', content='Preventive measures and regular checks help identify potential problems early.', score=0.757851243019104, metadata={'source': 'demo', 'domain': 'maintenance', 'processing_method': 'universal_vector_search', 'title': 'Document 5', 'search_method': 'universal_vector_search'}, entities=[], source='universal_vector_index')",
+      "UniversalSearchResult(doc_id='doc_2', content='Proper training and procedures ensure consistent and safe operations.', score=0.7530033588409424, metadata={'source': 'demo', 'domain': 'maintenance', 'processing_method': 'universal_vector_search', 'title': 'Document 3', 'search_method': 'universal_vector_search'}, entities=[], source='universal_vector_index')"
+    ],
+    "step_6": {
+      "success": true,
+      "processing_time": 0.23624873161315918,
+      "results_found": 3,
+      "retrieval_method": "FAISS vector search"
+    },
+    "step_7": {
+      "success": true,
+      "processing_time": 5.944855451583862,
+      "response_generated": true,
+      "llm_model": "Azure OpenAI GPT-4"
+    }
+  },
+  "metadata": {
+    "domain": "maintenance",
+    "completion_time": "2025-07-18T06:00:50.022765",
+    "success_rate": "100.0%"
+  }
+}
