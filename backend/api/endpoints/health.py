@@ -7,6 +7,7 @@ import logging
 import time
 from typing import Dict, Any
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 
 from core.orchestration.enhanced_rag_universal import EnhancedUniversalRAG
 
@@ -231,3 +232,11 @@ async def diagnose_data_system() -> Dict[str, Any]:
             "status": "error",
             "error": str(e)
         }
+
+@router.get("/api/v1/health", summary="Basic Health Check", response_description="Basic health status")
+async def basic_health_check():
+    """
+    Basic health check endpoint for monitoring and load balancers.
+    Returns a simple JSON indicating the API is up.
+    """
+    return JSONResponse(content={"status": "ok", "message": "Universal RAG API is healthy"})
