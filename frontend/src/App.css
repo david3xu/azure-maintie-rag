@@ -684,17 +684,22 @@ body {
   }
 }
 
-/* Dark mode support */
+/* Enhanced Dark mode support */
 @media (prefers-color-scheme: dark) {
   .App {
     background-color: #1a1a1a;
     color: #f0f0f0;
   }
 
+  .App-header {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  }
+
   .query-form,
   .response-section {
     background: #2d3748;
     border-color: #4a5568;
+    color: #f0f0f0;
   }
 
   .query-input {
@@ -703,7 +708,59 @@ body {
     border-color: #4a5568;
   }
 
+  .query-input::placeholder {
+    color: #a0aec0;
+  }
+
   .generated-response {
+    background: #1a202c;
+    color: #f0f0f0;
+  }
+
+  .help-text {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #f0f0f0;
+  }
+
+  .help-text h3 {
+    color: #f0f0f0;
+  }
+
+  .example-queries h4 {
+    color: #cbd5e0;
+  }
+
+  .example-queries ul {
+    color: #a0aec0;
+  }
+
+  .example-queries li:hover {
+    color: #90cdf4;
+  }
+
+  .app-footer {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #a0aec0;
+  }
+
+  .workflow-settings {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+
+  .checkbox-label {
+    color: #f0f0f0;
+  }
+
+  .view-selector {
+    background: #2d3748;
+    color: #f0f0f0;
+    border-color: #4a5568;
+  }
+
+  .view-selector:disabled {
     background: #1a202c;
   }
 }

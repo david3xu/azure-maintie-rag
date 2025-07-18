@@ -399,7 +399,8 @@ class UniversalWorkflowManager:
 
     def get_workflow_summary(self) -> Dict[str, Any]:
         """Get comprehensive workflow summary"""
-        total_time = (time.time() - self.start_time) * 1000
+        total_time = (time.time() - self.start_time) * 1000  # milliseconds
+        performance_total_time = self.performance_metrics.get("total_processing_time", 0)
 
         return {
             "query_id": self.query_id,
@@ -411,6 +412,8 @@ class UniversalWorkflowManager:
             "failed_steps": len([s for s in self.steps if s.status == WorkflowStatus.ERROR.value]),
             "total_progress": self.total_progress,
             "total_time_ms": total_time,
+            # Add both formats for compatibility
+            "total_processing_time": performance_total_time,  # seconds
             "performance_metrics": self.performance_metrics,
             "error_message": self.error_message,
             "timestamp": datetime.now().isoformat()
