@@ -10,7 +10,7 @@ MaintIE Enhanced RAG is a **production-grade backend system** for advanced maint
 
 - **Universal RAG System** with 100% functional components
 - **Knowledge graph extraction** from annotated maintenance data
-- **Multi-modal retrieval** (vector, entity, and graph search)
+- **Unified retrieval** (integrated vector and knowledge graph search)
 - **Domain-aware LLM response generation**
 - **Progressive real-time workflow** with streaming UI
 - **Configurable domain knowledge** (no hard-coded rules)
@@ -24,7 +24,7 @@ MaintIE Enhanced RAG is a **production-grade backend system** for advanced maint
 ### Core RAG Capabilities
 - Universal text-based knowledge extraction and processing
 - Advanced query analysis and concept expansion
-- Multi-modal retrieval (vector/entity/graph) with FAISS indexing
+- Unified retrieval (vector + knowledge graph) with FAISS indexing
 - LLM-powered, safety-aware response generation
 - Configurable domain knowledge (JSON)
 - Health, metrics, and system status endpoints
@@ -336,19 +336,16 @@ graph TD
     C --> E[Vector Index 1536D]
     D --> F[Knowledge Graph + GNN]
     G[User Query] --> H[Query Analysis Enhanced]
-    H --> I[Vector Search Multi-modal]
-    H --> J[Graph Search]
-    I --> K[Context Retrieval]
-    J --> K
-    F --> J
+    H --> I[Unified Search - Vector + Graph]
+    F --> I
     E --> I
+    I --> K[Context Retrieval]
     K --> L[LLM Response Generation GPT-4]
     L --> M[Final Answer with Citations]
 
     %% Real-time streaming
     H --> N[Streaming Progress Events]
     I --> N
-    J --> N
     L --> N
     N --> O[Frontend Progressive UI]
 ```
@@ -370,7 +367,7 @@ User Input → React Frontend → Streaming API → Universal RAG → Real-time 
 | **Vector Indexing** | FAISS Engine | Embedding + Vector DB | Documents → Searchable vectors | ✅ Progress |
 | **Graph Construction** | NetworkX + GNN | Graph algorithms | Entities → Knowledge graph | ✅ Progress |
 | **Query Processing** | Query Analyzer | NLP + Domain logic | User query → Enhanced query | ✅ Progress |
-| **Retrieval** | Multi-modal Search | Vector + Graph search | Query → Relevant context | ✅ Progress |
+| **Retrieval** | Unified Search | Vector + Graph search | Query → Relevant context | ✅ Progress |
 | **Generation** | LLM Interface | Azure OpenAI GPT-4 | Context → Final answer | ✅ Progress |
 
 ---

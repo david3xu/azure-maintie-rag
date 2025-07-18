@@ -44,7 +44,6 @@ class UniversalQueryRequest(BaseModel):
     max_results: int = Field(default=10, description="Maximum number of results to return")
     include_explanations: bool = Field(default=True, description="Whether to include explanations")
     enable_safety_warnings: bool = Field(default=True, description="Whether to enable safety warnings")
-    search_strategy: str = Field(default="universal", description="Search strategy to use")
 
 
 class UniversalQueryResponse(BaseModel):
@@ -52,7 +51,6 @@ class UniversalQueryResponse(BaseModel):
     success: bool
     query: str
     domain: str
-    strategy: str
     generated_response: Dict[str, Any]
     search_results: List[Dict[str, Any]]
     processing_time: float
@@ -121,10 +119,6 @@ async def process_universal_query(request: UniversalQueryRequest) -> Dict[str, A
                     detail=f"Failed to initialize Universal RAG system: {init_results.get('error', 'Unknown error')}"
                 )
 
-        # Set search strategy if provided
-        if request.search_strategy:
-            enhanced_rag.set_search_strategy(request.search_strategy)
-
         # Process the query
         results = await enhanced_rag.process_query(
             query=request.query,
@@ -144,7 +138,6 @@ async def process_universal_query(request: UniversalQueryRequest) -> Dict[str, A
             "success": True,
             "query": results["query"],
             "domain": results["domain"],
-            "strategy": results["strategy"],
             "generated_response": results["generated_response"],
             "search_results": results["search_results"],
             "processing_time": results["processing_time"],

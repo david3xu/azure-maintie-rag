@@ -63,16 +63,9 @@ class Settings(BaseSettings):
 
     # Retrieval Settings
     vector_search_top_k: int = Field(default=10, env="VECTOR_SEARCH_TOP_K")
-    entity_search_top_k: int = Field(default=8, env="ENTITY_SEARCH_TOP_K")
-    graph_search_top_k: int = Field(default=6, env="GRAPH_SEARCH_TOP_K")
     embedding_batch_size: int = Field(default=32, env="EMBEDDING_BATCH_SIZE")
     faiss_index_type: str = Field(default="IndexFlatIP", env="FAISS_INDEX_TYPE")
     similarity_threshold: float = Field(default=0.7, env="SIMILARITY_THRESHOLD")
-
-    # Fusion Weights
-    vector_weight: float = Field(default=0.4, env="VECTOR_WEIGHT")
-    entity_weight: float = Field(default=0.3, env="ENTITY_WEIGHT")
-    graph_weight: float = Field(default=0.3, env="GRAPH_WEIGHT")
 
     # Generation Settings
     openai_max_tokens: int = Field(default=500, env="OPENAI_MAX_TOKENS")

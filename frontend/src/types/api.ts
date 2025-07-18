@@ -30,3 +30,23 @@ export interface UniversalQueryRequest {
   include_explanations: boolean;
   enable_safety_warnings: boolean;
 }
+
+export interface UniversalQueryResponse {
+  success: boolean;
+  query: string;
+  domain: string;
+  generated_response: {
+    answer: string;
+    explanation?: string;
+    confidence?: number;
+  };
+  search_results: Array<{
+    content: string;
+    source: string;
+    score: number;
+  }>;
+  processing_time: number;
+  system_stats: Record<string, any>;
+  timestamp: string;
+  error?: string;
+}
