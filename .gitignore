@@ -82,10 +82,9 @@ training_history.png
 # Weights & Biases logs
 wandb/
 
-# Ignore all markdown files everywhere
-*.md
-
-# But do NOT ignore any .md files in the root directory
-!/*.md
+# Ignore specific markdown files (but keep documentation)
+# Only ignore auto-generated or temporary markdown files
+*.tmp.md
+*.temp.md
 
 backend/build/
