@@ -8,13 +8,23 @@ param environment string = 'dev'
 param location string = resourceGroup().location
 param resourcePrefix string = 'maintie'
 
+// Deployment timestamp for unique resource naming
+// Note: This parameter is available for future use but not currently used in resource names
+// @description('Deployment timestamp for resource naming')
+// param deploymentTimestamp string = utcNow('yyyyMMdd-HHmmss')
+
 // Add cost optimization parameters - data-driven
 param searchSkuName string = (environment == 'prod') ? 'standard' : 'basic'
 param storageSkuName string = (environment == 'prod') ? 'Standard_GRS' : 'Standard_LRS'
 
+// Parameters for unique resource names
+param storageAccountName string
+param searchServiceName string
+param keyVaultName string
+
 // Azure Storage Account for Universal RAG data
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
-  name: '${resourcePrefix}${environment}storage'
+  name: storageAccountName
   location: location
   sku: { name: storageSkuName }  // Environment-driven
   kind: 'StorageV2'
@@ -43,7 +53,7 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
 
 // Azure Cognitive Search for vector indices
 resource searchService 'Microsoft.Search/searchServices@2020-08-01' = {
-  name: '${resourcePrefix}-${environment}-search'
+  name: searchServiceName
   location: location
   sku: { name: searchSkuName }  // Environment-driven
   properties: {
@@ -55,7 +65,7 @@ resource searchService 'Microsoft.Search/searchServices@2020-08-01' = {
 
 // Azure Key Vault for secrets management
 resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
-  name: '${resourcePrefix}-${environment}-kv'
+  name: keyVaultName
   location: location
   properties: {
     sku: {
@@ -70,62 +80,102 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
   }
 }
 
-// Azure Cosmos DB for knowledge graph (Gremlin API) - TEMPORARILY DISABLED
-// resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
-//   name: '${resourcePrefix}-${environment}-cosmos'
-//   location: location
-//   kind: 'GlobalDocumentDB'
-//   properties: {
-//     databaseAccountOfferType: 'Standard'
-//     capabilities: [
-//       { name: 'EnableGremlin' }
-//     ]
-//     consistencyPolicy: {
-//       defaultConsistencyLevel: (environment == 'prod') ? 'Session' : 'Eventual'
-//     }
-//     locations: [
-//       {
-//         locationName: location
-//         failoverPriority: 0
-//         isZoneRedundant: (environment == 'prod') ? true : false
-//       }
-//     ]
-//     enableFreeTier: (environment == 'dev') ? true : false
-//   }
-// }
+// Azure Cosmos DB for knowledge graph (Gremlin API) - Optional for dev
+resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = if (environment == 'prod') {
+  name: '${resourcePrefix}-${environment}-cosmos'
+  location: location
+  kind: 'GlobalDocumentDB'
+  properties: {
+    databaseAccountOfferType: 'Standard'
+    capabilities: [
+      { name: 'EnableGremlin' }
+    ]
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+        isZoneRedundant: true
+      }
+    ]
+    enableFreeTier: false
+  }
+}
 
-// Cosmos database for Universal RAG - TEMPORARILY DISABLED
-// resource cosmosDatabase 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases@2023-04-15' = {
-//   parent: cosmosDB
-//   name: 'universal-rag-db'
-//   properties: {
-//     resource: {
-//       id: 'universal-rag-db'
-//     }
-//     options: {
-//       throughput: (environment == 'prod') ? 1000 : 400
-//     }
-//   }
-// }
+// Cosmos database for Universal RAG - Optional for dev
+resource cosmosDatabase 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases@2023-04-15' = if (environment == 'prod') {
+  parent: cosmosDB
+  name: 'universal-rag-db'
+  properties: {
+    resource: {
+      id: 'universal-rag-db'
+    }
+    options: {
+      throughput: 1000
+    }
+  }
+}
 
-// Cosmos container for knowledge graph - TEMPORARILY DISABLED
-// resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs@2023-04-15' = {
-//   parent: cosmosDatabase
-//   name: 'knowledge-graph'
-//   properties: {
-//     resource: {
-//       id: 'knowledge-graph'
-//       partitionKey: {
-//         paths: ['/domain']
-//         kind: 'Hash'
-//       }
-//     }
-//   }
-// }
+// Cosmos container for knowledge graph - Optional for dev
+resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs@2023-04-15' = if (environment == 'prod') {
+  parent: cosmosDatabase
+  name: 'knowledge-graph'
+  properties: {
+    resource: {
+      id: 'knowledge-graph'
+      partitionKey: {
+        paths: ['/domain']
+        kind: 'Hash'
+      }
+    }
+  }
+}
+
+// Azure ML Workspace for GNN training
+resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' = {
+  name: '${resourcePrefix}-${environment}-ml'
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    friendlyName: 'Universal RAG ML Workspace'
+    description: 'Azure ML workspace for GNN training and model management'
+    keyVault: keyVault.id
+    storageAccount: storageAccount.id
+    applicationInsights: applicationInsights.id
+  }
+}
+
+// Azure Application Insights for monitoring
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: '${resourcePrefix}-${environment}-appinsights'
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
+  }
+}
+
+// Log Analytics Workspace for monitoring
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: '${resourcePrefix}-${environment}-logs'
+  location: location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: (environment == 'prod') ? 90 : 30
+  }
+}
 
 // Outputs for deployment
 output storageAccountName string = storageAccount.name
 output searchServiceName string = searchService.name
 output keyVaultName string = keyVault.name
-// output cosmosDBName string = cosmosDB.name
-// output cosmosDBEndpoint string = cosmosDB.properties.documentEndpoint
+output mlWorkspaceName string = mlWorkspace.name
+output applicationInsightsName string = applicationInsights.name
+output logAnalyticsWorkspaceName string = logAnalyticsWorkspace.name

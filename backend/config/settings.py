@@ -156,6 +156,26 @@ azure_openai_priority_tier: str = Field(default="standard", env="AZURE_OPENAI_PR
     # Trusted Hosts for Security
     trusted_hosts: Optional[List[str]] = Field(default=None, env="TRUSTED_HOSTS")
 
+    # GNN Training Pipeline Configuration
+    azure_ml_compute_cluster: str = Field(default="gnn-cluster", env="AZURE_ML_COMPUTE_CLUSTER")
+    gnn_training_trigger_threshold: int = Field(default=100, env="GNN_TRAINING_TRIGGER_THRESHOLD")
+    gnn_model_deployment_tier: str = Field(default="standard", env="GNN_MODEL_DEPLOYMENT_TIER")
+    enable_incremental_gnn_training: bool = Field(default=True, env="ENABLE_INCREMENTAL_GNN_TRAINING")
+
+    # Graph Embedding Configuration
+    graph_embedding_dimension: int = Field(default=128, env="GRAPH_EMBEDDING_DIMENSION")
+    graph_embedding_update_frequency: str = Field(default="daily", env="GRAPH_EMBEDDING_UPDATE_FREQUENCY")
+
+    # Cosmos DB Gremlin Configuration
+    cosmos_db_database_name: str = Field(default="universal-rag-db", env="COSMOS_DB_DATABASE_NAME")
+    cosmos_db_container_name: str = Field(default="knowledge-graph", env="COSMOS_DB_CONTAINER_NAME")
+    cosmos_db_throughput: int = Field(default=400, env="COSMOS_DB_THROUGHPUT")
+
+    # Azure ML Workspace Configuration
+    ml_workspace_name: str = Field(default="maintie-dev-ml", env="ML_WORKSPACE_NAME")
+    ml_experiment_name: str = Field(default="universal-rag-gnn", env="ML_EXPERIMENT_NAME")
+    ml_environment_name: str = Field(default="gnn-training-env", env="ML_ENVIRONMENT_NAME")
+
     def get_resource_name(self, resource_type: str, suffix: str = "") -> str:
         """Generate Azure resource names following convention"""
         parts = [self.azure_resource_prefix, self.azure_environment, self.azure_region, resource_type]

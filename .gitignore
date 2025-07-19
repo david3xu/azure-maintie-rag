@@ -41,6 +41,12 @@ Thumbs.db
 *.log
 *.tmp
 
+# Enterprise Architecture temporary files
+*.deployment_*.id
+*.deployment_*.timestamp
+enterprise-architecture-test-report-*.json
+azure-health-report-*.json
+
 # Test coverage reports
 htmlcov/
 .coverage
