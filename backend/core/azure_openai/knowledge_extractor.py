@@ -20,6 +20,10 @@ from ..azure_ml.classification_service import (
     UniversalEntityClassifier, UniversalRelationClassifier
 )
 from .extraction_client import OptimizedLLMExtractor
+from .azure_text_analytics_service import AzureTextAnalyticsService
+from .azure_ml_quality_service import AzureMLQualityAssessment
+from .azure_monitoring_service import AzureKnowledgeMonitor
+from .azure_rate_limiter import AzureOpenAIRateLimiter
 from ...config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -39,7 +43,7 @@ class AzureOpenAIKnowledgeExtractor:
     """
 
     def __init__(self, domain_name: str = "general"):
-        """Initialize universal knowledge extractor"""
+        """Initialize universal knowledge extractor with enterprise services"""
         self.domain_name = domain_name
 
         # Initialize universal components
@@ -47,6 +51,15 @@ class AzureOpenAIKnowledgeExtractor:
         self.entity_classifier = UniversalEntityClassifier()
         self.relation_classifier = UniversalRelationClassifier()
         self.llm_extractor = OptimizedLLMExtractor(domain_name)
+
+        # Initialize enterprise services
+        self.text_analytics = AzureTextAnalyticsService()
+        self.quality_assessor = AzureMLQualityAssessment(domain_name)
+        self.monitor = AzureKnowledgeMonitor()
+        self.rate_limiter = AzureOpenAIRateLimiter()
+
+        # Enterprise extraction configuration
+        self.extraction_config = self._load_extraction_config()
 
         # Knowledge containers
         self.entities: Dict[str, UniversalEntity] = {}
@@ -70,6 +83,16 @@ class AzureOpenAIKnowledgeExtractor:
         }
 
         logger.info(f"AzureOpenAIKnowledgeExtractor initialized for domain: {domain_name}")
+
+    def _load_extraction_config(self) -> Dict[str, Any]:
+        """Load domain-specific extraction configuration"""
+        return {
+            "quality_tier": settings.extraction_quality_tier,
+            "confidence_threshold": settings.extraction_confidence_threshold,
+            "max_entities_per_document": settings.max_entities_per_document,
+            "batch_size": settings.extraction_batch_size,
+            "enable_preprocessing": settings.enable_text_analytics_preprocessing
+        }
 
     async def extract_knowledge_from_texts(
         self,
@@ -95,13 +118,20 @@ class AzureOpenAIKnowledgeExtractor:
             text_sources = [f"text_{i}" for i in range(len(texts))]
 
         try:
-            # Step 1: Process texts into universal documents
-            logger.info("Step 1: Converting texts to universal documents...")
-            await self._create_universal_documents(texts, text_sources)
+            # Start performance tracking
+            self.monitor.start_performance_tracking()
 
-            # Step 2: Extract entities and relations using LLM
-            logger.info("Step 2: Extracting entities and relations with LLM...")
-            await self._extract_entities_and_relations()
+            # Step 1: Enterprise text preprocessing
+            if self.extraction_config["enable_preprocessing"]:
+                logger.info("Step 1: Enterprise text preprocessing with Azure Text Analytics...")
+                await self._preprocess_texts_with_analytics(texts)
+            else:
+                logger.info("Step 1: Converting texts to universal documents...")
+                await self._create_universal_documents(texts, text_sources)
+
+            # Step 2: Extract entities and relations using LLM with rate limiting
+            logger.info("Step 2: Extracting entities and relations with LLM (rate limited)...")
+            await self._extract_entities_and_relations_with_rate_limiting()
 
             # Step 3: Classify and normalize extracted knowledge
             logger.info("Step 3: Classifying and normalizing knowledge...")
@@ -111,9 +141,17 @@ class AzureOpenAIKnowledgeExtractor:
             logger.info("Step 4: Building knowledge graph...")
             await self._build_universal_knowledge_graph()
 
-            # Step 5: Analyze and validate extracted knowledge
-            logger.info("Step 5: Analyzing extracted knowledge...")
-            validation_results = await self._validate_extracted_knowledge()
+            # Step 5: Enterprise quality assessment and monitoring
+            logger.info("Step 5: Enterprise quality assessment and monitoring...")
+            validation_results = await self._assess_extraction_quality_enterprise()
+
+            # Track performance metrics
+            performance_metrics = self.monitor.end_performance_tracking()
+            await self.monitor.track_azure_openai_usage(
+                performance_metrics["tokens_used"],
+                performance_metrics["api_calls"],
+                performance_metrics["duration_ms"]
+            )
 
             # Update statistics
             processing_time = (datetime.now() - start_time).total_seconds()
@@ -448,6 +486,128 @@ class AzureOpenAIKnowledgeExtractor:
             "unique_relation_types": len(self.discovered_relation_types),
             "processing_time": processing_time
         })
+
+    async def _preprocess_texts_with_analytics(self, texts: List[str]) -> None:
+        """Enterprise text preprocessing with Azure Text Analytics"""
+        try:
+            # Preprocess texts with Azure Text Analytics
+            preprocessing_results = await self.text_analytics.preprocess_for_extraction(texts)
+
+            # Create enhanced documents with preprocessing metadata
+            for i, (text, preprocess_data) in enumerate(zip(texts, preprocessing_results.get("enhanced_texts", texts))):
+                doc_id = f"{self.domain_name}_{i}"
+
+                # Validate text quality
+                quality_validation = await self.text_analytics.validate_text_quality(text)
+
+                # Create enhanced universal document
+                document = UniversalDocument(
+                    doc_id=doc_id,
+                    text=text,
+                    title=f"Enhanced Document {i+1}",
+                    metadata={
+                        "preprocessing_confidence": preprocessing_results.get("processing_confidence", 0.5),
+                        "language_metadata": preprocessing_results.get("language_metadata", [{}])[i] if i < len(preprocessing_results.get("language_metadata", [])) else {},
+                        "quality_validation": quality_validation,
+                        "domain": self.domain_name,
+                        "processed_at": datetime.now().isoformat()
+                    }
+                )
+
+                self.documents[doc_id] = document
+
+        except Exception as e:
+            logger.error(f"Enterprise preprocessing failed: {e}")
+            # Fallback to basic document creation
+            await self._create_universal_documents(texts, [f"text_{i}" for i in range(len(texts))])
+
+    async def _extract_entities_and_relations_with_rate_limiting(self) -> None:
+        """Extract entities and relations with enterprise rate limiting"""
+        all_texts = [doc.text for doc in self.documents.values()]
+
+        # Estimate tokens for rate limiting
+        estimated_tokens = sum(len(text.split()) * 1.3 for text in all_texts)
+
+        # Execute extraction with rate limiting
+        extraction_results = await self.rate_limiter.execute_with_rate_limiting(
+            extraction_function=lambda: self.llm_extractor.extract_entities_and_relations(all_texts),
+            estimated_tokens=estimated_tokens,
+            priority="standard"
+        )
+
+        # Process extracted entities and relations
+        await self._process_extraction_results(extraction_results)
+
+    async def _process_extraction_results(self, extraction_results: Dict[str, Any]) -> None:
+        """Process extraction results with enterprise enhancements"""
+        # Process extracted entities
+        for entity_data in extraction_results.get("entities", []):
+            if isinstance(entity_data, str):
+                entity = UniversalEntity(
+                    entity_id=f"entity_{len(self.entities)}",
+                    text=entity_data,
+                    entity_type=entity_data,
+                    confidence=0.8,
+                    context="",
+                    metadata={
+                        "extraction_method": "enterprise_llm",
+                        "domain": self.domain_name,
+                        "extracted_at": datetime.now().isoformat()
+                    }
+                )
+                self.entities[entity.entity_id] = entity
+                self.discovered_entity_types.add(entity.entity_type)
+                self.type_frequencies[entity.entity_type] += 1
+
+        # Process extracted relations
+        for relation_data in extraction_results.get("relations", []):
+            if isinstance(relation_data, dict):
+                relation = UniversalRelation(
+                    relation_id=f"relation_{len(self.relations)}",
+                    source=relation_data.get("source", ""),
+                    target=relation_data.get("target", ""),
+                    relation_type=relation_data.get("type", "related_to"),
+                    confidence=relation_data.get("confidence", 0.8),
+                    metadata={
+                        "extraction_method": "enterprise_llm",
+                        "domain": self.domain_name,
+                        "extracted_at": datetime.now().isoformat()
+                    }
+                )
+                self.relations.append(relation)
+                self.discovered_relation_types.add(relation.relation_type)
+
+    async def _assess_extraction_quality_enterprise(self) -> Dict[str, Any]:
+        """Enterprise quality assessment using Azure ML models"""
+
+        # Prepare extraction context for ML assessment
+        extraction_context = {
+            "domain": self.domain_name,
+            "entity_count": len(self.entities),
+            "relation_count": len(self.relations),
+            "entity_types": list(self.discovered_entity_types),
+            "relation_types": list(self.discovered_relation_types),
+            "documents_processed": len(self.documents),
+            "extraction_config": self.extraction_config
+        }
+
+        try:
+            # Use Azure ML for quality assessment
+            quality_results = await self.quality_assessor.assess_extraction_quality(
+                extraction_context,
+                self.entities,
+                self.relations
+            )
+
+            # Track quality metrics in Azure Monitor
+            await self.monitor.track_extraction_quality(quality_results)
+
+            return quality_results
+
+        except Exception as e:
+            logger.error(f"Enterprise quality assessment failed: {e}")
+            # Fallback to basic quality assessment
+            return await self._validate_extracted_knowledge()
 
     def get_extracted_knowledge(self) -> Dict[str, Any]:
         """Get all extracted knowledge in a structured format"""

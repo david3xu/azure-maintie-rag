@@ -61,11 +61,32 @@ class Settings(BaseSettings):
     azure_cosmos_db_connection_string: str = Field(default="", env="AZURE_COSMOS_DB_CONNECTION_STRING")
 
     # Azure ML Settings
-    azure_subscription_id: str = Field(default="", env="AZURE_SUBSCRIPTION_ID")
-    azure_resource_group: str = Field(default="", env="AZURE_RESOURCE_GROUP")
-    azure_ml_workspace: str = Field(default="", env="AZURE_ML_WORKSPACE")
-    azure_ml_workspace_name: str = Field(default="", env="AZURE_ML_WORKSPACE_NAME")
-    azure_tenant_id: str = Field(default="", env="AZURE_TENANT_ID")
+azure_subscription_id: str = Field(default="", env="AZURE_SUBSCRIPTION_ID")
+azure_resource_group: str = Field(default="", env="AZURE_RESOURCE_GROUP")
+azure_ml_workspace: str = Field(default="", env="AZURE_ML_WORKSPACE")
+azure_ml_workspace_name: str = Field(default="", env="AZURE_ML_WORKSPACE_NAME")
+azure_tenant_id: str = Field(default="", env="AZURE_TENANT_ID")
+
+# Azure ML Quality Assessment Settings
+azure_ml_confidence_endpoint: str = Field(default="", env="AZURE_ML_CONFIDENCE_ENDPOINT")
+azure_ml_completeness_endpoint: str = Field(default="", env="AZURE_ML_COMPLETENESS_ENDPOINT")
+
+# Azure Text Analytics Settings
+azure_text_analytics_endpoint: str = Field(default="", env="AZURE_TEXT_ANALYTICS_ENDPOINT")
+azure_text_analytics_key: str = Field(default="", env="AZURE_TEXT_ANALYTICS_KEY")
+
+# Knowledge Extraction Configuration
+extraction_quality_tier: str = Field(default="standard", env="EXTRACTION_QUALITY_TIER")
+extraction_confidence_threshold: float = Field(default=0.7, env="EXTRACTION_CONFIDENCE_THRESHOLD")
+max_entities_per_document: int = Field(default=100, env="MAX_ENTITIES_PER_DOCUMENT")
+extraction_batch_size: int = Field(default=10, env="EXTRACTION_BATCH_SIZE")
+enable_text_analytics_preprocessing: bool = Field(default=True, env="ENABLE_TEXT_ANALYTICS_PREPROCESSING")
+
+# Azure OpenAI Rate Limiting
+azure_openai_max_tokens_per_minute: int = Field(default=40000, env="AZURE_OPENAI_MAX_TOKENS_PER_MINUTE")
+azure_openai_max_requests_per_minute: int = Field(default=60, env="AZURE_OPENAI_MAX_REQUESTS_PER_MINUTE")
+azure_openai_cost_threshold_per_hour: float = Field(default=50.0, env="AZURE_OPENAI_COST_THRESHOLD_PER_HOUR")
+azure_openai_priority_tier: str = Field(default="standard", env="AZURE_OPENAI_PRIORITY_TIER")
 
     # Azure Key Vault Settings - Enterprise Security Enhancement
     azure_key_vault_url: str = Field(default="", env="AZURE_KEY_VAULT_URL")
