@@ -7,8 +7,9 @@ set -e
 
 # Configuration
 RESOURCE_GROUP="maintie-rag-rg"
-LOCATION="eastus"
+LOCATION="${LOCATION:-eastus}"  # Allow override from environment
 ENVIRONMENT="dev"
+RESOURCE_PREFIX="maintie"
 PROJECT_NAME="Universal-RAG"
 
 # Colors for output
@@ -80,11 +81,15 @@ check_deployment() {
 # Function to check if specific resources exist
 check_storage_account() {
     local storage_name=$1
-    if az storage account show --name $storage_name --resource-group $RESOURCE_GROUP &> /dev/null; then
-        print_warning "Storage account '$storage_name' already exists"
+    if [ -z "$storage_name" ]; then
+        print_error "Storage account name is empty"
+        return 1
+    fi
+    if az resource show --name $storage_name --resource-group $RESOURCE_GROUP --resource-type Microsoft.Storage/storageAccounts &> /dev/null; then
+        print_status "Storage account '$storage_name' exists"
         return 0
     else
-        print_info "Storage account '$storage_name' does not exist"
+        print_error "Storage account '$storage_name' does not exist"
         return 1
     fi
 }
@@ -137,7 +142,7 @@ else
     az deployment group create \
       --resource-group $RESOURCE_GROUP \
       --template-file infrastructure/azure-resources-core.bicep \
-      --parameters environment=$ENVIRONMENT \
+      --parameters environment=$ENVIRONMENT location=$LOCATION resourcePrefix=$RESOURCE_PREFIX \
       --verbose
     print_status "Core infrastructure deployment completed"
 fi
@@ -166,9 +171,26 @@ KEY_VAULT_NAME=$(az deployment group show \
   --query 'properties.outputs.keyVaultName.value' \
   --output tsv)
 
+# COSMOS_DB_NAME=$(az deployment group show \
+#   --resource-group $RESOURCE_GROUP \
+#   --name azure-resources-core \
+#   --query 'properties.outputs.cosmosDBName.value' \
+#   --output tsv)
+
+# COSMOS_DB_ENDPOINT=$(az deployment group show \
+#   --resource-group $RESOURCE_GROUP \
+#   --name azure-resources-core \
+#   --query 'properties.outputs.cosmosDBEndpoint.value' \
+#   --output tsv)
+
+COSMOS_DB_NAME=""
+COSMOS_DB_ENDPOINT=""
+
 print_info "Storage Account: $STORAGE_ACCOUNT"
 print_info "Search Service: $SEARCH_SERVICE"
 print_info "Key Vault: $KEY_VAULT_NAME"
+print_info "Cosmos DB: $COSMOS_DB_NAME"
+print_info "Cosmos DB Endpoint: $COSMOS_DB_ENDPOINT"
 
 # Verify resources exist
 if ! check_storage_account $STORAGE_ACCOUNT; then
@@ -186,20 +208,39 @@ if ! check_key_vault $KEY_VAULT_NAME; then
     exit 1
 fi
 
+# Check Cosmos DB (temporarily disabled)
+if [ ! -z "$COSMOS_DB_NAME" ]; then
+    if az cosmosdb show --name $COSMOS_DB_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+        print_status "Cosmos DB '$COSMOS_DB_NAME' exists"
+    else
+        print_warning "Cosmos DB not found (temporarily disabled)."
+    fi
+else
+    print_warning "Cosmos DB temporarily disabled due to region availability."
+fi
+
 # Configure Key Vault (only if not already configured)
 print_info "Configuring Key Vault..."
 USER_OBJECT_ID=$(az ad signed-in-user show --query id --output tsv)
 
-# Check if policy already exists
-if az keyvault show --name $KEY_VAULT_NAME --resource-group $RESOURCE_GROUP --query "properties.accessPolicies[?objectId=='$USER_OBJECT_ID']" --output tsv | grep -q "$USER_OBJECT_ID"; then
-    print_warning "Key Vault policy already exists for current user"
+# Check if Key Vault uses RBAC (which doesn't support access policies)
+if az keyvault show --name $KEY_VAULT_NAME --resource-group $RESOURCE_GROUP --query "properties.enableRbacAuthorization" --output tsv 2>/dev/null | grep -q "true"; then
+    print_warning "Key Vault uses RBAC authorization. Access policies not needed."
+    print_info "To access secrets, assign 'Key Vault Secrets User' role to your account:"
+    print_info "  az role assignment create --role 'Key Vault Secrets User' --assignee $USER_OBJECT_ID --scope /subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.KeyVault/vaults/$KEY_VAULT_NAME"
 else
-    print_info "Setting Key Vault policy..."
-    az keyvault set-policy \
-      --name $KEY_VAULT_NAME \
-      --object-id $USER_OBJECT_ID \
-      --secret-permissions get set list delete
-    print_status "Key Vault policy configured"
+    # Check if policy already exists
+    if az keyvault show --name $KEY_VAULT_NAME --resource-group $RESOURCE_GROUP --query "properties.accessPolicies[?objectId=='$USER_OBJECT_ID']" --output tsv 2>/dev/null | grep -q "$USER_OBJECT_ID"; then
+        print_warning "Key Vault policy already exists for current user"
+    else
+        print_info "Setting Key Vault policy..."
+        az keyvault set-policy \
+          --name $KEY_VAULT_NAME \
+          --resource-group $RESOURCE_GROUP \
+          --object-id $USER_OBJECT_ID \
+          --secret-permissions get set list delete
+        print_status "Key Vault policy configured"
+    fi
 fi
 
 # Store secrets in Key Vault (only if not already stored)
@@ -231,6 +272,121 @@ else
     print_status "Search admin key stored"
 fi
 
+# Create Search Index (if not exists)
+print_info "Creating search index..."
+if ! az search index show --service-name $SEARCH_SERVICE --resource-group $RESOURCE_GROUP --name universal-rag-index &> /dev/null; then
+    print_info "Creating universal-rag-index..."
+
+    # Create index definition
+    cat > /tmp/universal-rag-index.json << 'EOF'
+{
+  "name": "universal-rag-index",
+  "fields": [
+    {
+      "name": "id",
+      "type": "Edm.String",
+      "key": true,
+      "searchable": false,
+      "filterable": false,
+      "sortable": false,
+      "facetable": false
+    },
+    {
+      "name": "content",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": false,
+      "sortable": false,
+      "facetable": false
+    },
+    {
+      "name": "metadata",
+      "type": "Edm.String",
+      "searchable": false,
+      "filterable": true,
+      "sortable": false,
+      "facetable": false
+    },
+    {
+      "name": "embedding",
+      "type": "Collection(Edm.Single)",
+      "searchable": false,
+      "filterable": false,
+      "sortable": false,
+      "facetable": false,
+      "dimensions": 1536
+    },
+    {
+      "name": "domain",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": true,
+      "sortable": true,
+      "facetable": true
+    },
+    {
+      "name": "timestamp",
+      "type": "Edm.DateTimeOffset",
+      "searchable": false,
+      "filterable": true,
+      "sortable": true,
+      "facetable": false
+    }
+  ],
+  "suggesters": [
+    {
+      "name": "sg",
+      "searchMode": "analyzingInfixMatching",
+      "sourceFields": ["content", "domain"]
+    }
+  ],
+  "scoringProfiles": [
+    {
+      "name": "semantic",
+      "textWeights": {
+        "weights": {
+          "content": 1.0,
+          "domain": 0.5
+        }
+      }
+    }
+  ],
+  "semantic": {
+    "configurations": [
+      {
+        "name": "semantic-config",
+        "prioritizedFields": {
+          "titleField": {
+            "fieldName": "content"
+          },
+          "prioritizedKeywordsFields": [
+            {
+              "fieldName": "domain"
+            }
+          ],
+          "prioritizedContentFields": [
+            {
+              "fieldName": "content"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+EOF
+
+    az search index create \
+      --service-name $SEARCH_SERVICE \
+      --resource-group $RESOURCE_GROUP \
+      --name universal-rag-index \
+      --body @/tmp/universal-rag-index.json
+
+    print_status "Search index 'universal-rag-index' created"
+else
+    print_warning "Search index 'universal-rag-index' already exists"
+fi
+
 # Generate environment configuration (only if .env doesn't exist or is different)
 print_info "Checking environment configuration..."
 if [ -f "backend/.env" ]; then
@@ -253,6 +409,12 @@ AZURE_BLOB_CONTAINER=universal-rag-data
 AZURE_SEARCH_SERVICE=$SEARCH_SERVICE
 AZURE_SEARCH_INDEX=universal-rag-index
 AZURE_SEARCH_API_VERSION=2023-11-01
+
+# Azure Cosmos DB
+AZURE_COSMOS_DB_NAME=$COSMOS_DB_NAME
+AZURE_COSMOS_DB_ENDPOINT=$COSMOS_DB_ENDPOINT
+AZURE_COSMOS_DB_DATABASE=universal-rag-db
+AZURE_COSMOS_DB_CONTAINER=knowledge-graph
 
 # Azure Key Vault
 AZURE_KEY_VAULT_URL=https://$KEY_VAULT_NAME.vault.azure.net/
@@ -321,6 +483,7 @@ echo "  Resource Group: $RESOURCE_GROUP"
 echo "  Storage Account: $STORAGE_ACCOUNT"
 echo "  Search Service: $SEARCH_SERVICE"
 echo "  Key Vault: $KEY_VAULT_NAME"
+echo "  Cosmos DB: $COSMOS_DB_NAME"
 echo ""
 echo "🔧 Next Steps:"
 echo "  1. Update OpenAI configuration in backend/.env"

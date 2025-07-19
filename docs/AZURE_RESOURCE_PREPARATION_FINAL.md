@@ -179,7 +179,7 @@ python backend/scripts/train_comprehensive_gnn.py \
 ### 4. Application Deployment
 ```bash
 # Build container
-docker build -t azure-maintie-rag:latest backend/
+cd backend && docker build -t azure-maintie-rag:latest .
 
 # Deploy to Container Apps
 az containerapp update \

@@ -171,6 +171,12 @@ fi
 if [ ! -z "$SEARCH_SERVICE" ]; then
     if check_resource_exists "search service" "$SEARCH_SERVICE" "$RESOURCE_GROUP"; then
         print_status "Search Service '$SEARCH_SERVICE' exists"
+        # Check if search index exists
+        if az search index show --service-name $SEARCH_SERVICE --resource-group $RESOURCE_GROUP --name universal-rag-index &> /dev/null; then
+            print_info "  Search index 'universal-rag-index' exists"
+        else
+            print_warning "  Search index 'universal-rag-index' not found"
+        fi
         # SKU info removed due to Azure CLI environment issues
     else
         print_warning "Search Service '$SEARCH_SERVICE' not found"
@@ -210,6 +216,18 @@ echo "📋 Additional Resources Status:"
 COSMOS_ACCOUNT="maintie-dev-cosmos"
 if check_resource_exists "cosmosdb" "$COSMOS_ACCOUNT" "$RESOURCE_GROUP"; then
     print_status "Cosmos DB '$COSMOS_ACCOUNT' exists"
+    # Check if database exists
+    if az cosmosdb gremlin database show --account-name $COSMOS_ACCOUNT --resource-group $RESOURCE_GROUP --name universal-rag-db &> /dev/null; then
+        print_info "  Database 'universal-rag-db' exists"
+        # Check if container exists
+        if az cosmosdb gremlin graph show --account-name $COSMOS_ACCOUNT --resource-group $RESOURCE_GROUP --database-name universal-rag-db --name knowledge-graph &> /dev/null; then
+            print_info "  Container 'knowledge-graph' exists"
+        else
+            print_warning "  Container 'knowledge-graph' not found"
+        fi
+    else
+        print_warning "  Database 'universal-rag-db' not found"
+    fi
 else
     print_warning "Cosmos DB '$COSMOS_ACCOUNT' not found"
 fi
