@@ -382,6 +382,6 @@ def create_universal_processor(domain_name: str = "general") -> AzureOpenAITextP
 
 if __name__ == "__main__":
     # Example usage
-    processor = AzureOpenAITextProcessor("maintenance")
+    processor = AzureOpenAITextProcessor("general")
     stats = processor.extract_universal_knowledge()
     print(f"Universal knowledge extraction complete: {stats}")

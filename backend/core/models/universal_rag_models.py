@@ -1,7 +1,7 @@
 """
-Universal Data Models for Universal RAG
-Replaces domain-specific models with flexible, dynamic models that work with any domain
-No hardcoded entity types, relation types, or domain assumptions
+Universal RAG Models - Clean Implementation
+Single source of truth for all Universal RAG data models.
+Works with any domain without hardcoded assumptions.
 """
 
 from typing import Dict, List, Optional, Any, Union
@@ -11,6 +11,10 @@ from enum import Enum
 import json
 import numpy as np
 
+
+# ================================
+# CORE UNIVERSAL MODELS
+# ================================
 
 @dataclass
 class UniversalEntity:
@@ -168,6 +172,10 @@ class UniversalDocument:
         return doc
 
 
+# ================================
+# QUERY PROCESSING MODELS
+# ================================
+
 class QueryType(str, Enum):
     """Universal query types that work across domains"""
     FACTUAL = "factual"
@@ -176,6 +184,9 @@ class QueryType(str, Enum):
     COMPARISON = "comparison"
     EXPLANATION = "explanation"
     CLASSIFICATION = "classification"
+    PREVENTIVE = "preventive"
+    SAFETY = "safety"
+    INFORMATIONAL = "informational"
     UNKNOWN = "unknown"
 
 
@@ -205,6 +216,20 @@ class UniversalQueryAnalysis:
             "metadata": self.metadata
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UniversalQueryAnalysis':
+        """Create analysis from dictionary"""
+        return cls(
+            query_text=data["query_text"],
+            query_type=QueryType(data["query_type"]),
+            confidence=data["confidence"],
+            entities_detected=data.get("entities_detected", []),
+            concepts_detected=data.get("concepts_detected", []),
+            intent=data.get("intent"),
+            complexity=data.get("complexity", "medium"),
+            metadata=data.get("metadata", {})
+        )
+
 
 @dataclass
 class UniversalEnhancedQuery:
@@ -228,6 +253,26 @@ class UniversalEnhancedQuery:
             "metadata": self.metadata
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UniversalEnhancedQuery':
+        """Create enhanced query from dictionary"""
+        query_analysis = None
+        if data.get("query_analysis"):
+            query_analysis = UniversalQueryAnalysis.from_dict(data["query_analysis"])
+
+        return cls(
+            original_query=data["original_query"],
+            expanded_concepts=data.get("expanded_concepts", []),
+            related_entities=data.get("related_entities", []),
+            query_analysis=query_analysis,
+            search_terms=data.get("search_terms", []),
+            metadata=data.get("metadata", {})
+        )
+
+
+# ================================
+# SEARCH AND RESPONSE MODELS
+# ================================
 
 @dataclass
 class UniversalSearchResult:
@@ -238,7 +283,7 @@ class UniversalSearchResult:
     score: float
     metadata: Dict[str, Any] = field(default_factory=dict)
     entities: List[str] = field(default_factory=list)
-    source: str = "unknown"
+    source: str = "unknown"  # 'vector', 'entity', 'graph', 'universal'
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert search result to dictionary"""
@@ -250,6 +295,18 @@ class UniversalSearchResult:
             "entities": self.entities,
             "source": self.source
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UniversalSearchResult':
+        """Create search result from dictionary"""
+        return cls(
+            doc_id=data["doc_id"],
+            content=data["content"],
+            score=data["score"],
+            metadata=data.get("metadata", {}),
+            entities=data.get("entities", []),
+            source=data.get("source", "unknown")
+        )
 
 
 @dataclass
@@ -264,6 +321,7 @@ class UniversalRAGResponse:
     processing_metadata: Dict[str, Any] = field(default_factory=dict)
     citations: List[str] = field(default_factory=list)
     domain: str = "general"
+    safety_warnings: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert response to dictionary"""
@@ -275,9 +333,31 @@ class UniversalRAGResponse:
             "entities_used": self.entities_used,
             "processing_metadata": self.processing_metadata,
             "citations": self.citations,
-            "domain": self.domain
+            "domain": self.domain,
+            "safety_warnings": self.safety_warnings
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UniversalRAGResponse':
+        """Create response from dictionary"""
+        sources = [UniversalSearchResult.from_dict(s) for s in data.get("sources", [])]
+
+        return cls(
+            query=data["query"],
+            answer=data["answer"],
+            confidence=data["confidence"],
+            sources=sources,
+            entities_used=data.get("entities_used", []),
+            processing_metadata=data.get("processing_metadata", {}),
+            citations=data.get("citations", []),
+            domain=data.get("domain", "general"),
+            safety_warnings=data.get("safety_warnings", [])
+        )
+
+
+# ================================
+# KNOWLEDGE GRAPH MODELS
+# ================================
 
 @dataclass
 class UniversalKnowledgeGraph:
@@ -326,53 +406,129 @@ class UniversalKnowledgeGraph:
             "created_at": self.created_at
         }
 
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UniversalKnowledgeGraph':
+        """Create knowledge graph from dictionary"""
+        kg = cls(
+            domain=data["domain"],
+            entity_types=data.get("entity_types", []),
+            relation_types=data.get("relation_types", []),
+            statistics=data.get("statistics", {}),
+            created_at=data.get("created_at", datetime.now().isoformat())
+        )
 
-# Legacy compatibility aliases for existing code
-# These allow gradual migration from domain-specific to universal models
-MaintenanceEntity = UniversalEntity
-MaintenanceRelation = UniversalRelation
-MaintenanceDocument = UniversalDocument
-QueryAnalysis = UniversalQueryAnalysis
-EnhancedQuery = UniversalEnhancedQuery
-SearchResult = UniversalSearchResult
-RAGResponse = UniversalRAGResponse
+        # Load entities
+        for entity_data in data.get("entities", []):
+            entity = UniversalEntity.from_dict(entity_data)
+            kg.add_entity(entity)
+
+        # Load relations
+        for relation_data in data.get("relations", []):
+            relation = UniversalRelation.from_dict(relation_data)
+            kg.add_relation(relation)
+
+        return kg
 
 
-def create_sample_universal_data(domain: str = "general") -> Dict[str, Any]:
-    """Create sample universal data for testing"""
+# ================================
+# ML TRAINING MODELS
+# ================================
 
-    # Sample entity
-    entity = UniversalEntity(
-        entity_id="sample_entity_1",
-        text="sample concept",
-        entity_type="sample_type",
-        confidence=0.9,
-        metadata={"domain": domain}
-    )
+@dataclass
+class UniversalTrainingConfig:
+    """Universal training configuration for ML models"""
 
-    # Sample relation
-    relation = UniversalRelation(
-        relation_id="sample_relation_1",
-        source_entity_id="entity_1",
-        target_entity_id="entity_2",
-        relation_type="related_to",
-        confidence=0.8,
-        metadata={"domain": domain}
-    )
+    model_type: str  # 'gnn', 'transformer', 'hybrid'
+    domain: str
+    training_data_path: str
+    validation_data_path: Optional[str] = None
+    model_config: Dict[str, Any] = field(default_factory=dict)
+    hyperparameters: Dict[str, Any] = field(default_factory=dict)
+    training_metadata: Dict[str, Any] = field(default_factory=dict)
 
-    # Sample document
-    document = UniversalDocument(
-        doc_id="sample_doc_1",
-        text="This is a sample document for universal RAG testing.",
-        title="Sample Document",
-        metadata={"domain": domain, "source": "sample"}
-    )
-    document.add_entity(entity)
-    document.add_relation(relation)
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert config to dictionary"""
+        return {
+            "model_type": self.model_type,
+            "domain": self.domain,
+            "training_data_path": self.training_data_path,
+            "validation_data_path": self.validation_data_path,
+            "model_config": self.model_config,
+            "hyperparameters": self.hyperparameters,
+            "training_metadata": self.training_metadata
+        }
 
-    return {
-        "entity": entity.to_dict(),
-        "relation": relation.to_dict(),
-        "document": document.to_dict(),
-        "domain": domain
-    }
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UniversalTrainingConfig':
+        """Create config from dictionary"""
+        return cls(
+            model_type=data["model_type"],
+            domain=data["domain"],
+            training_data_path=data["training_data_path"],
+            validation_data_path=data.get("validation_data_path"),
+            model_config=data.get("model_config", {}),
+            hyperparameters=data.get("hyperparameters", {}),
+            training_metadata=data.get("training_metadata", {})
+        )
+
+
+@dataclass
+class UniversalTrainingResult:
+    """Universal training result"""
+
+    model_id: str
+    model_type: str
+    domain: str
+    training_metrics: Dict[str, float] = field(default_factory=dict)
+    validation_metrics: Dict[str, float] = field(default_factory=dict)
+    model_path: Optional[str] = None
+    training_time: Optional[float] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert result to dictionary"""
+        return {
+            "model_id": self.model_id,
+            "model_type": self.model_type,
+            "domain": self.domain,
+            "training_metrics": self.training_metrics,
+            "validation_metrics": self.validation_metrics,
+            "model_path": self.model_path,
+            "training_time": self.training_time,
+            "metadata": self.metadata
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'UniversalTrainingResult':
+        """Create result from dictionary"""
+        return cls(
+            model_id=data["model_id"],
+            model_type=data["model_type"],
+            domain=data["domain"],
+            training_metrics=data.get("training_metrics", {}),
+            validation_metrics=data.get("validation_metrics", {}),
+            model_path=data.get("model_path"),
+            training_time=data.get("training_time"),
+            metadata=data.get("metadata", {})
+        )
+
+
+# ================================
+# UTILITY FUNCTIONS
+# ================================
+
+def create_entity_type(type_name: str) -> str:
+    """Create dynamic entity type"""
+    return type_name.lower().replace(' ', '_')
+
+def create_relation_type(type_name: str) -> str:
+    """Create dynamic relation type"""
+    return type_name.lower().replace(' ', '_')
+
+def create_entity_type(type_name: str) -> str:
+    """Create dynamic entity type"""
+    return type_name.lower().replace(' ', '_')
+
+def create_relation_type(type_name: str) -> str:
+    """Create dynamic relation type"""
+    return type_name.lower().replace(' ', '_')

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Commit and push all changes
+echo "Staging all changes..."
+git add .
+
+echo "Creating commit..."
+git commit -m "feat: Complete Azure services consolidation and GNN implementation
+
+🎯 MAJOR CHANGES:
+- ✅ Consolidated all Azure services under core/azure_*/ structure
+- ✅ Moved files from backend/azure/ to backend/core/azure_*/
+- ✅ Deleted old backend/azure/ directory completely
+- ✅ Created new backend/core/azure_storage/ module
+
+🚀 NEW GNN IMPLEMENTATION:
+- ✅ backend/core/azure_ml/gnn/model.py - Universal GNN architecture
+- ✅ backend/core/azure_ml/gnn/trainer.py - GNN training logic
+- ✅ backend/core/azure_ml/gnn/data_loader.py - Graph data loading
+- ✅ backend/scripts/train_comprehensive_gnn.py - Azure ML control script
+
+📁 STRUCTURE CHANGES:
+- ✅ backend/core/azure_ml/ml_client.py (moved from backend/azure/)
+- ✅ backend/core/azure_cosmos/cosmos_gremlin_client.py (moved)
+- ✅ backend/core/azure_search/search_client.py (moved)
+- ✅ backend/core/azure_storage/storage_client.py (moved)
+
+📚 DOCUMENTATION UPDATES:
+- ✅ README.md - Updated architecture and GNN integration
+- ✅ docs/azure/consolidation_summary.md - Complete summary
+- ✅ docs/azure/gnn_implementation_plan_corrected.md - Implementation plan
+
+🔧 FEATURES:
+- ✅ Universal GNN training with Azure ML integration
+- ✅ Multiple GNN architectures (GCN, GAT, GraphSAGE)
+- ✅ Graph data loading from Azure Cosmos DB
+- ✅ Local and cloud training support
+- ✅ Comprehensive CLI interface
+- ✅ Production-ready error handling
+
+🎯 BENEFITS:
+- ✅ Consistent structure across all Azure services
+- ✅ No duplication of Azure client locations
+- ✅ Clean separation of data models vs ML implementation
+- ✅ Universal GNN that works with any domain knowledge graph
+- ✅ Native Azure ML integration for cloud training
+
+This completes the consolidation and GNN implementation phase!"
+
+echo "Pushing to GitHub..."
+git push origin azure-services-integration
+
+echo "✅ Changes committed and pushed successfully!"

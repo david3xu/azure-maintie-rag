@@ -428,9 +428,9 @@ class CompletelyFixedUniversalRAGWorkflowDemo:
 async def main():
     """Main demo execution with error handling"""
     try:
-        demo = CompletelyFixedUniversalRAGWorkflowDemo("maintenance")
+        demo = CompletelyFixedUniversalRAGWorkflowDemo("general")
         await demo.demonstrate_complete_workflow(
-            "How do I troubleshoot pump vibration problems and fix bearing issues?"
+            "How do I troubleshoot system performance problems and fix component issues?"
         )
         print(f"\n🎉 Universal RAG workflow demonstration completed!")
 

@@ -48,8 +48,7 @@ const Layout: React.FC<LayoutProps> = ({
                 disabled={loading || isStreaming}
               >
                 <option value="general">General</option>
-                <option value="finance">Finance</option>
-                <option value="healthcare">Healthcare</option>
+                <option value="general">General</option>
                 <option value="engineering">Engineering</option>
               </select>
             </div>
@@ -108,7 +107,7 @@ const Layout: React.FC<LayoutProps> = ({
     <footer className="app-footer">
       <p>
         🤖 Powered by Universal Smart RAG with Phase 1, 2, 3 optimizations |
-        🔒 Enterprise-grade maintenance intelligence
+        🔒 Enterprise-grade universal intelligence
       </p>
     </footer>
   </div>

@@ -32,14 +32,14 @@ class WorkflowManagerDemo:
     Shows three-layer progressive disclosure for different user types
     """
 
-    def __init__(self, domain: str = "maintenance"):
+    def __init__(self, domain: str = "general"):
         self.domain = domain
         self.workflow_events = []
         self.azure_services = AzureServicesManager()
         self.openai_integration = AzureOpenAIIntegration()
         self.azure_settings = AzureSettings()
 
-    async def demonstrate_workflow_integration(self, user_query: str = "How do I fix pump vibration issues?"):
+    async def demonstrate_workflow_integration(self, user_query: str = "How do I fix system performance issues?"):
         """Demonstrate workflow manager integration with Azure services"""
 
         print(f"🔄 AZURE SERVICES WORKFLOW INTEGRATION DEMO")
@@ -100,9 +100,9 @@ class WorkflowManagerDemo:
 
             # Upload sample documents
             sample_docs = [
-                "Pump vibration analysis requires monitoring of bearing conditions.",
-                "Regular maintenance schedules prevent unexpected pump failures.",
-                "Safety procedures must be followed during pump maintenance."
+                "System performance analysis requires monitoring of component conditions.",
+                "Regular monitoring schedules prevent unexpected system failures.",
+                "Safety procedures must be followed during system operations."
             ]
 
             for i, doc in enumerate(sample_docs):
@@ -142,9 +142,9 @@ class WorkflowManagerDemo:
 
             # Index documents
             sample_docs = [
-                {"id": "doc_1", "content": "Pump vibration analysis requires monitoring of bearing conditions."},
-                {"id": "doc_2", "content": "Regular maintenance schedules prevent unexpected pump failures."},
-                {"id": "doc_3", "content": "Safety procedures must be followed during pump maintenance."}
+                {"id": "doc_1", "content": "System performance analysis requires monitoring of component conditions."},
+                {"id": "doc_2", "content": "Regular monitoring schedules prevent unexpected system failures."},
+                {"id": "doc_3", "content": "Safety procedures must be followed during system operations."}
             ]
 
             for doc in sample_docs:

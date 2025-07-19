@@ -91,8 +91,8 @@ async def main():
         database_name = f"rag-metadata-{domain}"
         container_name = "documents"
 
-        await azure_services.cosmos_client.create_database(database_name)
-        await azure_services.cosmos_client.create_container(database_name, container_name)
+        # Gremlin automatically creates graph structure
+        logger.info(f"Azure Cosmos DB Gremlin graph ready for domain: {domain}")
 
         metadata_doc = {
             "id": f"metadata-{domain}",
@@ -104,7 +104,7 @@ async def main():
             "timestamp": datetime.now().isoformat()
         }
 
-        await azure_services.cosmos_client.create_document(database_name, container_name, metadata_doc)
+        await azure_services.cosmos_client.add_entity(metadata_doc, domain)
 
         processing_time = time.time() - start_time
 

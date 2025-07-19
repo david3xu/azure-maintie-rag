@@ -54,40 +54,12 @@ class UniversalRAGDemo:
         self.openai_integration = AzureOpenAIIntegration()
 
         self.sample_domains = {
-            "medical": [
-                "Patient presents with fever, headache, and fatigue symptoms.",
-                "Blood pressure monitoring is essential for cardiovascular health.",
-                "Diagnosis requires comprehensive examination and test results.",
-                "Treatment protocols vary based on patient medical history.",
-                "Medication interactions must be carefully considered during treatment."
-            ],
-            "legal": [
-                "Contract terms must be clearly defined and legally binding.",
-                "Liability clauses protect parties from unforeseen circumstances.",
-                "Intellectual property rights require proper documentation.",
-                "Compliance with regulations is mandatory for all operations.",
-                "Legal precedents influence court decisions and case outcomes."
-            ],
-            "finance": [
-                "Risk assessment is crucial for investment portfolio management.",
-                "Market volatility affects asset valuation and returns.",
-                "Diversification strategies help minimize investment risks.",
-                "Regulatory compliance ensures adherence to financial standards.",
-                "Credit analysis determines loan approval and interest rates."
-            ],
-            "maintenance": [
-                "Equipment maintenance schedules prevent unexpected failures.",
-                "Bearing lubrication is essential for rotating machinery operation.",
-                "Vibration analysis indicates potential mechanical problems.",
-                "Safety procedures must be followed during repair operations.",
-                "Preventive maintenance reduces overall operational costs."
-            ],
-            "technology": [
-                "Software development requires systematic testing and validation.",
-                "Database optimization improves application performance significantly.",
-                "Security protocols protect systems from unauthorized access.",
-                "API design ensures scalable and maintainable integrations.",
-                "Cloud infrastructure provides flexible and cost-effective solutions."
+            "general": [
+                "System components work together to achieve desired outcomes.",
+                "Performance monitoring helps identify potential issues early.",
+                "Regular analysis reveals patterns in system behavior.",
+                "Data processing requires systematic validation and testing.",
+                "Process optimization improves overall system efficiency."
             ]
         }
 
@@ -124,7 +96,7 @@ class UniversalRAGDemo:
         print("\n📋 Demo 1: Single Domain Processing")
         print("-" * 40)
 
-        domain = "medical"
+        domain = "general"
         texts = self.sample_domains[domain]
 
         print(f"Creating Universal RAG system for '{domain}' domain...")
@@ -160,7 +132,7 @@ class UniversalRAGDemo:
             print(f"   🤖 Processed with Azure OpenAI")
 
             # Test a query
-            query = "What symptoms should I monitor?"
+            query = "What should I monitor?"
             print(f"\n🔍 Testing query: '{query}'")
 
             query_start = time.time()
@@ -188,7 +160,7 @@ class UniversalRAGDemo:
         print("\n🌍 Demo 2: Multi-Domain Processing")
         print("-" * 40)
 
-        domains_to_test = ["legal", "finance", "technology"]
+        domains_to_test = ["general"]
 
         for domain in domains_to_test:
             print(f"\n🏗️ Creating '{domain}' domain...")
@@ -207,11 +179,9 @@ class UniversalRAGDemo:
                 # Process with Azure OpenAI
                 processed_docs = await self.openai_integration.process_documents(texts, domain)
 
-                # Test domain-specific query
+                # Test universal query
                 query_map = {
-                    "legal": "What are contract requirements?",
-                    "finance": "How to assess investment risk?",
-                    "technology": "What are security best practices?"
+                    "general": "What are system requirements?"
                 }
 
                 query = query_map[domain]
@@ -235,11 +205,11 @@ class UniversalRAGDemo:
         print("\n⚡ Demo 3: Real-time Query Processing")
         print("-" * 40)
 
-        # Use maintenance domain for this demo
-        domain = "maintenance"
+        # Use general domain for this demo
+        domain = "general"
         texts = self.sample_domains[domain]
 
-        print("Setting up maintenance domain for real-time demo...")
+        print("Setting up general domain for real-time demo...")
         orchestrator = await create_universal_rag_from_texts(texts, domain)
 
         # Define progress callback
