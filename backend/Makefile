@@ -166,7 +166,10 @@ clean:
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	rm -rf .pytest_cache/ htmlcov/ .coverage build/ dist/ *.egg-info/ 2>/dev/null || true
-	@echo "✅ Cache and temporary files cleaned"
+	@echo "🧹 Cleaning log files..."
+	rm -f *.log backend.log api.log 2>/dev/null || true
+	find . -name "*.log" -delete 2>/dev/null || true
+	@echo "✅ Cache, temporary files, and logs cleaned"
 
 clean-data:
 	@echo "🧹 Cleaning processed data (preserving raw text)..."
@@ -182,6 +185,8 @@ clean-all:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	find . -type f -name "*.pyo" -delete 2>/dev/null || true
+	rm -f *.log backend.log api.log 2>/dev/null || true
+	find . -name "*.log" -delete 2>/dev/null || true
 	@echo "✅ Complete cleanup done - only source code and raw data remain"
 	@echo "💡 Run 'make setup' to rebuild environment"
 
