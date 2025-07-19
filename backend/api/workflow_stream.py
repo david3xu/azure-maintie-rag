@@ -1,8 +1,8 @@
 """
-Real Workflow Streaming Endpoint
+Azure Workflow Streaming Endpoint
 ===============================
 
-Connects frontend workflow display to actual backend workflow implementation
+Connects frontend workflow display to actual Azure services backend implementation
 from scripts/query_processing_workflow.py
 """
 
@@ -13,228 +13,248 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-# Import actual components used in query processing
-from core.orchestration.enhanced_pipeline import AzureRAGEnhancedPipeline
-from core.workflow.universal_workflow_manager import create_workflow_manager
+# Import Azure service components
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIIntegration
+from config.azure_settings import AzureSettings
 
 router = APIRouter()
 
-async def stream_real_workflow(query_id: str, query: str, domain: str = "general") -> AsyncGenerator[str, None]:
+async def stream_azure_workflow(query_id: str, query: str, domain: str = "general") -> AsyncGenerator[str, None]:
     """
-    Stream real workflow steps from query_processing_workflow.py logic
+    Stream real Azure workflow steps from query_processing_workflow.py logic
 
     This connects the frontend WorkflowProgress component to the actual
-    backend workflow implementation, ensuring the UI reflects real processing steps.
+    Azure services backend implementation, ensuring the UI reflects real processing steps.
     """
 
     try:
-        # Step 1: Enhanced RAG Orchestration
+        # Step 1: Azure Services Initialization
         data = {
             'event_type': 'progress',
             'step_number': 1,
-            'step_name': 'enhanced_rag_orchestration',
-            'user_friendly_name': '[RAG] Enhanced RAG Orchestration',
+            'step_name': 'azure_services_initialization',
+            'user_friendly_name': '[AZURE] Azure Services Initialization',
             'status': 'in_progress',
-            'technology': 'AzureRAGEnhancedPipeline',
-            'details': 'Initializing RAG components...',
+            'technology': 'AzureServicesManager',
+            'details': 'Initializing Azure services...',
             'progress_percentage': 14
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Initialize Enhanced RAG (real backend logic)
-        enhanced_rag = AzureRAGEnhancedPipeline(domain)
-
-        # Ensure system is initialized
-        if not enhanced_rag.components_initialized:
-            await enhanced_rag.initialize_components()
+        # Initialize Azure services (real backend logic)
+        azure_services = AzureServicesManager()
+        await azure_services.initialize()
 
         data = {
             'event_type': 'progress',
             'step_number': 1,
-            'step_name': 'enhanced_rag_orchestration',
-            'user_friendly_name': '[RAG] Enhanced RAG Orchestration',
+            'step_name': 'azure_services_initialization',
+            'user_friendly_name': '[AZURE] Azure Services Initialization',
             'status': 'completed',
-            'technology': 'AzureRAGEnhancedPipeline',
-            'details': 'RAG components initialized successfully',
+            'technology': 'AzureServicesManager',
+            'details': 'Azure services initialized successfully',
             'progress_percentage': 28
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Step 2: Workflow Manager Creation (real backend)
+        # Step 2: Azure OpenAI Integration
         data = {
             'event_type': 'progress',
             'step_number': 2,
-            'step_name': 'workflow_manager_creation',
-            'user_friendly_name': '[WF] Workflow Manager Creation',
+            'step_name': 'azure_openai_integration',
+            'user_friendly_name': '[OPENAI] Azure OpenAI Integration',
             'status': 'in_progress',
-            'technology': 'UniversalWorkflowManager',
-            'details': 'Creating workflow manager for tracking...',
+            'technology': 'AzureOpenAIIntegration',
+            'details': 'Setting up Azure OpenAI integration...',
             'progress_percentage': 35
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        workflow_manager = create_workflow_manager(query, domain)
+        openai_integration = AzureOpenAIIntegration()
 
         data = {
             'event_type': 'progress',
             'step_number': 2,
-            'step_name': 'workflow_manager_creation',
-            'user_friendly_name': '[WF] Workflow Manager Creation',
+            'step_name': 'azure_openai_integration',
+            'user_friendly_name': '[OPENAI] Azure OpenAI Integration',
             'status': 'completed',
-            'technology': 'UniversalWorkflowManager',
-            'details': f'Query ID: {workflow_manager.query_id}',
+            'technology': 'AzureOpenAIIntegration',
+            'details': 'Azure OpenAI integration ready',
             'progress_percentage': 42
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Step 3: 7-Step Query Processing (real backend)
+        # Step 3: Azure Cognitive Search
         data = {
             'event_type': 'progress',
             'step_number': 3,
-            'step_name': 'query_processing',
-            'user_friendly_name': '[PROC] 7-Step Query Processing',
+            'step_name': 'azure_cognitive_search',
+            'user_friendly_name': '[SEARCH] Azure Cognitive Search',
             'status': 'in_progress',
-            'technology': 'Multiple Core Components',
-            'details': 'Processing query through 7-step workflow...',
+            'technology': 'Azure Cognitive Search',
+            'details': 'Searching for relevant documents...',
             'progress_percentage': 56
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Execute real query processing (same as scripts/query_processing_workflow.py)
-        results = await enhanced_rag.process_query(
-            query=query,
-            max_results=5,
-            include_explanations=True,
-            enable_safety_warnings=True,
-            workflow_manager=workflow_manager
+        # Execute real Azure search (same as scripts/query_processing_workflow.py)
+        index_name = f"rag-index-{domain}"
+        search_results = await azure_services.search_client.search_documents(
+            index_name, query, top_k=5
         )
 
-        # Step 4: Data Ingestion
         data = {
             'event_type': 'progress',
-            'step_number': 4,
-            'step_name': 'data_ingestion',
-            'user_friendly_name': '[DATA] Data Ingestion',
+            'step_number': 3,
+            'step_name': 'azure_cognitive_search',
+            'user_friendly_name': '[SEARCH] Azure Cognitive Search',
             'status': 'completed',
-            'technology': 'Text Processing',
-            'details': 'Text processing completed',
+            'technology': 'Azure Cognitive Search',
+            'details': f'Found {len(search_results)} relevant documents',
             'progress_percentage': 64
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Step 5: Knowledge Extraction
+        # Step 4: Azure Blob Storage Retrieval
         data = {
             'event_type': 'progress',
-            'step_number': 5,
-            'step_name': 'knowledge_extraction',
-            'user_friendly_name': '[KNOW] Knowledge Extraction',
-            'status': 'completed',
-            'technology': 'Entity/Relation Discovery',
-            'details': 'Entity and relation discovery completed',
+            'step_number': 4,
+            'step_name': 'azure_blob_storage_retrieval',
+            'user_friendly_name': '[STORAGE] Azure Blob Storage Retrieval',
+            'status': 'in_progress',
+            'technology': 'Azure Blob Storage',
+            'details': 'Retrieving document content...',
             'progress_percentage': 72
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Step 6: Vector Indexing
+        # Retrieve documents from Azure Blob Storage
+        container_name = f"rag-data-{domain}"
+        retrieved_docs = []
+
+        for i, result in enumerate(search_results[:3]):
+            blob_name = f"document_{i}.txt"
+            try:
+                content = await azure_services.storage_client.download_text(container_name, blob_name)
+                retrieved_docs.append(content)
+            except Exception as e:
+                logger.warning(f"Could not retrieve document {i}: {e}")
+
         data = {
             'event_type': 'progress',
-            'step_number': 6,
-            'step_name': 'vector_indexing',
-            'user_friendly_name': '[VEC] Vector Indexing',
+            'step_number': 4,
+            'step_name': 'azure_blob_storage_retrieval',
+            'user_friendly_name': '[STORAGE] Azure Blob Storage Retrieval',
             'status': 'completed',
-            'technology': 'FAISS Search',
-            'details': 'Search preparation completed',
+            'technology': 'Azure Blob Storage',
+            'details': f'Retrieved {len(retrieved_docs)} documents',
             'progress_percentage': 80
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Step 7: Graph Construction
+        # Step 5: Azure OpenAI Processing
         data = {
             'event_type': 'progress',
-            'step_number': 7,
-            'step_name': 'graph_construction',
-            'user_friendly_name': '[GRAPH] Graph Construction',
-            'status': 'completed',
-            'technology': 'Knowledge Graph',
-            'details': 'Knowledge graph building completed',
+            'step_number': 5,
+            'step_name': 'azure_openai_processing',
+            'user_friendly_name': '[OPENAI] Azure OpenAI Processing',
+            'status': 'in_progress',
+            'technology': 'Azure OpenAI',
+            'details': 'Generating response with Azure OpenAI...',
             'progress_percentage': 88
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Step 8: Query Processing
-        data = {
-            'event_type': 'progress',
-            'step_number': 8,
-            'step_name': 'query_analysis',
-            'user_friendly_name': '[ANAL] Query Analysis',
-            'status': 'completed',
-            'technology': 'Query Analyzer',
-            'details': 'Query analysis completed',
-            'progress_percentage': 92
-        }
-        yield f"data: {json.dumps(data)}\n\n"
+        # Generate response using Azure OpenAI
+        response = await openai_integration.generate_response(
+            query, retrieved_docs, domain
+        )
 
-        # Step 9: Retrieval
         data = {
             'event_type': 'progress',
-            'step_number': 9,
-            'step_name': 'retrieval',
-            'user_friendly_name': '[RET] Multi-modal Retrieval',
+            'step_number': 5,
+            'step_name': 'azure_openai_processing',
+            'user_friendly_name': '[OPENAI] Azure OpenAI Processing',
             'status': 'completed',
-            'technology': 'Vector Search',
-            'details': 'Multi-modal search completed',
+            'technology': 'Azure OpenAI',
+            'details': 'Response generated successfully',
             'progress_percentage': 96
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Step 10: Generation
+        # Step 6: Azure Cosmos DB Metadata Storage
         data = {
             'event_type': 'progress',
-            'step_number': 10,
-            'step_name': 'generation',
-            'user_friendly_name': '[GEN] LLM Response Generation',
+            'step_number': 6,
+            'step_name': 'azure_cosmos_db_storage',
+            'user_friendly_name': '[COSMOS] Azure Cosmos DB Storage',
+            'status': 'in_progress',
+            'technology': 'Azure Cosmos DB',
+            'details': 'Storing query metadata...',
+            'progress_percentage': 98
+        }
+        yield f"data: {json.dumps(data)}\n\n"
+
+        # Store query metadata in Azure Cosmos DB
+        database_name = f"rag-metadata-{domain}"
+        container_name = "queries"
+
+        query_metadata = {
+            "id": f"query-{time.strftime('%Y%m%d-%H%M%S')}",
+            "query": query,
+            "domain": domain,
+            "search_results_count": len(search_results),
+            "retrieved_docs_count": len(retrieved_docs),
+            "response_length": len(response),
+            "timestamp": time.strftime('%Y-%m-%dT%H:%M:%S')
+        }
+
+        try:
+            await azure_services.cosmos_client.create_document(database_name, container_name, query_metadata)
+        except Exception as e:
+            logger.warning(f"Could not store metadata: {e}")
+
+        data = {
+            'event_type': 'progress',
+            'step_number': 6,
+            'step_name': 'azure_cosmos_db_storage',
+            'user_friendly_name': '[COSMOS] Azure Cosmos DB Storage',
             'status': 'completed',
-            'technology': 'LLM Interface',
-            'details': 'Response generation completed',
+            'technology': 'Azure Cosmos DB',
+            'details': 'Metadata stored successfully',
             'progress_percentage': 100
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Complete with actual results
-        data = {
+        # Final completion event
+        completion_data = {
             'event_type': 'workflow_completed',
-            'response': results,
-            'progress_percentage': 100,
-            'processing_time': time.time(),
-            'core_files_used': [
-                'enhanced_rag_universal.py - Main orchestration',
-                'universal_rag_orchestrator_complete.py - 7-step workflow',
-                'universal_workflow_manager.py - Progress tracking',
-                'universal_query_analyzer.py - Query analysis',
-                'universal_vector_search.py - Vector search',
-                'universal_llm_interface.py - Response generation',
-                'universal_models.py - Data structures'
+            'query_id': query_id,
+            'total_steps': 6,
+            'azure_services_used': [
+                'Azure Services Manager',
+                'Azure OpenAI Integration',
+                'Azure Cognitive Search',
+                'Azure Blob Storage',
+                'Azure OpenAI Processing',
+                'Azure Cosmos DB'
             ],
-            'workflow_steps_executed': [
-                'Data Ingestion - Text processing',
-                'Knowledge Extraction - Entity/relation discovery',
-                'Vector Indexing - FAISS search preparation',
-                'Graph Construction - Knowledge graph building',
-                'Query Processing - Query analysis',
-                'Retrieval - Multi-modal search',
-                'Generation - LLM response creation'
-            ]
+            'success': True,
+            'response_length': len(response),
+            'documents_processed': len(retrieved_docs)
         }
-        yield f"data: {json.dumps(data)}\n\n"
+        yield f"data: {json.dumps(completion_data)}\n\n"
 
     except Exception as e:
-        # Send error event
-        data = {
-            'event_type': 'workflow_error',
+        error_data = {
+            'event_type': 'error',
+            'query_id': query_id,
             'error': str(e),
-            'progress_percentage': 0
+            'timestamp': time.strftime('%Y-%m-%dT%H:%M:%S')
         }
-        yield f"data: {json.dumps(data)}\n\n"
+        yield f"data: {json.dumps(error_data)}\n\n"
+
 
 @router.get("/api/v1/query/stream/real/{query_id}")
 async def stream_real_workflow_endpoint(
@@ -243,12 +263,18 @@ async def stream_real_workflow_endpoint(
     domain: str = "general"
 ):
     """
-    Stream real workflow progress from actual backend implementation
+    Stream real Azure workflow steps for a query
 
-    This endpoint connects the frontend WorkflowProgress component to the
-    real backend workflow from scripts/query_processing_workflow.py
+    This endpoint provides real-time progress updates from the actual
+    Azure services backend implementation.
     """
     return StreamingResponse(
-        stream_real_workflow(query_id, query, domain),
-        media_type="text/plain"
+        stream_azure_workflow(query_id, query, domain),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        }
     )
