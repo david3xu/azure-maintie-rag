@@ -11,7 +11,7 @@ from enum import Enum
 import json
 
 # Import universal models for legacy compatibility
-from core.models.universal_models import (
+from core.models.azure_rag_data_models import (
     UniversalEntity, UniversalRelation, UniversalDocument,
     UniversalQueryAnalysis, UniversalEnhancedQuery,
     UniversalSearchResult, UniversalRAGResponse

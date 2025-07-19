@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 # Universal components
-from core.orchestration.enhanced_rag_universal import (
+from core.orchestration.enhanced_pipeline import (
     get_enhanced_rag_instance, initialize_enhanced_rag_system
 )
 from config.settings import settings

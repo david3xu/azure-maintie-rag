@@ -9,13 +9,13 @@ from typing import Dict, Any
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-from core.orchestration.enhanced_rag_universal import EnhancedUniversalRAG
+from core.orchestration.enhanced_pipeline import AzureRAGEnhancedPipeline
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Singleton or factory for RAG instance (adjust as needed)
-rag_instance = EnhancedUniversalRAG()
+rag_instance = AzureRAGEnhancedPipeline()
 
 def get_rag_instance():
     return rag_instance

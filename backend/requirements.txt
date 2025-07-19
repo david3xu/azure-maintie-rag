@@ -27,6 +27,13 @@ structlog>=23.2.0
 pyyaml>=6.0
 pydantic-settings>=2.0.0
 
+# Azure SDK Libraries
+azure-storage-blob>=12.19.0
+azure-search-documents>=11.4.0
+azure-cosmos>=4.5.0
+azure-ai-ml>=1.12.0
+azure-identity>=1.15.0
+
 # Testing
 pytest>=7.4.0
 

@@ -28,14 +28,14 @@ backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 # FIXED: Import actual components used in data preparation
-from core.orchestration.universal_rag_orchestrator_complete import UniversalRAGOrchestrator
-from core.knowledge.universal_text_processor import UniversalTextProcessor
-from core.extraction.universal_knowledge_extractor import UniversalKnowledgeExtractor
-from core.classification.universal_classifier import (
-    UniversalEntityClassifier, UniversalRelationClassifier, UniversalClassificationPipeline
-)  # FIXED: Use actual class names
-from core.retrieval.universal_vector_search import UniversalVectorSearch
-from core.gnn.universal_gnn_processor import UniversalGNNDataProcessor
+from core.orchestration.rag_orchestration_service import AzureRAGOrchestrationService
+from core.azure_openai.text_processor import AzureOpenAITextProcessor
+from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
+from core.azure_ml.classification_service import (
+    AzureMLClassificationService as UniversalClassificationPipeline
+)  # Updated to Azure service naming
+from core.azure_search.vector_service import AzureSearchVectorService
+from core.azure_ml.gnn_processor import AzureMLGNNProcessor
 
 
 async def main():
@@ -53,7 +53,7 @@ async def main():
     try:
         # Initialize Universal RAG Orchestrator (triggers data preparation)
         print(f"\n📝 Initializing Universal RAG system...")
-        orchestrator = UniversalRAGOrchestrator(domain)
+        orchestrator = AzureRAGOrchestrationService(domain)
 
         # This initialization call uses all 8 data preparation core files
         initialization_results = await orchestrator.initialize_from_text_files()

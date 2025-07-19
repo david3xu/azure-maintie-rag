@@ -27,11 +27,11 @@ backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 # Import actual components used in query processing
-from core.orchestration.enhanced_rag_universal import EnhancedUniversalRAG
+from core.orchestration.enhanced_pipeline import AzureRAGEnhancedPipeline
 from core.workflow.universal_workflow_manager import create_workflow_manager
-from core.enhancement.universal_query_analyzer import UniversalQueryAnalyzer
-from core.retrieval.universal_vector_search import UniversalVectorSearch
-from core.generation.universal_llm_interface import UniversalLLMInterface
+from core.azure_search.query_analyzer import AzureSearchQueryAnalyzer
+from core.azure_search.vector_service import AzureSearchVectorService
+from core.azure_openai.completion_service import AzureOpenAICompletionService
 
 
 async def main():
@@ -53,7 +53,7 @@ async def main():
     try:
         # Step 1: Initialize Enhanced RAG (main orchestration)
         print(f"\n🎭 Step 1: Enhanced RAG Orchestration")
-        enhanced_rag = EnhancedUniversalRAG(domain)
+        enhanced_rag = AzureRAGEnhancedPipeline(domain)
 
         # Ensure system is initialized
         if not enhanced_rag.components_initialized:
