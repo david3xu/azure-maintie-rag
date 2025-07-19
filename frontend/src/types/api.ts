@@ -36,17 +36,23 @@ export interface UniversalQueryResponse {
   query: string;
   domain: string;
   generated_response: {
-    answer: string;
+    answer?: string;
     explanation?: string;
     confidence?: number;
-  };
+    content?: string;
+    response?: string;
+  } | string;
   search_results: Array<{
     content: string;
     source: string;
     score: number;
+    metadata?: {
+      source: string;
+    };
   }>;
   processing_time: number;
   system_stats: Record<string, any>;
   timestamp: string;
   error?: string;
+  safety_warnings?: string[];
 }
