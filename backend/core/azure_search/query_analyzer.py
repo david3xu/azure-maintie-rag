@@ -12,8 +12,8 @@ from collections import defaultdict
 from pathlib import Path
 import json
 
-from ..models.azure_rag_data_models import (
-    UniversalQueryAnalysis, UniversalEnhancedQuery, QueryType, UniversalEntity
+from ..models.universal_rag_models import (
+    UniversalQueryAnalysis, UniversalEnhancedQuery, QueryType
 )
 from ..azure_openai.text_processor import AzureOpenAITextProcessor
 from ..azure_openai.extraction_client import OptimizedLLMExtractor

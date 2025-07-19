@@ -13,8 +13,8 @@ from datetime import datetime
 import networkx as nx
 from collections import defaultdict
 
-from ..models.azure_rag_data_models import (
-    UniversalEntity, UniversalRelation, UniversalDocument
+from ..models.universal_rag_models import (
+    UniversalEntity, UniversalDocument, UniversalRelation
 )
 from .extraction_client import OptimizedLLMExtractor
 from ...config.settings import settings

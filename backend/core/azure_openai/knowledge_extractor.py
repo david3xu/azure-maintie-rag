@@ -12,7 +12,7 @@ from datetime import datetime
 import networkx as nx
 from collections import defaultdict
 
-from ..models.azure_rag_data_models import (
+from ..models.universal_rag_models import (
     UniversalEntity, UniversalRelation, UniversalDocument
 )
 from .text_processor import AzureOpenAITextProcessor

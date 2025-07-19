@@ -1,12 +1,12 @@
 """Azure Machine Learning client for Universal RAG model training."""
 
 import logging
+import time
 from typing import Dict, List, Any, Optional
 from azure.ai.ml import MLClient
-from azure.identity import DefaultAzureCredential
 from azure.core.exceptions import AzureError
 
-from backend.config.azure_settings import azure_settings
+from backend.config.settings import azure_settings
 from backend.core.models.universal_rag_models import (
     UniversalTrainingConfig, UniversalTrainingResult
 )
@@ -31,7 +31,7 @@ class AzureMLClient:
 
         # Initialize client (follows azure_openai.py error handling pattern)
         try:
-            self.credential = DefaultAzureCredential()
+            self.credential = self._get_azure_credential()
             self.ml_client = MLClient(
                 credential=self.credential,
                 subscription_id=self.subscription_id,
@@ -43,6 +43,16 @@ class AzureMLClient:
             raise
 
         logger.info(f"AzureMLClient initialized for workspace: {self.workspace_name}")
+
+    def _get_azure_credential(self):
+        """Enterprise credential management - data-driven from config"""
+        if azure_settings.azure_use_managed_identity and azure_settings.azure_managed_identity_client_id:
+            from azure.identity import ManagedIdentityCredential
+            return ManagedIdentityCredential(client_id=azure_settings.azure_managed_identity_client_id)
+
+        # Final fallback to DefaultAzureCredential
+        from azure.identity import DefaultAzureCredential
+        return DefaultAzureCredential()
 
     def create_compute_instance(self, compute_name: str, vm_size: str = "Standard_DS3_v2") -> Dict[str, Any]:
         """Create compute instance for training - data-driven configuration"""

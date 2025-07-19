@@ -16,7 +16,7 @@ import json
 # Azure service components
 from ..azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
 from ..azure_openai.text_processor import AzureOpenAITextProcessor
-from ..models.azure_rag_data_models import UniversalEntity, UniversalRelation, UniversalDocument
+from ..models.universal_rag_models import UniversalEntity, UniversalRelation, UniversalDocument
 from ..azure_search.query_analyzer import AzureSearchQueryAnalyzer
 from ..azure_search.vector_service import AzureSearchVectorService
 from ..azure_openai.completion_service import AzureOpenAICompletionService

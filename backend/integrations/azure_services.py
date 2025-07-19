@@ -1,21 +1,22 @@
 """Unified Azure services integration for Universal RAG system."""
 
 import logging
+import time
 from typing import Dict, Any, Optional, List
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
-from backend.azure.storage_client import AzureStorageClient
-from backend.azure.search_client import AzureCognitiveSearchClient
-from backend.azure.cosmos_gremlin_client import AzureCosmosGremlinClient
-from backend.azure.ml_client import AzureMLClient
+from backend.core.azure_storage.storage_client import AzureStorageClient
+from backend.core.azure_search.search_client import AzureCognitiveSearchClient
+from backend.core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
+from backend.core.azure_ml.ml_client import AzureMLClient
 from .azure_openai import AzureOpenAIClient
 
 logger = logging.getLogger(__name__)
 
 
 class AzureServicesManager:
-    """Unified manager for all Azure services - follows existing integration patterns"""
+    """Unified manager for all Azure services - enterprise health monitoring"""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize all Azure service clients"""
@@ -37,8 +38,9 @@ class AzureServicesManager:
         logger.info("AzureServicesManager initialized with all services")
 
     def check_all_services_health(self) -> Dict[str, Any]:
-        """Check health of all Azure services - concurrent execution"""
-        health_checks = {}
+        """Concurrent service health check - enterprise monitoring"""
+        health_results = {}
+        start_time = time.time()
 
         with ThreadPoolExecutor(max_workers=5) as executor:
             futures = {
@@ -51,24 +53,30 @@ class AzureServicesManager:
 
             for service_name, future in futures.items():
                 try:
-                    health_checks[service_name] = future.result(timeout=10)
+                    health_results[service_name] = future.result(timeout=30)
                 except Exception as e:
-                    health_checks[service_name] = {
-                        "status": "error",
-                        "error": str(e)
+                    health_results[service_name] = {
+                        "status": "unhealthy",
+                        "error": str(e),
+                        "service": service_name
                     }
 
-        # Overall health summary
-        all_healthy = all(
-            status.get("status") == "healthy"
-            for status in health_checks.values()
-        )
+        overall_time = time.time() - start_time
 
         return {
-            "overall_status": "healthy" if all_healthy else "degraded",
-            "services": health_checks,
-            "healthy_count": sum(1 for s in health_checks.values() if s.get("status") == "healthy"),
-            "total_count": len(health_checks)
+            "overall_status": "healthy" if all(
+                result.get("status") == "healthy" for result in health_results.values()
+            ) else "degraded",
+            "services": health_results,
+            "healthy_count": sum(1 for s in health_results.values() if s.get("status") == "healthy"),
+            "total_count": len(health_results),
+            "health_check_duration_ms": overall_time * 1000,
+            "timestamp": time.time(),
+            "telemetry": {
+                "service": "azure_services_manager",
+                "operation": "health_check",
+                "environment": "enterprise"
+            }
         }
 
     def migrate_data_to_azure(self, source_data_path: str, domain: str) -> Dict[str, Any]:

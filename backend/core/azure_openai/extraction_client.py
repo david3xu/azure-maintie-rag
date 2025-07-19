@@ -11,7 +11,7 @@ import random
 from datetime import datetime
 from openai import AzureOpenAI
 
-from ..models.azure_rag_data_models import UniversalEntity, UniversalRelation
+from ..models.universal_rag_models import UniversalEntity, UniversalRelation
 from ...config.settings import settings
 
 logger = logging.getLogger(__name__)

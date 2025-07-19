@@ -197,6 +197,17 @@ The system will automatically process raw text through the complete Azure Univer
 
 Our Azure Universal RAG system has achieved **complete functionality** through comprehensive Azure services integration:
 
+### 📖 **Azure Resource Preparation**
+**📖 [Complete Azure Resource Preparation Guide](docs/AZURE_RESOURCE_PREPARATION_FINAL.md)**
+
+For Azure infrastructure deployment and management, see our comprehensive guide covering:
+- Complete infrastructure deployment (10 Azure services)
+- Enterprise security (Key Vault, managed identities)
+- ML training environment (Azure ML workspace)
+- Monitoring & logging (Application Insights)
+- Application hosting (Container Apps)
+- Complete lifecycle management (deploy, teardown, redeploy)
+
 | **Component** | **Status** | **Azure Service** |
 |---------------|------------|-------------------|
 | Knowledge Extraction | ✅ Working | Azure OpenAI GPT-4 |
