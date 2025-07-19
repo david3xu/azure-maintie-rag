@@ -97,7 +97,7 @@ async def main():
         }
 
         try:
-            await azure_services.cosmos_client.create_document(database_name, container_name, query_metadata)
+            await azure_services.cosmos_client.add_entity(query_metadata, domain)
         except Exception as e:
             print(f"   ⚠️  Could not store metadata: {e}")
 

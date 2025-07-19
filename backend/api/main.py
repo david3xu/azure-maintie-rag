@@ -181,7 +181,7 @@ async def get_system_info():
             "services": {
                 "blob_storage": azure_services.storage_client is not None if azure_services else False,
                 "cognitive_search": azure_services.search_client is not None if azure_services else False,
-                "cosmos_db": azure_services.cosmos_client is not None if azure_services else False,
+                "cosmos_db_gremlin": azure_services.cosmos_client is not None if azure_services else False,
                 "machine_learning": azure_services.ml_client is not None if azure_services else False
             }
         }

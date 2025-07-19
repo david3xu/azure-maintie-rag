@@ -521,12 +521,12 @@ if __name__ == "__main__":
     async def main():
         # Test with sample texts
         sample_texts = [
-            "The pump system consists of an impeller, housing, and motor. The impeller rotates to move fluid through the system.",
-            "Regular maintenance includes checking the bearings, replacing seals, and monitoring vibration levels.",
-            "Bearing failure can cause increased vibration and noise. This leads to reduced pump efficiency."
+            "The system consists of multiple components working together to achieve the desired outcome.",
+            "Regular monitoring includes checking performance metrics, replacing worn parts, and monitoring system health.",
+            "Component failure can cause reduced efficiency and performance issues."
         ]
 
-        extractor = AzureOpenAIKnowledgeExtractor("maintenance")
+        extractor = AzureOpenAIKnowledgeExtractor("general")
         results = await extractor.extract_knowledge_from_texts(sample_texts)
 
         print("Extraction Results:")

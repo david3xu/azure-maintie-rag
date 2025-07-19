@@ -5,17 +5,14 @@ interface DomainSelectorProps {
   onChange: (domain: string) => void;
 }
 
+// Universal RAG system works with any markdown content from data/raw directory
 const domains = [
-  { value: 'general', label: 'General' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'healthcare', label: 'Healthcare' },
-  { value: 'engineering', label: 'Engineering' },
-  // Add more domains as needed
+  { value: 'general', label: 'Universal (Markdown Files)' }
 ];
 
 const DomainSelector: React.FC<DomainSelectorProps> = ({ domain, onChange }) => (
   <div className="domain-selector">
-    <label htmlFor="domain-select">Domain:</label>
+    <label htmlFor="domain-select">Data Source:</label>
     <select
       id="domain-select"
       value={domain}

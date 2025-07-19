@@ -183,23 +183,20 @@ async def stream_azure_workflow(query_id: str, query: str, domain: str = "genera
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Step 6: Azure Cosmos DB Metadata Storage
+        # Step 6: Azure Cosmos DB Gremlin Graph Storage
         data = {
             'event_type': 'progress',
             'step_number': 6,
-            'step_name': 'azure_cosmos_db_storage',
-            'user_friendly_name': '[COSMOS] Azure Cosmos DB Storage',
+            'step_name': 'azure_cosmos_gremlin_storage',
+            'user_friendly_name': '[COSMOS GREMLIN] Azure Cosmos DB Gremlin Graph Storage',
             'status': 'in_progress',
-            'technology': 'Azure Cosmos DB',
-            'details': 'Storing query metadata...',
+            'technology': 'Azure Cosmos DB Gremlin',
+            'details': 'Storing query metadata in graph...',
             'progress_percentage': 98
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        # Store query metadata in Azure Cosmos DB
-        database_name = f"rag-metadata-{domain}"
-        container_name = "queries"
-
+        # Store query metadata in Azure Cosmos DB Gremlin graph
         query_metadata = {
             "id": f"query-{time.strftime('%Y%m%d-%H%M%S')}",
             "query": query,
@@ -211,9 +208,9 @@ async def stream_azure_workflow(query_id: str, query: str, domain: str = "genera
         }
 
         try:
-            await azure_services.cosmos_client.create_document(database_name, container_name, query_metadata)
+            await azure_services.cosmos_client.add_entity(query_metadata, domain)
         except Exception as e:
-            logger.warning(f"Could not store metadata: {e}")
+            logger.warning(f"Could not store metadata in graph: {e}")
 
         data = {
             'event_type': 'progress',

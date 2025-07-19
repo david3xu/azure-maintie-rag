@@ -121,7 +121,7 @@ class OptimizedLLMExtractor:
 
             Guidelines:
             1. Return 8-12 most important entity types
-            2. Use lowercase with underscores (e.g., "medical_device")
+            2. Use lowercase with underscores (e.g., "system_component")
             3. Focus on concrete, identifiable objects/concepts
             4. Avoid overly specific or generic terms
 
@@ -158,7 +158,7 @@ class OptimizedLLMExtractor:
         all_relationships = set()
 
         # Sample entity types for context
-        entity_context = entities[:10] if entities else ["equipment", "component", "issue", "action"]
+        entity_context = entities[:10] if entities else ["component", "system", "process", "action"]
 
         for batch in batched_texts[:5]:  # Limit to 5 batches for discovery
             batch_text = "\n---\n".join(batch)
@@ -391,8 +391,8 @@ class OptimizedLLMExtractor:
         """Categorize entity type based on content"""
         entity_lower = entity.lower()
 
-        if any(word in entity_lower for word in ['equipment', 'machine', 'system', 'unit']):
-            return 'equipment'
+        if any(word in entity_lower for word in ['component', 'system', 'unit', 'module']):
+            return 'component'
         elif any(word in entity_lower for word in ['part', 'component', 'element']):
             return 'component'
         elif any(word in entity_lower for word in ['problem', 'issue', 'fault', 'error']):

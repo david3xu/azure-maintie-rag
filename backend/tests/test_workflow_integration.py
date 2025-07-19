@@ -208,7 +208,7 @@ async def test_azure_services_workflow():
             "details": "Documents uploaded successfully",
             "processing_time_ms": 1200.0,
             "technical_data": {
-                "container_name": "rag-data-test",
+                "container_name": "rag-data-general",
                 "documents_uploaded": 5
             }
         }
@@ -264,7 +264,7 @@ def print_sample_output():
 
     sample_workflow = {
         "query_id": "azure-sample-query-789",
-        "domain": "maintenance",
+                    "domain": "general",
         "total_steps": 3,
         "status": "completed",
         "processing_time_ms": 3500.0,
@@ -279,7 +279,7 @@ def print_sample_output():
                 "details": "5 documents uploaded to Azure Blob Storage",
                 "processing_time_ms": 1200.0,
                 "technical_data": {
-                    "container_name": "rag-data-maintenance",
+                    "container_name": "rag-data-general",
                     "documents_uploaded": 5,
                     "azure_region": "eastus"
                 }
@@ -295,7 +295,7 @@ def print_sample_output():
                 "processing_time_ms": 800.0,
                 "technical_data": {
                     "search_results_count": 7,
-                    "index_name": "rag-index-maintenance",
+                    "index_name": "rag-index-general",
                     "search_algorithm": "semantic"
                 }
             },

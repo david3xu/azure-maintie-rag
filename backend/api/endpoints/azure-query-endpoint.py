@@ -136,10 +136,8 @@ async def process_azure_query(
         )
         azure_services_used.append("Azure OpenAI")
 
-        # Step 4: Store query metadata in Azure Cosmos DB
-        logger.info("Storing query metadata in Azure Cosmos DB...")
-        database_name = f"rag-metadata-{request.domain}"
-        container_name = "queries"
+        # Step 4: Store query metadata in Azure Cosmos DB Gremlin
+        logger.info("Storing query metadata in Azure Cosmos DB Gremlin...")
 
         query_metadata = {
             "id": f"query-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
@@ -152,8 +150,9 @@ async def process_azure_query(
         }
 
         try:
-            await azure_services.cosmos_client.create_document(database_name, container_name, query_metadata)
-            azure_services_used.append("Azure Cosmos DB")
+            # Store as vertex in graph
+            await azure_services.cosmos_client.add_entity(query_metadata, request.domain)
+            azure_services_used.append("Azure Cosmos DB Gremlin")
         except Exception as e:
             logger.warning(f"Could not store metadata: {e}")
 
@@ -305,11 +304,9 @@ async def initialize_domain(request: DomainInitializationRequest) -> Dict[str, A
         index_name = f"rag-index-{request.domain}"
         await azure_services.search_client.create_index(index_name)
 
-        # Step 3: Create Azure Cosmos DB database and container
-        database_name = f"rag-metadata-{request.domain}"
-        container_name = "documents"
-        await azure_services.cosmos_client.create_database(database_name)
-        await azure_services.cosmos_client.create_container(database_name, container_name)
+        # Step 3: Initialize Azure Cosmos DB Gremlin graph
+        # Gremlin automatically creates graph structure
+        logger.info(f"Azure Cosmos DB Gremlin graph ready for domain: {request.domain}")
 
         return {
             "success": True,
@@ -317,7 +314,7 @@ async def initialize_domain(request: DomainInitializationRequest) -> Dict[str, A
             "azure_services_initialized": {
                 "blob_storage": container_name,
                 "cognitive_search": index_name,
-                "cosmos_db": f"{database_name}/{container_name}"
+                "cosmos_db_gremlin": f"graph-{request.domain}"
             },
             "message": f"Domain '{request.domain}' initialized with Azure services"
         }

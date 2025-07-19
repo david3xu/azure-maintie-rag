@@ -124,7 +124,7 @@ class AzureSearchQueryAnalyzer:
             Return 5-8 important concepts/terms that appear frequently in this domain.
             Format: JSON array of strings, lowercase with underscores.
 
-            Example: ["medical_device", "patient_care", "diagnostic_procedure"]
+            Example: ["system_component", "process_flow", "data_analysis"]
             """
 
             try:

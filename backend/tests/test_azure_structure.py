@@ -30,7 +30,7 @@ def test_azure_structure():
         "__init__.py",
         "storage_client.py",
         "search_client.py",
-        "cosmos_client.py",
+        "cosmos_gremlin_client.py",
         "ml_client.py",
         "integrations/azure_services.py",
         "integrations/azure_openai.py"

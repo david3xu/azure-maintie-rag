@@ -7,7 +7,7 @@ import asyncio
 
 from backend.azure.storage_client import AzureStorageClient
 from backend.azure.search_client import AzureCognitiveSearchClient
-from backend.azure.cosmos_client import AzureCosmosClient
+from backend.azure.cosmos_gremlin_client import AzureCosmosGremlinClient
 from backend.azure.ml_client import AzureMLClient
 from .azure_openai import AzureOpenAIClient
 
@@ -28,7 +28,7 @@ class AzureServicesManager:
             self.services['openai'] = AzureOpenAIClient(self.config.get('openai'))
             self.services['storage'] = AzureStorageClient(self.config.get('storage'))
             self.services['search'] = AzureCognitiveSearchClient(self.config.get('search'))
-            self.services['cosmos'] = AzureCosmosClient(self.config.get('cosmos'))
+            self.services['cosmos'] = AzureCosmosGremlinClient(self.config.get('cosmos'))
             self.services['ml'] = AzureMLClient(self.config.get('ml'))
         except Exception as e:
             logger.error(f"Failed to initialize Azure services: {e}")

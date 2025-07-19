@@ -39,14 +39,9 @@ class AzureOpenAICompletionService:
             azure_endpoint=self.api_base
         )
 
-        # Universal domain context (no hardcoded assumptions)
+        # Universal context - works with any MD data from data/raw directory
         self.domain_contexts = {
-            "maintenance": "industrial equipment maintenance and troubleshooting",
-            "medical": "medical information and healthcare guidance",
-            "legal": "legal information and document analysis",
-            "finance": "financial analysis and business guidance",
-            "education": "educational content and learning materials",
-            "general": "general knowledge and information"
+            "general": "universal knowledge processing from markdown documents"
         }
 
         logger.info(f"AzureOpenAICompletionService initialized for domain: {domain}")
@@ -138,23 +133,20 @@ class AzureOpenAICompletionService:
     def _build_domain_system_prompt(self) -> str:
         """Build dynamic system prompt based on domain"""
 
-        domain_context = self.domain_contexts.get(self.domain, "general knowledge")
+        domain_context = self.domain_contexts.get(self.domain, "universal knowledge from markdown documents")
 
         base_prompt = f"""You are an expert AI assistant specialized in {domain_context}.
 
 Your role:
 - Provide accurate, helpful, and comprehensive responses
-- Use the provided context to support your answers
+- Use the provided context from markdown documents to support your answers
 - Cite sources when referencing specific information
 - Be clear about limitations or uncertainties
-- Adapt your communication style to the domain context"""
+- Work with any type of markdown content from the data/raw directory"""
 
-        # Add domain-specific guidance
+        # Universal guidance - works with any MD data
         domain_guidance = {
-            "maintenance": "\n- Prioritize safety considerations in all recommendations\n- Provide step-by-step procedures when applicable\n- Include relevant safety warnings",
-            "medical": "\n- Always recommend consulting healthcare professionals\n- Provide educational information, not medical advice\n- Include appropriate medical disclaimers",
-            "legal": "\n- Provide general legal information, not legal advice\n- Recommend consulting qualified legal professionals\n- Include appropriate legal disclaimers",
-            "finance": "\n- Provide educational financial information\n- Include risk considerations and disclaimers\n- Recommend consulting financial advisors for specific decisions"
+            "general": "\n- Provide clear and accurate information from the markdown documents\n- Include relevant context and explanations\n- Ensure comprehensive coverage of the topic\n- Cite specific markdown sources when available"
         }
 
         if self.domain in domain_guidance:
@@ -177,7 +169,7 @@ Your role:
     def _build_user_prompt(self, query: str, context: str, enhanced_query: Optional[UniversalEnhancedQuery]) -> str:
         """Build dynamic user prompt"""
 
-        prompt = f"""Based on the following context, please answer this question about {self.domain}:
+        prompt = f"""Based on the following context from markdown documents, please answer this question:
 
 Question: {query}
 
@@ -192,9 +184,9 @@ Context:
 
         prompt += f"""Please provide a comprehensive answer that:
 1. Directly addresses the question
-2. Uses the provided context appropriately
+2. Uses the provided context from markdown documents appropriately
 3. Includes relevant citations [Source X]
-4. Is appropriate for the {self.domain} domain
+4. Is based on the available markdown data
 5. Acknowledges any limitations in the available information"""
 
         return prompt
@@ -236,12 +228,9 @@ Context:
 
         notes = []
 
-        # Domain-specific disclaimers
+        # Universal disclaimer - works with any MD data
         disclaimers = {
-            "maintenance": "⚠️ Safety Note: Always follow proper safety procedures and consult qualified technicians for complex maintenance tasks.",
-            "medical": "🏥 Medical Disclaimer: This information is for educational purposes only. Consult healthcare professionals for medical advice.",
-            "legal": "⚖️ Legal Disclaimer: This information is for general purposes only. Consult qualified legal professionals for legal advice.",
-            "finance": "💰 Financial Disclaimer: This information is educational only. Consult financial advisors for investment decisions."
+            "general": "ℹ️ Information Note: This response is based on markdown documents from the data/raw directory and should be verified for specific applications."
         }
 
         if self.domain in disclaimers:
@@ -326,7 +315,7 @@ def create_universal_llm_interface(domain: str = "general") -> AzureOpenAIComple
 
 if __name__ == "__main__":
     # Example usage
-    llm = AzureOpenAICompletionService("maintenance")
+            llm = AzureOpenAICompletionService("general")
 
     # Test connection
     test_result = llm.test_connection()
@@ -336,14 +325,14 @@ if __name__ == "__main__":
     sample_results = [
         UniversalSearchResult(
             doc_id="doc1",
-            content="Pump maintenance requires regular inspection",
+            content="System monitoring requires regular inspection",
             score=0.8,
             source="universal_search"
         )
     ]
 
     response = llm.generate_universal_response(
-        "How do I maintain a pump?",
+        "How do I monitor a system?",
         sample_results
     )
     print(f"Generated response: {response.answer[:100]}...")
