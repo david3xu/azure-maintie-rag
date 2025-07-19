@@ -9,8 +9,8 @@ import time
 from typing import Dict, List, Any, Optional, Union
 from openai import AzureOpenAI
 
-from ..models.azure_rag_data_models import (
-    UniversalSearchResult, UniversalEnhancedQuery, UniversalRAGResponse, UniversalQueryAnalysis
+from ..models.universal_rag_models import (
+    UniversalSearchResult, UniversalRAGResponse, UniversalEnhancedQuery
 )
 from ...config.settings import settings
 
@@ -315,7 +315,7 @@ def create_universal_llm_interface(domain: str = "general") -> AzureOpenAIComple
 
 if __name__ == "__main__":
     # Example usage
-            llm = AzureOpenAICompletionService("general")
+    llm = AzureOpenAICompletionService("general")
 
     # Test connection
     test_result = llm.test_connection()

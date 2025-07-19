@@ -1,12 +1,13 @@
 """Azure Blob Storage client for Universal RAG system."""
 
 import logging
+import time
 from typing import Dict, List, Any, Optional, IO
 from pathlib import Path
 from azure.storage.blob import BlobServiceClient, BlobClient
 from azure.core.exceptions import AzureError
 
-from backend.config.azure_settings import azure_settings
+from backend.config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +24,15 @@ class AzureStorageClient:
         self.account_key = self.config.get('account_key') or azure_settings.azure_storage_key
         self.container_name = self.config.get('container_name') or azure_settings.azure_blob_container
 
-        if not self.account_name or not self.account_key:
-            raise ValueError("Azure Storage account name and key are required")
+        if not self.account_name:
+            raise ValueError("Azure Storage account name is required")
 
         # Initialize client (follows azure_openai.py error handling pattern)
         try:
+            self.credential = self._get_azure_credential()
             self.blob_service_client = BlobServiceClient(
                 account_url=f"https://{self.account_name}.blob.core.windows.net",
-                credential=self.account_key
+                credential=self.credential
             )
             self._ensure_container_exists()
         except Exception as e:
@@ -38,6 +40,20 @@ class AzureStorageClient:
             raise
 
         logger.info(f"AzureStorageClient initialized for container: {self.container_name}")
+
+    def _get_azure_credential(self):
+        """Enterprise credential management - data-driven from config"""
+        if azure_settings.azure_use_managed_identity and azure_settings.azure_managed_identity_client_id:
+            from azure.identity import ManagedIdentityCredential
+            return ManagedIdentityCredential(client_id=azure_settings.azure_managed_identity_client_id)
+
+        # Fallback to account key if available
+        if self.account_key:
+            return self.account_key
+
+        # Final fallback to DefaultAzureCredential
+        from azure.identity import DefaultAzureCredential
+        return DefaultAzureCredential()
 
     def _ensure_container_exists(self):
         """Ensure container exists - create if needed"""
@@ -51,7 +67,9 @@ class AzureStorageClient:
             raise
 
     def upload_file(self, local_path: Path, blob_name: str, overwrite: bool = True) -> Dict[str, Any]:
-        """Upload file to Azure Blob Storage - matches azure_openai.py return pattern"""
+        """Upload file to Azure Blob Storage with telemetry - data-driven monitoring"""
+        start_time = time.time()
+
         try:
             blob_client = self.blob_service_client.get_blob_client(
                 container=self.container_name,
@@ -61,19 +79,37 @@ class AzureStorageClient:
             with open(local_path, "rb") as data:
                 blob_client.upload_blob(data, overwrite=overwrite)
 
+            # Add telemetry data
+            operation_time = time.time() - start_time
+
             return {
                 "success": True,
                 "blob_name": blob_name,
                 "container": self.container_name,
-                "size_bytes": local_path.stat().st_size
+                "size_bytes": local_path.stat().st_size,
+                "operation_duration_ms": operation_time * 1000,  # Data-driven metrics
+                "telemetry": {
+                    "service": "azure_storage",
+                    "operation": "upload_file",
+                    "timestamp": time.time()
+                }
             }
 
         except Exception as e:
+            # Add error telemetry
+            operation_time = time.time() - start_time
             logger.error(f"File upload failed for {blob_name}: {e}")
+
             return {
                 "success": False,
                 "error": str(e),
-                "blob_name": blob_name
+                "blob_name": blob_name,
+                "operation_duration_ms": operation_time * 1000,
+                "telemetry": {
+                    "service": "azure_storage",
+                    "operation": "upload_file_failed",
+                    "error_type": type(e).__name__
+                }
             }
 
     def download_file(self, blob_name: str, local_path: Path) -> Dict[str, Any]:

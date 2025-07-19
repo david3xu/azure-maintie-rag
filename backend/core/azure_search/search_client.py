@@ -1,6 +1,7 @@
 """Azure Cognitive Search client for Universal RAG system."""
 
 import logging
+import time
 from typing import Dict, List, Any, Optional
 import json
 from azure.search.documents import SearchClient
@@ -9,7 +10,7 @@ from azure.search.documents.models import VectorizedQuery
 from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import AzureError
 
-from backend.config.azure_settings import azure_settings
+from backend.config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +28,11 @@ class AzureCognitiveSearchClient:
         self.index_name = self.config.get('index_name') or azure_settings.azure_search_index
         self.api_version = azure_settings.azure_search_api_version
 
-        if not self.service_name or not self.admin_key:
-            raise ValueError("Azure Search service name and admin key are required")
+        if not self.service_name:
+            raise ValueError("Azure Search service name is required")
 
         self.endpoint = f"https://{self.service_name}.search.windows.net"
-        self.credential = AzureKeyCredential(self.admin_key)
+        self.credential = self._get_azure_credential()
 
         # Initialize clients (follows azure_openai.py pattern)
         try:
@@ -49,6 +50,20 @@ class AzureCognitiveSearchClient:
             raise
 
         logger.info(f"AzureCognitiveSearchClient initialized for index: {self.index_name}")
+
+    def _get_azure_credential(self):
+        """Enterprise credential management - data-driven from config"""
+        if azure_settings.azure_use_managed_identity and azure_settings.azure_managed_identity_client_id:
+            from azure.identity import ManagedIdentityCredential
+            return ManagedIdentityCredential(client_id=azure_settings.azure_managed_identity_client_id)
+
+        # Fallback to admin key if available
+        if self.admin_key:
+            return AzureKeyCredential(self.admin_key)
+
+        # Final fallback to DefaultAzureCredential
+        from azure.identity import DefaultAzureCredential
+        return DefaultAzureCredential()
 
     def create_universal_index(self, vector_dimensions: int = 1536) -> Dict[str, Any]:
         """Create universal search index for any domain - data-driven configuration"""

@@ -67,6 +67,15 @@ class Settings(BaseSettings):
     azure_ml_workspace_name: str = Field(default="", env="AZURE_ML_WORKSPACE_NAME")
     azure_tenant_id: str = Field(default="", env="AZURE_TENANT_ID")
 
+    # Azure Key Vault Settings - Enterprise Security Enhancement
+    azure_key_vault_url: str = Field(default="", env="AZURE_KEY_VAULT_URL")
+    azure_use_managed_identity: bool = Field(default=True, env="AZURE_USE_MANAGED_IDENTITY")
+    azure_managed_identity_client_id: str = Field(default="", env="AZURE_MANAGED_IDENTITY_CLIENT_ID")
+
+    # Azure Application Insights Settings - Enterprise Monitoring
+    azure_application_insights_connection_string: str = Field(default="", env="AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING")
+    azure_enable_telemetry: bool = Field(default=True, env="AZURE_ENABLE_TELEMETRY")
+
     # Azure Resource Naming Convention
     azure_resource_prefix: str = Field(default="maintie", env="AZURE_RESOURCE_PREFIX")
     azure_environment: str = Field(default="dev", env="AZURE_ENVIRONMENT")
@@ -146,6 +155,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # Allow extra fields from environment
 
 
 # Global settings instance

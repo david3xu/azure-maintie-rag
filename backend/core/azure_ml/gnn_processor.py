@@ -21,7 +21,7 @@ except ImportError:
     Data = None
 
 from ..azure_openai.text_processor import AzureOpenAITextProcessor
-from ..models.azure_rag_data_models import UniversalEntity, UniversalRelation
+from ..models.universal_rag_models import UniversalEntity, UniversalRelation
 from ...config.settings import settings
 
 logger = logging.getLogger(__name__)
