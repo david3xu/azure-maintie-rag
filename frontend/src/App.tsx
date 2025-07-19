@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import ChatHistory from "./components/chat/ChatHistory";
 import QueryForm from "./components/chat/QueryForm";
-import DomainSelector from "./components/domain/DomainSelector";
 import Layout from "./components/shared/Layout";
 import WorkflowPanel from "./components/workflow/WorkflowPanel";
 import { useChat } from "./hooks/useChat";
@@ -20,8 +19,22 @@ function App() {
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [viewLayer, setViewLayer] = useState<1 | 2 | 3>(1);
 
+  // Dark mode state management
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-mode');
+    } else {
+      document.documentElement.classList.remove('dark-mode');
+    }
+  }, [isDarkMode]);
+
   // Universal RAG orchestration
-  const { loading, result, error, runUniversalRAG } = useUniversalRAG();
+  const { loading, error, runUniversalRAG } = useUniversalRAG();
 
   // Workflow streaming (SSE/polling)
   const [workflowError, setWorkflowError] = useState<string | null>(null);
@@ -29,7 +42,9 @@ function App() {
   useWorkflowStream(
     showWorkflow ? queryId : null,
     handleWorkflowComplete,
-    handleWorkflowError
+    handleWorkflowError,
+    query,
+    domain
   );
 
   // Handle workflow completion
@@ -109,30 +124,40 @@ function App() {
   };
 
   return (
-    <Layout>
-      <DomainSelector domain={domain} onChange={setDomain} />
+    <Layout
+      isDarkMode={isDarkMode}
+      onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+      domain={domain}
+      onDomainChange={setDomain}
+      showWorkflow={showWorkflow}
+      onWorkflowToggle={setShowWorkflow}
+      viewLayer={viewLayer}
+      onViewLayerChange={setViewLayer}
+      loading={loading || isStreaming}
+      isStreaming={isStreaming}
+    >
       <QueryForm
         query={query}
         onChange={e => setQuery(e.target.value)}
         onSubmit={handleSubmit}
         loading={loading || isStreaming}
         isStreaming={isStreaming}
-        showWorkflow={showWorkflow}
-        setShowWorkflow={setShowWorkflow}
-        viewLayer={viewLayer}
-        setViewLayer={setViewLayer}
       />
-      <ChatHistory
-        messages={chatHistory}
-        currentChatId={currentChatId}
-      />
-      <WorkflowPanel
-        showWorkflow={showWorkflow}
-        queryId={queryId}
-        viewLayer={viewLayer}
-        onComplete={handleWorkflowComplete}
-        onError={handleWorkflowError}
-      />
+      <div className="split-layout">
+        <div className="chat-panel">
+          <ChatHistory
+            messages={chatHistory}
+            currentChatId={currentChatId}
+          />
+        </div>
+        <WorkflowPanel
+          showWorkflow={showWorkflow}
+          queryId={queryId}
+          viewLayer={viewLayer}
+          onComplete={handleWorkflowComplete}
+          onError={handleWorkflowError}
+        />
+      </div>
       {(error || workflowError) && (
         <div className="error-message">
           <h3>❌ Error</h3>

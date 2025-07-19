@@ -3,7 +3,8 @@ export const API_CONFIG = {
   ENDPOINTS: {
     UNIVERSAL_QUERY: '/api/v1/query/universal',
     STREAMING_QUERY: '/api/v1/query/streaming',
-    STREAM: '/api/v1/query/stream'
+    STREAM: '/api/v1/query/stream',
+    REAL_WORKFLOW_STREAM: '/api/v1/query/stream/real'
   }
 };
 

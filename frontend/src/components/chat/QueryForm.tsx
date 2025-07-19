@@ -7,10 +7,6 @@ interface QueryFormProps {
   onSubmit: (e: React.FormEvent) => void;
   loading: boolean;
   isStreaming: boolean;
-  showWorkflow: boolean;
-  setShowWorkflow: (checked: boolean) => void;
-  viewLayer: 1 | 2 | 3;
-  setViewLayer: (layer: 1 | 2 | 3) => void;
 }
 
 const QueryForm: React.FC<QueryFormProps> = ({
@@ -19,10 +15,6 @@ const QueryForm: React.FC<QueryFormProps> = ({
   onSubmit,
   loading,
   isStreaming,
-  showWorkflow,
-  setShowWorkflow,
-  viewLayer,
-  setViewLayer,
 }) => (
   <form onSubmit={onSubmit} className="query-form">
     <div className="input-group">
@@ -47,32 +39,6 @@ const QueryForm: React.FC<QueryFormProps> = ({
         Please enter a valid question.
       </div>
     )}
-    <div className="workflow-settings">
-      <label className="checkbox-label">
-        <input
-          type="checkbox"
-          checked={showWorkflow}
-          onChange={e => setShowWorkflow(e.target.checked)}
-          disabled={loading || isStreaming}
-        />
-        Show real-time processing workflow
-      </label>
-      {showWorkflow && (
-        <div className="view-controls">
-          <label>Detail Level:</label>
-          <select
-            value={viewLayer}
-            onChange={e => setViewLayer(Number(e.target.value) as 1 | 2 | 3)}
-            disabled={loading || isStreaming}
-            className="view-selector"
-          >
-            <option value={1}>🔍 User-Friendly</option>
-            <option value={2}>🔧 Technical Details</option>
-            <option value={3}>🔬 System Diagnostics</option>
-          </select>
-        </div>
-      )}
-    </div>
   </form>
 );
 
