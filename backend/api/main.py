@@ -96,6 +96,10 @@ if hasattr(settings, 'trusted_hosts') and settings.trusted_hosts:
 app.include_router(health.router)
 app.include_router(universal_query.router)
 
+# Import and include workflow stream router
+from api.workflow_stream import router as workflow_stream_router
+app.include_router(workflow_stream_router)
+
 # Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):

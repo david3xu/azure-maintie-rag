@@ -292,21 +292,175 @@ body {
 .App-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1rem 2rem;
+  padding: 0.5rem 2rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
 .App-header h1 {
   margin: 0 0 0.25rem 0;
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
 }
 
 .App-header p {
   margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+}
+
+.header-main {
+  flex: 1;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.header-control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.header-label {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.header-select {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-select:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.header-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.header-select-compact {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.header-select option {
+  background: #2d3748;
+  color: white;
+}
+
+.header-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: white;
   font-size: 0.9rem;
   opacity: 0.9;
+}
+
+.header-checkbox {
+  margin: 0;
+  cursor: pointer;
+}
+
+.header-checkbox-text {
+  white-space: nowrap;
+}
+
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background-color 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Dark mode adjustments */
+.dark-mode .header-select {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .header-select:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode .theme-toggle {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .theme-toggle:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Responsive design for header controls */
+@media (max-width: 1024px) {
+  .header-controls {
+    gap: 0.75rem;
+  }
+
+  .header-control-group {
+    gap: 0.4rem;
+  }
+
+  .header-label {
+    font-size: 0.8rem;
+  }
+
+  .header-select {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .header-controls {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .header-checkbox-text {
+    white-space: normal;
+    text-align: center;
+  }
 }
 
 .query-form {
@@ -318,6 +472,10 @@ body {
   flex-shrink: 0;
   margin-bottom: 1rem;
 }
+
+
+
+
 
 /* Full-screen split layout */
 .split-layout {
@@ -440,59 +598,111 @@ body {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .App {
-    background-color: #1a1a1a;
-    color: #f0f0f0;
-  }
+/* Dark mode styles using class selector instead of media query */
+.dark-mode .App {
+  background-color: #1a1a1a;
+  color: #f0f0f0;
+}
 
-  .workflow-panel {
-    background: #2d3748;
-    border-color: #4a5568;
-  }
+.dark-mode .workflow-panel {
+  background: #2d3748;
+  border-color: #4a5568;
+}
 
-  .chat-history {
-    background: #2d3748;
-    border-color: #4a5568;
-  }
+.dark-mode .chat-history {
+  background: #2d3748;
+  border-color: #4a5568;
+}
 
-  .chat-message {
-    background: #1a202c;
-    border-left-color: #667eea;
-  }
+.dark-mode .chat-message {
+  background: #1a202c;
+  border-left-color: #667eea;
+}
 
-  .chat-message.current {
-    border-left-color: #68d391;
-    background: #1a202c;
-  }
+.dark-mode .chat-message.current {
+  border-left-color: #68d391;
+  background: #1a202c;
+}
 
-  .chat-message-query {
-    color: #f0f0f0;
-  }
+.dark-mode .chat-message-query {
+  color: #f0f0f0;
+}
 
-  .chat-message-timestamp {
-    color: #a0aec0;
-  }
+.dark-mode .chat-message-timestamp {
+  color: #a0aec0;
+}
 
-  .chat-message-response {
-    color: #cbd5e0;
-  }
+.dark-mode .chat-message-response {
+  color: #cbd5e0;
+}
 
-  .chat-message-error {
-    color: #fc8181;
-  }
+.dark-mode .chat-message-error {
+  color: #fc8181;
+}
 
-  .chat-message-loading {
-    color: #63b3ed;
-  }
+.dark-mode .chat-message-loading {
+  color: #63b3ed;
+}
 
-  .confidence-badge {
-    background: #2d5a3d;
-    color: #68d391;
-  }
+.dark-mode .confidence-badge {
+  background: #2d5a3d;
+  color: #68d391;
+}
 
-  .processing-time-badge {
-    background: #2d4a5a;
-    color: #63b3ed;
-  }
+.dark-mode .processing-time-badge {
+  background: #2d4a5a;
+  color: #63b3ed;
+}
+
+.dark-mode .query-form {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #f0f0f0;
+}
+
+.dark-mode .query-input {
+  background: #1a202c;
+  color: #f0f0f0;
+  border-color: #4a5568;
+}
+
+.dark-mode .query-input::placeholder {
+  color: #a0aec0;
+}
+
+.dark-mode .submit-button {
+  background: #667eea;
+  color: #f0f0f0;
+}
+
+.dark-mode .submit-button:hover:not(:disabled) {
+  background: #5a67d8;
+}
+
+.dark-mode .dark-mode-toggle {
+  background: #4a5568;
+  color: #f0f0f0;
+  border: 1px solid #718096;
+}
+
+.dark-mode .dark-mode-toggle:hover {
+  background: #2d3748;
+}
+
+.dark-mode .checkbox-label {
+  color: #f0f0f0;
+}
+
+.dark-mode .view-selector {
+  background: #1a202c;
+  color: #f0f0f0;
+  border-color: #4a5568;
+}
+
+.dark-mode .settings-row {
+  color: #f0f0f0;
+}
+
+.dark-mode .view-controls label {
+  color: #f0f0f0;
 }
