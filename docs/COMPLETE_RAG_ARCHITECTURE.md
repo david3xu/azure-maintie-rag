@@ -176,7 +176,7 @@ update_cosmos_with_embeddings(graph_data)
 ### **Phase 3: Application Deployment**
 ```bash
 # Build application
-docker build -t azure-maintie-rag:latest backend/
+cd backend && docker build -t azure-maintie-rag:latest .
 
 # Deploy to container app
 az containerapp update --name maintie-rag-app --resource-group maintie-rag-rg --image azure-maintie-rag:latest

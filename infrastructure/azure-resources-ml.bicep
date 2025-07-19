@@ -97,10 +97,13 @@ resource containerEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
   }
 }
 
-// Container App
+// Container App - Enhanced for RAG workloads
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: containerAppName
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     managedEnvironmentId: containerEnvironment.id
     configuration: {
@@ -108,30 +111,78 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
         external: true
         targetPort: 8000
         allowInsecure: false
-      }
-    }
-          template: {
-        containers: [
+        traffic: [
           {
-            name: 'rag-app'
-            image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-            env: [
-              {
-                name: 'AZURE_ENVIRONMENT'
-                value: environment
-              }
-              {
-                name: 'AZURE_USE_MANAGED_IDENTITY'
-                value: 'true'
-              }
-            ]
+            weight: 100
+            latestRevision: true
           }
         ]
-        scale: {
-          minReplicas: 1
-          maxReplicas: 3
-        }
       }
+    }
+    template: {
+      containers: [
+        {
+          name: 'rag-app'
+          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'  // Replace with your RAG app image
+          resources: {
+            cpu: json('1.0')
+            memory: '2Gi'
+          }
+          env: [
+            {
+              name: 'AZURE_ENVIRONMENT'
+              value: environment
+            }
+            {
+              name: 'AZURE_USE_MANAGED_IDENTITY'
+              value: 'true'
+            }
+            {
+              name: 'AZURE_COSMOS_ENDPOINT'
+              value: 'https://${resourcePrefix}-${environment}-cosmos.documents.azure.com:443/'  // Reference Cosmos DB endpoint
+            }
+            {
+              name: 'AZURE_SEARCH_ENDPOINT'
+              value: 'https://${resourcePrefix}-${environment}-search.search.windows.net'
+            }
+            {
+              name: 'AZURE_STORAGE_ENDPOINT'
+              value: 'https://${resourcePrefix}${environment}storage.blob.core.windows.net'
+            }
+            {
+              name: 'AZURE_COSMOS_DATABASE'
+              value: 'universal-rag-db'
+            }
+            {
+              name: 'AZURE_COSMOS_CONTAINER'
+              value: 'knowledge-graph'
+            }
+            {
+              name: 'AZURE_SEARCH_INDEX'
+              value: 'universal-rag-index'
+            }
+            {
+              name: 'AZURE_BLOB_CONTAINER'
+              value: 'universal-rag-data'
+            }
+          ]
+        }
+      ]
+      scale: {
+        minReplicas: (environment == 'prod') ? 2 : 1
+        maxReplicas: (environment == 'prod') ? 10 : 3
+        rules: [
+          {
+            name: 'http-scaling'
+            http: {
+              metadata: {
+                concurrentRequests: '10'
+              }
+            }
+          }
+        ]
+      }
+    }
   }
 }
 

@@ -237,7 +237,7 @@ print(f'Overall health: {health[\"overall_status\"]}')
 ### **4.1 Build Application**
 ```bash
 # Build Docker image
-docker build -t azure-maintie-rag:latest backend/
+cd backend && docker build -t azure-maintie-rag:latest .
 
 # Tag for Azure Container Registry (if using ACR)
 # az acr build --registry your-acr-name --image azure-maintie-rag:latest .
@@ -384,7 +384,7 @@ az containerapp update \
 ### **6.2 Update Application**
 ```bash
 # Build new version
-docker build -t azure-maintie-rag:v2.0.0 backend/
+cd backend && docker build -t azure-maintie-rag:v2.0.0 .
 
 # Deploy update
 az containerapp update \

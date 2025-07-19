@@ -57,6 +57,19 @@ wait_for_deletion() {
     print_status "Resource group deletion completed"
 }
 
+# Function to check Cosmos DB region availability
+check_cosmos_region_availability() {
+    local region=$1
+    print_info "Checking Cosmos DB availability in $region..."
+
+    # Try to create a temporary Cosmos DB account to test availability
+    if az cosmosdb check-name-exists --name "test-cosmos-availability" &> /dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Phase 1: Complete Teardown
 echo -e "${BLUE}🔥 Phase 1: Complete Teardown${NC}"
 echo "=================================="
@@ -69,12 +82,26 @@ if check_resource_group; then
     print_info "Current resources:"
     az resource list --resource-group $RESOURCE_GROUP --query "[].{Name:name,Type:type}" --output table 2>/dev/null || print_warning "Could not list resources"
 
+    # Purge Key Vault if it exists (to avoid soft delete conflicts)
+    print_info "Checking for Key Vault soft delete conflicts..."
+    if az keyvault show --name maintie-dev-kv --resource-group $RESOURCE_GROUP &> /dev/null; then
+        print_warning "Key Vault exists. Will be deleted with resource group."
+    elif az keyvault show-deleted --name maintie-dev-kv --location $LOCATION &> /dev/null; then
+        print_info "Purging deleted Key Vault to avoid conflicts..."
+        az keyvault purge --name maintie-dev-kv --location $LOCATION
+        print_status "Key Vault purged"
+    fi
+
     # Delete resource group
     print_info "Deleting resource group and all resources..."
     az group delete --name $RESOURCE_GROUP --yes --no-wait
 
     # Wait for deletion
     wait_for_deletion
+
+    # Additional wait for search service deletion to complete
+    print_info "Waiting for search service deletion to complete..."
+    sleep 30
 else
     print_info "Resource group does not exist. Skipping teardown."
 fi
@@ -100,9 +127,47 @@ echo -e "${BLUE}🏗️  Phase 3: Deploy Core Infrastructure${NC}"
 echo "=========================================="
 
 print_info "Deploying core resources..."
+
+# Clean up any existing failed deployment first
+if az deployment group show --resource-group $RESOURCE_GROUP --name azure-resources-core &> /dev/null; then
+    print_info "Cleaning up existing failed deployment..."
+    az deployment group delete --resource-group $RESOURCE_GROUP --name azure-resources-core --yes
+    sleep 10  # Wait for cleanup
+fi
+
 if [ -f "./scripts/deploy-core.sh" ]; then
-    ./scripts/deploy-core.sh
-    print_status "Core infrastructure deployed"
+    # Try deployment with current location
+    if ./scripts/deploy-core.sh; then
+        print_status "Core infrastructure deployed"
+    else
+        print_warning "Core deployment failed. Trying with alternative region..."
+
+        # Try alternative regions for Cosmos DB
+        ALTERNATIVE_REGIONS=("westus2" "centralus" "southcentralus" "northeurope")
+
+        for alt_region in "${ALTERNATIVE_REGIONS[@]}"; do
+            print_info "Trying deployment with region: $alt_region"
+
+            # Clean up any existing deployment for this region
+            if az deployment group show --resource-group $RESOURCE_GROUP --name azure-resources-core &> /dev/null; then
+                az deployment group delete --resource-group $RESOURCE_GROUP --name azure-resources-core
+                sleep 5
+            fi
+
+            # Temporarily change location for this deployment
+            export LOCATION=$alt_region
+
+            if ./scripts/deploy-core.sh; then
+                print_status "Core infrastructure deployed in $alt_region"
+                break
+            else
+                print_warning "Failed with region $alt_region, trying next..."
+            fi
+        done
+
+        # Restore original location
+        export LOCATION="eastus"
+    fi
 else
     print_error "Core deployment script not found"
     exit 1
@@ -201,23 +266,23 @@ print_status "Total resources: $RESOURCE_COUNT"
 
 echo ""
 print_info "Expected resources:"
-echo "✅ Storage Account (maintiedevstorage)"
-echo "✅ ML Storage Account (maintiedevmlstorage)"
-echo "✅ Search Service (maintie-dev-search)"
-echo "✅ Key Vault (maintie-dev-kv)"
-echo "✅ Cosmos DB (maintie-dev-cosmos)"
-echo "✅ ML Workspace (maintie-dev-ml)"
-echo "✅ Application Insights (maintie-dev-app-insights)"
-echo "✅ Log Analytics (maintie-dev-laworkspace)"
-echo "✅ Container Environment (maintie-dev-env)"
-echo "✅ Container App (maintie-dev-rag-app)"
+echo "✅ Storage Account (maintiedevstorage) - Document storage"
+echo "✅ ML Storage Account (maintiedevmlstorage) - ML artifacts"
+echo "✅ Search Service (maintie-dev-search) - Vector search"
+echo "✅ Key Vault (maintie-dev-kv) - Secrets management"
+echo "✅ Cosmos DB (maintie-dev-cosmos) - Knowledge graph (Gremlin API)"
+echo "✅ ML Workspace (maintie-dev-ml) - GNN training"
+echo "✅ Application Insights (maintie-dev-app-insights) - Monitoring"
+echo "✅ Log Analytics (maintie-dev-laworkspace) - Logging"
+echo "✅ Container Environment (maintie-dev-env) - Container hosting"
+echo "✅ Container App (maintie-dev-rag-app) - Application hosting"
 
 echo ""
 print_status "🎉 Complete redeployment finished successfully!"
 echo ""
 print_info "Next steps:"
 echo "1. Test GNN training: python backend/scripts/train_comprehensive_gnn.py --workspace maintie-dev-ml"
-echo "2. Build application: docker build -t azure-maintie-rag:latest backend/"
+echo "2. Build application: cd backend && docker build -t azure-maintie-rag:latest ."
 echo "3. Deploy application: az containerapp update --name maintie-dev-rag-app --resource-group $RESOURCE_GROUP --image azure-maintie-rag:latest"
 echo "4. Test end-to-end RAG pipeline"
 echo ""

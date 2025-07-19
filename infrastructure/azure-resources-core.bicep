@@ -70,7 +70,62 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
   }
 }
 
+// Azure Cosmos DB for knowledge graph (Gremlin API) - TEMPORARILY DISABLED
+// resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
+//   name: '${resourcePrefix}-${environment}-cosmos'
+//   location: location
+//   kind: 'GlobalDocumentDB'
+//   properties: {
+//     databaseAccountOfferType: 'Standard'
+//     capabilities: [
+//       { name: 'EnableGremlin' }
+//     ]
+//     consistencyPolicy: {
+//       defaultConsistencyLevel: (environment == 'prod') ? 'Session' : 'Eventual'
+//     }
+//     locations: [
+//       {
+//         locationName: location
+//         failoverPriority: 0
+//         isZoneRedundant: (environment == 'prod') ? true : false
+//       }
+//     ]
+//     enableFreeTier: (environment == 'dev') ? true : false
+//   }
+// }
+
+// Cosmos database for Universal RAG - TEMPORARILY DISABLED
+// resource cosmosDatabase 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases@2023-04-15' = {
+//   parent: cosmosDB
+//   name: 'universal-rag-db'
+//   properties: {
+//     resource: {
+//       id: 'universal-rag-db'
+//     }
+//     options: {
+//       throughput: (environment == 'prod') ? 1000 : 400
+//     }
+//   }
+// }
+
+// Cosmos container for knowledge graph - TEMPORARILY DISABLED
+// resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs@2023-04-15' = {
+//   parent: cosmosDatabase
+//   name: 'knowledge-graph'
+//   properties: {
+//     resource: {
+//       id: 'knowledge-graph'
+//       partitionKey: {
+//         paths: ['/domain']
+//         kind: 'Hash'
+//       }
+//     }
+//   }
+// }
+
 // Outputs for deployment
 output storageAccountName string = storageAccount.name
 output searchServiceName string = searchService.name
 output keyVaultName string = keyVault.name
+// output cosmosDBName string = cosmosDB.name
+// output cosmosDBEndpoint string = cosmosDB.properties.documentEndpoint
