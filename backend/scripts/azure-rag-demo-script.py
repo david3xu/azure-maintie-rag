@@ -3,7 +3,7 @@
 Universal RAG Demo Script
 ========================
 
-Clean demonstration of the Universal RAG system using the new universal components.
+Clean demonstration of the Universal RAG system using the new Azure services architecture.
 This script replaces all the old domain-specific scripts with a single universal demo.
 
 Features:
@@ -14,7 +14,7 @@ Features:
 - No hardcoded types or schema dependencies
 
 Usage:
-    python scripts/universal_rag_demo.py
+    python scripts/azure-rag-demo-script.py
 """
 
 import sys
@@ -34,13 +34,10 @@ load_dotenv()
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
-# Azure service imports
-from core.orchestration.enhanced_pipeline import AzureRAGEnhancedPipeline as AzureRAGEnhancedPipeline
-from core.orchestration.rag_orchestration_service import (
-    create_universal_rag_from_texts, create_universal_rag_from_directory
-)
-from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor as AzureOpenAIKnowledgeExtractor
-from core.azure_openai.text_processor import AzureOpenAITextProcessor as AzureOpenAITextProcessor
+# Azure service imports - Updated to use new Azure services architecture
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIIntegration
+from config.azure_settings import AzureSettings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -48,10 +45,14 @@ logger = logging.getLogger(__name__)
 
 
 class UniversalRAGDemo:
-    """Universal RAG system demonstration"""
+    """Universal RAG system demonstration using Azure services"""
 
     def __init__(self):
-        """Initialize demo"""
+        """Initialize demo with Azure services"""
+        self.azure_settings = AzureSettings()
+        self.azure_services = AzureServicesManager()
+        self.openai_integration = AzureOpenAIIntegration()
+
         self.sample_domains = {
             "medical": [
                 "Patient presents with fever, headache, and fatigue symptoms.",
@@ -94,7 +95,7 @@ class UniversalRAGDemo:
         """Run complete Universal RAG demonstration"""
         print("🚀 Universal RAG System Demonstration")
         print("=" * 60)
-        print("Testing the Universal RAG system with multiple domains")
+        print("Testing the Universal RAG system with Azure services")
         print("Shows complete workflow from text files to intelligent responses")
         print()
 
@@ -112,7 +113,7 @@ class UniversalRAGDemo:
 
         print("\n✅ Universal RAG demonstration completed successfully!")
         print("The system demonstrated:")
-        print("  ✓ Zero configuration setup")
+        print("  ✓ Azure services integration")
         print("  ✓ Dynamic type discovery")
         print("  ✓ Multi-domain processing")
         print("  ✓ Real-time query handling")
@@ -130,37 +131,54 @@ class UniversalRAGDemo:
         print(f"Processing {len(texts)} sample texts...")
 
         try:
-            # Create Universal RAG system from texts
+            # Initialize Azure services
+            await self.azure_services.initialize()
+
+            # Create Universal RAG system from texts using Azure services
             start_time = time.time()
-            orchestrator = await create_universal_rag_from_texts(texts, domain)
+
+            # Store texts in Azure Blob Storage
+            container_name = f"rag-data-{domain}"
+            await self.azure_services.storage_client.create_container(container_name)
+
+            for i, text in enumerate(texts):
+                blob_name = f"document_{i}.txt"
+                await self.azure_services.storage_client.upload_text(container_name, blob_name, text)
+
+            # Process with Azure OpenAI
+            processed_docs = await self.openai_integration.process_documents(texts, domain)
+
             setup_time = time.time() - start_time
 
             print(f"✅ System created in {setup_time:.2f} seconds")
 
             # Get system status
-            status = orchestrator.get_system_status()
-            stats = status["system_stats"]
-
             print(f"📊 System Statistics:")
-            print(f"   📄 Documents: {stats['total_documents']}")
-            print(f"   🏷️  Entities: {stats['total_entities']}")
-            print(f"   🔗 Relations: {stats['total_relations']}")
-            print(f"   📝 Entity Types: {stats['unique_entity_types']}")
-            print(f"   🔀 Relation Types: {stats['unique_relation_types']}")
+            print(f"   📄 Documents: {len(texts)}")
+            print(f"   🏷️  Processed: {len(processed_docs)}")
+            print(f"   ☁️  Stored in Azure Blob Storage")
+            print(f"   🤖 Processed with Azure OpenAI")
 
             # Test a query
             query = "What symptoms should I monitor?"
             print(f"\n🔍 Testing query: '{query}'")
 
             query_start = time.time()
-            results = await orchestrator.process_query(query)
+
+            # Use Azure Cognitive Search for query processing
+            search_results = await self.azure_services.search_client.search_documents(
+                domain, query, top_k=5
+            )
+
+            # Generate response using Azure OpenAI
+            response = await self.openai_integration.generate_response(
+                query, search_results, domain
+            )
+
             query_time = time.time() - query_start
 
-            if results.get("success", False):
-                print(f"✅ Query processed in {query_time:.2f} seconds")
-                print(f"📝 Response: {results['response'].get('content', 'No response')[:200]}...")
-            else:
-                print(f"❌ Query failed: {results.get('error', 'Unknown error')}")
+            print(f"✅ Query processed in {query_time:.2f} seconds")
+            print(f"📝 Response: {response[:200]}...")
 
         except Exception as e:
             print(f"❌ Demo failed: {e}")
@@ -177,7 +195,17 @@ class UniversalRAGDemo:
 
             try:
                 texts = self.sample_domains[domain]
-                orchestrator = await create_universal_rag_from_texts(texts, domain)
+
+                # Store in Azure Blob Storage
+                container_name = f"rag-data-{domain}"
+                await self.azure_services.storage_client.create_container(container_name)
+
+                for i, text in enumerate(texts):
+                    blob_name = f"document_{i}.txt"
+                    await self.azure_services.storage_client.upload_text(container_name, blob_name, text)
+
+                # Process with Azure OpenAI
+                processed_docs = await self.openai_integration.process_documents(texts, domain)
 
                 # Test domain-specific query
                 query_map = {
@@ -187,14 +215,17 @@ class UniversalRAGDemo:
                 }
 
                 query = query_map[domain]
-                results = await orchestrator.process_query(query)
 
-                if results.get("success", False):
-                    print(f"✅ {domain.title()} domain: Query successful")
-                    response_preview = results['response'].get('content', '')[:150]
-                    print(f"   📝 Preview: {response_preview}...")
-                else:
-                    print(f"❌ {domain.title()} domain: Query failed")
+                # Search and generate response
+                search_results = await self.azure_services.search_client.search_documents(
+                    domain, query, top_k=3
+                )
+                response = await self.openai_integration.generate_response(
+                    query, search_results, domain
+                )
+
+                print(f"✅ {domain.title()} domain: Query successful")
+                print(f"   📝 Preview: {response[:150]}...")
 
             except Exception as e:
                 print(f"❌ {domain.title()} domain failed: {e}")

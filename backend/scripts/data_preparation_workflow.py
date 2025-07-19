@@ -1,20 +1,16 @@
 #!/usr/bin/env python3
 """
-Data Preparation Workflow Script
-================================
+Data Preparation Workflow Script with Azure Services
+==================================================
 
-Demonstrates WORKFLOW 1: Raw Text Data Handling
-Uses 8/12 core files to convert raw text into searchable knowledge base.
+Demonstrates WORKFLOW 1: Raw Text Data Handling with Azure Services
+Uses Azure services to convert raw text into searchable knowledge base.
 
-Core Files Used:
-- universal_text_processor.py (load text files)
-- universal_knowledge_extractor.py (extract entities/relations)
-- optimized_llm_extractor.py (LLM extraction)
-- universal_classifier.py (classify knowledge)
-- universal_vector_search.py (build indices)
-- universal_gnn_processor.py (prepare GNN data)
-- universal_models.py (data structures)
-- universal_rag_orchestrator_complete.py (initialization)
+Azure Services Used:
+- Azure Blob Storage (store documents)
+- Azure Cognitive Search (build indices)
+- Azure OpenAI (process documents)
+- Azure Cosmos DB (store metadata)
 """
 
 import sys
@@ -27,84 +23,105 @@ from datetime import datetime
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
-# FIXED: Import actual components used in data preparation
-from core.orchestration.rag_orchestration_service import AzureRAGOrchestrationService
-from core.azure_openai.text_processor import AzureOpenAITextProcessor
-from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
-from core.azure_ml.classification_service import (
-    AzureMLClassificationService as UniversalClassificationPipeline
-)  # Updated to Azure service naming
-from core.azure_search.vector_service import AzureSearchVectorService
-from core.azure_ml.gnn_processor import AzureMLGNNProcessor
+# Import Azure services architecture components
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIIntegration
+from config.azure_settings import AzureSettings
 
 
 async def main():
-    """Execute data preparation workflow"""
+    """Execute data preparation workflow with Azure services"""
 
-    print("🔄 WORKFLOW 1: Raw Text Data Handling")
+    print("🔄 WORKFLOW 1: Raw Text Data Handling with Azure Services")
     print("=" * 60)
-    print("📊 Purpose: Convert raw text files into searchable knowledge base")
-    print("🔧 Core Files: 8/12 files actively processing data")
+    print("📊 Purpose: Convert raw text files into searchable knowledge base using Azure")
+    print("☁️  Azure Services: Blob Storage, Cognitive Search, OpenAI, Cosmos DB")
     print("⏱️  Frequency: Once per data update (initialization/startup)")
 
     domain = "general"
     start_time = time.time()
 
     try:
-        # Initialize Universal RAG Orchestrator (triggers data preparation)
-        print(f"\n📝 Initializing Universal RAG system...")
-        orchestrator = AzureRAGOrchestrationService(domain)
+        # Initialize Azure services
+        print(f"\n📝 Initializing Azure services...")
+        azure_services = AzureServicesManager()
+        await azure_services.initialize()
 
-        # This initialization call uses all 8 data preparation core files
-        initialization_results = await orchestrator.initialize_from_text_files()
+        openai_integration = AzureOpenAIIntegration()
+        azure_settings = AzureSettings()
+
+        # Sample text data for processing
+        sample_texts = [
+            "Regular system monitoring helps prevent issues and ensures optimal performance.",
+            "Documentation and record keeping are essential for tracking operational history.",
+            "Proper training and procedures ensure consistent and safe operations.",
+            "Quality control measures verify that standards and requirements are met.",
+            "Preventive measures and regular checks help identify potential problems early."
+        ]
+
+        # Step 1: Store documents in Azure Blob Storage
+        print(f"\n☁️  Step 1: Storing documents in Azure Blob Storage...")
+        container_name = f"rag-data-{domain}"
+        await azure_services.storage_client.create_container(container_name)
+
+        for i, text in enumerate(sample_texts):
+            blob_name = f"document_{i}.txt"
+            await azure_services.storage_client.upload_text(container_name, blob_name, text)
+
+        # Step 2: Process documents with Azure OpenAI
+        print(f"\n🤖 Step 2: Processing documents with Azure OpenAI...")
+        processed_docs = await openai_integration.process_documents(sample_texts, domain)
+
+        # Step 3: Build search index with Azure Cognitive Search
+        print(f"\n🔍 Step 3: Building search index with Azure Cognitive Search...")
+        index_name = f"rag-index-{domain}"
+        await azure_services.search_client.create_index(index_name)
+
+        for i, text in enumerate(sample_texts):
+            document = {
+                "id": f"doc_{i}",
+                "content": text,
+                "domain": domain,
+                "metadata": {"source": "workflow", "index": i}
+            }
+            await azure_services.search_client.index_document(index_name, document)
+
+        # Step 4: Store metadata in Azure Cosmos DB
+        print(f"\n💾 Step 4: Storing metadata in Azure Cosmos DB...")
+        database_name = f"rag-metadata-{domain}"
+        container_name = "documents"
+
+        await azure_services.cosmos_client.create_database(database_name)
+        await azure_services.cosmos_client.create_container(database_name, container_name)
+
+        metadata_doc = {
+            "id": f"metadata-{domain}",
+            "domain": domain,
+            "total_documents": len(sample_texts),
+            "processed_documents": len(processed_docs),
+            "index_name": index_name,
+            "storage_container": container_name,
+            "timestamp": datetime.now().isoformat()
+        }
+
+        await azure_services.cosmos_client.create_document(database_name, container_name, metadata_doc)
 
         processing_time = time.time() - start_time
 
-        # FIXED: Handle different result types properly
-        if hasattr(initialization_results, 'get'):
-            # If it's a dictionary
-            success = initialization_results.get("success", False)
-            stats = initialization_results.get("system_stats", {})
-        elif hasattr(initialization_results, 'to_dict'):
-            # If it's a class instance with to_dict method
-            result_dict = initialization_results.to_dict()
-            success = result_dict.get("success", False)
-            stats = result_dict.get("system_stats", {})
-        else:
-            # If it's a boolean or other type
-            success = bool(initialization_results)
-            stats = {}
+        print(f"\n✅ Data preparation completed successfully!")
+        print(f"⏱️  Processing time: {processing_time:.2f}s")
+        print(f"📊 Documents processed: {len(sample_texts)}")
+        print(f"🤖 Documents processed with Azure OpenAI: {len(processed_docs)}")
+        print(f"🔍 Search index created: {index_name}")
+        print(f"💾 Metadata stored in Cosmos DB: {database_name}")
 
-        if success:
-            print(f"\n✅ Data preparation completed successfully!")
-            print(f"⏱️  Processing time: {processing_time:.2f}s")
-            print(f"📊 Documents processed: {stats.get('total_documents', 0)}")
-            print(f"🧠 Entities extracted: {stats.get('total_entities', 0)}")
-            print(f"🔗 Relations extracted: {stats.get('total_relations', 0)}")
-            print(f"🏷️  Entity types discovered: {stats.get('unique_entity_types', 0)}")
-            print(f"🔗 Relation types discovered: {stats.get('unique_relation_types', 0)}")
-            print(f"📈 Index built: {stats.get('index_built', False)}")
+        print(f"\n📋 Azure Services Usage Summary:")
+        print(f"   ✅ Azure Blob Storage - Stored {len(sample_texts)} documents")
+        print(f"   ✅ Azure OpenAI - Processed documents for knowledge extraction")
+        print(f"   ✅ Azure Cognitive Search - Built search index")
+        print(f"   ✅ Azure Cosmos DB - Stored metadata and tracking")
 
-            print(f"\n📋 Core Files Usage Summary:")
-            print(f"   ✅ universal_text_processor.py - Loaded text files")
-            print(f"   ✅ universal_knowledge_extractor.py - Extracted knowledge")
-            print(f"   ✅ optimized_llm_extractor.py - LLM processing")
-            print(f"   ✅ universal_classifier.py - Classification")
-            print(f"   ✅ universal_vector_search.py - Built indices")
-            print(f"   ✅ universal_gnn_processor.py - GNN preparation")
-            print(f"   ✅ universal_models.py - Data structures")
-            print(f"   ✅ universal_rag_orchestrator_complete.py - Coordination")
-
-            print(f"\n🚀 System Status: Ready for user queries!")
-
-        else:
-            error_msg = "Unknown error"
-            if hasattr(initialization_results, 'get'):
-                error_msg = initialization_results.get('error', 'Unknown error')
-            elif hasattr(initialization_results, 'to_dict'):
-                result_dict = initialization_results.to_dict()
-                error_msg = result_dict.get('error', 'Unknown error')
-            print(f"❌ Data preparation failed: {error_msg}")
+        print(f"\n🚀 System Status: Ready for user queries!")
 
     except Exception as e:
         print(f"❌ Data preparation workflow failed: {e}")

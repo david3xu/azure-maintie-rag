@@ -1,6 +1,6 @@
 """
-FastAPI application for Universal Enhanced RAG
-Production-ready API with universal domain support, streaming, and real-time progress
+FastAPI application for Azure Universal RAG
+Production-ready API with Azure services integration, streaming, and real-time progress
 """
 
 import logging
@@ -14,12 +14,12 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
-# Universal components
-from core.orchestration.enhanced_pipeline import (
-    get_enhanced_rag_instance, initialize_enhanced_rag_system
-)
+# Azure service components
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIIntegration
+from config.azure_settings import AzureSettings
 from config.settings import settings
-from api.endpoints import health, universal_query
+from api.endpoints import health, azure_query_endpoint
 
 # Configure logging
 logging.basicConfig(
@@ -31,45 +31,44 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager with Universal RAG initialization"""
+    """Application lifespan manager with Azure services initialization"""
     # Startup
-    logger.info("Starting Universal Enhanced RAG API...")
+    logger.info("Starting Azure Universal RAG API...")
 
     try:
-        # Initialize Universal RAG system for default domain
-        logger.info("Initializing Universal RAG system...")
-        init_results = await initialize_enhanced_rag_system(
-            domain_name="general",
-            force_rebuild=False
-        )
+        # Initialize Azure services
+        logger.info("Initializing Azure services...")
+        azure_services = AzureServicesManager()
+        await azure_services.initialize()
 
-        app.state.initialization_results = init_results
+        openai_integration = AzureOpenAIIntegration()
+        azure_settings = AzureSettings()
 
-        if not init_results.get("success", False):
-            logger.warning("Universal RAG system initialization incomplete - some features may not work")
-            logger.warning(f"Initialization error: {init_results.get('error', 'Unknown error')}")
-        else:
-            logger.info("Universal RAG system initialized successfully")
-            logger.info(f"System stats: {init_results['system_stats']}")
+        # Store Azure services in app state
+        app.state.azure_services = azure_services
+        app.state.openai_integration = openai_integration
+        app.state.azure_settings = azure_settings
 
-        # Store the Universal RAG instance
-        app.state.universal_rag_system = get_enhanced_rag_instance("general")
+        logger.info("Azure services initialized successfully")
+        logger.info(f"Azure location: {azure_settings.azure_location}")
+        logger.info(f"Azure resource prefix: {azure_settings.azure_resource_prefix}")
 
     except Exception as e:
-        logger.error(f"Failed to initialize Universal RAG system: {e}", exc_info=True)
-        app.state.universal_rag_system = None
-        app.state.initialization_results = {"success": False, "error": str(e)}
+        logger.error(f"Failed to initialize Azure services: {e}", exc_info=True)
+        app.state.azure_services = None
+        app.state.openai_integration = None
+        app.state.azure_settings = None
 
     yield
 
     # Shutdown
-    logger.info("Shutting down Universal Enhanced RAG API...")
+    logger.info("Shutting down Azure Universal RAG API...")
 
 
-# Create FastAPI app with Universal RAG support
+# Create FastAPI app with Azure services support
 app = FastAPI(
-    title="Universal Enhanced RAG API",
-    description="Universal Retrieval-Augmented Generation system that works with any domain",
+    title="Azure Universal RAG API",
+    description="Azure-powered Retrieval-Augmented Generation system that works with any domain",
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -94,7 +93,7 @@ if hasattr(settings, 'trusted_hosts') and settings.trusted_hosts:
 
 # Include routers
 app.include_router(health.router)
-app.include_router(universal_query.router)
+app.include_router(azure_query_endpoint.router)
 
 # Import and include workflow stream router
 from api.workflow_stream import router as workflow_stream_router
@@ -147,20 +146,21 @@ async def log_requests(request: Request, call_next):
 async def root():
     """Root endpoint with API information"""
     return {
-        "message": "Universal Enhanced RAG API",
+        "message": "Azure Universal RAG API",
         "version": "2.0.0",
-        "description": "Universal Retrieval-Augmented Generation system that works with any domain",
+        "description": "Azure-powered Retrieval-Augmented Generation system that works with any domain",
         "docs_url": "/docs",
         "health_check": "/api/v1/health",
-        "universal_query": "/api/v1/query/universal",
+        "azure_query": "/api/v1/query/universal",
         "streaming_query": "/api/v1/query/streaming",
         "domain_management": "/api/v1/domain/",
         "features": [
-            "Universal domain support",
+            "Azure services integration",
             "Real-time streaming queries",
-            "Dynamic entity/relation discovery",
-            "No configuration files required",
-            "Pure text file processing",
+            "Azure Cognitive Search",
+            "Azure OpenAI processing",
+            "Azure Blob Storage",
+            "Azure Cosmos DB metadata",
             "Multi-domain batch processing"
         ]
     }
@@ -168,60 +168,83 @@ async def root():
 # System info endpoint
 @app.get("/api/v1/info")
 async def get_system_info():
-    """Get system information and status"""
+    """Get system information and Azure services status"""
     try:
-        # Get initialization results
-        init_results = getattr(app.state, 'initialization_results', {})
+        # Get Azure services status
+        azure_services = getattr(app.state, 'azure_services', None)
+        azure_settings = getattr(app.state, 'azure_settings', None)
 
-        # Get current system status if available
-        system_status = {}
-        if hasattr(app.state, 'universal_rag_system') and app.state.universal_rag_system:
-            system_status = app.state.universal_rag_system.get_system_status()
+        azure_status = {
+            "initialized": azure_services is not None,
+            "location": azure_settings.azure_location if azure_settings else None,
+            "resource_prefix": azure_settings.azure_resource_prefix if azure_settings else None,
+            "services": {
+                "blob_storage": azure_services.storage_client is not None if azure_services else False,
+                "cognitive_search": azure_services.search_client is not None if azure_services else False,
+                "cosmos_db": azure_services.cosmos_client is not None if azure_services else False,
+                "machine_learning": azure_services.ml_client is not None if azure_services else False
+            }
+        }
 
         return {
             "api_version": "2.0.0",
-            "system_type": "Universal Enhanced RAG",
-            "initialization_status": init_results.get("success", False),
-            "initialization_error": init_results.get("error"),
-            "system_stats": init_results.get("system_stats", {}),
-            "discovered_types": init_results.get("discovered_types", {}),
-            "current_status": system_status,
+            "system_type": "Azure Universal RAG",
+            "azure_status": azure_status,
             "features": {
-                "universal_domain_support": True,
+                "azure_services_integration": True,
                 "streaming_queries": True,
                 "real_time_progress": True,
-                "dynamic_type_discovery": True,
+                "azure_cognitive_search": True,
+                "azure_openai": True,
+                "azure_blob_storage": True,
+                "azure_cosmos_db": True,
                 "multi_domain_batch": True
             },
             "endpoints": {
-                "universal_query": "/api/v1/query/universal",
+                "azure_query": "/api/v1/query/universal",
                 "streaming_query": "/api/v1/query/streaming",
                 "batch_query": "/api/v1/query/batch",
                 "domain_initialization": "/api/v1/domain/initialize",
                 "domain_status": "/api/v1/domain/{domain_name}/status",
-                "list_domains": "/api/v1/domains/list"
+                "workflow_summary": "/api/v1/workflow/{query_id}/summary",
+                "workflow_steps": "/api/v1/workflow/{query_id}/steps"
             }
         }
+
     except Exception as e:
         logger.error(f"Failed to get system info: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-# Dependency to get Universal RAG instance
-async def get_universal_rag_instance(domain: str = "general"):
-    """Dependency to get Universal RAG instance"""
-    try:
-        return get_enhanced_rag_instance(domain)
-    except Exception as e:
-        logger.error(f"Failed to get Universal RAG instance: {e}")
-        raise HTTPException(status_code=500, detail="Universal RAG system not available")
+
+async def get_azure_services() -> AzureServicesManager:
+    """Get Azure services instance"""
+    azure_services = getattr(app.state, 'azure_services', None)
+    if not azure_services:
+        raise HTTPException(status_code=503, detail="Azure services not initialized")
+    return azure_services
+
+
+async def get_openai_integration() -> AzureOpenAIIntegration:
+    """Get Azure OpenAI integration instance"""
+    openai_integration = getattr(app.state, 'openai_integration', None)
+    if not openai_integration:
+        raise HTTPException(status_code=503, detail="Azure OpenAI integration not initialized")
+    return openai_integration
+
+
+async def get_azure_settings() -> AzureSettings:
+    """Get Azure settings instance"""
+    azure_settings = getattr(app.state, 'azure_settings', None)
+    if not azure_settings:
+        raise HTTPException(status_code=503, detail="Azure settings not initialized")
+    return azure_settings
 
 
 if __name__ == "__main__":
-    # Run the application
     uvicorn.run(
         "main:app",
         host=settings.api_host,
         port=settings.api_port,
-        reload=settings.environment == "development",
+        reload=settings.debug,
         log_level=settings.log_level.lower()
     )

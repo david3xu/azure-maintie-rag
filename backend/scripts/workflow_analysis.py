@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Workflow Analysis Script
-=======================
+Workflow Analysis Script with Azure Services
+==========================================
 
-Analyzes core file usage patterns in both workflows.
-Provides insights into system architecture and file responsibilities.
+Analyzes Azure service usage patterns in both workflows.
+Provides insights into Azure architecture and service responsibilities.
 """
 
 import sys
@@ -15,109 +15,145 @@ backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 
-def analyze_core_files():
-    """Analyze core file usage patterns"""
+def analyze_azure_services():
+    """Analyze Azure service usage patterns"""
 
-    core_files = {
-        "orchestration/enhanced_rag_universal.py": {
+    azure_services = {
+        "Azure Blob Storage": {
+            "data_prep": True,
+            "query_runtime": True,
+            "purpose": "Both workflows - stores documents + retrieves content"
+        },
+        "Azure Cognitive Search": {
+            "data_prep": True,
+            "query_runtime": True,
+            "purpose": "Both workflows - builds indices + searches documents"
+        },
+        "Azure OpenAI": {
+            "data_prep": True,
+            "query_runtime": True,
+            "purpose": "Both workflows - processes documents + generates responses"
+        },
+        "Azure Cosmos DB": {
+            "data_prep": True,
+            "query_runtime": True,
+            "purpose": "Both workflows - stores metadata + tracks queries"
+        },
+        "Azure Machine Learning": {
             "data_prep": False,
-            "query_runtime": True,
-            "purpose": "Runtime orchestration only - coordinates query processing"
-        },
-        "orchestration/universal_rag_orchestrator_complete.py": {
-            "data_prep": True,
-            "query_runtime": True,
-            "purpose": "Both workflows - initializes system + processes queries"
-        },
-        "workflow/universal_workflow_manager.py": {
-            "data_prep": False,
-            "query_runtime": True,
-            "purpose": "Runtime tracking only - tracks query progress"
-        },
-        "extraction/universal_knowledge_extractor.py": {
-            "data_prep": True,
             "query_runtime": False,
-            "purpose": "Data prep only - extracts knowledge from raw text"
-        },
-        "extraction/optimized_llm_extractor.py": {
-            "data_prep": True,
-            "query_runtime": False,
-            "purpose": "Data prep only - LLM calls for extraction"
-        },
-        "extraction/llm_knowledge_extractor.py": {
-            "data_prep": True,
-            "query_runtime": False,
-            "purpose": "Data prep only - base extraction functionality"
-        },
-        "knowledge/universal_text_processor.py": {
-            "data_prep": True,
-            "query_runtime": False,
-            "purpose": "Data prep only - loads and processes raw text files"
-        },
-        "classification/universal_classifier.py": {
-            "data_prep": True,
-            "query_runtime": False,
-            "purpose": "Data prep only - classifies extracted entities/relations"
-        },
-        "retrieval/universal_vector_search.py": {
-            "data_prep": True,
-            "query_runtime": True,
-            "purpose": "Both workflows - builds indices + searches"
-        },
-        "enhancement/universal_query_analyzer.py": {
-            "data_prep": False,
-            "query_runtime": True,
-            "purpose": "Runtime only - analyzes user queries"
-        },
-        "generation/universal_llm_interface.py": {
-            "data_prep": False,
-            "query_runtime": True,
-            "purpose": "Runtime only - generates responses"
-        },
-        "gnn/universal_gnn_processor.py": {
-            "data_prep": True,
-            "query_runtime": False,
-            "purpose": "Data prep only - prepares GNN data structures"
+            "purpose": "Future enhancement - custom ML models"
         }
     }
 
-    print("📊 UNIVERSAL RAG CORE FILES USAGE ANALYSIS")
+    print("📊 AZURE SERVICES USAGE ANALYSIS")
     print("=" * 80)
 
-    data_prep_count = sum(1 for f in core_files.values() if f["data_prep"])
-    query_runtime_count = sum(1 for f in core_files.values() if f["query_runtime"])
-    both_count = sum(1 for f in core_files.values() if f["data_prep"] and f["query_runtime"])
+    data_prep_count = sum(1 for s in azure_services.values() if s["data_prep"])
+    query_runtime_count = sum(1 for s in azure_services.values() if s["query_runtime"])
+    both_count = sum(1 for s in azure_services.values() if s["data_prep"] and s["query_runtime"])
 
     print(f"📋 Summary:")
-    print(f"   🔸 Total core files analyzed: {len(core_files)}")
-    print(f"   🔸 Data preparation workflow: {data_prep_count} files")
-    print(f"   🔸 Query processing workflow: {query_runtime_count} files")
-    print(f"   🔸 Used by both workflows: {both_count} files")
-    print(f"   🔸 System utilization: {(data_prep_count + query_runtime_count - both_count) / len(core_files) * 100:.1f}%")
+    print(f"   🔸 Total Azure services analyzed: {len(azure_services)}")
+    print(f"   🔸 Data preparation workflow: {data_prep_count} services")
+    print(f"   🔸 Query processing workflow: {query_runtime_count} services")
+    print(f"   🔸 Used by both workflows: {both_count} services")
+    print(f"   🔸 Service utilization: {(data_prep_count + query_runtime_count - both_count) / len(azure_services) * 100:.1f}%")
 
     print(f"\n📊 Detailed Analysis:")
 
-    print(f"\n🔹 DATA PREPARATION WORKFLOW FILES:")
-    for filepath, info in core_files.items():
+    print(f"\n🔹 DATA PREPARATION WORKFLOW SERVICES:")
+    for service_name, info in azure_services.items():
         if info["data_prep"]:
             shared = "📍 SHARED" if info["query_runtime"] else ""
-            print(f"   ✅ {filepath} {shared}")
+            print(f"   ✅ {service_name} {shared}")
             print(f"      └─ {info['purpose']}")
 
-    print(f"\n🔸 QUERY PROCESSING WORKFLOW FILES:")
-    for filepath, info in core_files.items():
+    print(f"\n🔸 QUERY PROCESSING WORKFLOW SERVICES:")
+    for service_name, info in azure_services.items():
         if info["query_runtime"]:
             shared = "📍 SHARED" if info["data_prep"] else ""
-            print(f"   ✅ {filepath} {shared}")
+            print(f"   ✅ {service_name} {shared}")
             print(f"      └─ {info['purpose']}")
 
-    print(f"\n🎯 Architecture Benefits:")
-    print(f"   ✅ Clear separation of concerns")
-    print(f"   ✅ Data prep happens once, queries are fast")
-    print(f"   ✅ Can rebuild indices without affecting runtime")
-    print(f"   ✅ Scalable architecture with minimal shared components")
+    print(f"\n🎯 Azure Architecture Benefits:")
+    print(f"   ✅ Fully managed cloud services")
+    print(f"   ✅ Automatic scaling and high availability")
+    print(f"   ✅ Built-in security and compliance")
+    print(f"   ✅ Pay-per-use pricing model")
+    print(f"   ✅ Global distribution and low latency")
+    print(f"   ✅ Integrated monitoring and logging")
+
+    print(f"\n☁️  Azure Service Integration:")
+    print(f"   🔹 Azure Blob Storage: Document storage and retrieval")
+    print(f"   🔹 Azure Cognitive Search: Semantic search and indexing")
+    print(f"   🔹 Azure OpenAI: Natural language processing")
+    print(f"   🔹 Azure Cosmos DB: Metadata and query tracking")
+    print(f"   🔹 Azure Machine Learning: Future ML model deployment")
+
+    print(f"\n📈 Performance Characteristics:")
+    print(f"   ⚡ Data preparation: One-time setup with Azure services")
+    print(f"   ⚡ Query processing: Real-time with Azure Cognitive Search")
+    print(f"   ⚡ Response generation: Fast with Azure OpenAI")
+    print(f"   ⚡ Scalability: Automatic with Azure cloud services")
+
+
+def analyze_azure_integration_files():
+    """Analyze Azure integration file structure"""
+
+    azure_files = {
+        "config/azure_settings.py": {
+            "purpose": "Azure configuration and environment settings",
+            "usage": "Both workflows - provides Azure service credentials"
+        },
+        "azure/storage_client.py": {
+            "purpose": "Azure Blob Storage client operations",
+            "usage": "Both workflows - document storage and retrieval"
+        },
+        "azure/search_client.py": {
+            "purpose": "Azure Cognitive Search client operations",
+            "usage": "Both workflows - search indexing and querying"
+        },
+        "azure/cosmos_client.py": {
+            "purpose": "Azure Cosmos DB client operations",
+            "usage": "Both workflows - metadata storage and tracking"
+        },
+        "azure/ml_client.py": {
+            "purpose": "Azure Machine Learning client operations",
+            "usage": "Future enhancement - custom ML model deployment"
+        },
+        "integrations/azure_services.py": {
+            "purpose": "Unified Azure services manager",
+            "usage": "Both workflows - coordinates all Azure services"
+        },
+        "integrations/azure_openai.py": {
+            "purpose": "Azure OpenAI integration",
+            "usage": "Both workflows - document processing and response generation"
+        }
+    }
+
+    print(f"\n📁 AZURE INTEGRATION FILES ANALYSIS")
+    print("=" * 80)
+
+    print(f"📋 Summary:")
+    print(f"   🔸 Total Azure integration files: {len(azure_files)}")
+    print(f"   🔸 Configuration files: 1")
+    print(f"   🔸 Service client files: 4")
+    print(f"   🔸 Integration manager files: 2")
+
+    print(f"\n📊 File Structure:")
+    for filepath, info in azure_files.items():
+        print(f"   ✅ {filepath}")
+        print(f"      └─ {info['purpose']}")
+        print(f"      └─ Usage: {info['usage']}")
+
+    print(f"\n🏗️  Infrastructure Files:")
+    print(f"   ✅ infrastructure/azure-resources.bicep - Azure resource templates")
+    print(f"   ✅ infrastructure/parameters.json - Deployment parameters")
+    print(f"   ✅ infrastructure/provision.py - Automated provisioning script")
 
 
 if __name__ == "__main__":
     """Execute workflow analysis"""
-    analyze_core_files()
+    analyze_azure_services()
+    analyze_azure_integration_files()
