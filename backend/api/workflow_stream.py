@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 # Import actual components used in query processing
-from core.orchestration.enhanced_rag_universal import EnhancedUniversalRAG
+from core.orchestration.enhanced_pipeline import AzureRAGEnhancedPipeline
 from core.workflow.universal_workflow_manager import create_workflow_manager
 
 router = APIRouter()
@@ -35,14 +35,14 @@ async def stream_real_workflow(query_id: str, query: str, domain: str = "general
             'step_name': 'enhanced_rag_orchestration',
             'user_friendly_name': '[RAG] Enhanced RAG Orchestration',
             'status': 'in_progress',
-            'technology': 'EnhancedUniversalRAG',
+            'technology': 'AzureRAGEnhancedPipeline',
             'details': 'Initializing RAG components...',
             'progress_percentage': 14
         }
         yield f"data: {json.dumps(data)}\n\n"
 
         # Initialize Enhanced RAG (real backend logic)
-        enhanced_rag = EnhancedUniversalRAG(domain)
+        enhanced_rag = AzureRAGEnhancedPipeline(domain)
 
         # Ensure system is initialized
         if not enhanced_rag.components_initialized:
@@ -54,7 +54,7 @@ async def stream_real_workflow(query_id: str, query: str, domain: str = "general
             'step_name': 'enhanced_rag_orchestration',
             'user_friendly_name': '[RAG] Enhanced RAG Orchestration',
             'status': 'completed',
-            'technology': 'EnhancedUniversalRAG',
+            'technology': 'AzureRAGEnhancedPipeline',
             'details': 'RAG components initialized successfully',
             'progress_percentage': 28
         }

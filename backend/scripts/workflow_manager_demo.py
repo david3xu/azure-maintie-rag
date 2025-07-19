@@ -18,7 +18,7 @@ import time
 
 # Import workflow manager
 from core.workflow.universal_workflow_manager import create_workflow_manager
-from core.orchestration.enhanced_rag_universal import get_enhanced_rag_instance
+from core.orchestration.enhanced_pipeline import get_enhanced_rag_instance
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
