@@ -59,6 +59,10 @@ htmlcov/
 # Ignore Docker artifacts
 *.pid
 
+# Ignore Node.js artifacts in root (this is a Python project)
+package-lock.json
+node_modules/
+
 # Ignore extraction artifacts
 extracted_knowledge.json
 
