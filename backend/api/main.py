@@ -15,9 +15,9 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 # Azure service components
-from integrations.azure_services import AzureServicesManager
-from integrations.azure_openai import AzureOpenAIIntegration
-from config.azure_settings import AzureSettings
+from azure.integrations.azure_services import AzureServicesManager
+from azure.integrations.azure_openai import AzureOpenAIIntegration
+from config.settings import AzureSettings
 from config.settings import settings
 from api.endpoints import health, azure_query_endpoint
 

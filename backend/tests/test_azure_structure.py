@@ -31,7 +31,9 @@ def test_azure_structure():
         "storage_client.py",
         "search_client.py",
         "cosmos_client.py",
-        "ml_client.py"
+        "ml_client.py",
+        "integrations/azure_services.py",
+        "integrations/azure_openai.py"
     ]
 
     print("\n📁 Checking Azure directory structure...")
@@ -71,12 +73,13 @@ def test_infrastructure():
 
 def test_integrations():
     """Test integrations"""
-    integrations_dir = Path("backend/integrations")
+    integrations_dir = Path("backend/azure/integrations")
     required_files = [
-        "azure_services.py"
+        "azure_services.py",
+        "azure_openai.py"
     ]
 
-    print("\n🔗 Checking integrations...")
+    print("\n🔗 Checking Azure integrations...")
     all_exist = True
 
     for file_name in required_files:

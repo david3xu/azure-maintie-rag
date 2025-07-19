@@ -14,9 +14,9 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 # Import Azure service components
-from integrations.azure_services import AzureServicesManager
-from integrations.azure_openai import AzureOpenAIIntegration
-from config.azure_settings import AzureSettings
+from azure.integrations.azure_services import AzureServicesManager
+from azure.integrations.azure_openai import AzureOpenAIIntegration
+from config.settings import AzureSettings
 
 router = APIRouter()
 

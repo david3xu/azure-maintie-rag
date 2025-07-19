@@ -17,9 +17,9 @@ from typing import Dict, Any, List
 import time
 
 # Import Azure services architecture components
-from integrations.azure_services import AzureServicesManager
-from integrations.azure_openai import AzureOpenAIIntegration
-from config.azure_settings import AzureSettings
+from azure.integrations.azure_services import AzureServicesManager
+from azure.integrations.azure_openai import AzureOpenAIIntegration
+from config.settings import AzureSettings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
