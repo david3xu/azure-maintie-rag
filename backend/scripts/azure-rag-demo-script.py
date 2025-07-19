@@ -35,9 +35,9 @@ backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 # Azure service imports - Updated to use new Azure services architecture
-from integrations.azure_services import AzureServicesManager
-from integrations.azure_openai import AzureOpenAIIntegration
-from config.azure_settings import AzureSettings
+from azure.integrations.azure_services import AzureServicesManager
+from azure.integrations.azure_openai import AzureOpenAIIntegration
+from config.settings import AzureSettings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
