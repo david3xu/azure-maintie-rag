@@ -87,19 +87,7 @@ function App() {
       setQueryId(chatId); // Use chatId as queryId for streaming
     } else {
       try {
-        await runUniversalRAG({ query: query.trim(), domain });
-        // Convert UniversalRAGResponse to QueryResponse
-        const queryResponse = result
-          ? {
-              query: query.trim(),
-              generated_response: result.answer,
-              confidence_score: 1.0,
-              processing_time: 0,
-              safety_warnings: [],
-              sources: result.sources ? result.sources.map(s => s.title) : [],
-              citations: [],
-            }
-          : null;
+        const queryResponse = await runUniversalRAG({ query: query.trim(), domain });
         setChatHistory(prev =>
           prev.map(msg =>
             msg.id === chatId
