@@ -56,13 +56,18 @@ Azure Universal RAG is a **production-grade backend system** for advanced univer
 - **Separated Backend API and Frontend UI services**
 
 ### Azure Infrastructure & Deployment
-- Azure Blob Storage for document storage
-- Azure Cognitive Search for vector search
-- Azure Cosmos DB for knowledge graphs
-- Azure OpenAI for processing and generation
-- Azure Machine Learning for advanced analytics
-- Docker and virtualenv support
-- Comprehensive Azure service integration
+- **Infrastructure as Code**: Bicep templates with deterministic naming
+- **Azure Blob Storage**: Document storage with hierarchical namespace
+- **Azure Cognitive Search**: Vector search and indexing
+- **Azure Cosmos DB**: Knowledge graphs (Gremlin API)
+- **Azure OpenAI**: Processing and generation
+- **Azure Machine Learning**: Advanced analytics and model training
+- **Azure Key Vault**: Secrets management with RBAC
+- **Azure Application Insights**: Application monitoring
+- **Azure Log Analytics**: Centralized logging
+- **Azure Container Apps**: Application hosting
+- **Docker and virtualenv support**
+- **Comprehensive Azure service integration**
 
 ---
 
@@ -90,6 +95,28 @@ Backend Stack:
 ```
 
 ## 🏗️ Architecture
+
+### Current Deployment Status
+
+**✅ Deployed Services (5/10):**
+```
+├── ✅ Storage Account (maintiedevstorvmoi46sh)
+├── ✅ Search Service (maintie-dev-search-vmoi46)
+├── ✅ Key Vault (maintie-dev-kv-vmoi46)
+├── ✅ Application Insights (maintie-dev-appinsights)
+└── ✅ Log Analytics (maintie-dev-logs)
+```
+
+**❌ Pending Services (5/10):**
+```
+├── ❌ ML Storage Account (maintiedevmlstorage)
+├── ❌ Cosmos DB Gremlin (maintie-dev-cosmos)
+├── ❌ ML Workspace (maintie-dev-ml)
+├── ❌ Container Environment (maintie-dev-env)
+└── ❌ Container App (maintie-dev-rag-app)
+```
+
+### Target Architecture
 
 ```
 backend/
@@ -142,20 +169,31 @@ make clean              # Clean ALL generated files - reset to raw text data
 ### Azure Deployment Commands
 
 ```bash
-# Validate configuration
-python scripts/validate-configuration.py
+# Deploy complete infrastructure (self-contained)
+./scripts/enhanced-complete-redeploy.sh
+
+# Check current deployment status (dynamic detection)
+./scripts/status-working.sh
+
+# Clean up everything (with confirmation)
+./scripts/teardown.sh
 
 # Deploy to different environments
 AZURE_ENVIRONMENT=dev ./scripts/enhanced-complete-redeploy.sh
 AZURE_ENVIRONMENT=staging ./scripts/enhanced-complete-redeploy.sh
 AZURE_ENVIRONMENT=prod ./scripts/enhanced-complete-redeploy.sh
 
-# Test deployment fixes
-./scripts/test-azure-deployment-fixes.sh
-
-# Check deployment status
-./scripts/status.sh
+# Validate configuration
+python scripts/validate-configuration.py
 ```
+
+### Deployment Features
+
+- **✅ Self-Contained Scripts**: No external dependencies
+- **✅ Deterministic Naming**: Consistent resource names using `uniqueString()`
+- **✅ Dynamic Status Detection**: Real-time service status checking
+- **✅ Enterprise Reliability**: Circuit breaker patterns and error handling
+- **✅ Resource Group Management**: Automatic creation and cleanup
 
 ---
 
