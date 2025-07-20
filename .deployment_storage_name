@@ -1,0 +1,5 @@
+[0;34m🏗️  Generating globally unique storage account name[0m
+[0;34mℹ️  Base prefix: maintie, Environment: dev[0m
+[0;34mℹ️  Using high-entropy generation for storage name validation[0m
+[0;32m✅ Generated unique storage name: maintiedevstor73bd2756[0m
+maintiedevstor73bd2756

@@ -45,24 +45,43 @@ orchestrate_resilient_deployment() {
     local unique_search_name
     local unique_keyvault_name
 
-                    # Generate storage name and capture only the final result
-    # Use a temporary file to capture only the final name
+                        # Generate globally unique resource names (capture only the final name)
+    print_info "Generating globally unique resource names..."
+
+    # Generate names and capture only the actual names, not logs
+    # Use a temporary file to capture output and extract only the final name
     local temp_file=$(mktemp)
 
-    # Generate storage name and capture only the last line (the actual name)
+    # Generate storage name
     generate_globally_unique_storage_name "maintie" "$environment" > "$temp_file" 2>&1
-    unique_storage_name=$(tail -n1 "$temp_file")
+    unique_storage_name=$(tail -n1 "$temp_file" | tr -d '\n\r')
 
     # Generate search name
     generate_unique_search_name "maintie" "$environment" "$region" > "$temp_file" 2>&1
-    unique_search_name=$(tail -n1 "$temp_file")
+    unique_search_name=$(tail -n1 "$temp_file" | tr -d '\n\r')
 
     # Generate key vault name
     generate_unique_keyvault_name "maintie" "$environment" > "$temp_file" 2>&1
-    unique_keyvault_name=$(tail -n1 "$temp_file")
+    unique_keyvault_name=$(tail -n1 "$temp_file" | tr -d '\n\r')
 
     # Clean up temp file
     rm -f "$temp_file"
+
+    # Clean names from any extra characters
+    unique_storage_name=$(echo "$unique_storage_name" | sed 's/[^a-z0-9]//g')
+    unique_search_name=$(echo "$unique_search_name" | sed 's/[^a-z0-9-]//g')
+    unique_keyvault_name=$(echo "$unique_keyvault_name" | sed 's/[^a-z0-9-]//g')
+
+    # Validate names are not empty
+    if [ -z "$unique_storage_name" ] || [ -z "$unique_search_name" ] || [ -z "$unique_keyvault_name" ]; then
+        print_error "Failed to generate unique resource names"
+        return 1
+    fi
+
+    # Store names for later verification
+    echo "$unique_storage_name" > ".deployment_storage_name"
+    echo "$unique_search_name" > ".deployment_search_name"
+    echo "$unique_keyvault_name" > ".deployment_keyvault_name"
 
     # Validate names were generated successfully
     if [[ -z "$unique_storage_name" || "${#unique_storage_name}" -lt 3 ]]; then
@@ -163,8 +182,9 @@ execute_deployment_with_circuit_breaker() {
                 print_info "Deployment output logged to: $deployment_output_file"
             fi
 
-            # Verify deployment outputs
-            verify_deployment_outputs "$deployment_name"
+            # NEW: Capture deployment outputs
+            print_info "Verifying deployment outputs"
+            verify_deployment_outputs "$deployment_name" "$resource_group"
 
             # Cleanup temp file
             rm -f "$deployment_output_file"

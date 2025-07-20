@@ -186,6 +186,10 @@ deploy_ml_infrastructure_conditional() {
 verify_deployment_success() {
     print_header "Phase 6: Deployment Verification"
 
+    # NEW: Wait for resource propagation
+    print_info "Waiting for resource propagation..."
+    sleep 30
+
     # Verify core resources
     local required_resources=(
         "Microsoft.Storage/storageAccounts"
@@ -210,30 +214,45 @@ verify_deployment_success() {
         fi
     done
 
-    # Verify specific resource names using stored names
+    # Verify specific resource names using ONLY stored names
     local expected_search_service
     local expected_storage_account
     local expected_key_vault
 
+    # ALWAYS use stored names if available, never regenerate
     if [ -f ".deployment_search_name" ]; then
-        expected_search_service=$(cat ".deployment_search_name")
+        expected_search_service=$(cat ".deployment_search_name" | tr -d '\n\r')
     else
-        expected_search_service="maintie-${ENVIRONMENT}-search-${DEPLOYMENT_TIMESTAMP}"
+        print_error "Search service name not found in stored deployment files"
+        verification_failed=true
     fi
 
     if [ -f ".deployment_storage_name" ]; then
-        expected_storage_account=$(cat ".deployment_storage_name")
+        expected_storage_account=$(cat ".deployment_storage_name" | tr -d '\n\r')
     else
-        expected_storage_account="maintie${ENVIRONMENT}stor${DEPLOYMENT_TIMESTAMP}"
+        print_error "Storage account name not found in stored deployment files"
+        verification_failed=true
     fi
 
     if [ -f ".deployment_keyvault_name" ]; then
-        expected_key_vault=$(cat ".deployment_keyvault_name")
+        expected_key_vault=$(cat ".deployment_keyvault_name" | tr -d '\n\r')
     else
-        expected_key_vault="maintie-${ENVIRONMENT}-kv-${DEPLOYMENT_TIMESTAMP:0:8}"
+        print_error "Key Vault name not found in stored deployment files"
+        verification_failed=true
     fi
 
-    # Check Search service
+    # Exit early if names not found
+    if [ "$verification_failed" = true ]; then
+        print_error "Cannot verify deployment without stored resource names"
+        return 1
+    fi
+
+    print_info "Verifying resources using stored names:"
+    print_info "  - Search Service: $expected_search_service"
+    print_info "  - Storage Account: $expected_storage_account"
+    print_info "  - Key Vault: $expected_key_vault"
+
+    # Check Search service with detailed error
     if az search service show \
         --resource-group "$RESOURCE_GROUP" \
         --name "$expected_search_service" \
@@ -241,10 +260,12 @@ verify_deployment_success() {
         print_status "Verified Search service: $expected_search_service"
     else
         print_error "Search service verification failed: $expected_search_service"
+        print_info "Available search services:"
+        az search service list --resource-group "$RESOURCE_GROUP" --query "[].name" --output tsv 2>/dev/null || true
         verification_failed=true
     fi
 
-    # Check Storage account
+    # Check Storage account with detailed error
     if az storage account show \
         --resource-group "$RESOURCE_GROUP" \
         --name "$expected_storage_account" \
@@ -252,10 +273,12 @@ verify_deployment_success() {
         print_status "Verified Storage account: $expected_storage_account"
     else
         print_error "Storage account verification failed: $expected_storage_account"
+        print_info "Available storage accounts:"
+        az storage account list --resource-group "$RESOURCE_GROUP" --query "[].name" --output tsv 2>/dev/null || true
         verification_failed=true
     fi
 
-    # Check Key Vault
+    # Check Key Vault with detailed error
     if az keyvault show \
         --resource-group "$RESOURCE_GROUP" \
         --name "$expected_key_vault" \
@@ -263,6 +286,8 @@ verify_deployment_success() {
         print_status "Verified Key Vault: $expected_key_vault"
     else
         print_error "Key Vault verification failed: $expected_key_vault"
+        print_info "Available key vaults:"
+        az keyvault list --resource-group "$RESOURCE_GROUP" --query "[].name" --output tsv 2>/dev/null || true
         verification_failed=true
     fi
 
