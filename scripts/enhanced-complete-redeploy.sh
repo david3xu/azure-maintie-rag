@@ -84,10 +84,13 @@ deploy_core_infrastructure_resilient() {
             # Deploy core infrastructure using Azure CLI directly
     print_info "Deploying core infrastructure with working services only"
 
+    # Generate deterministic deployment token
+    local deterministic_token=$(echo -n "$RESOURCE_GROUP-$ENVIRONMENT-maintie" | sha256sum | cut -c1-8)
+
     if az deployment group create \
         --resource-group "$RESOURCE_GROUP" \
         --template-file "infrastructure/azure-resources-core.bicep" \
-        --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" \
+        --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" "deploymentToken=$deterministic_token" \
         --name "azure-resources-core-$(date +%Y%m%d-%H%M%S)" \
         --mode Incremental; then
         print_status "Core infrastructure deployment completed successfully"
@@ -99,7 +102,7 @@ deploy_core_infrastructure_resilient() {
 }
 
 deploy_ml_infrastructure_conditional() {
-    print_header "Phase 5: Conditional ML Infrastructure Deployment"
+    print_header "Phase 5: Conditional ML Infrastructure Deployment (Simplified)"
 
     # Check if core infrastructure was deployed successfully
     local core_resources_exist=true
@@ -109,15 +112,18 @@ deploy_ml_infrastructure_conditional() {
     if [ -f ".deployment_search_name" ]; then
         search_service_name=$(cat ".deployment_search_name")
     else
-        search_service_name="maintie-${ENVIRONMENT}-search-${DEPLOYMENT_TIMESTAMP}"
+        # Use actual deployed name from status
+        search_service_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Search/searchServices" --query "[0].name" --output tsv 2>/dev/null)
     fi
 
-    if ! az search service show \
+    if [ -z "$search_service_name" ] || ! az search service show \
         --resource-group "$RESOURCE_GROUP" \
         --name "$search_service_name" \
         --output none 2>/dev/null; then
         print_warning "Core Search service not found, skipping ML deployment"
         core_resources_exist=false
+    else
+        print_info "Found Search service: $search_service_name"
     fi
 
     # Check for Storage account using stored name
@@ -125,15 +131,18 @@ deploy_ml_infrastructure_conditional() {
     if [ -f ".deployment_storage_name" ]; then
         storage_account_name=$(cat ".deployment_storage_name")
     else
-        storage_account_name="maintie${ENVIRONMENT}stor${DEPLOYMENT_TIMESTAMP}"
+        # Use actual deployed name from status
+        storage_account_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Storage/storageAccounts" --query "[?contains(name, 'stor') && !contains(name, 'ml')].name" --output tsv 2>/dev/null | head -1)
     fi
 
-    if ! az storage account show \
+    if [ -z "$storage_account_name" ] || ! az storage account show \
         --resource-group "$RESOURCE_GROUP" \
         --name "$storage_account_name" \
         --output none 2>/dev/null; then
         print_warning "Core Storage account not found, skipping ML deployment"
         core_resources_exist=false
+    else
+        print_info "Found Storage account: $storage_account_name"
     fi
 
     if [ "$core_resources_exist" = false ]; then
@@ -141,31 +150,107 @@ deploy_ml_infrastructure_conditional() {
         return 0
     fi
 
-    # Deploy ML infrastructure if core resources exist
-    print_info "Core resources verified, proceeding with ML infrastructure deployment"
+    # Deploy simplified ML infrastructure if core resources exist
+    print_info "Core resources verified, proceeding with simplified ML infrastructure deployment"
+    print_info "Deploying: ML Storage Account + ML Workspace (skipping Cosmos DB due to region issues)"
 
-    # Check if ML infrastructure template exists
-    if [ ! -f "infrastructure/azure-resources-ml.bicep" ]; then
-        print_warning "ML infrastructure template not found, skipping ML deployment"
+    # Check if simplified ML infrastructure template exists
+    if [ ! -f "infrastructure/azure-resources-ml-simple.bicep" ]; then
+        print_warning "Simplified ML infrastructure template not found, skipping ML deployment"
         return 0
     fi
 
-    # Deploy ML infrastructure
-    local ml_deployment_parameters="environment=$ENVIRONMENT location=$AZURE_LOCATION deploymentTimestamp=$DEPLOYMENT_TIMESTAMP"
-
+    # Deploy simplified ML infrastructure using same parameter pattern as core
     if az deployment group create \
         --resource-group "$RESOURCE_GROUP" \
-        --template-file "infrastructure/azure-resources-ml.bicep" \
-        --parameters "$ml_deployment_parameters" \
-        --name "azure-resources-ml-${DEPLOYMENT_TIMESTAMP}" \
+        --template-file "infrastructure/azure-resources-ml-simple.bicep" \
+        --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" \
+        --name "azure-resources-ml-simple-$(date +%Y%m%d-%H%M%S)" \
         --mode Incremental; then
 
-        print_status "ML infrastructure deployment completed successfully"
+        print_status "Simplified ML infrastructure deployment completed successfully"
+        print_info "Deployed: ML Storage Account + ML Workspace"
+        print_info "Skipped: Cosmos DB, Container Environment, Container App (region availability)"
         return 0
     else
-        print_warning "ML infrastructure deployment failed, but core deployment succeeded"
+        print_warning "Simplified ML infrastructure deployment failed, but core deployment succeeded"
         return 0  # Don't fail the entire deployment
     fi
+}
+
+deploy_cosmos_infrastructure() {
+    print_header "Phase 6: Cosmos DB Infrastructure Deployment"
+
+    # Check if core infrastructure was deployed successfully first
+    local core_resources_exist=true
+
+    # Check for Key Vault (needed for secrets storage)
+    local key_vault_name
+    if [ -f ".deployment_keyvault_name" ]; then
+        key_vault_name=$(cat ".deployment_keyvault_name")
+    else
+        # Use actual deployed name from status
+        key_vault_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.KeyVault/vaults" --query "[0].name" --output tsv 2>/dev/null)
+    fi
+
+    if [ -z "$key_vault_name" ] || ! az keyvault show \
+        --name "$key_vault_name" \
+        --resource-group "$RESOURCE_GROUP" \
+        --output none 2>/dev/null; then
+        print_warning "Core Key Vault not found, skipping Cosmos DB deployment"
+        core_resources_exist=false
+    else
+        print_info "Found Key Vault: $key_vault_name"
+    fi
+
+    if [ "$core_resources_exist" = false ]; then
+        print_warning "Cosmos DB deployment skipped due to missing core resources"
+        return 0
+    fi
+
+    # Deploy Cosmos DB infrastructure
+    print_info "Core resources verified, proceeding with Cosmos DB deployment"
+    print_info "Deploying: Cosmos DB Account + Gremlin Database + Knowledge Graph Container"
+
+    # Check if Cosmos DB template exists
+    if [ ! -f "infrastructure/azure-resources-cosmos.bicep" ]; then
+        print_warning "Cosmos DB infrastructure template not found, skipping Cosmos DB deployment"
+        return 0
+    fi
+
+    # Deploy Cosmos DB infrastructure using same parameter pattern as other templates
+    if az deployment group create \
+        --resource-group "$RESOURCE_GROUP" \
+        --template-file "infrastructure/azure-resources-cosmos.bicep" \
+        --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" \
+        --name "azure-resources-cosmos-$(date +%Y%m%d-%H%M%S)" \
+        --mode Incremental; then
+
+        print_status "Cosmos DB infrastructure deployment completed successfully"
+
+        # Store Cosmos DB connection details for application configuration
+        local cosmos_account_name="maintie-${ENVIRONMENT}-cosmos-${DEPLOYMENT_TIMESTAMP:0:6}"
+        echo "$cosmos_account_name" > ".deployment_cosmos_name"
+
+        print_info "Deployed: Cosmos DB Account (Gremlin API enabled)"
+        print_info "Database: universal-rag-db-${ENVIRONMENT}"
+        print_info "Container: knowledge-graph-${ENVIRONMENT}"
+        print_info "Throughput: $(get_environment_cosmos_throughput) RU/s"
+
+        return 0
+    else
+        print_warning "Cosmos DB infrastructure deployment failed, but other deployments succeeded"
+        return 0  # Don't fail the entire deployment
+    fi
+}
+
+get_environment_cosmos_throughput() {
+    case "$ENVIRONMENT" in
+        "dev") echo "400" ;;
+        "staging") echo "800" ;;
+        "prod") echo "1600" ;;
+        *) echo "400" ;;
+    esac
 }
 
 verify_deployment_success() {
@@ -329,7 +414,13 @@ main() {
         exit 1
     fi
 
-        # Phase 6: Deployment verification
+    # Phase 6: Cosmos DB infrastructure
+    if ! deploy_cosmos_infrastructure; then
+        print_error "Cosmos DB infrastructure deployment failed"
+        exit 1
+    fi
+
+    # Phase 7: Deployment verification
     print_info "Deployment verification handled by consolidated service"
     print_status "✅ Deployment completed successfully"
 
@@ -357,6 +448,7 @@ main() {
     print_info "  - Search Service: $deployed_search_service"
     print_info "  - Storage Account: $deployed_storage_account"
     print_info "  - Key Vault: $deployed_key_vault"
+    print_info "  - Cosmos DB: maintie-${ENVIRONMENT}-cosmos-[token]"
 
     # Clean up temporary deployment files
     cleanup_deployment_files
