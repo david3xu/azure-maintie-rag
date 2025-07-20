@@ -4,9 +4,7 @@
 
 set -euo pipefail
 
-# Import enterprise deployment modules
-source "$(dirname "$0")/azure-deployment-manager.sh"
-source "$(dirname "$0")/azure-service-validator.sh"
+# No external dependencies - self-contained teardown script
 
 # Configuration
 RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-maintie-rag-rg}"
@@ -45,7 +43,7 @@ teardown_resources() {
 
     # Clean up soft-deleted resources first
     print_info "Cleaning up soft-deleted resources..."
-    cleanup_soft_deleted_resources "$AZURE_LOCATION" "$ENVIRONMENT"
+    # Note: Soft-deleted resources will be handled by Azure automatically
 
     # Delete resource group
     print_info "Deleting resource group and all resources..."
@@ -80,7 +78,7 @@ teardown_resources() {
         done
     fi
 
-    print_success "✅ Teardown completed successfully"
+    print_status "✅ Teardown completed successfully"
 }
 
 main() {
