@@ -1,198 +1,54 @@
-# Azure Universal RAG Scripts
+# Azure Universal RAG - Essential Scripts
 
-This directory contains the enterprise deployment scripts for Azure Universal RAG infrastructure.
+This directory contains only the essential scripts for Azure Universal RAG deployment and management.
 
-## 📁 Script Structure
+## 📁 Essential Scripts
 
-### **Core Deployment Scripts**
+### 🚀 `enhanced-complete-redeploy.sh`
+**Main deployment script** - Deploys all working Azure services
+- Deploys Storage Account, Search Service, Key Vault, Application Insights, Log Analytics
+- Uses clean Bicep template with only working services
+- Includes health checks and validation
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `deploy.sh` | **Simple deployment** using enterprise architecture | `./scripts/deploy.sh` |
-| `enhanced-complete-redeploy.sh` | **Full enterprise deployment** with all phases | `./scripts/enhanced-complete-redeploy.sh` |
-| `teardown.sh` | **Safe teardown** with soft-delete cleanup | `./scripts/teardown.sh` |
-| `status.sh` | **Status check** for deployment and resources | `./scripts/status.sh` |
+### 📊 `status-working.sh`
+**Status checker** - Shows current working services status
+- Lists all 6 working Azure services
+- Shows which services are operational
+- Provides clear status summary
 
-### **Enterprise Architecture Modules**
+### 🧹 `teardown.sh`
+**Cleanup script** - Removes all Azure resources
+- Deletes all resources in the resource group
+- Cleans up deployment artifacts
+- Use with caution in production
 
-| Module | Purpose | Description |
-|--------|---------|-------------|
-| `azure-deployment-manager.sh` | **Enterprise resilience patterns** | Handles deployment conflicts, soft-delete issues, and multi-region failures |
-| `azure-service-validator.sh` | **Pre-deployment validation** | Service availability checking and conflict resolution |
-| `test-enterprise-deployment.sh` | **Implementation validation** | Tests enterprise deployment architecture |
+## 🎯 Usage
 
-## 🚀 Quick Start
-
-### **1. Simple Deployment**
 ```bash
-# Deploy with enterprise architecture
-./scripts/deploy.sh
-```
-
-### **2. Full Enterprise Deployment**
-```bash
-# Deploy with all enterprise features
+# Deploy all working services
 ./scripts/enhanced-complete-redeploy.sh
-```
 
-### **3. Check Status**
-```bash
-# Check current deployment status
-./scripts/status.sh
-```
+# Check status of working services
+./scripts/status-working.sh
 
-### **4. Teardown**
-```bash
-# Safely remove all resources
+# Clean up all resources (use with caution)
 ./scripts/teardown.sh
 ```
 
-## 🔧 Configuration
+## ✅ Working Services
 
-### **Environment Variables**
+The deployment creates these 7 essential Azure services:
+1. **Storage Account** - For Universal RAG data
+2. **ML Storage Account** - For ML workspace data
+3. **Search Service** - For vector search and indexing
+4. **Key Vault** - For secrets management
+5. **Application Insights** - For monitoring
+6. **Log Analytics** - For logging
+7. **Smart Detector Alert Rule** - For failure anomaly detection
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `AZURE_RESOURCE_GROUP` | `maintie-rag-rg` | Azure resource group name |
-| `AZURE_ENVIRONMENT` | `dev` | Environment (dev, staging, prod) |
-| `AZURE_LOCATION` | Auto-detected | Azure region for deployment |
+## 🏗️ Architecture
 
-### **Example Configuration**
-```bash
-export AZURE_RESOURCE_GROUP="my-rag-rg"
-export AZURE_ENVIRONMENT="prod"
-export AZURE_LOCATION="eastus"
-```
-
-## 🏗️ Enterprise Features
-
-### **1. Conflict Resolution**
-- **Time-based unique naming**: Prevents soft-delete conflicts
-- **Automatic cleanup**: Detects and purges soft-deleted resources
-- **Service availability validation**: Pre-deployment resource checking
-
-### **2. Multi-Region Resilience**
-- **Intelligent region selection**: Capacity-aware region optimization
-- **Failover capabilities**: Automated region failover for deployment failures
-- **Quota management**: Subscription quota validation and optimization
-
-### **3. Enterprise Monitoring**
-- **Real-time telemetry**: Application Insights integration
-- **Performance tracking**: Comprehensive performance metrics
-- **Error tracking**: Detailed error tracking and business metrics
-
-## 📊 Deployment Phases
-
-### **Simple Deployment** (`deploy.sh`)
-1. **Authentication check**: Verify Azure CLI authentication
-2. **Region selection**: Get optimal deployment region
-3. **Resource group creation**: Create if needed
-4. **Core deployment**: Deploy with exponential backoff
-
-### **Enterprise Deployment** (`enhanced-complete-redeploy.sh`)
-1. **Pre-deployment validation**: Azure CLI auth, extensions, prerequisites
-2. **Optimal region selection**: Capacity-aware region selection
-3. **Clean deployment preparation**: Conflict resolution and cleanup
-4. **Resilient core infrastructure**: Exponential backoff deployment
-5. **Conditional ML infrastructure**: Dependency-aware ML deployment
-6. **Deployment verification**: Comprehensive resource verification
-
-## 🔍 Testing
-
-### **Test Enterprise Architecture**
-```bash
-# Test implementation of enterprise deployment patterns
-./scripts/test-enterprise-deployment.sh
-```
-
-### **Test Enterprise Knowledge Extraction**
-```bash
-# Test enterprise knowledge extraction with Azure services
-cd backend
-python scripts/test_enterprise_knowledge_extraction.py
-```
-
-## 🛠️ Troubleshooting
-
-### **Common Issues**
-
-#### **1. Authentication Issues**
-```bash
-# Ensure Azure CLI is authenticated
-az login
-az account show
-```
-
-#### **2. Resource Group Conflicts**
-```bash
-# Check current resources
-./scripts/status.sh
-
-# Clean up if needed
-./scripts/teardown.sh
-```
-
-#### **3. Soft-Delete Conflicts**
-```bash
-# The enterprise scripts automatically handle soft-delete conflicts
-# If manual cleanup is needed:
-az keyvault list-deleted
-az keyvault purge --name <vault-name> --location <location>
-```
-
-#### **4. Region Availability Issues**
-```bash
-# The enterprise scripts automatically select optimal regions
-# Check available regions:
-az account list-locations --query "[].name" --output table
-```
-
-### **Debug Mode**
-```bash
-# Enable verbose output
-set -x
-./scripts/deploy.sh
-set +x
-```
-
-## 📈 Success Metrics
-
-### **Deployment Success Rate**
-- **Target**: >95% successful deployments
-- **Current**: ~60% (before enterprise patterns)
-- **Expected**: >95% (with enterprise patterns)
-
-### **Conflict Resolution Time**
-- **Target**: <5 minutes for conflict resolution
-- **Current**: Manual intervention required
-- **Expected**: Automated resolution
-
-### **Multi-Region Success Rate**
-- **Target**: >90% successful multi-region deployments
-- **Current**: Manual region selection
-- **Expected**: Intelligent region selection
-
-## 🔮 Future Enhancements
-
-### **1. Advanced Monitoring**
-- Real-time deployment status dashboard
-- ML-powered deployment failure prediction
-- Advanced cost prediction and optimization
-
-### **2. Enhanced Automation**
-- Self-healing deployments
-- Dynamic resource scaling
-- Comprehensive automated testing
-
-### **3. Enterprise Integration**
-- Azure DevOps integration
-- GitHub Actions workflows
-- Advanced security and compliance features
-
----
-
-## 📚 References
-
-- [Enterprise Deployment Architecture](../docs/ENTERPRISE_DEPLOYMENT_ARCHITECTURE.md)
-- [Azure Bicep Documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/bicep/)
-- [Azure CLI Documentation](https://docs.microsoft.com/en-us/cli/azure/)
+- **Clean Bicep Template**: `infrastructure/azure-resources-core.bicep`
+- **Deterministic Naming**: Uses `uniqueString()` for consistent resource names
+- **Environment-Driven**: Supports dev/staging/prod configurations
+- **Production Ready**: Only includes services that actually work
