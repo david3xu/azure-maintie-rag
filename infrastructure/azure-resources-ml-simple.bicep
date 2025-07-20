@@ -35,16 +35,18 @@ var resourceConfig = {
 var currentConfig = resourceConfig[environment]
 
 // Use same deterministic naming pattern as core template
+@minLength(10)
+@description('Unique deployment token from main deployment')
 param deploymentToken string = uniqueString(resourceGroup().id, environment, resourcePrefix)
 
 // Deterministic resource naming - following existing pattern
-var mlStorageAccountName = '${resourcePrefix}${environment}mlstor${take(deploymentToken, 6)}'
-var mlWorkspaceName = '${resourcePrefix}-${environment}-ml-${take(deploymentToken, 6)}'
+var mlStorageAccountName = '${resourcePrefix}${environment}mlstor${take(deploymentToken, 8)}'
+var mlWorkspaceName = '${resourcePrefix}-${environment}-ml'
 
-// Reference existing resources from core deployment - using same naming pattern
-var existingStorageAccountName = '${resourcePrefix}${environment}stor${take(deploymentToken, 8)}'
-var existingKeyVaultName = '${resourcePrefix}-${environment}-kv-${take(deploymentToken, 6)}'
-var existingAppInsightsName = '${resourcePrefix}-${environment}-appinsights'
+// Parameters for existing resources from core deployment
+param existingStorageAccountName string
+param existingKeyVaultName string
+param existingAppInsightsName string = '${resourcePrefix}-${environment}-appinsights'
 
 // Get existing resources from core deployment
 resource existingStorageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' existing = {
@@ -72,6 +74,21 @@ resource mlStorageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' = {
   }
 }
 
+// ML Storage Blob Service
+resource mlBlobService 'Microsoft.Storage/storageAccounts/blobServices@2021-04-01' = {
+  parent: mlStorageAccount
+  name: 'default'
+}
+
+// ML Workspace Container
+resource mlWorkspaceContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-04-01' = {
+  parent: mlBlobService
+  name: 'azureml'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
 // Azure ML Workspace
 resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2021-04-01' = {
   name: mlWorkspaceName
@@ -85,6 +102,22 @@ resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2021-04-01' =
     applicationInsights: existingAppInsights.id
     friendlyName: 'Universal RAG ML Workspace - ${toUpper(environment)}'
     description: 'ML workspace for Universal RAG GNN training and inference'
+  }
+}
+
+// Role assignments for ML workspace managed identity
+resource storageContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe' // Storage Blob Data Contributor
+}
+
+resource mlWorkspaceStorageRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  scope: mlStorageAccount
+  name: guid(mlWorkspace.id, mlStorageAccount.id, storageContributorRoleDefinition.id)
+  properties: {
+    roleDefinitionId: storageContributorRoleDefinition.id
+    principalId: mlWorkspace.identity.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 

@@ -38,7 +38,7 @@ var resourceConfig = {
 var currentConfig = resourceConfig[environment]
 
 // Use same deterministic naming pattern as other templates
-param deploymentToken string = uniqueString(resourceGroup().id, deployment().name)
+param deploymentToken string = uniqueString(resourceGroup().id, environment, resourcePrefix)
 
 // Deterministic resource naming - following existing pattern from codebase
 var cosmosAccountName = '${resourcePrefix}-${environment}-cosmos-${take(deploymentToken, 6)}'
