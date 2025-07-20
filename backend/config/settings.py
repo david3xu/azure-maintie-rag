@@ -61,32 +61,32 @@ class Settings(BaseSettings):
     azure_cosmos_db_connection_string: str = Field(default="", env="AZURE_COSMOS_DB_CONNECTION_STRING")
 
     # Azure ML Settings
-azure_subscription_id: str = Field(default="", env="AZURE_SUBSCRIPTION_ID")
-azure_resource_group: str = Field(default="", env="AZURE_RESOURCE_GROUP")
-azure_ml_workspace: str = Field(default="", env="AZURE_ML_WORKSPACE")
-azure_ml_workspace_name: str = Field(default="", env="AZURE_ML_WORKSPACE_NAME")
-azure_tenant_id: str = Field(default="", env="AZURE_TENANT_ID")
+    azure_subscription_id: str = Field(default="", env="AZURE_SUBSCRIPTION_ID")
+    azure_resource_group: str = Field(default="", env="AZURE_RESOURCE_GROUP")
+    azure_ml_workspace: str = Field(default="", env="AZURE_ML_WORKSPACE")
+    azure_ml_workspace_name: str = Field(default="", env="AZURE_ML_WORKSPACE_NAME")
+    azure_tenant_id: str = Field(default="", env="AZURE_TENANT_ID")
 
-# Azure ML Quality Assessment Settings
-azure_ml_confidence_endpoint: str = Field(default="", env="AZURE_ML_CONFIDENCE_ENDPOINT")
-azure_ml_completeness_endpoint: str = Field(default="", env="AZURE_ML_COMPLETENESS_ENDPOINT")
+    # Azure ML Quality Assessment Settings
+    azure_ml_confidence_endpoint: str = Field(default="", env="AZURE_ML_CONFIDENCE_ENDPOINT")
+    azure_ml_completeness_endpoint: str = Field(default="", env="AZURE_ML_COMPLETENESS_ENDPOINT")
 
-# Azure Text Analytics Settings
-azure_text_analytics_endpoint: str = Field(default="", env="AZURE_TEXT_ANALYTICS_ENDPOINT")
-azure_text_analytics_key: str = Field(default="", env="AZURE_TEXT_ANALYTICS_KEY")
+    # Azure Text Analytics Settings
+    azure_text_analytics_endpoint: str = Field(default="", env="AZURE_TEXT_ANALYTICS_ENDPOINT")
+    azure_text_analytics_key: str = Field(default="", env="AZURE_TEXT_ANALYTICS_KEY")
 
-# Knowledge Extraction Configuration
-extraction_quality_tier: str = Field(default="standard", env="EXTRACTION_QUALITY_TIER")
-extraction_confidence_threshold: float = Field(default=0.7, env="EXTRACTION_CONFIDENCE_THRESHOLD")
-max_entities_per_document: int = Field(default=100, env="MAX_ENTITIES_PER_DOCUMENT")
-extraction_batch_size: int = Field(default=10, env="EXTRACTION_BATCH_SIZE")
-enable_text_analytics_preprocessing: bool = Field(default=True, env="ENABLE_TEXT_ANALYTICS_PREPROCESSING")
+    # Knowledge Extraction Configuration
+    extraction_quality_tier: str = Field(default="standard", env="EXTRACTION_QUALITY_TIER")
+    extraction_confidence_threshold: float = Field(default=0.7, env="EXTRACTION_CONFIDENCE_THRESHOLD")
+    max_entities_per_document: int = Field(default=100, env="MAX_ENTITIES_PER_DOCUMENT")
+    extraction_batch_size: int = Field(default=10, env="EXTRACTION_BATCH_SIZE")
+    enable_text_analytics_preprocessing: bool = Field(default=True, env="ENABLE_TEXT_ANALYTICS_PREPROCESSING")
 
-# Azure OpenAI Rate Limiting
-azure_openai_max_tokens_per_minute: int = Field(default=40000, env="AZURE_OPENAI_MAX_TOKENS_PER_MINUTE")
-azure_openai_max_requests_per_minute: int = Field(default=60, env="AZURE_OPENAI_MAX_REQUESTS_PER_MINUTE")
-azure_openai_cost_threshold_per_hour: float = Field(default=50.0, env="AZURE_OPENAI_COST_THRESHOLD_PER_HOUR")
-azure_openai_priority_tier: str = Field(default="standard", env="AZURE_OPENAI_PRIORITY_TIER")
+    # Azure OpenAI Rate Limiting
+    azure_openai_max_tokens_per_minute: int = Field(default=40000, env="AZURE_OPENAI_MAX_TOKENS_PER_MINUTE")
+    azure_openai_max_requests_per_minute: int = Field(default=60, env="AZURE_OPENAI_MAX_REQUESTS_PER_MINUTE")
+    azure_openai_cost_threshold_per_hour: float = Field(default=50.0, env="AZURE_OPENAI_COST_THRESHOLD_PER_HOUR")
+    azure_openai_priority_tier: str = Field(default="standard", env="AZURE_OPENAI_PRIORITY_TIER")
 
     # Azure Key Vault Settings - Enterprise Security Enhancement
     azure_key_vault_url: str = Field(default="", env="AZURE_KEY_VAULT_URL")
@@ -176,12 +176,106 @@ azure_openai_priority_tier: str = Field(default="standard", env="AZURE_OPENAI_PR
     ml_experiment_name: str = Field(default="universal-rag-gnn", env="ML_EXPERIMENT_NAME")
     ml_environment_name: str = Field(default="gnn-training-env", env="ML_ENVIRONMENT_NAME")
 
+    # Environment-specific service configurations
+    SERVICE_CONFIGS: ClassVar[Dict[str, Dict[str, Any]]] = {
+        'dev': {
+            'search_sku': 'basic',
+            'search_replicas': 1,
+            'storage_sku': 'Standard_LRS',
+            'cosmos_throughput': 400,
+            'ml_compute_instances': 1,
+            'openai_tokens_per_minute': 10000,
+            'telemetry_sampling_rate': 10.0,
+            'retention_days': 30,
+            'app_insights_sampling': 10.0
+        },
+        'staging': {
+            'search_sku': 'standard',
+            'search_replicas': 1,
+            'storage_sku': 'Standard_ZRS',
+            'cosmos_throughput': 800,
+            'ml_compute_instances': 2,
+            'openai_tokens_per_minute': 20000,
+            'telemetry_sampling_rate': 5.0,
+            'retention_days': 60,
+            'app_insights_sampling': 5.0
+        },
+        'prod': {
+            'search_sku': 'standard',
+            'search_replicas': 2,
+            'storage_sku': 'Standard_GRS',
+            'cosmos_throughput': 1600,
+            'ml_compute_instances': 4,
+            'openai_tokens_per_minute': 40000,
+            'telemetry_sampling_rate': 1.0,
+            'retention_days': 90,
+            'app_insights_sampling': 1.0
+        }
+    }
+
+    def get_service_config(self, config_key: str):
+        """Get environment-specific service configuration"""
+        env_config = self.SERVICE_CONFIGS.get(self.azure_environment, self.SERVICE_CONFIGS['dev'])
+        return env_config.get(config_key)
+
+    # Cost optimization properties
+    @property
+    def effective_search_sku(self) -> str:
+        return self.get_service_config('search_sku')
+
+    @property
+    def effective_storage_sku(self) -> str:
+        return self.get_service_config('storage_sku')
+
+    @property
+    def effective_openai_tokens_per_minute(self) -> int:
+        return self.get_service_config('openai_tokens_per_minute')
+
+    @property
+    def effective_cosmos_throughput(self) -> int:
+        return self.get_service_config('cosmos_throughput')
+
+    @property
+    def effective_ml_compute_instances(self) -> int:
+        return self.get_service_config('ml_compute_instances')
+
+    @property
+    def effective_telemetry_sampling_rate(self) -> float:
+        return self.get_service_config('telemetry_sampling_rate')
+
+    @property
+    def effective_retention_days(self) -> int:
+        return self.get_service_config('retention_days')
+
     def get_resource_name(self, resource_type: str, suffix: str = "") -> str:
-        """Generate Azure resource names following convention"""
-        parts = [self.azure_resource_prefix, self.azure_environment, self.azure_region, resource_type]
+        """Generate Azure resource names following enterprise convention"""
+        # Resource type mappings for consistent naming
+        resource_mappings = {
+            'storage': 'stor',
+            'search': 'srch',
+            'keyvault': 'kv',
+            'cosmos': 'cosmos',
+            'ml': 'ml',
+            'appinsights': 'ai',
+            'loganalytics': 'law'
+        }
+
+        # Get short name for resource type
+        short_type = resource_mappings.get(resource_type, resource_type)
+
+        # Base name components
+        parts = [self.azure_resource_prefix, self.azure_environment, short_type]
+
+        # Add suffix if provided
         if suffix:
             parts.append(suffix)
-        return "-".join(parts)
+
+        # Join with appropriate separator based on resource type
+        if resource_type in ['storage']:
+            # Storage accounts cannot have hyphens
+            return "".join(parts)
+        else:
+            return "-".join(parts)
 
     def validate_azure_config(self) -> Dict[str, Any]:
         """Validate Azure configuration completeness"""
