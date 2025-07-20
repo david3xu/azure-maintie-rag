@@ -59,14 +59,15 @@ async def main():
             "Preventive measures and regular checks help identify potential problems early."
         ]
 
-        # Step 1: Store documents in Azure Blob Storage
-        print(f"\n☁️  Step 1: Storing documents in Azure Blob Storage...")
+        # Step 1: Store documents in Azure Blob Storage using RAG storage
+        print(f"\n☁️  Step 1: Storing documents in Azure Blob Storage (RAG)...")
         container_name = f"rag-data-{domain}"
-        await azure_services.storage_client.create_container(container_name)
+        rag_storage = azure_services.get_rag_storage_client()
+        await rag_storage.create_container(container_name)
 
         for i, text in enumerate(sample_texts):
             blob_name = f"document_{i}.txt"
-            await azure_services.storage_client.upload_text(container_name, blob_name, text)
+            await rag_storage.upload_text(container_name, blob_name, text)
 
         # Step 2: Process documents with Azure OpenAI
         print(f"\n🤖 Step 2: Processing documents with Azure OpenAI...")

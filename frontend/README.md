@@ -128,7 +128,7 @@ Real-time progress through Azure services:
 - **Azure OpenAI**: Knowledge extraction and response generation
 - **Azure Cognitive Search**: Vector search and retrieval
 - **Azure Cosmos DB Gremlin**: Native graph traversal and analytics
-- **Azure Blob Storage**: Document storage and retrieval
+- **Azure Blob Storage (Multi-Account)**: RAG data, ML models, and app data storage
 
 ## 🎨 UI Components
 

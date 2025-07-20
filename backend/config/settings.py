@@ -39,32 +39,46 @@ class Settings(BaseSettings):
     embedding_api_version: str = Field(default="2025-03-01-preview", env="EMBEDDING_API_VERSION")
     embedding_dimension: int = Field(default=1536, env="EMBEDDING_DIMENSION")
 
-    # Azure Storage Settings
+    # Azure Storage Settings - RAG Data Storage
     azure_storage_account: str = Field(default="", env="AZURE_STORAGE_ACCOUNT")
     azure_storage_key: str = Field(default="", env="AZURE_STORAGE_KEY")
     azure_blob_container: str = Field(default="universal-rag-data", env="AZURE_BLOB_CONTAINER")
     azure_storage_connection_string: str = Field(default="", env="AZURE_STORAGE_CONNECTION_STRING")
 
+    # Azure ML Storage Settings - ML Models and Artifacts
+    azure_ml_storage_account: str = Field(default="", env="AZURE_ML_STORAGE_ACCOUNT")
+    azure_ml_storage_key: str = Field(default="", env="AZURE_ML_STORAGE_KEY")
+    azure_ml_blob_container: str = Field(default="ml-models", env="AZURE_ML_BLOB_CONTAINER")
+    azure_ml_storage_connection_string: str = Field(default="", env="AZURE_ML_STORAGE_CONNECTION_STRING")
+
+    # Azure Application Storage Settings - App Data and Logs
+    azure_app_storage_account: str = Field(default="", env="AZURE_APP_STORAGE_ACCOUNT")
+    azure_app_storage_key: str = Field(default="", env="AZURE_APP_STORAGE_KEY")
+    azure_app_blob_container: str = Field(default="app-data", env="AZURE_APP_BLOB_CONTAINER")
+    azure_app_storage_connection_string: str = Field(default="", env="AZURE_APP_STORAGE_CONNECTION_STRING")
+
     # Azure Cognitive Search Settings
     azure_search_service: str = Field(default="", env="AZURE_SEARCH_SERVICE")
-    azure_search_key: str = Field(default="", env="AZURE_SEARCH_KEY")
+    azure_search_admin_key: str = Field(default="", env="AZURE_SEARCH_ADMIN_KEY")
+    azure_search_query_key: str = Field(default="", env="AZURE_SEARCH_QUERY_KEY")
     azure_search_index: str = Field(default="universal-rag-index", env="AZURE_SEARCH_INDEX")
     azure_search_api_version: str = Field(default="2023-11-01", env="AZURE_SEARCH_API_VERSION")
     azure_search_service_name: str = Field(default="", env="AZURE_SEARCH_SERVICE_NAME")
-    azure_search_admin_key: str = Field(default="", env="AZURE_SEARCH_ADMIN_KEY")
 
     # Azure Cosmos DB Settings (Gremlin API)
     azure_cosmos_endpoint: str = Field(default="", env="AZURE_COSMOS_ENDPOINT")
     azure_cosmos_key: str = Field(default="", env="AZURE_COSMOS_KEY")
     azure_cosmos_database: str = Field(default="universal-rag-db", env="AZURE_COSMOS_DATABASE")
     azure_cosmos_container: str = Field(default="knowledge-graph", env="AZURE_COSMOS_CONTAINER")
+    azure_cosmos_api_version: str = Field(default="2023-03-01-preview", env="AZURE_COSMOS_API_VERSION")
     azure_cosmos_db_connection_string: str = Field(default="", env="AZURE_COSMOS_DB_CONNECTION_STRING")
 
     # Azure ML Settings
     azure_subscription_id: str = Field(default="", env="AZURE_SUBSCRIPTION_ID")
-    azure_resource_group: str = Field(default="", env="AZURE_RESOURCE_GROUP")
+    azure_resource_group: str = Field(default="maintie-rag-rg", env="AZURE_RESOURCE_GROUP")
     azure_ml_workspace: str = Field(default="", env="AZURE_ML_WORKSPACE")
     azure_ml_workspace_name: str = Field(default="", env="AZURE_ML_WORKSPACE_NAME")
+    azure_ml_api_version: str = Field(default="2023-04-01", env="AZURE_ML_API_VERSION")
     azure_tenant_id: str = Field(default="", env="AZURE_TENANT_ID")
 
     # Azure ML Quality Assessment Settings
@@ -153,8 +167,15 @@ class Settings(BaseSettings):
     discovery_enable_ner: bool = Field(default=True, env="DISCOVERY_ENABLE_NER")
     discovery_enable_relations: bool = Field(default=True, env="DISCOVERY_ENABLE_RELATIONS")
 
-    # Trusted Hosts for Security
-    trusted_hosts: Optional[List[str]] = Field(default=None, env="TRUSTED_HOSTS")
+        # Trusted Hosts for Security
+    trusted_hosts: Optional[str] = Field(default="localhost,127.0.0.1", env="TRUSTED_HOSTS")
+
+    @property
+    def trusted_hosts_list(self) -> List[str]:
+        """Convert trusted_hosts string to list"""
+        if isinstance(self.trusted_hosts, str):
+            return [host.strip() for host in self.trusted_hosts.split(",")]
+        return []
 
     # GNN Training Pipeline Configuration
     azure_ml_compute_cluster: str = Field(default="gnn-cluster", env="AZURE_ML_COMPUTE_CLUSTER")
@@ -172,7 +193,7 @@ class Settings(BaseSettings):
     cosmos_db_throughput: int = Field(default=400, env="COSMOS_DB_THROUGHPUT")
 
     # Azure ML Workspace Configuration
-    ml_workspace_name: str = Field(default="maintie-dev-ml", env="ML_WORKSPACE_NAME")
+    ml_workspace_name: str = Field(default="maintie-dev-ml-1cdd8e11", env="ML_WORKSPACE_NAME")
     ml_experiment_name: str = Field(default="universal-rag-gnn", env="ML_EXPERIMENT_NAME")
     ml_environment_name: str = Field(default="gnn-training-env", env="ML_ENVIRONMENT_NAME")
 
@@ -281,7 +302,7 @@ class Settings(BaseSettings):
         """Validate Azure configuration completeness"""
         return {
             "storage_configured": bool(self.azure_storage_account and self.azure_storage_key),
-            "search_configured": bool(self.azure_search_service and self.azure_search_key),
+            "search_configured": bool(self.azure_search_service and self.azure_search_admin_key),
             "cosmos_configured": bool(self.azure_cosmos_endpoint and self.azure_cosmos_key),
             "ml_configured": bool(self.azure_subscription_id and self.azure_resource_group),
             "openai_configured": bool(self.openai_api_key and self.openai_api_base),

@@ -122,12 +122,14 @@ async def process_azure_query(
         for i, result in enumerate(search_results[:3]):  # Get top 3 documents
             blob_name = f"document_{i}.txt"
             try:
-                content = await azure_services.storage_client.download_text(container_name, blob_name)
+                # Use RAG storage client for document retrieval
+                rag_storage = azure_services.get_rag_storage_client()
+                content = await rag_storage.download_text(container_name, blob_name)
                 retrieved_docs.append(content)
             except Exception as e:
                 logger.warning(f"Could not retrieve document {i}: {e}")
 
-        azure_services_used.append("Azure Blob Storage")
+        azure_services_used.append("Azure Blob Storage (RAG)")
 
         # Step 3: Generate response using Azure OpenAI
         logger.info("Generating response with Azure OpenAI...")
@@ -296,9 +298,19 @@ async def initialize_domain(request: DomainInitializationRequest) -> Dict[str, A
         azure_services = AzureServicesManager()
         await azure_services.initialize()
 
-        # Step 1: Create Azure Blob Storage container
-        container_name = f"rag-data-{request.domain}"
-        await azure_services.storage_client.create_container(container_name)
+        # Step 1: Create Azure Blob Storage containers for different data types
+        rag_container_name = f"rag-data-{request.domain}"
+        ml_container_name = f"ml-models-{request.domain}"
+        app_container_name = f"app-data-{request.domain}"
+
+        # Create containers using appropriate storage clients
+        rag_storage = azure_services.get_rag_storage_client()
+        ml_storage = azure_services.get_ml_storage_client()
+        app_storage = azure_services.get_app_storage_client()
+
+        await rag_storage.create_container(rag_container_name)
+        await ml_storage.create_container(ml_container_name)
+        await app_storage.create_container(app_container_name)
 
         # Step 2: Create Azure Cognitive Search index
         index_name = f"rag-index-{request.domain}"
@@ -312,11 +324,14 @@ async def initialize_domain(request: DomainInitializationRequest) -> Dict[str, A
             "success": True,
             "domain": request.domain,
             "azure_services_initialized": {
-                "blob_storage": container_name,
+                "rag_storage": rag_container_name,
+                "ml_storage": ml_container_name,
+                "app_storage": app_container_name,
                 "cognitive_search": index_name,
                 "cosmos_db_gremlin": f"graph-{request.domain}"
             },
-            "message": f"Domain '{request.domain}' initialized with Azure services"
+            "message": f"Domain '{request.domain}' initialized with Azure services (multi-storage)"
+        }
         }
 
     except Exception as e:

@@ -12,7 +12,10 @@ from openai import AzureOpenAI
 from ..models.universal_rag_models import (
     UniversalSearchResult, UniversalRAGResponse, UniversalEnhancedQuery
 )
-from ...config.settings import settings
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +116,8 @@ class AzureOpenAICompletionService:
 
         except Exception as e:
             logger.error(f"Universal response generation failed: {e}")
-            return self._create_fallback_response(query, str(e))
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Response generation failed: {e}")
 
     def generate_response_fixed(self,
                                query: Union[str, UniversalEnhancedQuery],
@@ -258,23 +262,7 @@ Context:
 
         return min(confidence, 0.95)  # Cap at 95%
 
-    def _create_fallback_response(self, query: str, error_msg: str) -> UniversalRAGResponse:
-        """Create fallback response when generation fails"""
-
-        return UniversalRAGResponse(
-            query=query,
-            answer=f"I apologize, but I encountered an issue generating a response for your {self.domain} question. Please try rephrasing your question or contact support if the issue persists.",
-            confidence=0.1,
-            sources=[],
-            entities_used=[],
-            processing_metadata={
-                "domain": self.domain,
-                "generation_method": "fallback",
-                "error": error_msg
-            },
-            citations=[],
-            domain=self.domain
-        )
+    # ❌ REMOVED: Fallback response method - errors should propagate
 
     async def configure_domain_knowledge(self,
                                        entities: List[Any] = None,

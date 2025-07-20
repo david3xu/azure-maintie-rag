@@ -34,9 +34,12 @@ help:
 	@echo "  make clean-azure - Clean Azure deployment artifacts"
 	@echo ""
 	@echo "🏗️ Azure Infrastructure:"
-	@echo "  make azure-deploy   - Deploy all 10 Azure services"
-	@echo "  make azure-status   - Check Azure infrastructure status"
-	@echo "  make azure-teardown - Clean up Azure resources"
+	@echo "  make azure-deploy      - Deploy all 10 Azure services"
+	@echo "  make azure-deploy-auto - Deploy + auto-configure environment"
+	@echo "  make azure-dev-auto    - Deploy + auto-configure + start dev"
+	@echo "  make azure-status      - Check Azure infrastructure status"
+	@echo "  make azure-teardown    - Clean up Azure resources"
+	@echo "  make clean-azure-config - Clean automated configuration"
 	@echo ""
 	@echo "🐳 Docker:"
 	@echo "  make docker-up  - Start with Docker"
@@ -184,6 +187,17 @@ azure-deploy:
 	@echo "💡 Deploys all 10 Azure services (Storage, Search, ML, Cosmos DB, etc.)"
 	./scripts/enhanced-complete-redeploy.sh
 
+# Automated Azure deployment and configuration
+azure-deploy-auto:
+	@echo "🚀 Automated Azure deployment with configuration generation..."
+	./scripts/enhanced-complete-redeploy.sh
+	@echo "✅ Backend environment automatically configured"
+
+azure-dev-auto:
+	@echo "🔄 Starting development with automated Azure configuration..."
+	make azure-deploy-auto
+	make dev
+
 azure-status:
 	@echo "📊 Checking Azure Universal RAG infrastructure status..."
 	@echo "💡 Shows all 10 services and their operational status"
@@ -194,6 +208,12 @@ azure-teardown:
 	@echo "⚠️  This will delete ALL Azure resources in the resource group"
 	@echo "💡 Use with caution - this action cannot be undone"
 	./scripts/teardown.sh
+
+# Clean automated configuration
+clean-azure-config:
+	@echo "🧹 Cleaning automated Azure configuration..."
+	rm -f backend/.env .azure_deployment_outputs.json
+	@echo "✅ Automated configuration cleaned"
 
 clean-azure:
 	@echo "🧹 Cleaning Azure deployment artifacts..."

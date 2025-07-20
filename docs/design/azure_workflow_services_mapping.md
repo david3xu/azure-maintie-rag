@@ -52,7 +52,7 @@ graph TD
 | **Step 1** | Azure Services Manager | `AzureServicesManager()` | Orchestrate all Azure services |
 | **Step 2** | Azure OpenAI Integration | `AzureOpenAIIntegration()` | LLM processing coordination |
 | **Step 3** | Azure Cognitive Search | `azure_services.search_client` | Vector search and indexing |
-| **Step 4** | Azure Blob Storage | `azure_services.storage_client` | Document storage and retrieval |
+| **Step 4** | Azure Blob Storage (RAG) | `azure_services.get_rag_storage_client()` | Document storage and retrieval |
 | **Step 5** | Azure OpenAI Processing | `openai_integration.generate_response()` | Text generation and analysis |
 | **Step 6** | Azure Cosmos DB | `azure_services.cosmos_client` | Knowledge graph storage |
 
@@ -147,7 +147,7 @@ Unified Search → Context Retrieval → Azure OpenAI Response Generation → Fi
 | 1 | Azure Services Manager | `[AZURE] Azure Services Initialization` | `AzureServicesManager` |
 | 2 | Azure OpenAI | `[OPENAI] Azure OpenAI Integration` | `AzureOpenAIIntegration` |
 | 3 | Azure Cognitive Search | `[SEARCH] Azure Cognitive Search` | `azure_services.search_client` |
-| 4 | Azure Blob Storage | `[STORAGE] Azure Blob Storage` | `azure_services.storage_client` |
+| 4 | Azure Blob Storage (RAG) | `[STORAGE] Azure Blob Storage (RAG)` | `azure_services.get_rag_storage_client()` |
 | 5 | Azure OpenAI Processing | `[OPENAI] Azure OpenAI Processing` | `openai_integration.generate_response()` |
 | 6 | Azure Cosmos DB | `[COSMOS] Azure Cosmos DB Storage` | `azure_services.cosmos_client` |
 
@@ -160,11 +160,11 @@ Unified Search → Context Retrieval → Azure OpenAI Response Generation → Fi
 
 | **Mermaid Component** | **Azure Resource** | **Bicep Template** | **Resource Name** |
 |-----------------------|-------------------|-------------------|-------------------|
-| Azure Blob Storage | Storage Account | `azure-resources-core.bicep` | `maintiedevstorage` |
-| Azure Cognitive Search | Search Service | `azure-resources-core.bicep` | `maintie-dev-search` |
-| Azure Cosmos DB Gremlin | Cosmos DB Account | *Missing* ⚠️ | `maintie-dev-cosmos` |
+| Azure Blob Storage (RAG) | Storage Account | `azure-resources-core.bicep` | `maintiedevmlstor1cdd8e11` |
+| Azure Cognitive Search | Search Service | `azure-resources-core.bicep` | `maintie-dev-search-1cdd8e` |
+| Azure Cosmos DB Gremlin | Cosmos DB Account | `azure-resources-core.bicep` | `maintie-dev-cosmos-1cdd8e11` |
 | Azure OpenAI | External Service | Configuration | `OPENAI_API_BASE` |
-| Azure ML | ML Workspace | `azure-resources-ml.bicep` | `maintie-dev-ml` |
+| Azure ML | ML Workspace | `azure-resources-ml.bicep` | `maintie-dev-ml-1cdd8e11` |
 
 ---
 
@@ -224,7 +224,7 @@ azure_storage_account: str = "maintiedevstorage"
 azure_blob_container: str = "universal-rag-data"
 
 # Azure Cognitive Search
-azure_search_service: str = "maintie-dev-search"
+azure_search_service: str = "maintie-dev-search-1cdd8e"
 azure_search_index: str = "universal-rag-index"
 
 # Azure Cosmos DB
@@ -233,7 +233,7 @@ azure_cosmos_database: str = "universal-rag-db"
 azure_cosmos_container: str = "knowledge-graph"
 
 # Azure ML
-azure_ml_workspace: str = "maintie-dev-ml"
+azure_ml_workspace: str = "maintie-dev-ml-1cdd8e11"
 ```
 
 ---

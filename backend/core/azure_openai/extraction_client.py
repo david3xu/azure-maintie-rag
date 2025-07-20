@@ -12,7 +12,10 @@ from datetime import datetime
 from openai import AzureOpenAI
 
 from ..models.universal_rag_models import UniversalEntity, UniversalRelation
-from ...config.settings import settings
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -443,8 +446,9 @@ class OptimizedLLMExtractor:
             return entities[:15]  # Limit
 
         except Exception as e:
-            logger.warning(f"Failed to parse entity response: {e}")
-            return []
+            logger.error(f"Failed to parse entity response: {e}")
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Entity response parsing failed: {e}")
 
     def _parse_relationship_response(self, response_content: str) -> List[str]:
         """Parse relationship response from LLM"""
@@ -472,8 +476,9 @@ class OptimizedLLMExtractor:
             return relationships[:12]  # Limit
 
         except Exception as e:
-            logger.warning(f"Failed to parse relationship response: {e}")
-            return []
+            logger.error(f"Failed to parse relationship response: {e}")
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Relationship response parsing failed: {e}")
 
     def _parse_triplet_response(self, response_content: str) -> List[tuple]:
         """Parse triplet response from LLM"""
@@ -495,5 +500,6 @@ class OptimizedLLMExtractor:
             return []
 
         except Exception as e:
-            logger.warning(f"Failed to parse triplet response: {e}")
-            return []
+            logger.error(f"Failed to parse triplet response: {e}")
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Triplet response parsing failed: {e}")

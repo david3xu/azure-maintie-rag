@@ -75,7 +75,9 @@ class TestUniversalRAG:
     async def test_azure_services_initialization(self, azure_services):
         """Test Azure services initialization"""
         # Test that all Azure services are properly initialized
-        assert azure_services.storage_client is not None
+        assert azure_services.get_rag_storage_client() is not None
+        assert azure_services.get_ml_storage_client() is not None
+        assert azure_services.get_app_storage_client() is not None
         assert azure_services.search_client is not None
         assert azure_services.cosmos_client is not None
         assert azure_services.ml_client is not None
@@ -99,21 +101,22 @@ class TestUniversalRAG:
         test_content = "This is a test document for RAG processing."
 
         try:
-            # Test container creation
-            await azure_services.storage_client.create_container(container_name)
+            # Test container creation using RAG storage
+            rag_storage = azure_services.get_rag_storage_client()
+            await rag_storage.create_container(container_name)
 
             # Test text upload
-            await azure_services.storage_client.upload_text(container_name, blob_name, test_content)
+            await rag_storage.upload_text(container_name, blob_name, test_content)
 
             # Test text download
-            downloaded_content = await azure_services.storage_client.download_text(container_name, blob_name)
+            downloaded_content = await rag_storage.download_text(container_name, blob_name)
 
             assert downloaded_content == test_content
 
         finally:
             # Clean up
-            await azure_services.storage_client.delete_blob(container_name, blob_name)
-            await azure_services.storage_client.delete_container(container_name)
+            await rag_storage.delete_blob(container_name, blob_name)
+            await rag_storage.delete_container(container_name)
 
     @pytest.mark.asyncio
     async def test_azure_cognitive_search(self, azure_services, sample_texts):
@@ -135,13 +138,14 @@ class TestUniversalRAG:
         query = "What are system monitoring best practices?"
 
         try:
-            # Store documents in Azure Blob Storage
+            # Store documents in Azure Blob Storage using RAG storage
             container_name = f"rag-data-{domain}"
-            await azure_services.storage_client.create_container(container_name)
+            rag_storage = azure_services.get_rag_storage_client()
+            await rag_storage.create_container(container_name)
 
             for i, text in enumerate(sample_texts):
                 blob_name = f"document_{i}.txt"
-                await azure_services.storage_client.upload_text(container_name, blob_name, text)
+                await rag_storage.upload_text(container_name, blob_name, text)
 
             # Process documents with Azure OpenAI
             processed_docs = await openai_integration.process_documents(sample_texts, domain)
@@ -161,20 +165,21 @@ class TestUniversalRAG:
 
         finally:
             # Clean up
-            await azure_services.storage_client.delete_container(container_name)
+            await rag_storage.delete_container(container_name)
 
     @pytest.mark.asyncio
     async def test_multi_domain_support(self, azure_services, openai_integration, sample_domains):
         """Test multi-domain support"""
         for domain, texts in sample_domains.items():
             try:
-                # Store domain-specific documents
+                # Store domain-specific documents using RAG storage
                 container_name = f"rag-data-{domain}"
-                await azure_services.storage_client.create_container(container_name)
+                rag_storage = azure_services.get_rag_storage_client()
+                await rag_storage.create_container(container_name)
 
                 for i, text in enumerate(texts):
                     blob_name = f"document_{i}.txt"
-                    await azure_services.storage_client.upload_text(container_name, blob_name, text)
+                    await rag_storage.upload_text(container_name, blob_name, text)
 
                 # Process documents
                 processed_docs = await openai_integration.process_documents(texts, domain)
@@ -197,7 +202,7 @@ class TestUniversalRAG:
 
             finally:
                 # Clean up
-                await azure_services.storage_client.delete_container(container_name)
+                await rag_storage.delete_container(container_name)
 
     @pytest.mark.asyncio
     async def test_azure_cosmos_gremlin_operations(self, azure_services):
@@ -252,8 +257,9 @@ class TestUniversalRAG:
     async def test_error_handling(self, azure_services):
         """Test error handling in Azure services"""
         # Test with invalid container name
+        rag_storage = azure_services.get_rag_storage_client()
         with pytest.raises(Exception):
-            await azure_services.storage_client.create_container("")
+            await rag_storage.create_container("")
 
     def test_azure_settings(self):
         """Test Azure settings configuration"""

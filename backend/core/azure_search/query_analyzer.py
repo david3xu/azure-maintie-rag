@@ -149,30 +149,14 @@ class AzureSearchQueryAnalyzer:
                 }
 
             except Exception as e:
-                logger.warning(f"LLM pattern discovery failed: {e}")
-                # Fallback to simple keyword extraction
-                self._extract_keywords_fallback(text_samples)
+                logger.error(f"LLM pattern discovery failed: {e}")
+                # ❌ REMOVED: Silent fallback - let the error propagate
+                raise RuntimeError(f"LLM pattern discovery failed: {e}")
 
         except Exception as e:
             logger.warning(f"Pattern building failed: {e}")
 
-    def _extract_keywords_fallback(self, text_samples: List[str]):
-        """Fallback keyword extraction when LLM is unavailable"""
-        all_text = " ".join(text_samples).lower()
-
-        # Simple keyword extraction
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', all_text)
-        word_freq = defaultdict(int)
-
-        for word in words:
-            if len(word) > 3:  # Skip very short words
-                word_freq[word] += 1
-
-        # Get top concepts
-        top_concepts = [word for word, freq in sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:10]]
-        self.discovered_concepts.update(top_concepts)
-
-        self.query_patterns = {"domain_concepts": top_concepts}
+    # ❌ REMOVED: Fallback keyword extraction method - errors should propagate
 
     def analyze_query_universal(self, query: str) -> UniversalQueryAnalysis:
         """Universal query analysis that works with any domain"""
@@ -224,7 +208,8 @@ class AzureSearchQueryAnalyzer:
 
         except Exception as e:
             logger.error(f"Query analysis failed: {e}")
-            return self._create_fallback_analysis(query)
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Query analysis failed: {e}")
 
     def _classify_query_universal(self, query: str) -> Tuple[QueryType, float]:
         """Universal query classification without domain assumptions"""
@@ -249,8 +234,8 @@ class AzureSearchQueryAnalyzer:
             if best_type[1] > 0:
                 return best_type[0], min(best_type[1] * 2, 1.0)  # Scale confidence
 
-        # Fallback classification
-        return QueryType.UNKNOWN, 0.5
+        # ❌ REMOVED: Silent fallback - let the error propagate
+        raise RuntimeError(f"Query classification failed for: {query}")
 
     def _extract_entities_universal(self, query: str) -> List[str]:
         """Extract entities from query using discovered domain knowledge"""
@@ -357,22 +342,7 @@ class AzureSearchQueryAnalyzer:
 
         return related[:5]  # Limit expansion
 
-    def _create_fallback_analysis(self, query: str) -> UniversalQueryAnalysis:
-        """Create fallback analysis when main analysis fails"""
-        return UniversalQueryAnalysis(
-            query_text=query,
-            query_type=QueryType.UNKNOWN,
-            confidence=0.3,
-            entities_detected=[],
-            concepts_detected=[],
-            intent="general_inquiry",
-            complexity="medium",
-            metadata={
-                "domain": self.domain,
-                "analysis_method": "fallback",
-                "note": "Analysis failed, using fallback"
-            }
-        )
+    # ❌ REMOVED: Fallback analysis method - errors should propagate
 
     # Simplified methods for backward compatibility
     def analyze_query_simple(self, query: str) -> UniversalQueryAnalysis:
