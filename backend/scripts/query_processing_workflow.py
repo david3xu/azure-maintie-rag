@@ -70,7 +70,9 @@ async def main():
         for i, result in enumerate(search_results[:3]):  # Get top 3 documents
             blob_name = f"document_{i}.txt"
             try:
-                content = await azure_services.storage_client.download_text(container_name, blob_name)
+                # Use RAG storage for document retrieval
+            rag_storage = azure_services.get_rag_storage_client()
+            content = await rag_storage.download_text(container_name, blob_name)
                 retrieved_docs.append(content)
             except Exception as e:
                 print(f"   ⚠️  Could not retrieve document {i}: {e}")

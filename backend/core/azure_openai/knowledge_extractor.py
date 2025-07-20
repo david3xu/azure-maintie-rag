@@ -518,8 +518,8 @@ class AzureOpenAIKnowledgeExtractor:
 
         except Exception as e:
             logger.error(f"Enterprise preprocessing failed: {e}")
-            # Fallback to basic document creation
-            await self._create_universal_documents(texts, [f"text_{i}" for i in range(len(texts))])
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Enterprise preprocessing failed: {e}")
 
     async def _extract_entities_and_relations_with_rate_limiting(self) -> None:
         """Extract entities and relations with enterprise rate limiting"""
@@ -606,8 +606,8 @@ class AzureOpenAIKnowledgeExtractor:
 
         except Exception as e:
             logger.error(f"Enterprise quality assessment failed: {e}")
-            # Fallback to basic quality assessment
-            return await self._validate_extracted_knowledge()
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Enterprise quality assessment failed: {e}")
 
     def get_extracted_knowledge(self) -> Dict[str, Any]:
         """Get all extracted knowledge in a structured format"""

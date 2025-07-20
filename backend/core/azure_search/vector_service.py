@@ -255,11 +255,8 @@ class AzureSearchVectorService:
 
         except Exception as e:
             logger.error(f"Universal document indexing failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "fallback_message": "Universal RAG indexing encountered an error"
-            }
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Universal document indexing failed: {e}")
 
     def search_universal(self, query: str, top_k: int = 10) -> List[UniversalSearchResult]:
         """Universal semantic search across all documents"""
@@ -315,7 +312,8 @@ class AzureSearchVectorService:
 
         except Exception as e:
             logger.error(f"Universal search failed: {e}")
-            return []
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Universal search failed: {e}")
 
     def _save_index(self):
         """Save universal index to disk"""

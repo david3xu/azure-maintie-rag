@@ -29,6 +29,11 @@ Azure Universal RAG is a **production-grade backend system** for advanced univer
   - Enterprise architecture compliance
   - Deployment guides and usage instructions
   - Configuration validation and troubleshooting
+- **[AZURE_SETUP_GUIDE.md](AZURE_SETUP_GUIDE.md)** - Minimal Azure setup instructions:
+  - Environment configuration
+  - Azure service endpoints setup
+  - API keys configuration
+  - Startup validation and troubleshooting
 
 ### **Key Features Documented**
 - ✅ **Critical Error Fixes**: Azure CLI response stream consumption error resolved
@@ -57,7 +62,7 @@ Azure Universal RAG is a **production-grade backend system** for advanced univer
 
 ### Azure Infrastructure & Deployment
 - **Infrastructure as Code**: Bicep templates with deterministic naming
-- **Azure Blob Storage**: Document storage with hierarchical namespace
+- **Azure Blob Storage (Multi-Account)**: RAG data, ML models, and app data storage
 - **Azure Cognitive Search**: Vector search and indexing
 - **Azure Cosmos DB**: Knowledge graphs (Gremlin API)
 - **Azure OpenAI**: Processing and generation
@@ -86,7 +91,7 @@ Backend Stack:
 ├─ Azure OpenAI integration (openai>=1.13.3)
 ├─ Azure Cognitive Search (vector search)
 ├─ Azure Cosmos DB (knowledge graphs)
-├─ Azure Blob Storage (document storage)
+├─ Azure Blob Storage (multi-account: RAG, ML, App)
 ├─ Azure Machine Learning (advanced analytics + GNN training)
 ├─ NetworkX 3.2.0 graph processing
 ├─ PyTorch 2.0.0 + torch-geometric 2.3.0 (GNN)
@@ -134,8 +139,9 @@ backend/
 │   │   └── cosmos_gremlin_client.py
 │   ├── azure_search/       # ✅ Azure Cognitive Search
 │   │   └── search_client.py
-│   ├── azure_storage/      # ✅ Azure Blob Storage
-│   │   └── storage_client.py
+│   ├── azure_storage/      # ✅ Azure Blob Storage (Multi-Account)
+│   │   ├── storage_client.py
+│   │   └── storage_factory.py
 │   ├── azure_openai/       # ✅ Azure OpenAI
 │   ├── models/             # ✅ Universal data models
 │   ├── orchestration/      # ✅ RAG orchestration
@@ -240,9 +246,28 @@ cd azure-maintie-rag
 
 ### 2. Configure Azure environment
 
-- Copy `backend/config/environment_example.env` to `backend/.env`
-- Set your Azure service credentials and endpoints
-- Configure Azure OpenAI, Cognitive Search, Cosmos DB, and Blob Storage settings
+**✅ Minimal Setup Required - Your Architecture is Ready!**
+
+Your `make dev` is already architected for Azure services integration. Follow these steps:
+
+```bash
+# 1. Create environment file (already done)
+cp backend/config/environment_example.env backend/.env
+
+# 2. Update with actual Azure service endpoints
+./scripts/update-env-from-deployment.sh
+
+# 3. Add API keys to backend/.env (manual step)
+# - AZURE_STORAGE_KEY (from Azure Portal)
+# - AZURE_SEARCH_KEY (from Azure Portal)
+# - AZURE_COSMOS_KEY (from Azure Portal)
+# - OPENAI_API_KEY (your Azure OpenAI key)
+
+# 4. Start development
+make dev
+```
+
+**See [AZURE_SETUP_GUIDE.md](AZURE_SETUP_GUIDE.md) for detailed setup instructions.**
 
 ### 3. Full Project Setup
 
@@ -295,7 +320,7 @@ Our Azure Universal RAG system has achieved **complete functionality** through c
 - | Query Processing | ✅ Working | Azure OpenAI + Azure Services |
 - | Vector Search | ✅ Working | Azure Cognitive Search retrieval |
 - | Response Generation | ✅ Working | Azure OpenAI GPT-4 |
-- | Document Storage | ✅ Working | Azure Blob Storage |
+- | Document Storage | ✅ Working | Azure Blob Storage (Multi-Account) |
 - | Knowledge Graphs | ✅ Working | Azure Cosmos DB |
 - | Metadata Storage | ✅ Working | Azure Cosmos DB |
 - | **GNN Training** | ✅ **NEW** | Azure Machine Learning |
@@ -317,7 +342,7 @@ Our Azure Universal RAG system has achieved **complete functionality** through c
 - - Native graph traversal and analytics
 - - Multi-domain support
 -
-- **Azure Blob Storage**
+- **Azure Blob Storage (Multi-Account)**
 - - Document storage and retrieval
 - - Hierarchical namespace for data organization
 - - Version control for data updates
@@ -442,8 +467,9 @@ Our Azure Universal RAG system has achieved **complete functionality** through c
 - │  │  │  └─ cosmos_gremlin_client.py
 - │  │  ├─ azure_search/        # ✅ Azure Cognitive Search
 - │  │  │  └─ search_client.py
-- │  │  ├─ azure_storage/       # ✅ Azure Blob Storage
-- │  │  │  └─ storage_client.py
+- │  │  ├─ azure_storage/       # ✅ Azure Blob Storage (Multi-Account)
+- │  │  │  ├─ storage_client.py
+- │  │  │  └─ storage_factory.py
 - │  │  ├─ azure_openai/        # ✅ Azure OpenAI
 - │  │  ├─ models/              # ✅ Universal data models
 - │  │  ├─ orchestration/       # Main RAG orchestration logic
@@ -488,7 +514,7 @@ Our Azure Universal RAG system has achieved **complete functionality** through c
 
 ```mermaid
 flowchart TD
-    A[Raw Text Data] --> B[Azure Blob Storage]
+    A[Raw Text Data] --> B[Azure Blob Storage (RAG)]
     B --> C[Knowledge Extraction Azure OpenAI]
     C --> D[Azure Cognitive Search Vectors]
     C --> E[Entity/Relation Graph]
@@ -521,7 +547,7 @@ Streaming Progress Events → Frontend Progressive UI
 -
 - | **Phase** | **Component** | **Azure Service** | **Function** | **Streaming** |
 - |-----------|---------------|-------------------|--------------|---------------|
-- | **Data Ingestion** | Text Processor | Azure Blob Storage | Raw text → Clean documents | ✅ Progress |
+- | **Data Ingestion** | Text Processor | Azure Blob Storage (RAG) | Raw text → Clean documents | ✅ Progress |
 - | **Knowledge Extraction** | LLM Extractor | Azure OpenAI GPT-4 | Text → Entities + Relations | ✅ Progress |
 - | **Vector Indexing** | Azure Cognitive Search | Embedding + Vector DB | Documents → Searchable vectors | ✅ Progress |
 - | **Graph Construction** | Azure Cosmos DB Gremlin | Native graph algorithms | Entities → Knowledge graph | ✅ Progress |

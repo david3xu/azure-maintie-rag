@@ -17,6 +17,7 @@ backend/
 │
 ├── ☁️ azure/              # Azure service clients
 │   ├── storage_client.py  # Azure Blob Storage client
+│   └── storage_factory.py # Multi-account storage factory
 │   ├── search_client.py   # Azure Cognitive Search client
 │   ├── cosmos_gremlin_client.py  # Azure Cosmos DB Gremlin client
 │   ├── ml_client.py       # Azure Machine Learning client

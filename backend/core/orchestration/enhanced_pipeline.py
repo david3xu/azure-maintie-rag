@@ -355,10 +355,8 @@ class AzureRAGEnhancedPipeline:
                 response_length = len(str(response_content))
             confidence_score = query_results.get("confidence_score", 0.0)
         else:
-            # Fallback
-            search_results = []
-            response_length = len(str(query_results))
-            confidence_score = 0.0
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Unsupported query_results type: {type(query_results)}")
 
         return {
             "source_diversity": len(set(r.get("source", "") if isinstance(r, dict) else getattr(r, 'source', '') for r in search_results)),

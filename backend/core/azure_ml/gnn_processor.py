@@ -22,7 +22,10 @@ except ImportError:
 
 from ..azure_openai.text_processor import AzureOpenAITextProcessor
 from ..models.universal_rag_models import UniversalEntity, UniversalRelation
-from ...config.settings import settings
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -198,10 +201,8 @@ class AzureMLGNNProcessor:
 
         except Exception as e:
             logger.error(f"Universal node feature creation failed: {e}")
-            # Fallback to simple features
-            num_entities = len(self.entity_to_idx)
-            self.entity_features = torch.randn(num_entities, 8)
-            self.entity_types = torch.zeros(num_entities, dtype=torch.long)
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Universal node feature creation failed: {e}")
 
     def _create_universal_edge_data(self):
         """Create universal edge data from discovered relations"""
@@ -254,10 +255,8 @@ class AzureMLGNNProcessor:
 
         except Exception as e:
             logger.error(f"Universal edge data creation failed: {e}")
-            # Fallback to empty edges
-            self.edge_index = torch.zeros((2, 0), dtype=torch.long)
-            self.edge_attr = torch.zeros((0, 1), dtype=torch.float)
-            self.edge_types = torch.zeros(0, dtype=torch.long)
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Universal edge data creation failed: {e}")
 
     def _create_universal_torch_geometric_data(self) -> Optional[Data]:
         """Create PyTorch Geometric data object from universal features"""

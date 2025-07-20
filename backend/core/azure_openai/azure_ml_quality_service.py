@@ -105,7 +105,8 @@ class AzureMLQualityAssessment:
             return confidence_assessment
         except Exception as e:
             logger.error(f"Azure ML confidence assessment failed: {e}")
-            return self._fallback_confidence_assessment(entities, relations)
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Azure ML confidence assessment failed: {e}")
 
     async def _assess_domain_completeness(
         self,
@@ -130,7 +131,8 @@ class AzureMLQualityAssessment:
             return completeness_assessment
         except Exception as e:
             logger.error(f"Azure ML completeness assessment failed: {e}")
-            return self._fallback_completeness_assessment(extraction_context)
+            # ❌ REMOVED: Silent fallback - let the error propagate
+            raise RuntimeError(f"Azure ML completeness assessment failed: {e}")
 
     async def _assess_semantic_consistency(
         self,
@@ -156,7 +158,7 @@ class AzureMLQualityAssessment:
             "consistency_score": consistency_score,
             "entity_coverage": len(entity_ids.intersection(relation_entities)) / max(len(entity_ids), 1),
             "relation_coverage": len(relation_entities.intersection(entity_ids)) / max(len(relation_entities), 1),
-            "assessment_quality": "ml_enhanced" if self.ml_client else "fallback"
+            "assessment_quality": "ml_enhanced" if self.ml_client else "error"
         }
 
     async def _call_ml_endpoint(self, endpoint_url: str, features: Dict[str, Any]) -> Dict[str, Any]:
@@ -215,41 +217,7 @@ class AzureMLQualityAssessment:
 
         return low_confidence_items / max(total_items, 1)
 
-    def _fallback_confidence_assessment(self, entities: Dict[str, Any], relations: List[Any]) -> Dict[str, Any]:
-        """Fallback confidence assessment when ML is unavailable"""
-        confidences = []
-
-        for entity in entities.values():
-            if isinstance(entity, dict) and "confidence" in entity:
-                confidences.append(entity["confidence"])
-
-        for relation in relations:
-            if isinstance(relation, dict) and "confidence" in relation:
-                confidences.append(relation["confidence"])
-
-        avg_confidence = statistics.mean(confidences) if confidences else 0.5
-
-        return {
-            "confidence_score": avg_confidence,
-            "confidence_variance": statistics.variance(confidences) if len(confidences) > 1 else 0.0,
-            "low_confidence_ratio": self._calculate_low_confidence_ratio(entities, relations),
-            "assessment_quality": "fallback"
-        }
-
-    def _fallback_completeness_assessment(self, extraction_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Fallback completeness assessment when ML is unavailable"""
-        entity_count = extraction_context.get("entity_count", 0)
-        relation_count = extraction_context.get("relation_count", 0)
-
-        # Simple heuristic-based completeness score
-        completeness_score = min(1.0, (entity_count + relation_count) / 50.0)
-
-        return {
-            "completeness_score": completeness_score,
-            "entity_coverage": min(1.0, entity_count / 20.0),
-            "relation_coverage": min(1.0, relation_count / 30.0),
-            "assessment_quality": "fallback"
-        }
+    # ❌ REMOVED: Fallback assessment methods - errors should propagate
 
     def _calculate_enterprise_quality_score(
         self,

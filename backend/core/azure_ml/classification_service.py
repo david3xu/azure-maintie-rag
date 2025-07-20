@@ -39,13 +39,8 @@ class UniversalEntityClassifier:
             if result:
                 return result
 
-        # Fallback to generic entity
-        return ClassificationResult(
-            entity_type="generic_entity",
-            confidence=0.5,
-            category="universal",
-            metadata={"classifier": "universal_fallback"}
-        )
+        # ❌ REMOVED: Silent fallback - let the error propagate
+        raise RuntimeError(f"Entity classification failed for: {entity_text}")
 
     def classify_entities_batch(self, entities: List[str], contexts: List[str] = None) -> List[ClassificationResult]:
         """Classify multiple entities efficiently"""
@@ -175,13 +170,8 @@ class UniversalRelationClassifier:
             if result:
                 return result
 
-        # Fallback to generic relation
-        return ClassificationResult(
-            entity_type="generic_relation",
-            confidence=0.5,
-            category="universal",
-            metadata={"classifier": "universal_fallback"}
-        )
+        # ❌ REMOVED: Silent fallback - let the error propagate
+        raise RuntimeError(f"Relation classification failed for: {relation_text}")
 
     def _load_relation_types(self) -> Dict[str, Dict[str, Any]]:
         """Load relation types from domain configuration"""

@@ -24,7 +24,7 @@ class AzureCognitiveSearchClient:
 
         # Load from environment (matches azure_openai.py pattern)
         self.service_name = self.config.get('service_name') or azure_settings.azure_search_service
-        self.admin_key = self.config.get('admin_key') or azure_settings.azure_search_key
+        self.admin_key = self.config.get('admin_key') or azure_settings.azure_search_admin_key
         self.index_name = self.config.get('index_name') or azure_settings.azure_search_index
         self.api_version = azure_settings.azure_search_api_version
 

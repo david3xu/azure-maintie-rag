@@ -15,8 +15,8 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 # Azure service components
-from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIIntegration
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIIntegration
 from config.settings import AzureSettings
 from config.settings import settings
 from api.endpoints import health, azure_query_endpoint
@@ -44,6 +44,22 @@ async def lifespan(app: FastAPI):
         openai_integration = AzureOpenAIIntegration()
         azure_settings = AzureSettings()
 
+                # ADD: Check for automated configuration
+        if azure_settings.azure_use_managed_identity:
+            logger.info("Using automated Azure configuration with Managed Identity")
+            logger.info("No manual keys required - uses Azure credential chain")
+        else:
+            logger.info("Using manual configuration from environment variables")
+
+        # ADD: Validation check
+        validation_result = azure_settings.validate_azure_config()
+        logger.info(f"Azure configuration validation: {validation_result}")
+
+        # Log validation details
+        for service, configured in validation_result.items():
+            status = "✅" if configured else "❌"
+            logger.info(f"  {status} {service}: {'Configured' if configured else 'Not configured'}")
+
         # Store Azure services in app state
         app.state.azure_services = azure_services
         app.state.openai_integration = openai_integration
@@ -55,9 +71,8 @@ async def lifespan(app: FastAPI):
 
     except Exception as e:
         logger.error(f"Failed to initialize Azure services: {e}", exc_info=True)
-        app.state.azure_services = None
-        app.state.openai_integration = None
-        app.state.azure_settings = None
+        # ❌ REMOVED: Silent fallback - let the error propagate
+        raise RuntimeError(f"Azure services initialization failed: {e}")
 
     yield
 
@@ -85,10 +100,10 @@ app.add_middleware(
 )
 
 # Add trusted host middleware for security (if configured)
-if hasattr(settings, 'trusted_hosts') and settings.trusted_hosts:
+if hasattr(settings, 'trusted_hosts_list') and settings.trusted_hosts_list:
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=settings.trusted_hosts
+        allowed_hosts=settings.trusted_hosts_list
     )
 
 # Include routers
@@ -154,15 +169,15 @@ async def root():
         "azure_query": "/api/v1/query/universal",
         "streaming_query": "/api/v1/query/streaming",
         "domain_management": "/api/v1/domain/",
-        "features": [
-            "Azure services integration",
-            "Real-time streaming queries",
-            "Azure Cognitive Search",
-            "Azure OpenAI processing",
-            "Azure Blob Storage",
-            "Azure Cosmos DB metadata",
-            "Multi-domain batch processing"
-        ]
+                    "features": [
+                "Azure services integration",
+                "Real-time streaming queries",
+                "Azure Cognitive Search",
+                "Azure OpenAI processing",
+                "Multi-storage architecture (RAG, ML, App)",
+                "Azure Cosmos DB metadata",
+                "Multi-domain batch processing"
+            ]
     }
 
 # System info endpoint
@@ -179,7 +194,9 @@ async def get_system_info():
             "location": azure_settings.azure_location if azure_settings else None,
             "resource_prefix": azure_settings.azure_resource_prefix if azure_settings else None,
             "services": {
-                "blob_storage": azure_services.storage_client is not None if azure_services else False,
+                "rag_storage": azure_services.get_rag_storage_client() is not None if azure_services else False,
+                "ml_storage": azure_services.get_ml_storage_client() is not None if azure_services else False,
+                "app_storage": azure_services.get_app_storage_client() is not None if azure_services else False,
                 "cognitive_search": azure_services.search_client is not None if azure_services else False,
                 "cosmos_db_gremlin": azure_services.cosmos_client is not None if azure_services else False,
                 "machine_learning": azure_services.ml_client is not None if azure_services else False

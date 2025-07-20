@@ -17,7 +17,10 @@ from ..models.universal_rag_models import (
     UniversalEntity, UniversalDocument, UniversalRelation
 )
 from .extraction_client import OptimizedLLMExtractor
-from ...config.settings import settings
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
