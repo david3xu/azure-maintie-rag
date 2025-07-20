@@ -22,7 +22,7 @@ var resourceConfig = {
     storageSku: 'Standard_LRS'
     storageAccessTier: 'Cool'
     keyVaultSku: 'standard'
-    appInsightsSampling: 10.0
+    appInsightsSampling: 10
     cosmosThroughput: 400
     mlComputeInstances: 1
     openaiTokensPerMinute: 10000
@@ -35,7 +35,7 @@ var resourceConfig = {
     storageSku: 'Standard_ZRS'
     storageAccessTier: 'Hot'
     keyVaultSku: 'standard'
-    appInsightsSampling: 5.0
+    appInsightsSampling: 5
     cosmosThroughput: 800
     mlComputeInstances: 2
     openaiTokensPerMinute: 20000
@@ -48,7 +48,7 @@ var resourceConfig = {
     storageSku: 'Standard_GRS'
     storageAccessTier: 'Hot'
     keyVaultSku: 'premium'
-    appInsightsSampling: 1.0
+    appInsightsSampling: 1
     cosmosThroughput: 1600
     mlComputeInstances: 4
     openaiTokensPerMinute: 40000
