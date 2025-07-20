@@ -93,7 +93,19 @@ deploy_core_infrastructure_resilient() {
         --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" "deploymentToken=$deterministic_token" \
         --name "azure-resources-core-$(date +%Y%m%d-%H%M%S)" \
         --mode Incremental; then
-        print_status "Core infrastructure deployment completed successfully"
+                print_status "Core infrastructure deployment completed successfully"
+
+        # Store deployment token for other deployments
+        local deployment_token=$(echo "$deployment_output" | jq -r '.properties.outputs.deploymentToken.value' 2>/dev/null || echo "")
+        if [ -z "$deployment_token" ]; then
+            # Try to get from the actual deployment
+            deployment_token=$(az deployment group show --resource-group "$RESOURCE_GROUP" --name "azure-resources-core-${DEPLOYMENT_TIMESTAMP}" --query 'properties.outputs.deploymentToken.value' --output tsv 2>/dev/null || echo "")
+        fi
+        if [ -n "$deployment_token" ]; then
+            echo "$deployment_token" > ".deployment_token"
+            print_info "Stored deployment token: $deployment_token"
+        fi
+
         return 0
     else
         print_error "Core infrastructure deployment failed"
@@ -135,6 +147,11 @@ deploy_ml_infrastructure_conditional() {
         storage_account_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Storage/storageAccounts" --query "[?contains(name, 'stor') && !contains(name, 'ml')].name" --output tsv 2>/dev/null | head -1)
     fi
 
+    # If still not found, try a broader search
+    if [ -z "$storage_account_name" ]; then
+        storage_account_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Storage/storageAccounts" --query "[0].name" --output tsv 2>/dev/null)
+    fi
+
     if [ -z "$storage_account_name" ] || ! az storage account show \
         --resource-group "$RESOURCE_GROUP" \
         --name "$storage_account_name" \
@@ -160,11 +177,32 @@ deploy_ml_infrastructure_conditional() {
         return 0
     fi
 
-    # Deploy simplified ML infrastructure using same parameter pattern as core
+    # Get actual deployed resource names for ML template
+    local actual_storage_account=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Storage/storageAccounts" --query "[?contains(name, 'stor') && !contains(name, 'ml')].name" --output tsv 2>/dev/null | head -1)
+    local actual_key_vault=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.KeyVault/vaults" --query "[0].name" --output tsv 2>/dev/null)
+
+    if [ -z "$actual_storage_account" ] || [ -z "$actual_key_vault" ]; then
+        print_warning "Could not find required core resources for ML deployment"
+        return 0
+    fi
+
+    print_info "Using core resources for ML deployment:"
+    print_info "  - Storage Account: $actual_storage_account"
+    print_info "  - Key Vault: $actual_key_vault"
+
+    # Get deployment token from core deployment
+    local deployment_token
+    if [ -f ".deployment_token" ]; then
+        deployment_token=$(cat ".deployment_token")
+    else
+        deployment_token=$(uniqueString "$RESOURCE_GROUP" "$ENVIRONMENT" "maintie")
+    fi
+
+    # Deploy simplified ML infrastructure with correct parameters
     if az deployment group create \
         --resource-group "$RESOURCE_GROUP" \
         --template-file "infrastructure/azure-resources-ml-simple.bicep" \
-        --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" \
+        --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" "existingStorageAccountName=$actual_storage_account" "existingKeyVaultName=$actual_key_vault" "deploymentToken=$deployment_token" \
         --name "azure-resources-ml-simple-$(date +%Y%m%d-%H%M%S)" \
         --mode Incremental; then
 
