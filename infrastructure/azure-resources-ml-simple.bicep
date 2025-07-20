@@ -48,6 +48,10 @@ param existingStorageAccountName string
 param existingKeyVaultName string
 param existingAppInsightsName string = '${resourcePrefix}-${environment}-appinsights'
 
+// Use the actual deployed resource names from core deployment outputs
+var existingStorageAccountName = '${resourcePrefix}${environment}stor${deploymentToken}'
+var existingKeyVaultName = '${resourcePrefix}-${environment}-kv-${take(deploymentToken, 6)}'
+
 // Get existing resources from core deployment
 resource existingStorageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' existing = {
   name: existingStorageAccountName
