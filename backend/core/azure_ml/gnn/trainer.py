@@ -14,7 +14,7 @@ import json
 
 from .model import UniversalGNN, UniversalGNNConfig, create_gnn_model
 from .data_loader import load_graph_data, convert_to_pytorch_geometric
-from backend.core.models.universal_rag_models import UniversalTrainingResult
+from core.models.universal_rag_models import UniversalTrainingResult
 
 logger = logging.getLogger(__name__)
 

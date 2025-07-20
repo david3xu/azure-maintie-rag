@@ -5,7 +5,7 @@ import os
 from typing import List, Dict, Any
 from pathlib import Path
 
-from backend.core.models.universal_rag_models import (
+from core.models.universal_rag_models import (
     UniversalEntity, UniversalRelation, UniversalDocument,
     UniversalQueryAnalysis, UniversalEnhancedQuery,
     UniversalSearchResult, UniversalRAGResponse,
@@ -165,7 +165,7 @@ class TestUniversalModels:
         )
 
         assert analysis.query_text == query
-        assert analysis.query_type.value == "factual"
+        assert analysis.query_type == "factual"
         assert 0 <= analysis.confidence <= 1
         assert analysis.intent == "information_seeking"
 

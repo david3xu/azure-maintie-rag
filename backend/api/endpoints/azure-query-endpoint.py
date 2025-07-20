@@ -19,8 +19,8 @@ import json
 import uuid
 
 # Azure service components
-from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIIntegration
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 from config.settings import settings
 
@@ -92,7 +92,7 @@ class BatchQueryRequest(BaseModel):
 async def process_azure_query(
     request: AzureQueryRequest,
     azure_services: AzureServicesManager = Depends(lambda: getattr(Request.state, 'azure_services', None)),
-    openai_integration: AzureOpenAIIntegration = Depends(lambda: getattr(Request.state, 'openai_integration', None))
+    openai_integration: AzureOpenAIClient = Depends(lambda: getattr(Request.state, 'openai_integration', None))
 ) -> Dict[str, Any]:
     """
     Process an Azure-powered query that works with any domain
@@ -332,7 +332,6 @@ async def initialize_domain(request: DomainInitializationRequest) -> Dict[str, A
             },
             "message": f"Domain '{request.domain}' initialized with Azure services (multi-storage)"
         }
-        }
 
     except Exception as e:
         logger.error(f"Failed to initialize domain: {e}", exc_info=True)
@@ -350,7 +349,7 @@ async def process_batch_queries(request: BatchQueryRequest) -> Dict[str, Any]:
         azure_services = AzureServicesManager()
         await azure_services.initialize()
 
-        openai_integration = AzureOpenAIIntegration()
+        openai_integration = AzureOpenAIClient()
 
         results = []
         for i, query in enumerate(request.queries):
@@ -475,7 +474,7 @@ async def _process_streaming_query_with_azure(
         azure_services = AzureServicesManager()
         await azure_services.initialize()
 
-        openai_integration = AzureOpenAIIntegration()
+        openai_integration = AzureOpenAIClient()
 
         # Process the query using Azure services
         search_results = await azure_services.search_client.search_documents(

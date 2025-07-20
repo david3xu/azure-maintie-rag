@@ -7,7 +7,7 @@ import logging
 from typing import Dict, Any, Optional
 from datetime import datetime
 import time
-from ...config.settings import azure_settings
+from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 

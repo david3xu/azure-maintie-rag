@@ -18,7 +18,7 @@ import time
 
 # Import Azure services architecture components
 from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIIntegration
+from azure.integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 
 # Configure logging
@@ -36,7 +36,7 @@ class WorkflowManagerDemo:
         self.domain = domain
         self.workflow_events = []
         self.azure_services = AzureServicesManager()
-        self.openai_integration = AzureOpenAIIntegration()
+        self.openai_integration = AzureOpenAIClient()
         self.azure_settings = AzureSettings()
 
     async def demonstrate_workflow_integration(self, user_query: str = "How do I fix system performance issues?"):

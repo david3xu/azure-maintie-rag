@@ -7,7 +7,7 @@ from pathlib import Path
 from azure.storage.blob import BlobServiceClient, BlobClient
 from azure.core.exceptions import AzureError
 
-from backend.config.settings import azure_settings
+from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 

@@ -10,7 +10,7 @@ from azure.search.documents.models import VectorizedQuery
 from azure.core.credentials import AzureKeyCredential
 from azure.core.exceptions import AzureError
 
-from backend.config.settings import azure_settings
+from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 

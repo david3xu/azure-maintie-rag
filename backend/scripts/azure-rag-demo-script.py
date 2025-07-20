@@ -36,7 +36,7 @@ sys.path.insert(0, str(backend_path))
 
 # Azure service imports - Updated to use new Azure services architecture
 from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIIntegration
+from azure.integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 
 # Configure logging
@@ -51,7 +51,7 @@ class UniversalRAGDemo:
         """Initialize demo with Azure services"""
         self.azure_settings = AzureSettings()
         self.azure_services = AzureServicesManager()
-        self.openai_integration = AzureOpenAIIntegration()
+        self.openai_integration = AzureOpenAIClient()
 
         self.sample_domains = {
             "general": [

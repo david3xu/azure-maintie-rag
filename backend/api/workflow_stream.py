@@ -14,8 +14,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 # Import Azure service components
-from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIIntegration
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 
 router = APIRouter()
@@ -65,13 +65,13 @@ async def stream_azure_workflow(query_id: str, query: str, domain: str = "genera
             'step_name': 'azure_openai_integration',
             'user_friendly_name': '[OPENAI] Azure OpenAI Integration',
             'status': 'in_progress',
-            'technology': 'AzureOpenAIIntegration',
+            'technology': 'AzureOpenAIClient',
             'details': 'Setting up Azure OpenAI integration...',
             'progress_percentage': 35
         }
         yield f"data: {json.dumps(data)}\n\n"
 
-        openai_integration = AzureOpenAIIntegration()
+        openai_integration = AzureOpenAIClient()
 
         data = {
             'event_type': 'progress',
@@ -79,7 +79,7 @@ async def stream_azure_workflow(query_id: str, query: str, domain: str = "genera
             'step_name': 'azure_openai_integration',
             'user_friendly_name': '[OPENAI] Azure OpenAI Integration',
             'status': 'completed',
-            'technology': 'AzureOpenAIIntegration',
+            'technology': 'AzureOpenAIClient',
             'details': 'Azure OpenAI integration ready',
             'progress_percentage': 42
         }

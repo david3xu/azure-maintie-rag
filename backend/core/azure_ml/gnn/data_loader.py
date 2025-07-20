@@ -8,8 +8,8 @@ import logging
 from pathlib import Path
 import json
 
-from backend.core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
-from backend.core.models.universal_rag_models import UniversalEntity, UniversalRelation
+from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
+from core.models.universal_rag_models import UniversalEntity, UniversalRelation
 
 logger = logging.getLogger(__name__)
 

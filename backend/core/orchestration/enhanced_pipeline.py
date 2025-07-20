@@ -14,7 +14,7 @@ from pathlib import Path
 from .rag_orchestration_service import (
     AzureRAGOrchestrationService, create_universal_rag_from_texts, create_universal_rag_from_directory
 )
-from ...config.settings import settings
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 

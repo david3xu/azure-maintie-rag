@@ -4,13 +4,13 @@ Enterprise-grade quality scoring using Azure ML endpoints
 """
 
 from azure.ai.ml import MLClient
-from azure.core.credentials import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential
 import asyncio
 import logging
 from typing import Dict, List, Any
 from datetime import datetime
 import statistics
-from ...config.settings import azure_settings
+from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 
