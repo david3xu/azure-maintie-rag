@@ -11,12 +11,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Logging functions
-print_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
-print_status() { echo -e "${GREEN}✅ $1${NC}"; }
-print_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
-print_error() { echo -e "${RED}❌ $1${NC}"; }
-print_header() { echo -e "${BLUE}🏗️  $1${NC}"; }
+# Logging functions - redirect to stderr to avoid contaminating stdout
+print_info() { echo -e "${BLUE}ℹ️  $1${NC}" >&2; }
+print_status() { echo -e "${GREEN}✅ $1${NC}" >&2; }
+print_warning() { echo -e "${YELLOW}⚠️  $1${NC}" >&2; }
+print_error() { echo -e "${RED}❌ $1${NC}" >&2; }
+print_header() { echo -e "${BLUE}🏗️  $1${NC}" >&2; }
 
 class="AzureGlobalNamingStrategy"
 

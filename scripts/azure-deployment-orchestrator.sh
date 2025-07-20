@@ -37,10 +37,48 @@ orchestrate_resilient_deployment() {
     # Initialize Azure Extension Manager
     validate_and_install_extensions
 
-    # Generate globally unique resource names
-    local unique_storage_name=$(generate_globally_unique_storage_name "maintie" "$environment")
-    local unique_search_name=$(generate_unique_search_name "maintie" "$environment" "$region")
-    local unique_keyvault_name=$(generate_unique_keyvault_name "maintie" "$environment")
+    # Generate globally unique resource names (capture only the final name)
+    print_info "Generating globally unique resource names..."
+
+    # Capture names with output redirection to separate logs from names
+    local unique_storage_name
+    local unique_search_name
+    local unique_keyvault_name
+
+                    # Generate storage name and capture only the final result
+    # Use a temporary file to capture only the final name
+    local temp_file=$(mktemp)
+
+    # Generate storage name and capture only the last line (the actual name)
+    generate_globally_unique_storage_name "maintie" "$environment" > "$temp_file" 2>&1
+    unique_storage_name=$(tail -n1 "$temp_file")
+
+    # Generate search name
+    generate_unique_search_name "maintie" "$environment" "$region" > "$temp_file" 2>&1
+    unique_search_name=$(tail -n1 "$temp_file")
+
+    # Generate key vault name
+    generate_unique_keyvault_name "maintie" "$environment" > "$temp_file" 2>&1
+    unique_keyvault_name=$(tail -n1 "$temp_file")
+
+    # Clean up temp file
+    rm -f "$temp_file"
+
+    # Validate names were generated successfully
+    if [[ -z "$unique_storage_name" || "${#unique_storage_name}" -lt 3 ]]; then
+        print_error "Failed to generate valid storage account name"
+        return 1
+    fi
+
+    if [[ -z "$unique_search_name" || "${#unique_search_name}" -lt 3 ]]; then
+        print_error "Failed to generate valid search service name"
+        return 1
+    fi
+
+    if [[ -z "$unique_keyvault_name" || "${#unique_keyvault_name}" -lt 3 ]]; then
+        print_error "Failed to generate valid key vault name"
+        return 1
+    fi
 
     print_info "Generated unique resource names:"
     print_info "  - Storage Account: $unique_storage_name"
@@ -248,7 +286,34 @@ validate_bicep_template_parameters() {
 
     print_info "Validating Bicep template parameters..."
 
-    # Validate template syntax
+    # Clean and validate resource names
+    storage_name=$(echo "$storage_name" | tr -d '\n\r' | sed 's/[^a-z0-9]//g')
+    search_name=$(echo "$search_name" | tr -d '\n\r' | sed 's/[^a-z0-9-]//g')
+    keyvault_name=$(echo "$keyvault_name" | tr -d '\n\r' | sed 's/[^a-z0-9-]//g')
+
+    # Debug output for validation
+    print_info "Clean resource names for validation:"
+    print_info "  Storage: '$storage_name' (length: ${#storage_name})"
+    print_info "  Search: '$search_name' (length: ${#search_name})"
+    print_info "  KeyVault: '$keyvault_name' (length: ${#keyvault_name})"
+
+    # Validate name formats
+    if [[ ! "$storage_name" =~ ^[a-z0-9]{3,24}$ ]]; then
+        print_error "Invalid storage account name format: '$storage_name'"
+        return 1
+    fi
+
+    if [[ ! "$search_name" =~ ^[a-z0-9-]{2,60}$ ]]; then
+        print_error "Invalid search service name format: '$search_name'"
+        return 1
+    fi
+
+    if [[ ! "$keyvault_name" =~ ^[a-z0-9-]{3,24}$ ]]; then
+        print_error "Invalid key vault name format: '$keyvault_name'"
+        return 1
+    fi
+
+    # Validate template syntax with clean names
     if ! az deployment group validate \
         --resource-group "${RESOURCE_GROUP:-maintie-rag-rg}" \
         --template-file "$template_file" \
@@ -260,9 +325,9 @@ validate_bicep_template_parameters() {
 
         print_error "Bicep template validation failed"
         print_error "Template file: $template_file"
-        print_error "Storage name: $storage_name"
-        print_error "Search name: $search_name"
-        print_error "Key Vault name: $keyvault_name"
+        print_error "Storage name: '$storage_name'"
+        print_error "Search name: '$search_name'"
+        print_error "Key Vault name: '$keyvault_name'"
         return 1
     fi
 
