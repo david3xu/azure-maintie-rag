@@ -2,7 +2,7 @@
 # Backend = Complete Universal RAG API service
 # Frontend = Pure UI consumer with workflow transparency
 
-.PHONY: help setup dev test clean clean-all clean-models health docs-setup docs-status docs-preview
+.PHONY: help setup dev test clean clean-all clean-models clean-azure health docs-setup docs-status docs-preview azure-deploy azure-status azure-teardown
 
 help:
 	@echo "🔧 Azure MaintIE Universal RAG - Clean Service Architecture"
@@ -31,6 +31,12 @@ help:
 	@echo "  make clean      - Clean processed data & build artifacts"
 	@echo "  make clean-all  - Deep clean (preserves raw text only)"
 	@echo "  make clean-models - Complete reset to source code"
+	@echo "  make clean-azure - Clean Azure deployment artifacts"
+	@echo ""
+	@echo "🏗️ Azure Infrastructure:"
+	@echo "  make azure-deploy   - Deploy all 10 Azure services"
+	@echo "  make azure-status   - Check Azure infrastructure status"
+	@echo "  make azure-teardown - Clean up Azure resources"
 	@echo ""
 	@echo "🐳 Docker:"
 	@echo "  make docker-up  - Start with Docker"
@@ -171,3 +177,25 @@ data-setup:
 	@echo "📊 Setting up text data for Universal RAG..."
 	@echo "💡 Universal RAG processes any text files automatically"
 	cd backend && make data-setup SOURCE=$(SOURCE)
+
+# Azure Infrastructure Management
+azure-deploy:
+	@echo "🏗️ Deploying Azure Universal RAG infrastructure..."
+	@echo "💡 Deploys all 10 Azure services (Storage, Search, ML, Cosmos DB, etc.)"
+	./scripts/enhanced-complete-redeploy.sh
+
+azure-status:
+	@echo "📊 Checking Azure Universal RAG infrastructure status..."
+	@echo "💡 Shows all 10 services and their operational status"
+	./scripts/status-working.sh
+
+azure-teardown:
+	@echo "🧹 Cleaning up Azure Universal RAG infrastructure..."
+	@echo "⚠️  This will delete ALL Azure resources in the resource group"
+	@echo "💡 Use with caution - this action cannot be undone"
+	./scripts/teardown.sh
+
+clean-azure:
+	@echo "🧹 Cleaning Azure deployment artifacts..."
+	rm -f .deployment_token .deployment_storage_name .deployment_search_name .deployment_keyvault_name .deployment_cosmos_name 2>/dev/null || true
+	@echo "✅ Azure deployment artifacts cleaned"

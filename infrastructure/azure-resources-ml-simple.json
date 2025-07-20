@@ -1,0 +1,156 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.36.177.2456",
+      "templateHash": "7972793889383233364"
+    }
+  },
+  "parameters": {
+    "environment": {
+      "type": "string",
+      "defaultValue": "dev"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "resourcePrefix": {
+      "type": "string",
+      "defaultValue": "maintie"
+    },
+    "deploymentToken": {
+      "type": "string",
+      "defaultValue": "[uniqueString(resourceGroup().id, parameters('environment'), parameters('resourcePrefix'))]",
+      "minLength": 10,
+      "metadata": {
+        "description": "Unique deployment token from main deployment"
+      }
+    }
+  },
+  "variables": {
+    "resourceConfig": {
+      "dev": {
+        "mlComputeInstances": 1,
+        "mlVmSize": "Standard_DS2_v2",
+        "storageSku": "Standard_LRS",
+        "storageAccessTier": "Cool"
+      },
+      "staging": {
+        "mlComputeInstances": 2,
+        "mlVmSize": "Standard_DS3_v2",
+        "storageSku": "Standard_ZRS",
+        "storageAccessTier": "Hot"
+      },
+      "prod": {
+        "mlComputeInstances": 4,
+        "mlVmSize": "Standard_DS4_v2",
+        "storageSku": "Standard_GRS",
+        "storageAccessTier": "Hot"
+      }
+    },
+    "currentConfig": "[variables('resourceConfig')[parameters('environment')]]",
+    "mlStorageAccountName": "[format('{0}{1}mlstor{2}', parameters('resourcePrefix'), parameters('environment'), take(parameters('deploymentToken'), 8))]",
+    "mlWorkspaceName": "[format('{0}-{1}-ml', parameters('resourcePrefix'), parameters('environment'))]",
+    "existingKeyVaultName": "[format('{0}-{1}-kv-{2}', parameters('resourcePrefix'), parameters('environment'), take(parameters('deploymentToken'), 6))]",
+    "existingAppInsightsName": "[format('{0}-{1}-appinsights', parameters('resourcePrefix'), parameters('environment'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-04-01",
+      "name": "[variables('mlStorageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[variables('currentConfig').storageSku]"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "accessTier": "[variables('currentConfig').storageAccessTier]"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}/{1}', variables('mlStorageAccountName'), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('mlStorageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}/{1}/{2}', variables('mlStorageAccountName'), 'default', 'azureml')]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('mlStorageAccountName'), 'default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.MachineLearningServices/workspaces",
+      "apiVersion": "2021-04-01",
+      "name": "[variables('mlWorkspaceName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "storageAccount": "[resourceId('Microsoft.Storage/storageAccounts', variables('mlStorageAccountName'))]",
+        "keyVault": "[resourceId('Microsoft.KeyVault/vaults', variables('existingKeyVaultName'))]",
+        "applicationInsights": "[resourceId('Microsoft.Insights/components', variables('existingAppInsightsName'))]",
+        "friendlyName": "[format('Universal RAG ML Workspace - {0}', toUpper(parameters('environment')))]",
+        "description": "ML workspace for Universal RAG GNN training and inference"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('mlStorageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('mlStorageAccountName'))]",
+      "name": "[guid(resourceId('Microsoft.MachineLearningServices/workspaces', variables('mlWorkspaceName')), resourceId('Microsoft.Storage/storageAccounts', variables('mlStorageAccountName')), subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'))]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+        "principalId": "[reference(resourceId('Microsoft.MachineLearningServices/workspaces', variables('mlWorkspaceName')), '2021-04-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('mlStorageAccountName'))]",
+        "[resourceId('Microsoft.MachineLearningServices/workspaces', variables('mlWorkspaceName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "mlStorageAccountName": {
+      "type": "string",
+      "value": "[variables('mlStorageAccountName')]"
+    },
+    "mlStorageAccountId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('mlStorageAccountName'))]"
+    },
+    "mlWorkspaceName": {
+      "type": "string",
+      "value": "[variables('mlWorkspaceName')]"
+    },
+    "mlWorkspaceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.MachineLearningServices/workspaces', variables('mlWorkspaceName'))]"
+    },
+    "deploymentToken": {
+      "type": "string",
+      "value": "[parameters('deploymentToken')]"
+    },
+    "environmentConfig": {
+      "type": "object",
+      "value": "[variables('currentConfig')]"
+    }
+  }
+}

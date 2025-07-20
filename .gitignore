@@ -47,6 +47,13 @@ Thumbs.db
 enterprise-architecture-test-report-*.json
 azure-health-report-*.json
 
+# Azure deployment artifacts
+.deployment_token
+.deployment_storage_name
+.deployment_search_name
+.deployment_keyvault_name
+.deployment_cosmos_name
+
 # Test coverage reports
 htmlcov/
 .coverage
