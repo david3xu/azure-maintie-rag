@@ -53,39 +53,17 @@ orchestrate_resilient_deployment() {
         return 1
     fi
 
-    # Azure ARM template deployment with enterprise parameters
-    # Find the project root by looking for the infrastructure directory
-    local project_root=""
-    local current_dir="$(pwd)"
-
-    # Try to find the project root by looking for infrastructure directory
-    if [ -d "$current_dir/infrastructure" ]; then
-        project_root="$current_dir"
-    elif [ -d "$(dirname "$0")/../infrastructure" ]; then
-        project_root="$(dirname "$0")/.."
-    elif [ -d "/home/azureuser/workspace/azure-maintie-rag/infrastructure" ]; then
-        project_root="/home/azureuser/workspace/azure-maintie-rag"
-    else
-        print_error "Cannot find project root with infrastructure directory"
-        print_error "Current directory: $current_dir"
-        print_error "Script directory: $(dirname "$0")"
-        return 1
-    fi
-
+    # Resolve template file path
+    local project_root="$(dirname "$0")/.."
     local template_file="$project_root/infrastructure/azure-resources-core.bicep"
 
-    # Debug path resolution
-    print_info "Current directory: $current_dir"
-    print_info "Project root: $project_root"
-    print_info "Template file: $template_file"
-
-    # Verify template file exists
-    if [ ! -f "$template_file" ]; then
-        print_error "Template file not found: $template_file"
-        print_error "Available files in project root: $(ls -la "$project_root" 2>/dev/null || echo 'Cannot access project root')"
+    # Validate template and parameters before deployment
+    if ! validate_bicep_template_parameters "$template_file" "$unique_storage_name" "$unique_search_name" "$unique_keyvault_name"; then
+        print_error "Template validation failed - cannot proceed with deployment"
         return 1
     fi
 
+    # Azure ARM template deployment with enterprise parameters
     local deployment_config=(
         "--resource-group" "$resource_group"
         "--template-file" "$template_file"
@@ -100,14 +78,23 @@ orchestrate_resilient_deployment() {
     )
 
     # Execute deployment with circuit breaker pattern
-    execute_deployment_with_circuit_breaker "${deployment_config[@]}"
+    if execute_deployment_with_circuit_breaker "${deployment_config[@]}"; then
+        print_status "Resilient deployment completed successfully"
+        return 0
+    else
+        print_error "Deployment failed after all retry attempts"
+
+        # Capture diagnostics for failed deployment
+        capture_azure_deployment_diagnostics "azure-resources-core-$(date +%Y%m%d)" "$resource_group"
+        return 1
+    fi
 }
 
 execute_deployment_with_circuit_breaker() {
     local deployment_config=("$@")
     local max_failures=3
     local failure_count=0
-    local circuit_open_duration=300  # 5 minutes
+    local circuit_open_duration=300
     local deployment_name="azure-resources-core-$(date +%Y%m%d-%H%M%S)"
 
     print_header "Executing deployment with circuit breaker pattern"
@@ -121,23 +108,57 @@ execute_deployment_with_circuit_breaker() {
         # Add deployment name to config
         local full_deployment_config=("--name" "$deployment_name" "${deployment_config[@]}")
 
-        if az deployment group create "${full_deployment_config[@]}"; then
+        # FIX: Execute command and capture exit code separately
+        local deployment_output_file="/tmp/azure-deployment-${deployment_name}.log"
+        local deployment_exit_code=0
+
+        # Execute deployment command with output capture
+        az deployment group create "${full_deployment_config[@]}" \
+            > "$deployment_output_file" 2>&1 || deployment_exit_code=$?
+
+        # Check exit code instead of command result
+        if [ $deployment_exit_code -eq 0 ]; then
             print_status "Azure ARM deployment succeeded"
+
+            # Log successful deployment output
+            if [ -f "$deployment_output_file" ]; then
+                print_info "Deployment output logged to: $deployment_output_file"
+            fi
 
             # Verify deployment outputs
             verify_deployment_outputs "$deployment_name"
+
+            # Cleanup temp file
+            rm -f "$deployment_output_file"
             return 0
         else
             failure_count=$((failure_count + 1))
 
+            # Log failed deployment output for debugging
+            if [ -f "$deployment_output_file" ]; then
+                print_error "Deployment failed. Output:"
+                cat "$deployment_output_file"
+            fi
+
             if [ $failure_count -lt $max_failures ]; then
                 print_warning "Deployment failed. Circuit breaker cooling down for ${circuit_open_duration}s"
+
+                # Cleanup failed deployment
+                cleanup_failed_deployment "$deployment_name"
+
+                # Wait before retry
                 sleep $circuit_open_duration
 
                 # Refresh Azure authentication and validate service health
                 refresh_azure_session
                 validate_azure_service_health "${deployment_config[5]}"  # Extract region from config
+
+                # Generate new deployment name for retry
+                deployment_name="azure-resources-core-$(date +%Y%m%d-%H%M%S)"
             fi
+
+            # Cleanup temp file
+            rm -f "$deployment_output_file"
         fi
     done
 
@@ -183,21 +204,110 @@ verify_deployment_outputs() {
 }
 
 refresh_azure_session() {
-    print_info "Refreshing Azure session"
+    print_info "Refreshing Azure authentication session..."
 
-    # Check if current session is valid
-    if ! az account show --output none 2>/dev/null; then
-        print_warning "Azure session expired, attempting to refresh"
+    # Clear any existing authentication cache
+    az account clear 2>/dev/null || true
 
-        # Try to refresh using existing credentials
-        if az account get-access-token --output none 2>/dev/null; then
-            print_status "Azure session refreshed successfully"
-        else
-            print_error "Failed to refresh Azure session"
-            return 1
-        fi
-    else
-        print_status "Azure session is valid"
+    # Re-authenticate with fresh session
+    if ! az login --output none 2>/dev/null; then
+        print_warning "Interactive login failed, using existing credentials"
+    fi
+
+    # Verify authentication
+    local current_account=$(az account show --query "user.name" --output tsv 2>/dev/null || echo "unknown")
+    print_info "Authenticated as: $current_account"
+
+    # Clear any ML workspace defaults that might conflict
+    az config unset defaults.workspace 2>/dev/null || true
+    az config unset defaults.group 2>/dev/null || true
+
+    print_status "Azure session refreshed"
+}
+
+cleanup_failed_deployment() {
+    local deployment_name=$1
+
+    print_info "Cleaning up failed deployment: $deployment_name"
+
+    # Try to delete the failed deployment
+    az deployment group delete \
+        --resource-group "${RESOURCE_GROUP:-maintie-rag-rg}" \
+        --name "$deployment_name" \
+        --yes \
+        --no-wait 2>/dev/null || true
+
+    print_info "Failed deployment cleanup initiated"
+}
+
+validate_bicep_template_parameters() {
+    local template_file=$1
+    local storage_name=$2
+    local search_name=$3
+    local keyvault_name=$4
+
+    print_info "Validating Bicep template parameters..."
+
+    # Validate template syntax
+    if ! az deployment group validate \
+        --resource-group "${RESOURCE_GROUP:-maintie-rag-rg}" \
+        --template-file "$template_file" \
+        --parameters "environment=dev" "location=eastus" \
+                    "storageAccountName=$storage_name" \
+                    "searchServiceName=$search_name" \
+                    "keyVaultName=$keyvault_name" \
+        --output none 2>/dev/null; then
+
+        print_error "Bicep template validation failed"
+        print_error "Template file: $template_file"
+        print_error "Storage name: $storage_name"
+        print_error "Search name: $search_name"
+        print_error "Key Vault name: $keyvault_name"
+        return 1
+    fi
+
+    print_status "Bicep template validation passed"
+    return 0
+}
+
+capture_azure_deployment_diagnostics() {
+    local deployment_name=$1
+    local resource_group=${2:-maintie-rag-rg}
+
+    print_info "Capturing deployment diagnostics..."
+
+    # Create diagnostics directory
+    local diagnostics_dir="/tmp/azure-diagnostics-$(date +%Y%m%d-%H%M%S)"
+    mkdir -p "$diagnostics_dir"
+
+    # Capture deployment details
+    az deployment group show \
+        --resource-group "$resource_group" \
+        --name "$deployment_name" \
+        --output json > "$diagnostics_dir/deployment-details.json" 2>/dev/null || true
+
+    # Capture deployment operations
+    az deployment operation group list \
+        --resource-group "$resource_group" \
+        --name "$deployment_name" \
+        --output json > "$diagnostics_dir/deployment-operations.json" 2>/dev/null || true
+
+    # Capture resource group state
+    az resource list \
+        --resource-group "$resource_group" \
+        --output json > "$diagnostics_dir/resource-group-state.json" 2>/dev/null || true
+
+    # Capture Azure CLI version and configuration
+    az version > "$diagnostics_dir/azure-cli-version.json" 2>/dev/null || true
+    az account show > "$diagnostics_dir/azure-account.json" 2>/dev/null || true
+
+    print_info "Diagnostics captured to: $diagnostics_dir"
+
+    # Print summary of critical errors
+    if [ -f "$diagnostics_dir/deployment-operations.json" ]; then
+        print_info "Deployment operation errors:"
+        jq -r '.[] | select(.properties.provisioningState == "Failed") | .properties.statusMessage.error.message' \
+            "$diagnostics_dir/deployment-operations.json" 2>/dev/null || true
     fi
 }
 
@@ -361,6 +471,9 @@ export -f validate_azure_service_health
 export -f validate_regional_capacity
 export -f deploy_with_rollback_capability
 export -f rollback_deployment
+export -f cleanup_failed_deployment
+export -f validate_bicep_template_parameters
+export -f capture_azure_deployment_diagnostics
 
 # Execute main function if script is run directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

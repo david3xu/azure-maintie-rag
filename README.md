@@ -20,6 +20,25 @@ Azure Universal RAG is a **production-grade backend system** for advanced univer
 
 ---
 
+## 📚 Documentation
+
+### **Complete Implementation Guide**
+- **[AZURE_UNIVERSAL_RAG_DOCUMENTATION.md](AZURE_UNIVERSAL_RAG_DOCUMENTATION.md)** - Comprehensive documentation covering:
+  - Critical error fixes and architecture improvements
+  - Data-driven configuration implementation
+  - Enterprise architecture compliance
+  - Deployment guides and usage instructions
+  - Configuration validation and troubleshooting
+
+### **Key Features Documented**
+- ✅ **Critical Error Fixes**: Azure CLI response stream consumption error resolved
+- ✅ **Data-Driven Configuration**: 100% environment-driven configuration with no hardcoded values
+- ✅ **Cost Optimization**: Environment-specific resource allocation (dev/staging/prod)
+- ✅ **Enterprise Architecture**: Production-grade deployment patterns and validation
+- ✅ **Comprehensive Testing**: Automated validation and testing suites
+
+---
+
 ## ✨ Features
 
 ### Core Azure RAG Capabilities
@@ -120,6 +139,24 @@ make docker-down        # Stop and remove Docker containers
 make clean              # Clean ALL generated files - reset to raw text data
 ```
 
+### Azure Deployment Commands
+
+```bash
+# Validate configuration
+python scripts/validate-configuration.py
+
+# Deploy to different environments
+AZURE_ENVIRONMENT=dev ./scripts/enhanced-complete-redeploy.sh
+AZURE_ENVIRONMENT=staging ./scripts/enhanced-complete-redeploy.sh
+AZURE_ENVIRONMENT=prod ./scripts/enhanced-complete-redeploy.sh
+
+# Test deployment fixes
+./scripts/test-azure-deployment-fixes.sh
+
+# Check deployment status
+./scripts/status.sh
+```
+
 ---
 
 ## 📝 Documentation Setup
@@ -198,214 +235,216 @@ The system will automatically process raw text through the complete Azure Univer
 Our Azure Universal RAG system has achieved **complete functionality** through comprehensive Azure services integration:
 
 ### 📖 **Azure Resource Preparation**
-**📖 [Complete Azure Resource Preparation Guide](docs/AZURE_RESOURCE_PREPARATION_FINAL.md)**
-
-For Azure infrastructure deployment and management, see our comprehensive guide covering:
-- Complete infrastructure deployment (10 Azure services)
-- Enterprise security (Key Vault, managed identities)
-- ML training environment (Azure ML workspace)
-- Monitoring & logging (Application Insights)
-- Application hosting (Container Apps)
-- Complete lifecycle management (deploy, teardown, redeploy)
-
-| **Component** | **Status** | **Azure Service** |
-|---------------|------------|-------------------|
-| Knowledge Extraction | ✅ Working | Azure OpenAI GPT-4 |
-| Vector Indexing | ✅ Working | Azure Cognitive Search |
-| Query Processing | ✅ Working | Azure OpenAI + Azure Services |
-| Vector Search | ✅ Working | Azure Cognitive Search retrieval |
-| Response Generation | ✅ Working | Azure OpenAI GPT-4 |
-| Document Storage | ✅ Working | Azure Blob Storage |
-| Knowledge Graphs | ✅ Working | Azure Cosmos DB |
-| Metadata Storage | ✅ Working | Azure Cosmos DB |
-| **GNN Training** | ✅ **NEW** | Azure Machine Learning |
-
-### Key Azure Services Integration
-
-**Azure OpenAI Integration**
-- GPT-4 for knowledge extraction and response generation
-- Text embeddings for vector search
-- Domain-agnostic processing
-
-**Azure Cognitive Search**
-- Vector search with semantic capabilities
-- Multi-language support
-- Real-time indexing and search
-
-**Azure Cosmos DB**
-- Knowledge graph storage with Gremlin API
-- Native graph traversal and analytics
-- Multi-domain support
-
-**Azure Blob Storage**
-- Document storage and retrieval
-- Hierarchical namespace for data organization
-- Version control for data updates
-
----
-
-## 🎯 Progressive Real-Time Workflow
-
-### Three-Layer Smart Disclosure
-
-Our frontend provides **progressive disclosure** for different user types:
-
-**Layer 1: User-Friendly** (90% of users)
-```
-🔍 Understanding your question...
-☁️ Searching Azure services...
-📝 Generating comprehensive answer...
-```
-
-**Layer 2: Technical Workflow** (power users)
-```
-📊 Knowledge Extraction (Azure OpenAI): 15 entities, 10 relations
-🔧 Vector Indexing (Azure Cognitive Search): 7 documents, 1536D vectors
-🔍 Query Processing: Troubleshooting type, 18 concepts
-⚡ Vector Search: 3 results, top score 0.826
-📝 Response Generation (Azure OpenAI): 2400+ chars, 3 citations
-```
-
-**Layer 3: System Diagnostics** (administrators)
-```json
-{
-  "step": "azure_cognitive_search",
-  "status": "completed",
-  "duration": 2.7,
-  "azure_service": "cognitive_search",
-  "details": { "documents_found": 15, "search_score": 0.826 }
-}
-```
-
-### Streaming API Endpoints
-
-- `GET /api/v1/query/stream/{query_id}`: Server-sent events for real-time Azure service updates
-- `POST /api/v1/query/universal`: Submit query with Azure services processing
-- Real-time progress updates with detailed Azure service information
-
----
-
-## 🔬 Comprehensive Azure ML Integration
-
-Azure Universal RAG includes **research-level, end-to-end Azure ML integration** for advanced experimentation and production deployment, including **Universal GNN training**.
-
-### Features:
-- Azure ML workspace integration
-- **Universal GNN training** with multiple architectures (GCN, GAT, GraphSAGE)
-- Hyperparameter optimization (Optuna)
-- Cross-validation (k-fold)
-- Advanced training: schedulers, early stopping, gradient clipping, label smoothing, class weighting
-- Comprehensive evaluation: accuracy, precision, recall, F1, AUC, confusion matrix, per-class analysis
-- Ablation studies
-- Experiment tracking (Azure ML + Weights & Biases)
-- Model checkpointing and result saving
-- **Graph data loading** from Azure Cosmos DB Gremlin
-
-### How to Use:
-
-**CLI:**
-```bash
-# Create environment and config files
-python backend/scripts/train_comprehensive_gnn.py --create-env
-python backend/scripts/train_comprehensive_gnn.py --create-config
-
-# Train GNN with default config
-python backend/scripts/train_comprehensive_gnn.py
-
-# Train with custom config
-python backend/scripts/train_comprehensive_gnn.py \
-    --config example_comprehensive_gnn_config.json
-
-# Train in Azure ML
-python backend/scripts/train_comprehensive_gnn.py \
-    --workspace my-workspace \
-    --experiment universal-rag-gnn
-```
-
-**Config:** Edit `backend/scripts/example_comprehensive_gnn_config.json` or provide your own.
-
-**API:** Import and call `run_comprehensive_gnn_training()` from `src.gnn.comprehensive_trainer`.
-
-### Documentation:
-- See `backend/scripts/README_comprehensive_gnn.md` for CLI/config details
-- See module docstring in `backend/src/gnn/comprehensive_trainer.py` for full feature list and integration points
-
-### CI/CD:
-- The pipeline is smoke-tested in CI to ensure research code health
-
----
-
-## 🐳 Docker
-
-To build and run both backend and frontend services using Docker:
-
-```bash
-make docker-up
-```
-
----
-
-## 📂 Project Structure
-
-```
-Project Root:
-├─ backend/                    # Complete Azure Universal RAG API service
-│  ├─ core/                   # Azure Universal RAG core components
-│  │  ├─ azure_ml/            # ✅ Azure ML + GNN training
-│  │  │  ├─ ml_client.py      # Azure ML integration
-│  │  │  ├─ gnn/              # Universal GNN components
-│  │  │  │  ├─ model.py       # GNN architecture
-│  │  │  │  ├─ trainer.py     # Training logic
-│  │  │  │  └─ data_loader.py # Graph data loading
-│  │  │  └─ classification_service.py
-│  │  ├─ azure_cosmos/        # ✅ Azure Cosmos DB
-│  │  │  └─ cosmos_gremlin_client.py
-│  │  ├─ azure_search/        # ✅ Azure Cognitive Search
-│  │  │  └─ search_client.py
-│  │  ├─ azure_storage/       # ✅ Azure Blob Storage
-│  │  │  └─ storage_client.py
-│  │  ├─ azure_openai/        # ✅ Azure OpenAI
-│  │  ├─ models/              # ✅ Universal data models
-│  │  ├─ orchestration/       # Main RAG orchestration logic
-│  │  ├─ workflow/            # Three-layer workflow transparency
-│  │  └─ utilities/           # Core utility functions
-│  ├─ scripts/                # ✅ Utility and demo scripts
-│  │  └─ train_comprehensive_gnn.py # GNN training
-│  ├─ api/                    # FastAPI endpoints + streaming
-│  │  ├─ endpoints/           # Individual endpoint files
-│  │  ├─ models/              # API request/response models
-│  │  └─ main.py              # FastAPI application
-│  ├─ config/                 # Configuration files
-│  ├─ docs/                   # Backend documentation
-│  ├─ integrations/           # External service integrations
-│  ├─ utilities/              # Shared utility functions
-│  ├─ tests/                  # Comprehensive test suite
-│  └─ debug/                  # Debug and development tools
-├─ frontend/                  # Pure UI consumer service
-│  ├─ src/                    # React components + workflow transparency
-│  ├─ public/                 # Static assets
-│  └─ package.json            # Node.js dependencies
-├─ infrastructure/            # Azure Infrastructure as Code
-│  ├─ azure-resources.bicep   # Azure resource templates
-│  ├─ parameters.json         # Environment parameters
-│  └─ provision.py            # Python automation script
-├─ docs/                      # Project documentation
-├─ .vscode/                   # VSCode configuration
-├─ .env                       # Environment variables
-├─ docker-compose.yml         # Docker Compose configuration
-└─ Makefile                   # Root Makefile for orchestrating services
-```
-
----
-
-## 🔄 Service Architecture
-
-### Complete Azure Universal RAG Workflow
-
-The Azure Universal RAG system implements a comprehensive workflow from raw text data to final answers with real-time progress tracking:
+- **📖 [Complete Azure Resource Preparation Guide](docs/AZURE_RESOURCE_PREPARATION_FINAL.md)**
+-
+- For Azure infrastructure deployment and management, see our comprehensive guide covering:
+- - Complete infrastructure deployment (10 Azure services)
+- - Enterprise security (Key Vault, managed identities)
+- - ML training environment (Azure ML workspace)
+- - Monitoring & logging (Application Insights)
+- - Application hosting (Container Apps)
+- - Complete lifecycle management (deploy, teardown, redeploy)
+-
+- | **Component** | **Status** | **Azure Service** |
+- |---------------|------------|-------------------|
+- | Knowledge Extraction | ✅ Working | Azure OpenAI GPT-4 |
+- | Vector Indexing | ✅ Working | Azure Cognitive Search |
+- | Query Processing | ✅ Working | Azure OpenAI + Azure Services |
+- | Vector Search | ✅ Working | Azure Cognitive Search retrieval |
+- | Response Generation | ✅ Working | Azure OpenAI GPT-4 |
+- | Document Storage | ✅ Working | Azure Blob Storage |
+- | Knowledge Graphs | ✅ Working | Azure Cosmos DB |
+- | Metadata Storage | ✅ Working | Azure Cosmos DB |
+- | **GNN Training** | ✅ **NEW** | Azure Machine Learning |
+-
+- ### Key Azure Services Integration
+-
+- **Azure OpenAI Integration**
+- - GPT-4 for knowledge extraction and response generation
+- - Text embeddings for vector search
+- - Domain-agnostic processing
+-
+- **Azure Cognitive Search**
+- - Vector search with semantic capabilities
+- - Multi-language support
+- - Real-time indexing and search
+-
+- **Azure Cosmos DB**
+- - Knowledge graph storage with Gremlin API
+- - Native graph traversal and analytics
+- - Multi-domain support
+-
+- **Azure Blob Storage**
+- - Document storage and retrieval
+- - Hierarchical namespace for data organization
+- - Version control for data updates
+-
+- ---
+-
+- ## 🎯 Progressive Real-Time Workflow
+-
+- ### Three-Layer Smart Disclosure
+-
+- Our frontend provides **progressive disclosure** for different user types:
+-
+- **Layer 1: User-Friendly** (90% of users)
+- ```
+- 🔍 Understanding your question...
+- ☁️ Searching Azure services...
+- 📝 Generating comprehensive answer...
+- ```
+-
+- **Layer 2: Technical Workflow** (power users)
+- ```
+- 📊 Knowledge Extraction (Azure OpenAI): 15 entities, 10 relations
+- 🔧 Vector Indexing (Azure Cognitive Search): 7 documents, 1536D vectors
+- 🔍 Query Processing: Troubleshooting type, 18 concepts
+- ⚡ Vector Search: 3 results, top score 0.826
+- 📝 Response Generation (Azure OpenAI): 2400+ chars, 3 citations
+- ```
+-
+- **Layer 3: System Diagnostics** (administrators)
+- ```json
+- {
+-   "step": "azure_cognitive_search",
+-   "status": "completed",
+-   "duration": 2.7,
+-   "azure_service": "cognitive_search",
+-   "details": { "documents_found": 15, "search_score": 0.826 }
+- }
+- ```
+-
+- ### Streaming API Endpoints
+-
+- - `GET /api/v1/query/stream/{query_id}`: Server-sent events for real-time Azure service updates
+- - `POST /api/v1/query/universal`: Submit query with Azure services processing
+- - Real-time progress updates with detailed Azure service information
+-
+- ---
+-
+- ## 🔬 Comprehensive Azure ML Integration
+-
+- Azure Universal RAG includes **research-level, end-to-end Azure ML integration** for advanced experimentation and production deployment, including **Universal GNN training**.
+-
+- ### Features:
+- - Azure ML workspace integration
+- - **Universal GNN training** with multiple architectures (GCN, GAT, GraphSAGE)
+- - Hyperparameter optimization (Optuna)
+- - Cross-validation (k-fold)
+- - Advanced training: schedulers, early stopping, gradient clipping, label smoothing, class weighting
+- - Comprehensive evaluation: accuracy, precision, recall, F1, AUC, confusion matrix, per-class analysis
+- - Ablation studies
+- - Experiment tracking (Azure ML + Weights & Biases)
+- - Model checkpointing and result saving
+- - **Graph data loading** from Azure Cosmos DB Gremlin
+-
+- ### How to Use:
+-
+- **CLI:**
+- ```bash
+- # Create environment and config files
+- python backend/scripts/train_comprehensive_gnn.py --create-env
+- python backend/scripts/train_comprehensive_gnn.py --create-config
+-
+- # Train GNN with default config
+- python backend/scripts/train_comprehensive_gnn.py
+-
+- # Train with custom config
+- python backend/scripts/train_comprehensive_gnn.py \
+-     --config example_comprehensive_gnn_config.json
+-
+- # Train in Azure ML
+- python backend/scripts/train_comprehensive_gnn.py \
+-     --workspace my-workspace \
+-     --experiment universal-rag-gnn
+- ```
+-
+- **Config:** Edit `backend/scripts/example_comprehensive_gnn_config.json` or provide your own.
+-
+- **API:** Import and call `run_comprehensive_gnn_training()` from `src.gnn.comprehensive_trainer`.
+-
+- ### Documentation:
+- - See `backend/scripts/README_comprehensive_gnn.md` for CLI/config details
+- - See module docstring in `backend/src/gnn/comprehensive_trainer.py` for full feature list and integration points
+-
+- ### CI/CD:
+- - The pipeline is smoke-tested in CI to ensure research code health
+-
+- ---
+-
+- ## 🐳 Docker
+-
+- To build and run both backend and frontend services using Docker:
+-
+- ```bash
+- make docker-up
+- ```
+-
+- ---
+-
+- ## 📂 Project Structure
+-
+- ```
+- Project Root:
+- ├─ backend/                    # Complete Azure Universal RAG API service
+- │  ├─ core/                   # Azure Universal RAG core components
+- │  │  ├─ azure_ml/            # ✅ Azure ML + GNN training
+- │  │  │  ├─ ml_client.py      # Azure ML integration
+- │  │  │  ├─ gnn/              # Universal GNN components
+- │  │  │  │  ├─ model.py       # GNN architecture
+- │  │  │  │  ├─ trainer.py     # Training logic
+- │  │  │  │  └─ data_loader.py # Graph data loading
+- │  │  │  └─ classification_service.py
+- │  │  ├─ azure_cosmos/        # ✅ Azure Cosmos DB
+- │  │  │  └─ cosmos_gremlin_client.py
+- │  │  ├─ azure_search/        # ✅ Azure Cognitive Search
+- │  │  │  └─ search_client.py
+- │  │  ├─ azure_storage/       # ✅ Azure Blob Storage
+- │  │  │  └─ storage_client.py
+- │  │  ├─ azure_openai/        # ✅ Azure OpenAI
+- │  │  ├─ models/              # ✅ Universal data models
+- │  │  ├─ orchestration/       # Main RAG orchestration logic
+- │  │  ├─ workflow/            # Three-layer workflow transparency
+- │  │  └─ utilities/           # Core utility functions
+- │  ├─ scripts/                # ✅ Utility and demo scripts
+- │  │  └─ train_comprehensive_gnn.py # GNN training
+- │  ├─ api/                    # FastAPI endpoints + streaming
+- │  │  ├─ endpoints/           # Individual endpoint files
+- │  │  ├─ models/              # API request/response models
+- │  │  └─ main.py              # FastAPI application
+- │  ├─ config/                 # Configuration files
+- │  ├─ docs/                   # Backend documentation
+- │  ├─ integrations/           # External service integrations
+- │  ├─ utilities/              # Shared utility functions
+- │  ├─ tests/                  # Comprehensive test suite
+- │  └─ debug/                  # Debug and development tools
+- ├─ frontend/                  # Pure UI consumer service
+- │  ├─ src/                    # React components + workflow transparency
+- │  ├─ public/                 # Static assets
+- │  └─ package.json            # Node.js dependencies
+- ├─ infrastructure/            # Azure Infrastructure as Code
+- │  ├─ azure-resources.bicep   # Azure resource templates
+- │  ├─ parameters.json         # Environment parameters
+- │  └─ provision.py            # Python automation script
+- ├─ docs/                      # Project documentation
+- ├─ .vscode/                   # VSCode configuration
+- ├─ .env                       # Environment variables
+- ├─ docker-compose.yml         # Docker Compose configuration
+- └─ Makefile                   # Root Makefile for orchestrating services
+- ```
+-
+- ---
+-
+- ## 🔄 Service Architecture
+-
+- ### Complete Azure Universal RAG Workflow
+-
+- The Azure Universal RAG system implements a comprehensive workflow from raw text data to final answers with real-time progress tracking:
+-
+-
 
 ```mermaid
-graph TD
+flowchart TD
     A[Raw Text Data] --> B[Azure Blob Storage]
     B --> C[Knowledge Extraction Azure OpenAI]
     C --> D[Azure Cognitive Search Vectors]
@@ -430,100 +469,97 @@ graph TD
     P --> Q[Frontend Progressive UI]
 ```
 
-### Enhanced Service Flow with Azure Services
-
-```
-User Input → React Frontend → Streaming API → Azure Universal RAG → Real-time Updates → AI Response
-     ↓             ↓              ↓               ↓               ↓              ↓
-"pump failure"  handleSubmit()  POST /streaming  Azure Services   SSE Progress   JSON response
+Streaming Progress Events → Frontend Progressive UI
 ```
 
-### Workflow Components (Azure Enhanced)
-
-| **Phase** | **Component** | **Azure Service** | **Function** | **Streaming** |
-|-----------|---------------|-------------------|--------------|---------------|
-| **Data Ingestion** | Text Processor | Azure Blob Storage | Raw text → Clean documents | ✅ Progress |
-| **Knowledge Extraction** | LLM Extractor | Azure OpenAI GPT-4 | Text → Entities + Relations | ✅ Progress |
-| **Vector Indexing** | Azure Cognitive Search | Embedding + Vector DB | Documents → Searchable vectors | ✅ Progress |
-| **Graph Construction** | Azure Cosmos DB Gremlin | Native graph algorithms | Entities → Knowledge graph | ✅ Progress |
-| **Query Processing** | Query Analyzer | Azure OpenAI + Azure Services | User query → Enhanced query | ✅ Progress |
-| **GNN Training** | GNN Trainer | Azure Machine Learning | Graph data → Trained GNN model | ✅ Progress |
-| **Retrieval** | Unified Search | Azure Cognitive Search + Cosmos DB Gremlin + GNN | Query → Relevant context | ✅ Progress |
-| **Generation** | LLM Interface | Azure OpenAI GPT-4 | Context → Final answer | ✅ Progress |
-
----
-
-## 📚 Documentation
-
-### Available Documentation
-
-- **API Documentation**: Available at `http://localhost:8000/docs` when backend is running
-- **🌟 Azure Universal RAG Capabilities Guide**: See `backend/docs/AZURE_UNIVERSAL_RAG_CAPABILITIES.md` for complete system capabilities, API reference, and integration examples
-- **Comprehensive Azure ML Training**: See `backend/scripts/README_comprehensive_gnn.md`
-- **System Architecture**: This README provides complete system overview
-- **Streaming API**: Real-time workflow documentation in API docs
-
-**📖 Key Documentation:**
-- **[Complete Azure Capabilities Guide](backend/docs/AZURE_UNIVERSAL_RAG_CAPABILITIES.md)** - Full system capabilities, API endpoints, progressive workflow system
-- **[Documentation Index](backend/docs/README.md)** - All documentation organized by purpose
-- **[System Status](backend/docs/AZURE_UNIVERSAL_RAG_FINAL_STATUS.md)** - Current system health and performance metrics
-
-### Key Scripts for Testing
-
-```bash
-# Azure Universal RAG workflow test
-python backend/scripts/azure-rag-demo-script.py
-
-# Real query processing with Azure services
-python backend/scripts/query_processing_workflow.py
-
-# Azure Universal smart RAG flow
-python backend/scripts/azure-rag-workflow-demo.py
-
-# GNN training with Azure ML
-python backend/scripts/train_comprehensive_gnn.py
-```
-
-### Generated Output Files
-
-The system generates comprehensive analysis in `backend/data/output/`:
-- Query analysis results
-- Response generation outputs
-- Performance metrics
-- Azure service diagnostics
-
----
-
-## 🚀 Getting Started
-
-### Quick Start (from Raw Text)
-
-1. **Clean Setup**:
-   ```bash
-   make clean    # Reset to raw data state
-   make setup    # Install dependencies
-   ```
-
-2. **Configure Azure Services**:
-   - Set up Azure OpenAI, Cognitive Search, Cosmos DB, Blob Storage
-   - Update `backend/.env` with Azure service credentials
-   - Place text files in `backend/data/raw/`
-
-3. **Start Services**:
-   ```bash
-   make dev      # Start backend + frontend
-   ```
-
-4. **Access System**:
-   - Frontend UI: `http://localhost:5174`
-   - Backend API: `http://localhost:8000`
-   - API Documentation: `http://localhost:8000/docs`
-
-### Progressive Workflow Experience
-
-1. Submit a question through the frontend
-2. Watch real-time progress through Azure services
-3. Receive comprehensive answers with citations
-4. Explore technical details and Azure service diagnostics
-
-The system provides a complete Azure-powered RAG experience from raw text data to intelligent responses with full visibility into the processing workflow.
+- ```
+-
+- ### Workflow Components (Azure Enhanced)
+-
+- | **Phase** | **Component** | **Azure Service** | **Function** | **Streaming** |
+- |-----------|---------------|-------------------|--------------|---------------|
+- | **Data Ingestion** | Text Processor | Azure Blob Storage | Raw text → Clean documents | ✅ Progress |
+- | **Knowledge Extraction** | LLM Extractor | Azure OpenAI GPT-4 | Text → Entities + Relations | ✅ Progress |
+- | **Vector Indexing** | Azure Cognitive Search | Embedding + Vector DB | Documents → Searchable vectors | ✅ Progress |
+- | **Graph Construction** | Azure Cosmos DB Gremlin | Native graph algorithms | Entities → Knowledge graph | ✅ Progress |
+- | **Query Processing** | Query Analyzer | Azure OpenAI + Azure Services | User query → Enhanced query | ✅ Progress |
+- | **GNN Training** | GNN Trainer | Azure Machine Learning | Graph data → Trained GNN model | ✅ Progress |
+- | **Retrieval** | Unified Search | Azure Cognitive Search + Cosmos DB Gremlin + GNN | Query → Relevant context | ✅ Progress |
+- | **Generation** | LLM Interface | Azure OpenAI GPT-4 | Context → Final answer | ✅ Progress |
+-
+- ---
+-
+- ## 📚 Documentation
+-
+- ### Available Documentation
+-
+- - **API Documentation**: Available at `http://localhost:8000/docs` when backend is running
+- - **🌟 Azure Universal RAG Capabilities Guide**: See `backend/docs/AZURE_UNIVERSAL_RAG_CAPABILITIES.md` for complete system capabilities, API reference, and integration examples
+- - **Comprehensive Azure ML Training**: See `backend/scripts/README_comprehensive_gnn.md`
+- - **System Architecture**: This README provides complete system overview
+- - **Streaming API**: Real-time workflow documentation in API docs
+-
+- **📖 Key Documentation:**
+- - **[Complete Azure Capabilities Guide](backend/docs/AZURE_UNIVERSAL_RAG_CAPABILITIES.md)** - Full system capabilities, API endpoints, progressive workflow system
+- - **[Documentation Index](backend/docs/README.md)** - All documentation organized by purpose
+- - **[System Status](backend/docs/AZURE_UNIVERSAL_RAG_FINAL_STATUS.md)** - Current system health and performance metrics
+-
+- ### Key Scripts for Testing
+-
+- ```bash
+- # Azure Universal RAG workflow test
+- python backend/scripts/azure-rag-demo-script.py
+-
+- # Real query processing with Azure services
+- python backend/scripts/query_processing_workflow.py
+-
+- # Azure Universal smart RAG flow
+- python backend/scripts/azure-rag-workflow-demo.py
+-
+- # GNN training with Azure ML
+- python backend/scripts/train_comprehensive_gnn.py
+- ```
+-
+- ### Generated Output Files
+-
+- The system generates comprehensive analysis in `backend/data/output/`:
+- - Query analysis results
+- - Response generation outputs
+- - Performance metrics
+- - Azure service diagnostics
+-
+- ---
+-
+- ## 🚀 Getting Started
+-
+- ### Quick Start (from Raw Text)
+-
+- 1. **Clean Setup**:
+-    ```bash
+-    make clean    # Reset to raw data state
+-    make setup    # Install dependencies
+-    ```
+-
+- 2. **Configure Azure Services**:
+-    - Set up Azure OpenAI, Cognitive Search, Cosmos DB, Blob Storage
+-    - Update `backend/.env` with Azure service credentials
+-    - Place text files in `backend/data/raw/`
+-
+- 3. **Start Services**:
+-    ```bash
+-    make dev      # Start backend + frontend
+-    ```
+-
+- 4. **Access System**:
+-    - Frontend UI: `http://localhost:5174`
+-    - Backend API: `http://localhost:8000`
+-    - API Documentation: `http://localhost:8000/docs`
+-
+- ### Progressive Workflow Experience
+-
+- 1. Submit a question through the frontend
+- 2. Watch real-time progress through Azure services
+- 3. Receive comprehensive answers with citations
+- 4. Explore technical details and Azure service diagnostics
+-
+- The system provides a complete Azure-powered RAG experience from raw text data to intelligent responses with full visibility into the processing workflow.

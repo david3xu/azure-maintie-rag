@@ -1,0 +1,248 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.36.177.2456",
+      "templateHash": "17247160270887196932"
+    }
+  },
+  "parameters": {
+    "environment": {
+      "type": "string",
+      "defaultValue": "dev"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "resourcePrefix": {
+      "type": "string",
+      "defaultValue": "maintie"
+    },
+    "searchSkuName": {
+      "type": "string",
+      "defaultValue": "[if(equals(parameters('environment'), 'prod'), 'standard', 'basic')]"
+    },
+    "storageSkuName": {
+      "type": "string",
+      "defaultValue": "[if(equals(parameters('environment'), 'prod'), 'Standard_GRS', 'Standard_LRS')]"
+    },
+    "storageAccountName": {
+      "type": "string"
+    },
+    "searchServiceName": {
+      "type": "string"
+    },
+    "keyVaultName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2021-04-01",
+      "name": "[parameters('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('storageSkuName')]"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "isHnsEnabled": true,
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "accessTier": "[if(equals(parameters('environment'), 'prod'), 'Hot', 'Cool')]"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}/{1}', parameters('storageAccountName'), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2021-04-01",
+      "name": "[format('{0}/{1}/{2}', parameters('storageAccountName'), 'default', 'universal-rag-data')]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Search/searchServices",
+      "apiVersion": "2020-08-01",
+      "name": "[parameters('searchServiceName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('searchSkuName')]"
+      },
+      "properties": {
+        "replicaCount": "[if(equals(parameters('environment'), 'prod'), 2, 1)]",
+        "partitionCount": "[if(equals(parameters('environment'), 'prod'), 2, 1)]",
+        "hostingMode": "default"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2021-06-01-preview",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [],
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 7
+      }
+    },
+    {
+      "condition": "[equals(parameters('environment'), 'prod')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2023-04-15",
+      "name": "[format('{0}-{1}-cosmos', parameters('resourcePrefix'), parameters('environment'))]",
+      "location": "[parameters('location')]",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "capabilities": [
+          {
+            "name": "EnableGremlin"
+          }
+        ],
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session"
+        },
+        "locations": [
+          {
+            "locationName": "[parameters('location')]",
+            "failoverPriority": 0,
+            "isZoneRedundant": true
+          }
+        ],
+        "enableFreeTier": false
+      }
+    },
+    {
+      "condition": "[equals(parameters('environment'), 'prod')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases",
+      "apiVersion": "2023-04-15",
+      "name": "[format('{0}/{1}', format('{0}-{1}-cosmos', parameters('resourcePrefix'), parameters('environment')), 'universal-rag-db')]",
+      "properties": {
+        "resource": {
+          "id": "universal-rag-db"
+        },
+        "options": {
+          "throughput": 1000
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('{0}-{1}-cosmos', parameters('resourcePrefix'), parameters('environment')))]"
+      ]
+    },
+    {
+      "condition": "[equals(parameters('environment'), 'prod')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs",
+      "apiVersion": "2023-04-15",
+      "name": "[format('{0}/{1}/{2}', format('{0}-{1}-cosmos', parameters('resourcePrefix'), parameters('environment')), 'universal-rag-db', 'knowledge-graph')]",
+      "properties": {
+        "resource": {
+          "id": "knowledge-graph",
+          "partitionKey": {
+            "paths": [
+              "/domain"
+            ],
+            "kind": "Hash"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/gremlinDatabases', format('{0}-{1}-cosmos', parameters('resourcePrefix'), parameters('environment')), 'universal-rag-db')]"
+      ]
+    },
+    {
+      "condition": "[equals(parameters('environment'), 'prod')]",
+      "type": "Microsoft.MachineLearningServices/workspaces",
+      "apiVersion": "2023-04-01",
+      "name": "[format('{0}-{1}-ml', parameters('resourcePrefix'), parameters('environment'))]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "friendlyName": "Universal RAG ML Workspace",
+        "description": "Azure ML workspace for GNN training and model management",
+        "keyVault": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+        "storageAccount": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+        "applicationInsights": "[resourceId('Microsoft.Insights/components', format('{0}-{1}-appinsights', parameters('resourcePrefix'), parameters('environment')))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/components', format('{0}-{1}-appinsights', parameters('resourcePrefix'), parameters('environment')))]",
+        "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[format('{0}-{1}-appinsights', parameters('resourcePrefix'), parameters('environment'))]",
+      "location": "[parameters('location')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-{1}-logs', parameters('resourcePrefix'), parameters('environment')))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', format('{0}-{1}-logs', parameters('resourcePrefix'), parameters('environment')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[format('{0}-{1}-logs', parameters('resourcePrefix'), parameters('environment'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": "[if(equals(parameters('environment'), 'prod'), 90, 30)]"
+      }
+    }
+  ],
+  "outputs": {
+    "storageAccountName": {
+      "type": "string",
+      "value": "[parameters('storageAccountName')]"
+    },
+    "searchServiceName": {
+      "type": "string",
+      "value": "[parameters('searchServiceName')]"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "value": "[parameters('keyVaultName')]"
+    },
+    "mlWorkspaceName": {
+      "type": "string",
+      "value": "[if(equals(parameters('environment'), 'prod'), format('{0}-{1}-ml', parameters('resourcePrefix'), parameters('environment')), 'not-deployed')]"
+    },
+    "applicationInsightsName": {
+      "type": "string",
+      "value": "[format('{0}-{1}-appinsights', parameters('resourcePrefix'), parameters('environment'))]"
+    },
+    "logAnalyticsWorkspaceName": {
+      "type": "string",
+      "value": "[format('{0}-{1}-logs', parameters('resourcePrefix'), parameters('environment'))]"
+    }
+  }
+}
