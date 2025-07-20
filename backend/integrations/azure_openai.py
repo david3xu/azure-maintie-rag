@@ -32,7 +32,7 @@ class AzureOpenAIClient:
 
         # Initialize tokenizer
         try:
-            self.tokenizer = tiktoken.encoding_for_model("gpt-4")
+            self.tokenizer = tiktoken.encoding_for_model("gpt-4.1")
         except:
             self.tokenizer = tiktoken.get_encoding("cl100k_base")
 

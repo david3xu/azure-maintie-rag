@@ -6,10 +6,10 @@ from typing import Dict, Any, Optional, List
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
-from backend.core.azure_storage.storage_factory import get_storage_factory
-from backend.core.azure_search.search_client import AzureCognitiveSearchClient
-from backend.core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
-from backend.core.azure_ml.ml_client import AzureMLClient
+from core.azure_storage.storage_factory import get_storage_factory
+from core.azure_search.search_client import AzureCognitiveSearchClient
+from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
+from core.azure_ml.ml_client import AzureMLClient
 from .azure_openai import AzureOpenAIClient
 
 logger = logging.getLogger(__name__)

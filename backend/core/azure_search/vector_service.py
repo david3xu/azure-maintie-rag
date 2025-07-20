@@ -16,7 +16,7 @@ import faiss
 from openai import AzureOpenAI
 
 from ..models.universal_rag_models import UniversalSearchResult, UniversalDocument
-from ...config.settings import settings
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 

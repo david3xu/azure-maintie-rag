@@ -17,7 +17,7 @@ from ..models.universal_rag_models import (
 )
 from ..azure_openai.text_processor import AzureOpenAITextProcessor
 from ..azure_openai.extraction_client import OptimizedLLMExtractor
-from ...config.settings import settings
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 

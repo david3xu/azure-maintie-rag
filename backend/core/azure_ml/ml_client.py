@@ -6,8 +6,8 @@ from typing import Dict, List, Any, Optional
 from azure.ai.ml import MLClient
 from azure.core.exceptions import AzureError
 
-from backend.config.settings import azure_settings
-from backend.core.models.universal_rag_models import (
+from config.settings import azure_settings
+from core.models.universal_rag_models import (
     UniversalTrainingConfig, UniversalTrainingResult
 )
 

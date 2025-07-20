@@ -8,7 +8,7 @@ from azure.core.credentials import AzureKeyCredential
 from typing import Dict, List, Any, Optional
 import logging
 from datetime import datetime
-from ...config.settings import azure_settings
+from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 

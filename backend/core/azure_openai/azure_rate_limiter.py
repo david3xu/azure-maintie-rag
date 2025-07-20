@@ -8,7 +8,7 @@ import time
 from typing import Dict, Any, Optional, Callable, List
 from dataclasses import dataclass
 import logging
-from ...config.settings import azure_settings
+from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 

@@ -23,7 +23,7 @@ sys.path.insert(0, str(backend_path))
 
 # Import Azure services architecture components
 from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIIntegration
+from azure.integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 
 # Configure logging
@@ -40,7 +40,7 @@ class CompletelyFixedUniversalRAGWorkflowDemo:
     def __init__(self, domain: str = "general"):
         self.domain = domain
         self.azure_services = AzureServicesManager()
-        self.openai_integration = AzureOpenAIIntegration()
+        self.openai_integration = AzureOpenAIClient()
         self.azure_settings = AzureSettings()
 
         self.demo_texts = [
@@ -255,7 +255,7 @@ class CompletelyFixedUniversalRAGWorkflowDemo:
 
         print(f"🔍 Processing Query: '{query}'")
 
-        analyzer = AzureOpenAIIntegration() # Assuming AzureOpenAIIntegration can act as a query analyzer
+        analyzer = AzureOpenAIClient() # Assuming AzureOpenAIClient can act as a query analyzer
         step_start = time.time()
 
         try:
@@ -329,7 +329,7 @@ class CompletelyFixedUniversalRAGWorkflowDemo:
         """COMPLETELY FIXED: Step 7 with correct method signature"""
         self.print_step_header(7, "Generation", "Generate comprehensive answer using Azure OpenAI GPT-4")
 
-        llm_interface = AzureOpenAIIntegration() # Assuming AzureOpenAIIntegration can act as a completion service
+        llm_interface = AzureOpenAIClient() # Assuming AzureOpenAIClient can act as a completion service
         step_start = time.time()
 
         try:

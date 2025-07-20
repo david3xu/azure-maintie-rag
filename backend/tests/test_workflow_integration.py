@@ -10,8 +10,8 @@ import logging
 from datetime import datetime
 
 # Updated imports for Azure services architecture
-from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIIntegration
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 
 # Configure logging
@@ -28,7 +28,7 @@ async def test_azure_workflow_integration():
     azure_services = AzureServicesManager()
     await azure_services.initialize()
 
-    openai_integration = AzureOpenAIIntegration()
+    openai_integration = AzureOpenAIClient()
     azure_settings = AzureSettings()
 
     # Test workflow step creation with Azure services
@@ -192,7 +192,7 @@ async def test_azure_services_workflow():
         azure_services = AzureServicesManager()
         await azure_services.initialize()
 
-        openai_integration = AzureOpenAIIntegration()
+        openai_integration = AzureOpenAIClient()
 
         # Simulate workflow steps
         workflow_steps = []

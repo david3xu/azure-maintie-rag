@@ -21,7 +21,7 @@ from ..azure_search.query_analyzer import AzureSearchQueryAnalyzer
 from ..azure_search.vector_service import AzureSearchVectorService
 from ..azure_openai.completion_service import AzureOpenAICompletionService
 from ..azure_ml.gnn_processor import AzureMLGNNProcessor
-from ...config.settings import settings
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 

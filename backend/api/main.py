@@ -16,10 +16,14 @@ import uvicorn
 
 # Azure service components
 from integrations.azure_services import AzureServicesManager
-from integrations.azure_openai import AzureOpenAIIntegration
+from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 from config.settings import settings
-from api.endpoints import health, azure_query_endpoint
+from api.endpoints import health
+import importlib
+
+# Fix import for azure-query-endpoint (hyphen in filename)
+azure_query_endpoint = importlib.import_module("api.endpoints.azure-query-endpoint")
 
 # Configure logging
 logging.basicConfig(
@@ -41,7 +45,7 @@ async def lifespan(app: FastAPI):
         azure_services = AzureServicesManager()
         await azure_services.initialize()
 
-        openai_integration = AzureOpenAIIntegration()
+        openai_integration = AzureOpenAIClient()
         azure_settings = AzureSettings()
 
                 # ADD: Check for automated configuration
@@ -241,7 +245,7 @@ async def get_azure_services() -> AzureServicesManager:
     return azure_services
 
 
-async def get_openai_integration() -> AzureOpenAIIntegration:
+async def get_openai_integration() -> AzureOpenAIClient:
     """Get Azure OpenAI integration instance"""
     openai_integration = getattr(app.state, 'openai_integration', None)
     if not openai_integration:

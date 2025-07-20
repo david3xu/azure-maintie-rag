@@ -5,13 +5,9 @@ Azure OpenAI, vector databases, graph databases, and monitoring.
 """
 
 from .azure_openai import AzureOpenAIClient
-from .vector_store import VectorStoreClient
-from .graph_store import GraphStoreClient
-from .monitoring import MonitoringClient
+from .azure_services import AzureServicesManager
 
 __all__ = [
     'AzureOpenAIClient',
-    'VectorStoreClient',
-    'GraphStoreClient',
-    'MonitoringClient'
+    'AzureServicesManager'
 ]

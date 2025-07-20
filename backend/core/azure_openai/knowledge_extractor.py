@@ -24,7 +24,7 @@ from .azure_text_analytics_service import AzureTextAnalyticsService
 from .azure_ml_quality_service import AzureMLQualityAssessment
 from .azure_monitoring_service import AzureKnowledgeMonitor
 from .azure_rate_limiter import AzureOpenAIRateLimiter
-from ...config.settings import settings
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 

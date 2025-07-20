@@ -4,7 +4,7 @@ import logging
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-from backend.config.settings import settings
+from config.settings import settings
 from .storage_client import AzureStorageClient
 
 logger = logging.getLogger(__name__)

@@ -25,7 +25,7 @@ sys.path.insert(0, str(backend_path))
 
 # Import Azure services architecture components
 from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIIntegration
+from azure.integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 
 
@@ -47,7 +47,7 @@ async def main():
         azure_services = AzureServicesManager()
         await azure_services.initialize()
 
-        openai_integration = AzureOpenAIIntegration()
+        openai_integration = AzureOpenAIClient()
         azure_settings = AzureSettings()
 
         # Sample text data for processing
