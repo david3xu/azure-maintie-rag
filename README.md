@@ -98,23 +98,25 @@ Backend Stack:
 
 ### Current Deployment Status
 
-**✅ Deployed Services (5/10):**
+**✅ Deployed Services (10/10 Complete):**
 ```
-├── ✅ Storage Account (maintiedevstorvmoi46sh)
-├── ✅ Search Service (maintie-dev-search-vmoi46)
-├── ✅ Key Vault (maintie-dev-kv-vmoi46)
+├── ✅ Storage Account (maintiedevstor1cdd8e11)
+├── ✅ ML Storage Account (maintiedevmlstor1cdd8e11)
+├── ✅ Search Service (maintie-dev-search-1cdd8e)
+├── ✅ Key Vault (maintie-dev-kv-1cdd8e)
 ├── ✅ Application Insights (maintie-dev-appinsights)
-└── ✅ Log Analytics (maintie-dev-logs)
+├── ✅ Log Analytics (maintie-dev-logs)
+├── ✅ Cosmos DB (maintie-dev-cosmos-1cdd8e11)
+├── ✅ ML Workspace (maintie-dev-ml-1cdd8e11)
+├── ✅ Container Environment (maintie-dev-env-1cdd8e11)
+└── ✅ Container App (maintie-dev-app-1cdd8e11)
 ```
 
-**❌ Pending Services (5/10):**
-```
-├── ❌ ML Storage Account (maintiedevmlstorage)
-├── ❌ Cosmos DB Gremlin (maintie-dev-cosmos)
-├── ❌ ML Workspace (maintie-dev-ml)
-├── ❌ Container Environment (maintie-dev-env)
-└── ❌ Container App (maintie-dev-rag-app)
-```
+**🎉 All Services Operational!**
+- **Core Infrastructure**: Deployed via Bicep templates
+- **ML Infrastructure**: Deployed via Azure CLI
+- **Container Infrastructure**: Deployed via Azure CLI
+- **Data Infrastructure**: Deployed via Azure CLI
 
 ### Target Architecture
 
@@ -177,6 +179,9 @@ make clean              # Clean ALL generated files - reset to raw text data
 
 # Clean up everything (with confirmation)
 ./scripts/teardown.sh
+
+# Manual CLI deployment (if needed)
+# See scripts/README.md for step-by-step CLI commands
 
 # Deploy to different environments
 AZURE_ENVIRONMENT=dev ./scripts/enhanced-complete-redeploy.sh

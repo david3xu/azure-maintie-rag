@@ -43,20 +43,16 @@ param deploymentToken string = uniqueString(resourceGroup().id, environment, res
 var mlStorageAccountName = '${resourcePrefix}${environment}mlstor${take(deploymentToken, 8)}'
 var mlWorkspaceName = '${resourcePrefix}-${environment}-ml'
 
-// Parameters for existing resources from core deployment
-param existingStorageAccountName string
-param existingKeyVaultName string
-param existingAppInsightsName string = '${resourcePrefix}-${environment}-appinsights'
+// Remove parameter requirements - reference actual deployed resources
+// param existingStorageAccountName string  // Remove this line
+// param existingKeyVaultName string        // Remove this line
+// param existingAppInsightsName string = '${resourcePrefix}-${environment}-appinsights'
 
-// Use the actual deployed resource names from core deployment outputs
-var existingStorageAccountName = '${resourcePrefix}${environment}stor${deploymentToken}'
+// Reference actual deployed resources using the exact naming pattern from core deployment
 var existingKeyVaultName = '${resourcePrefix}-${environment}-kv-${take(deploymentToken, 6)}'
+var existingAppInsightsName = '${resourcePrefix}-${environment}-appinsights'
 
-// Get existing resources from core deployment
-resource existingStorageAccount 'Microsoft.Storage/storageAccounts@2021-04-01' existing = {
-  name: existingStorageAccountName
-}
-
+// Get existing resources from core deployment (only Key Vault and App Insights are used)
 resource existingKeyVault 'Microsoft.KeyVault/vaults@2021-06-01-preview' existing = {
   name: existingKeyVaultName
 }

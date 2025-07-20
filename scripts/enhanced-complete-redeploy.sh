@@ -87,15 +87,14 @@ deploy_core_infrastructure_resilient() {
     # Generate deterministic deployment token
     local deterministic_token=$(echo -n "$RESOURCE_GROUP-$ENVIRONMENT-maintie" | sha256sum | cut -c1-8)
 
-    # Capture deployment output properly
-    local deployment_output=$(az deployment group create \
+    # Capture deployment output properly with JSON output
+    local deployment_output
+    if deployment_output=$(az deployment group create \
         --resource-group "$RESOURCE_GROUP" \
         --template-file "infrastructure/azure-resources-core.bicep" \
         --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" "deploymentToken=$deterministic_token" \
         --name "azure-resources-core-$(date +%Y%m%d-%H%M%S)" \
-        --mode Incremental)
-
-    if [ $? -eq 0 ]; then
+        --mode Incremental --output json); then
         print_status "Core infrastructure deployment completed successfully"
 
         # Store deployment token for other deployments
@@ -109,10 +108,22 @@ deploy_core_infrastructure_resilient() {
         fi
 
         # Store actual deployed resource names from output
-        local actual_storage_name=$(echo "$deployment_output" | jq -r '.properties.outputs.storageAccountName.value' 2>/dev/null || echo "")
-        local actual_search_name=$(echo "$deployment_output" | jq -r '.properties.outputs.searchServiceName.value' 2>/dev/null || echo "")
-        local actual_keyvault_name=$(echo "$deployment_output" | jq -r '.properties.outputs.keyVaultName.value' 2>/dev/null || echo "")
+        local actual_storage_name=$(echo "$deployment_output" | jq -r '.properties.outputs.storageAccountName.value' 2>/dev/null)
+        local actual_search_name=$(echo "$deployment_output" | jq -r '.properties.outputs.searchServiceName.value' 2>/dev/null)
+        local actual_keyvault_name=$(echo "$deployment_output" | jq -r '.properties.outputs.keyVaultName.value' 2>/dev/null)
 
+        # Fallback to actual deployed resources if output parsing fails
+        if [ -z "$actual_storage_name" ] || [ "$actual_storage_name" = "null" ]; then
+            actual_storage_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Storage/storageAccounts" --query "[?starts_with(name, '${resourcePrefix}${environment}stor')].name" --output tsv | head -1)
+        fi
+        if [ -z "$actual_search_name" ] || [ "$actual_search_name" = "null" ]; then
+            actual_search_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Search/searchServices" --query "[0].name" --output tsv)
+        fi
+        if [ -z "$actual_keyvault_name" ] || [ "$actual_keyvault_name" = "null" ]; then
+            actual_keyvault_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.KeyVault/vaults" --query "[0].name" --output tsv)
+        fi
+
+        # Store names for later use
         if [ -n "$actual_storage_name" ]; then
             echo "$actual_storage_name" > ".deployment_storage_name"
         fi
