@@ -1,0 +1,4 @@
+[0;34m🏗️  Generating globally unique Key Vault name[0m
+[0;34mℹ️  Using high-entropy generation for key vault name validation[0m
+[0;32m✅ Generated unique Key Vault name: maintie-dev-kv-ec68bf[0m
+maintie-dev-kv-ec68bf
