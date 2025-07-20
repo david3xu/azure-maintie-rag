@@ -87,23 +87,40 @@ deploy_core_infrastructure_resilient() {
     # Generate deterministic deployment token
     local deterministic_token=$(echo -n "$RESOURCE_GROUP-$ENVIRONMENT-maintie" | sha256sum | cut -c1-8)
 
-    if az deployment group create \
+    # Capture deployment output properly
+    local deployment_output=$(az deployment group create \
         --resource-group "$RESOURCE_GROUP" \
         --template-file "infrastructure/azure-resources-core.bicep" \
         --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" "deploymentToken=$deterministic_token" \
         --name "azure-resources-core-$(date +%Y%m%d-%H%M%S)" \
-        --mode Incremental; then
-                print_status "Core infrastructure deployment completed successfully"
+        --mode Incremental)
+
+    if [ $? -eq 0 ]; then
+        print_status "Core infrastructure deployment completed successfully"
 
         # Store deployment token for other deployments
         local deployment_token=$(echo "$deployment_output" | jq -r '.properties.outputs.deploymentToken.value' 2>/dev/null || echo "")
         if [ -z "$deployment_token" ]; then
-            # Try to get from the actual deployment
-            deployment_token=$(az deployment group show --resource-group "$RESOURCE_GROUP" --name "azure-resources-core-${DEPLOYMENT_TIMESTAMP}" --query 'properties.outputs.deploymentToken.value' --output tsv 2>/dev/null || echo "")
+            deployment_token="$deterministic_token"
         fi
         if [ -n "$deployment_token" ]; then
             echo "$deployment_token" > ".deployment_token"
             print_info "Stored deployment token: $deployment_token"
+        fi
+
+        # Store actual deployed resource names from output
+        local actual_storage_name=$(echo "$deployment_output" | jq -r '.properties.outputs.storageAccountName.value' 2>/dev/null || echo "")
+        local actual_search_name=$(echo "$deployment_output" | jq -r '.properties.outputs.searchServiceName.value' 2>/dev/null || echo "")
+        local actual_keyvault_name=$(echo "$deployment_output" | jq -r '.properties.outputs.keyVaultName.value' 2>/dev/null || echo "")
+
+        if [ -n "$actual_storage_name" ]; then
+            echo "$actual_storage_name" > ".deployment_storage_name"
+        fi
+        if [ -n "$actual_search_name" ]; then
+            echo "$actual_search_name" > ".deployment_search_name"
+        fi
+        if [ -n "$actual_keyvault_name" ]; then
+            echo "$actual_keyvault_name" > ".deployment_keyvault_name"
         fi
 
         return 0
@@ -143,8 +160,8 @@ deploy_ml_infrastructure_conditional() {
     if [ -f ".deployment_storage_name" ]; then
         storage_account_name=$(cat ".deployment_storage_name")
     else
-        # Use actual deployed name from status
-        storage_account_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Storage/storageAccounts" --query "[?contains(name, 'stor') && !contains(name, 'ml')].name" --output tsv 2>/dev/null | head -1)
+        # Use the exact naming pattern from successful deployment
+        storage_account_name=$(az resource list --resource-group "$RESOURCE_GROUP" --resource-type "Microsoft.Storage/storageAccounts" --query "[?starts_with(name, 'maintiedevstor')].name" --output tsv 2>/dev/null | head -1)
     fi
 
     # If still not found, try a broader search
@@ -190,19 +207,22 @@ deploy_ml_infrastructure_conditional() {
     print_info "  - Storage Account: $actual_storage_account"
     print_info "  - Key Vault: $actual_key_vault"
 
-    # Get deployment token from core deployment
-    local deployment_token
+    # Use the exact deployment token from successful core deployment
+    local deployment_token="1cdd8e11"  # From your successful deployment
     if [ -f ".deployment_token" ]; then
         deployment_token=$(cat ".deployment_token")
-    else
-        deployment_token=$(uniqueString "$RESOURCE_GROUP" "$ENVIRONMENT" "maintie")
+    fi
+
+    # Ensure we use the same token that created the core resources
+    if [ -z "$deployment_token" ]; then
+        deployment_token=$(az deployment group list --resource-group "$RESOURCE_GROUP" --query "[?contains(name, 'azure-resources-core')].properties.outputs.deploymentToken.value" --output tsv 2>/dev/null | head -1)
     fi
 
     # Deploy simplified ML infrastructure with correct parameters
     if az deployment group create \
         --resource-group "$RESOURCE_GROUP" \
         --template-file "infrastructure/azure-resources-ml-simple.bicep" \
-        --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" "existingStorageAccountName=$actual_storage_account" "existingKeyVaultName=$actual_key_vault" "deploymentToken=$deployment_token" \
+        --parameters "environment=$ENVIRONMENT" "location=$AZURE_LOCATION" "resourcePrefix=maintie" "deploymentToken=$deployment_token" \
         --name "azure-resources-ml-simple-$(date +%Y%m%d-%H%M%S)" \
         --mode Incremental; then
 
