@@ -45,8 +45,8 @@ var resourceConfig = {
 // Get current environment configuration
 var currentConfig = resourceConfig[environment]
 
-// Simple deterministic naming with deployment token
-param deploymentToken string = uniqueString(resourceGroup().id, deployment().name)
+// Deterministic naming with environment and resource prefix
+param deploymentToken string = uniqueString(resourceGroup().id, environment, resourcePrefix)
 
 // Deterministic resource naming
 var storageAccountName = '${resourcePrefix}${environment}stor${take(deploymentToken, 8)}'
