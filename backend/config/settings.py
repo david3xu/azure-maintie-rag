@@ -313,6 +313,27 @@ class Settings(BaseSettings):
         case_sensitive = False
         extra = "ignore"  # Allow extra fields from environment
 
+    skip_processing_if_data_exists: bool = Field(
+        default=False,
+        env="SKIP_PROCESSING_IF_DATA_EXISTS",
+        description="Skip data preparation if Azure services already contain data"
+    )
+    force_data_reprocessing: bool = Field(
+        default=False,
+        env="FORCE_DATA_REPROCESSING",
+        description="Force data reprocessing even if Azure services contain data"
+    )
+    data_state_validation_enabled: bool = Field(
+        default=True,
+        env="DATA_STATE_VALIDATION_ENABLED",
+        description="Enable Azure data state validation before processing"
+    )
+    azure_data_state_cache_ttl: int = Field(
+        default=300,
+        env="AZURE_DATA_STATE_CACHE_TTL",
+        description="Azure data state cache TTL in seconds"
+    )
+
 
 # Global settings instance
 settings = Settings()

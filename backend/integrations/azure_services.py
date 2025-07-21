@@ -5,6 +5,7 @@ import time
 from typing import Dict, Any, Optional, List
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
+from datetime import datetime
 
 from core.azure_storage.storage_factory import get_storage_factory
 from core.azure_search.search_client import AzureCognitiveSearchClient
@@ -216,3 +217,139 @@ class AzureServicesManager:
             "all_configured": all_configured,
             "services": validation_results
         }
+
+    async def validate_domain_data_state(self, domain: str) -> Dict[str, Any]:
+        """Enterprise Azure data state validation across services"""
+        # Azure Blob Storage state validation
+        rag_storage = self.get_rag_storage_client()
+        container_name = f"rag-data-{domain}"
+        blob_state = await self._validate_blob_storage_state(rag_storage, container_name)
+        # Azure Cognitive Search state validation
+        search_client = self.get_service('search')
+        index_name = f"rag-index-{domain}"
+        search_state = await self._validate_search_index_state(search_client, index_name)
+        # Azure Cosmos DB state validation
+        cosmos_client = self.get_service('cosmos')
+        cosmos_state = await self._validate_cosmos_metadata_state(cosmos_client, domain)
+        # Raw data directory validation
+        raw_data_state = self._validate_raw_data_directory()
+        return {
+            "domain": domain,
+            "azure_blob_storage": blob_state,
+            "azure_cognitive_search": search_state,
+            "azure_cosmos_db": cosmos_state,
+            "raw_data_directory": raw_data_state,
+            "requires_processing": self._calculate_processing_requirement(
+                blob_state, search_state, cosmos_state, raw_data_state
+            ),
+            "timestamp": datetime.now().isoformat()
+        }
+
+    async def _validate_blob_storage_state(self, storage_client, container_name: str) -> Dict[str, Any]:
+        """Validate Azure Blob Storage container state"""
+        try:
+            from azure.core.exceptions import ResourceNotFoundError
+            blobs = await storage_client.list_blobs(container_name)
+            blob_count = len(list(blobs)) if blobs else 0
+            return {
+                "container_exists": True,
+                "document_count": blob_count,
+                "has_data": blob_count > 0,
+                "container_name": container_name
+            }
+        except ResourceNotFoundError:
+            return {
+                "container_exists": False,
+                "document_count": 0,
+                "has_data": False,
+                "container_name": container_name
+            }
+        except Exception as e:
+            logger.warning(f"Azure Blob Storage validation failed: {e}")
+            return {
+                "container_exists": False,
+                "document_count": 0,
+                "has_data": False,
+                "error": str(e)
+            }
+
+    async def _validate_search_index_state(self, search_client, index_name: str) -> Dict[str, Any]:
+        """Validate Azure Cognitive Search index state"""
+        try:
+            index_stats = await search_client._get_index_statistics(index_name)
+            return {
+                "index_exists": index_stats.get("index_exists", False),
+                "document_count": index_stats.get("document_count", 0),
+                "has_data": index_stats.get("document_count", 0) > 0,
+                "index_name": index_name
+            }
+        except Exception as e:
+            logger.warning(f"Azure Cognitive Search validation failed: {e}")
+            return {
+                "index_exists": False,
+                "document_count": 0,
+                "has_data": False,
+                "error": str(e)
+            }
+
+    async def _validate_cosmos_metadata_state(self, cosmos_client, domain: str) -> Dict[str, Any]:
+        """Validate Azure Cosmos DB metadata state"""
+        try:
+            stats = cosmos_client.get_graph_statistics(domain)
+            has_metadata = stats.get("success", False) and (
+                stats.get("vertex_count", 0) > 0 or stats.get("edge_count", 0) > 0
+            )
+            return {
+                "metadata_exists": stats.get("success", False),
+                "vertex_count": stats.get("vertex_count", 0),
+                "edge_count": stats.get("edge_count", 0),
+                "has_data": has_metadata,
+                "domain": domain
+            }
+        except Exception as e:
+            logger.warning(f"Azure Cosmos DB validation failed: {e}")
+            return {
+                "metadata_exists": False,
+                "vertex_count": 0,
+                "edge_count": 0,
+                "has_data": False,
+                "error": str(e)
+            }
+
+    def _validate_raw_data_directory(self) -> Dict[str, Any]:
+        """Validate raw data directory state"""
+        from pathlib import Path
+        raw_data_path = Path("data/raw")
+        if not raw_data_path.exists():
+            return {
+                "directory_exists": False,
+                "file_count": 0,
+                "has_files": False,
+                "last_modified": None
+            }
+        markdown_files = list(raw_data_path.glob("*.md"))
+        last_modified = None
+        if markdown_files:
+            mod_times = [f.stat().st_mtime for f in markdown_files]
+            last_modified = datetime.fromtimestamp(max(mod_times)).isoformat()
+        return {
+            "directory_exists": True,
+            "file_count": len(markdown_files),
+            "has_files": len(markdown_files) > 0,
+            "last_modified": last_modified
+        }
+
+    def _calculate_processing_requirement(self, blob_state: Dict, search_state: Dict, cosmos_state: Dict, raw_data_state: Dict) -> str:
+        """Calculate processing requirement based on data state"""
+        has_azure_data = any([
+            blob_state.get("has_data", False),
+            search_state.get("has_data", False),
+            cosmos_state.get("has_data", False)
+        ])
+        has_raw_data = raw_data_state.get("has_files", False)
+        if not has_raw_data:
+            return "no_raw_data"
+        elif not has_azure_data:
+            return "full_processing_required"
+        else:
+            return "data_exists_check_policy"
