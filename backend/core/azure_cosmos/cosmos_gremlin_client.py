@@ -10,6 +10,7 @@ from gremlin_python.process.graph_traversal import __
 from gremlin_python.process.traversal import T, P
 
 from config.settings import azure_settings
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -70,42 +71,50 @@ class AzureCosmosGremlinClient:
             raise
 
     def add_entity(self, entity_data: Dict[str, Any], domain: str) -> Dict[str, Any]:
-        """Add entity vertex to graph using Gremlin"""
+        """Enterprise thread-safe entity addition with proper error handling"""
         try:
-            # Lazy initialize client if needed
             if not self._client_initialized:
                 self._initialize_client()
-
-            # Suppress async warnings during Gremlin operations
-            import warnings
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-
-                # Gremlin query to add vertex
-                query = f"""
-                    g.addV('Entity')
-                        .property('text', '{entity_data.get("text", "")}')
-                        .property('entity_type', '{entity_data.get("entity_type", "unknown")}')
-                        .property('domain', '{domain}')
-                        .property('confidence', {entity_data.get("confidence", 1.0)})
-                        .property('created_at', '{entity_data.get("created_at", "")}')
-                """
-
-                result = self.gremlin_client.submit(query)
-                vertex = result.all().result()[0]
-
-            return {
-                "success": True,
-                "id": str(vertex.id),
-                "entity_type": entity_data.get("entity_type", "unknown")
-            }
-
+            entity_id = entity_data.get('id', f"entity_{int(time.time())}")
+            entity_text = str(entity_data.get('text', ''))[:500]
+            escaped_entity_text = entity_text.replace("'", "\\'")
+            query = f"""
+                g.addV('Entity')
+                    .property('id', '{entity_id}')
+                    .property('text', '{escaped_entity_text}')
+                    .property('domain', '{domain}')
+                    .property('entity_type', '{entity_data.get("entity_type", "document")}')
+                    .property('created_at', '{datetime.now().isoformat()}')
+            """
+            try:
+                result = self._execute_gremlin_query_safe(query, timeout_seconds=30)
+                if result:
+                    logger.info(f"Entity added successfully: {entity_id} in domain {domain}")
+                    return {
+                        "success": True,
+                        "entity_id": entity_id,
+                        "domain": domain
+                    }
+                else:
+                    logger.warning(f"Entity addition returned no result: {entity_id}")
+                    return {
+                        "success": False,
+                        "error": "No result from Gremlin query",
+                        "entity_id": entity_id
+                    }
+            except Exception as query_error:
+                logger.error(f"Gremlin query execution failed: {query_error}")
+                return {
+                    "success": False,
+                    "error": f"Query execution failed: {str(query_error)}",
+                    "entity_id": entity_id
+                }
         except Exception as e:
             logger.error(f"Entity addition failed: {e}")
             return {
                 "success": False,
                 "error": str(e),
-                "entity_id": entity_data.get("id", "unknown")
+                "entity_id": entity_data.get('id', 'unknown')
             }
 
     def add_relationship(self, relation_data: Dict[str, Any], domain: str) -> Dict[str, Any]:

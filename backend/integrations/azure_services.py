@@ -199,11 +199,19 @@ class AzureServicesManager:
         validation_results = {}
 
         for service_name, service in self.services.items():
+            logger.debug(f"Validating service: {service_name}")
             if hasattr(service, 'validate_azure_configuration'):
-                validation_results[service_name] = service.validate_azure_configuration()
+                result = service.validate_azure_configuration()
+                validation_results[service_name] = result
+                logger.debug(f"Service {service_name} validation result: {result}")
             elif hasattr(service, 'get_connection_status'):
                 status = service.get_connection_status()
-                validation_results[service_name] = {"configured": status.get("status") == "healthy"}
+                configured = status.get("status") == "healthy"
+                validation_results[service_name] = {"configured": configured}
+                if not configured:
+                    logger.error(f"Service {service_name} not configured. Status: {status}")
+                else:
+                    logger.info(f"Service {service_name} configured successfully")
             else:
                 logger.warning(f"No validation method available for {service_name}")
                 validation_results[service_name] = {"configured": False}  # Don't assume OK
