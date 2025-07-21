@@ -100,7 +100,7 @@ async def stream_azure_workflow(query_id: str, query: str, domain: str = "genera
 
         # Execute real Azure search (same as scripts/query_processing_workflow.py)
         index_name = f"rag-index-{domain}"
-        search_results = await azure_services.search_client.search_documents(
+        search_results = await azure_services.get_service('search').search_documents(
             index_name, query, top_k=5
         )
 
@@ -136,7 +136,7 @@ async def stream_azure_workflow(query_id: str, query: str, domain: str = "genera
         for i, result in enumerate(search_results[:3]):
             blob_name = f"document_{i}.txt"
             try:
-                content = await azure_services.storage_client.download_text(container_name, blob_name)
+                content = await azure_services.get_service('rag_storage').download_text(container_name, blob_name)
                 retrieved_docs.append(content)
             except Exception as e:
                 logger.warning(f"Could not retrieve document {i}: {e}")
@@ -208,7 +208,8 @@ async def stream_azure_workflow(query_id: str, query: str, domain: str = "genera
         }
 
         try:
-            await azure_services.cosmos_client.add_entity(query_metadata, domain)
+            cosmos_client = azure_services.get_service('cosmos')
+            cosmos_client.add_entity(query_metadata, domain)
         except Exception as e:
             logger.warning(f"Could not store metadata in graph: {e}")
 

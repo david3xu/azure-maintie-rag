@@ -156,12 +156,11 @@ async def process_azure_query(
         }
 
         try:
-            # Store as vertex in graph
             cosmos_client = azure_services.get_service('cosmos')
-            await cosmos_client.add_entity(query_metadata, request.domain)
+            cosmos_client.add_entity(query_metadata, request.domain)
             azure_services_used.append("Azure Cosmos DB Gremlin")
         except Exception as e:
-            logger.warning(f"Could not store metadata: {e}")
+            logger.warning(f"Could not store metadata in graph: {e}")
 
         processing_time = time.time() - start_time
 

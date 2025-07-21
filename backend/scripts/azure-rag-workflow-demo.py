@@ -133,11 +133,11 @@ class CompletelyFixedUniversalRAGWorkflowDemo:
         try:
             # Store documents in Azure Blob Storage
             container_name = f"rag-data-{self.domain}"
-            await self.azure_services.storage_client.create_container(container_name)
+            await self.azure_services.get_service('rag_storage').create_container(container_name)
 
             for i, text in enumerate(self.demo_texts):
                 blob_name = f"document_{i}.txt"
-                await self.azure_services.storage_client.upload_text(container_name, blob_name, text)
+                await self.azure_services.get_service('rag_storage').upload_text(container_name, blob_name, text)
 
             step_result = {
                 "success": True,
@@ -201,7 +201,7 @@ class CompletelyFixedUniversalRAGWorkflowDemo:
         try:
             # Create search index for the domain
             index_name = f"rag-index-{self.domain}"
-            await self.azure_services.search_client.create_index(index_name)
+            await self.azure_services.get_service('search').create_index(index_name)
 
             # Index documents
             for i, text in enumerate(self.demo_texts):
@@ -211,7 +211,7 @@ class CompletelyFixedUniversalRAGWorkflowDemo:
                     "domain": self.domain,
                     "metadata": {"source": "demo", "index": i}
                 }
-                await self.azure_services.search_client.index_document(index_name, document)
+                await self.azure_services.get_service('search').index_document(index_name, document)
 
             step_result = {
                 "success": True,
@@ -294,7 +294,7 @@ class CompletelyFixedUniversalRAGWorkflowDemo:
 
             if vector_search and vector_search.get("success", False):
                 # Use the correct search method
-                search_results = await self.azure_services.search_client.search_documents(vector_search["index_name"], query, top_k=3)
+                search_results = await self.azure_services.get_service('search').search_documents(vector_search["index_name"], query, top_k=3)
 
                 step_result = {
                     "success": True,

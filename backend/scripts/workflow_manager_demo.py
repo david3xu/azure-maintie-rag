@@ -96,7 +96,7 @@ class WorkflowManagerDemo:
         try:
             # Create container for domain
             container_name = f"rag-data-{self.domain}"
-            await self.azure_services.storage_client.create_container(container_name)
+            await self.azure_services.get_service('rag_storage').create_container(container_name)
 
             # Upload sample documents
             sample_docs = [
@@ -107,7 +107,7 @@ class WorkflowManagerDemo:
 
             for i, doc in enumerate(sample_docs):
                 blob_name = f"document_{i}.txt"
-                await self.azure_services.storage_client.upload_text(container_name, blob_name, doc)
+                await self.azure_services.get_service('rag_storage').upload_text(container_name, blob_name, doc)
 
             self._capture_workflow_event("step_completed", {
                 "step_name": "azure_blob_storage_upload",
@@ -138,7 +138,7 @@ class WorkflowManagerDemo:
         try:
             # Create search index
             index_name = f"rag-index-{self.domain}"
-            await self.azure_services.search_client.create_index(index_name)
+            await self.azure_services.get_service('search').create_index(index_name)
 
             # Index documents
             sample_docs = [
@@ -148,10 +148,10 @@ class WorkflowManagerDemo:
             ]
 
             for doc in sample_docs:
-                await self.azure_services.search_client.index_document(index_name, doc)
+                await self.azure_services.get_service('search').index_document(index_name, doc)
 
             # Search for relevant documents
-            search_results = await self.azure_services.search_client.search_documents(
+            search_results = await self.azure_services.get_service('search').search_documents(
                 index_name, user_query, top_k=5
             )
 
