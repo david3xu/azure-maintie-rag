@@ -13,6 +13,28 @@ from pydantic import Field
 class Settings(BaseSettings):
     """Unified application configuration settings for Azure services - single source of truth"""
 
+    # --- Azure Data Processing Policy Configuration ---
+    skip_processing_if_data_exists: bool = Field(
+        default=False,
+        env="SKIP_PROCESSING_IF_DATA_EXISTS",
+        description="Skip data preparation if Azure services already contain data"
+    )
+    force_data_reprocessing: bool = Field(
+        default=False,
+        env="FORCE_DATA_REPROCESSING",
+        description="Force data reprocessing even if Azure services contain data"
+    )
+    data_state_validation_enabled: bool = Field(
+        default=True,
+        env="DATA_STATE_VALIDATION_ENABLED",
+        description="Enable Azure data state validation before processing"
+    )
+    azure_data_state_cache_ttl: int = Field(
+        default=300,
+        env="AZURE_DATA_STATE_CACHE_TTL",
+        description="Azure data state cache TTL in seconds"
+    )
+
     # Application Settings
     app_name: str = "Azure Universal RAG"
     app_version: str = "2.0.0"
@@ -61,7 +83,6 @@ class Settings(BaseSettings):
     azure_search_service: str = Field(default="", env="AZURE_SEARCH_SERVICE")
     azure_search_admin_key: str = Field(default="", env="AZURE_SEARCH_ADMIN_KEY")
     azure_search_query_key: str = Field(default="", env="AZURE_SEARCH_QUERY_KEY")
-    azure_search_index: str = Field(default="universal-rag-index", env="AZURE_SEARCH_INDEX")
     azure_search_api_version: str = Field(default="2023-11-01", env="AZURE_SEARCH_API_VERSION")
     azure_search_service_name: str = Field(default="", env="AZURE_SEARCH_SERVICE_NAME")
 
@@ -312,27 +333,6 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = False
         extra = "ignore"  # Allow extra fields from environment
-
-    skip_processing_if_data_exists: bool = Field(
-        default=False,
-        env="SKIP_PROCESSING_IF_DATA_EXISTS",
-        description="Skip data preparation if Azure services already contain data"
-    )
-    force_data_reprocessing: bool = Field(
-        default=False,
-        env="FORCE_DATA_REPROCESSING",
-        description="Force data reprocessing even if Azure services contain data"
-    )
-    data_state_validation_enabled: bool = Field(
-        default=True,
-        env="DATA_STATE_VALIDATION_ENABLED",
-        description="Enable Azure data state validation before processing"
-    )
-    azure_data_state_cache_ttl: int = Field(
-        default=300,
-        env="AZURE_DATA_STATE_CACHE_TTL",
-        description="Azure data state cache TTL in seconds"
-    )
 
 
 # Global settings instance
