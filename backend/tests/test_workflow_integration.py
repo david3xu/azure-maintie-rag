@@ -47,7 +47,7 @@ async def test_azure_workflow_integration():
             "container_name": "rag-data-test",
             "documents_uploaded": 5,
             "storage_location": "Azure Blob Storage",
-            "azure_region": azure_settings.azure_location
+            "azure_region": azure_settings.azure_region
         }
     }
 
