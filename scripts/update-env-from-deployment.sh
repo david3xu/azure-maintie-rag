@@ -48,21 +48,39 @@ update_env_file() {
     cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%Y%m%d-%H%M%S)"
 
     # Update Azure Storage settings
-    sed -i "s/AZURE_STORAGE_ACCOUNT=.*/AZURE_STORAGE_ACCOUNT=$storage_account/" "$ENV_FILE"
+    if [ -n "$storage_account" ]; then
+        print_info "Setting AZURE_STORAGE_ACCOUNT=$storage_account"
+        sed -i "s|AZURE_STORAGE_ACCOUNT=.*|AZURE_STORAGE_ACCOUNT=${storage_account//|/\\|}|" "$ENV_FILE"
+    fi
 
     # Update Azure Search settings
-    sed -i "s/AZURE_SEARCH_SERVICE=.*/AZURE_SEARCH_SERVICE=$search_service/" "$ENV_FILE"
-    sed -i "s/AZURE_SEARCH_SERVICE_NAME=.*/AZURE_SEARCH_SERVICE_NAME=$search_service/" "$ENV_FILE"
+    if [ -n "$search_service" ]; then
+        print_info "Setting AZURE_SEARCH_SERVICE=$search_service"
+        sed -i "s|AZURE_SEARCH_SERVICE=.*|AZURE_SEARCH_SERVICE=${search_service//|/\\|}|" "$ENV_FILE"
+        sed -i "s|AZURE_SEARCH_SERVICE_NAME=.*|AZURE_SEARCH_SERVICE_NAME=${search_service//|/\\|}|" "$ENV_FILE"
+    fi
 
     # Update Azure Key Vault settings
-    sed -i "s|AZURE_KEY_VAULT_URL=.*|AZURE_KEY_VAULT_URL=https://$key_vault_name.vault.azure.net/|" "$ENV_FILE"
+    if [ -n "$key_vault_name" ]; then
+        print_info "Setting AZURE_KEY_VAULT_URL=https://$key_vault_name.vault.azure.net/"
+        sed -i "s|AZURE_KEY_VAULT_URL=.*|AZURE_KEY_VAULT_URL=https://$key_vault_name.vault.azure.net/|" "$ENV_FILE"
+    fi
 
     # Update Azure Cosmos DB settings
-    sed -i "s|AZURE_COSMOS_ENDPOINT=.*|AZURE_COSMOS_ENDPOINT=https://$cosmos_name.documents.azure.com:443/|" "$ENV_FILE"
+    if [ -n "$cosmos_name" ]; then
+        print_info "Setting AZURE_COSMOS_ENDPOINT=https://$cosmos_name.documents.azure.com:443/"
+        sed -i "s|AZURE_COSMOS_ENDPOINT=.*|AZURE_COSMOS_ENDPOINT=https://$cosmos_name.documents.azure.com:443/|" "$ENV_FILE"
+    fi
 
     # Update connection strings
-    sed -i "s|AZURE_STORAGE_CONNECTION_STRING=.*|AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=$storage_account;AccountKey=your-key;EndpointSuffix=core.windows.net|" "$ENV_FILE"
-    sed -i "s|AZURE_COSMOS_DB_CONNECTION_STRING=.*|AZURE_COSMOS_DB_CONNECTION_STRING=AccountEndpoint=https://$cosmos_name.documents.azure.com:443/;AccountKey=your-key;|" "$ENV_FILE"
+    if [ -n "$storage_account" ]; then
+        print_info "Setting AZURE_STORAGE_CONNECTION_STRING for $storage_account"
+        sed -i "s|AZURE_STORAGE_CONNECTION_STRING=.*|AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=${storage_account//|/\\|};AccountKey=your-key;EndpointSuffix=core.windows.net|" "$ENV_FILE"
+    fi
+    if [ -n "$cosmos_name" ]; then
+        print_info "Setting AZURE_COSMOS_DB_CONNECTION_STRING for $cosmos_name"
+        sed -i "s|AZURE_COSMOS_DB_CONNECTION_STRING=.*|AZURE_COSMOS_DB_CONNECTION_STRING=AccountEndpoint=https://$cosmos_name.documents.azure.com:443/;AccountKey=your-key;|" "$ENV_FILE"
+    fi
 
     print_status "Environment file updated successfully"
     print_warning "⚠️  IMPORTANT: You need to manually update the API keys in $ENV_FILE:"
@@ -82,50 +100,50 @@ extract_service_names() {
     # Try to get from deployment files
     if [ -f ".deployment_search_name" ]; then
         search_service=$(cat ".deployment_search_name" | tr -d '\n\r')
-        print_status "Found Search Service: $search_service"
+        print_status "Found Search Service: $search_service" >&2
     fi
 
     if [ -f ".deployment_storage_name" ]; then
         storage_account=$(cat ".deployment_storage_name" | tr -d '\n\r')
-        print_status "Found Storage Account: $storage_account"
+        print_status "Found Storage Account: $storage_account" >&2
     fi
 
     if [ -f ".deployment_keyvault_name" ]; then
         key_vault_name=$(cat ".deployment_keyvault_name" | tr -d '\n\r')
-        print_status "Found Key Vault: $key_vault_name"
+        print_status "Found Key Vault: $key_vault_name" >&2
     fi
 
     if [ -f ".deployment_cosmos_name" ]; then
         cosmos_name=$(cat ".deployment_cosmos_name" | tr -d '\n\r')
-        print_status "Found Cosmos DB: $cosmos_name"
+        print_status "Found Cosmos DB: $cosmos_name" >&2
     fi
 
     # If not found in files, try to get from Azure
     if [ -z "$search_service" ]; then
         search_service=$(az search service list --resource-group "$RESOURCE_GROUP" --query "[0].name" --output tsv 2>/dev/null || echo "")
         if [ -n "$search_service" ]; then
-            print_status "Found Search Service from Azure: $search_service"
+            print_status "Found Search Service from Azure: $search_service" >&2
         fi
     fi
 
     if [ -z "$storage_account" ]; then
         storage_account=$(az storage account list --resource-group "$RESOURCE_GROUP" --query "[0].name" --output tsv 2>/dev/null || echo "")
         if [ -n "$storage_account" ]; then
-            print_status "Found Storage Account from Azure: $storage_account"
+            print_status "Found Storage Account from Azure: $storage_account" >&2
         fi
     fi
 
     if [ -z "$key_vault_name" ]; then
         key_vault_name=$(az keyvault list --resource-group "$RESOURCE_GROUP" --query "[0].name" --output tsv 2>/dev/null || echo "")
         if [ -n "$key_vault_name" ]; then
-            print_status "Found Key Vault from Azure: $key_vault_name"
+            print_status "Found Key Vault from Azure: $key_vault_name" >&2
         fi
     fi
 
     if [ -z "$cosmos_name" ]; then
         cosmos_name=$(az cosmosdb list --resource-group "$RESOURCE_GROUP" --query "[0].name" --output tsv 2>/dev/null || echo "")
         if [ -n "$cosmos_name" ]; then
-            print_status "Found Cosmos DB from Azure: $cosmos_name"
+            print_status "Found Cosmos DB from Azure: $cosmos_name" >&2
         fi
     fi
 
