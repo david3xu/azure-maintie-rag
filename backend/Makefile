@@ -10,13 +10,9 @@ help:
 	@echo "🚀 Setup:"
 	@echo "  make setup          - Full project setup with virtual environment"
 	@echo "  make dev-install    - Development dependencies only"
-	@echo "  make docs-setup     - Setup documentation environment"
 	@echo ""
 	@echo "🏃 Development:"
 	@echo "  make run            - Start FastAPI server with hot reload"
-	@echo "  make workflow-demo  - Run Universal RAG workflow demonstration"
-	@echo "  make docs-preview   - Open markdown preview"
-	@echo "  make docs-status    - Show documentation setup status"
 	@echo ""
 	@echo "🔄 Workflows:"
 	@echo "  make data-prep      - WORKFLOW 1: Raw text → knowledge base"
@@ -27,21 +23,9 @@ help:
 	@echo "🧪 Testing:"
 	@echo "  make test           - Run all tests (unit + integration + workflow)"
 	@echo "  make test-unit      - Run unit tests only"
-	@echo "  make test-integration - Run API integration tests"
-	@echo "  make test-workflow  - Run workflow manager integration tests"
-	@echo "  make test-universal - Run Universal RAG system tests"
 	@echo ""
 	@echo "🧹 Cleanup:"
 	@echo "  make clean          - Clean generated files and cache"
-	@echo "  make clean-data     - Clean processed data (keep raw text)"
-	@echo "  make clean-all      - Clean everything except raw data"
-	@echo ""
-	@echo "📊 Data:"
-	@echo "  make data-setup SOURCE=/path/to/text/data - Setup text data"
-	@echo ""
-	@echo "🐳 Docker:"
-	@echo "  make docker-build   - Build Docker image"
-	@echo "  make docker-run     - Run Docker container"
 	@echo ""
 
 # Setup targets
@@ -127,12 +111,6 @@ workflow-analysis:
 	@echo "Total Active Files: 10/12 core files (83% utilization)"
 	PYTHONPATH=. ./.venv/bin/python scripts/workflow_analysis.py
 
-# Legacy workflow demo (kept for backward compatibility)
-workflow-demo:
-	@echo "🔄 Running Universal RAG workflow demonstration..."
-	@echo "💡 This demonstrates text processing with workflow transparency"
-	PYTHONPATH=. ./.venv/bin/python scripts/universal_rag_demo.py
-
 # Enhanced Azure Data Lifecycle Management
 data-state:
 	@echo "🔍 Azure Data State Analysis..."
@@ -142,12 +120,12 @@ data-state:
 data-prep-conditional:
 	@echo "🧠 Conditional Data Preparation (with Azure state validation)..."
 	@echo "💡 Checks Azure services state before processing"
-	PYTHONPATH=. .venv/bin/python scripts/data_preparation_workflow.py
+	PYTHONPATH=. ./.venv/bin/python scripts/data_preparation_workflow.py
 
 data-prep-force:
 	@echo "🔄 Force Data Preparation (ignores existing Azure data)..."
 	@echo "⚠️  This will reprocess data even if Azure services contain existing data"
-	FORCE_DATA_REPROCESSING=true PYTHONPATH=. .venv/bin/python scripts/data_preparation_workflow.py
+	FORCE_DATA_REPROCESSING=true PYTHONPATH=. ./.venv/bin/python scripts/data_preparation_workflow.py
 
 azure-clean-data:
 	@echo "🧹 Automated Azure data cleanup (preserving infrastructure)..."
