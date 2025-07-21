@@ -76,6 +76,45 @@ async def main():
     start_time = time.time()
 
     try:
+        # Step 0: Azure Data State Validation (NEW)
+        print(f"\n🔍 Step 0: Azure Data State Analysis...")
+        # Initialize Azure services (existing pattern)
+        azure_services = AzureServicesManager()
+        validation = azure_services.validate_configuration()
+        if not validation['all_configured']:
+            raise RuntimeError(f"Azure services not properly configured: {validation}")
+        # Validate Azure data state
+        data_state = await azure_services.validate_domain_data_state(domain)
+        # Display Azure service state
+        print(f"📊 Azure Services Data State:")
+        print(f"   🗄️  Azure Blob Storage: {'✅ Has Data' if data_state['azure_blob_storage']['has_data'] else '❌ Empty'} ({data_state['azure_blob_storage']['document_count']} docs)")
+        print(f"   🔍 Azure Cognitive Search: {'✅ Has Index' if data_state['azure_cognitive_search']['has_data'] else '❌ No Index'} ({data_state['azure_cognitive_search']['document_count']} docs)")
+        print(f"   💾 Azure Cosmos DB: {'✅ Has Metadata' if data_state['azure_cosmos_db']['has_data'] else '❌ No Metadata'} ({data_state['azure_cosmos_db']['vertex_count']} entities)")
+        print(f"   📁 Raw Data: {'✅ Available' if data_state['raw_data_directory']['has_files'] else '❌ Missing'} ({data_state['raw_data_directory']['file_count']} files)")
+        # Processing decision based on data state
+        processing_requirement = data_state['requires_processing']
+        if processing_requirement == "no_raw_data":
+            print(f"❌ No raw data files found. Please add markdown files to data/raw/")
+            return 1
+        elif processing_requirement == "data_exists_check_policy":
+            # Check environment policy for handling existing data
+            from config.settings import azure_settings
+            skip_if_exists = getattr(azure_settings, 'skip_processing_if_data_exists', False)
+            force_reprocess = getattr(azure_settings, 'force_data_reprocessing', False)
+            if skip_if_exists and not force_reprocess:
+                print(f"⏭️  Skipping data preparation - Azure services already contain data for domain '{domain}'")
+                print(f"💡 To force reprocessing, set FORCE_DATA_REPROCESSING=true in environment")
+                print(f"⏱️  Processing time: {time.time() - start_time:.2f}s (skipped)")
+                return 0
+            elif force_reprocess:
+                print(f"🔄 Force reprocessing enabled - proceeding with data preparation...")
+            else:
+                print(f"⚠️  Existing data detected. Configure processing policy in environment:")
+                print(f"    SKIP_PROCESSING_IF_DATA_EXISTS=true  # Skip if data exists")
+                print(f"    FORCE_DATA_REPROCESSING=true        # Always reprocess")
+                return 1
+        print(f"✅ Proceeding with Azure data preparation workflow...")
+
         # Load raw data from data/raw directory
         print(f"\n📂 Loading raw data from data/raw directory...")
         raw_documents = load_raw_data_from_directory()

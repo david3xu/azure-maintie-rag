@@ -133,6 +133,36 @@ workflow-demo:
 	@echo "💡 This demonstrates text processing with workflow transparency"
 	PYTHONPATH=. ./.venv/bin/python scripts/universal_rag_demo.py
 
+# Enhanced Azure Data Lifecycle Management
+data-state:
+	@echo "🔍 Azure Data State Analysis..."
+	@echo "📊 Analyzing Azure services data state for domain: general"
+	PYTHONPATH=. ./.venv/bin/python -c "
+import asyncio
+import json
+from integrations.azure_services import AzureServicesManager
+async def analyze_state():
+    services = AzureServicesManager()
+    state = await services.validate_domain_data_state('general')
+    print('Azure Data State Analysis:')
+    print(f'  Blob Storage: {state[\"azure_blob_storage\"][\"document_count\"]} documents')
+    print(f'  Search Index: {state[\"azure_cognitive_search\"][\"document_count\"]} documents')
+    print(f'  Cosmos DB: {state[\"azure_cosmos_db\"][\"vertex_count\"]} entities')
+    print(f'  Raw Data: {state[\"raw_data_directory\"][\"file_count\"]} files')
+    print(f'  Processing Required: {state[\"requires_processing\"]}')
+asyncio.run(analyze_state())
+"
+
+data-prep-conditional:
+	@echo "🧠 Conditional Data Preparation (with Azure state validation)..."
+	@echo "💡 Checks Azure services state before processing"
+	PYTHONPATH=. .venv/bin/python scripts/data_preparation_workflow.py
+
+data-prep-force:
+	@echo "🔄 Force Data Preparation (ignores existing Azure data)..."
+	@echo "⚠️  This will reprocess data even if Azure services contain existing data"
+	FORCE_DATA_REPROCESSING=true PYTHONPATH=. .venv/bin/python scripts/data_preparation_workflow.py
+
 # Testing - Updated for Universal RAG architecture
 test: test-unit test-integration test-workflow test-universal
 
