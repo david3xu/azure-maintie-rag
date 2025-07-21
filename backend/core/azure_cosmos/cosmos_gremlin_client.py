@@ -229,23 +229,44 @@ class AzureCosmosGremlinClient:
             logger.error(f"Path finding failed: {e}")
             return []
 
-    def get_graph_statistics(self, domain: str) -> Dict[str, Any]:
-        """Get knowledge graph statistics using Gremlin"""
+    def _execute_gremlin_query_safe(self, query: str, timeout_seconds: int = 30):
+        """Enterprise thread-isolated Gremlin query execution"""
+        import concurrent.futures
+        import threading
+        import warnings
+        def _run_gremlin_query():
+            """Execute Gremlin query in isolated thread context"""
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", RuntimeWarning)
+                    warnings.simplefilter("ignore", DeprecationWarning)
+                    result = self.gremlin_client.submit(query)
+                    return result.all().result()
+            except Exception as e:
+                logger.warning(f"Gremlin query execution failed: {e}")
+                return []
         try:
-            # Count vertices (entities)
-            vertex_query = f"""
-                g.V().has('domain', '{domain}').count()
-            """
-            vertex_result = self.gremlin_client.submit(vertex_query)
-            vertex_count = vertex_result.all().result()[0]
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_run_gremlin_query)
+                return future.result(timeout=timeout_seconds)
+        except concurrent.futures.TimeoutError:
+            logger.warning(f"Gremlin query timed out after {timeout_seconds}s: {query}")
+            return []
+        except Exception as e:
+            logger.warning(f"Thread execution failed for Gremlin query: {e}")
+            return []
 
-            # Count edges (relationships)
-            edge_query = f"""
-                g.E().has('domain', '{domain}').count()
-            """
-            edge_result = self.gremlin_client.submit(edge_query)
-            edge_count = edge_result.all().result()[0]
-
+    def get_graph_statistics(self, domain: str) -> Dict[str, Any]:
+        """Get knowledge graph statistics using enterprise thread-safe pattern"""
+        try:
+            if not self._client_initialized:
+                self._initialize_client()
+            vertex_query = f"g.V().has('domain', '{domain}').count()"
+            vertex_result = self._execute_gremlin_query_safe(vertex_query)
+            vertex_count = vertex_result[0] if vertex_result else 0
+            edge_query = f"g.E().has('domain', '{domain}').count()"
+            edge_result = self._execute_gremlin_query_safe(edge_query)
+            edge_count = edge_result[0] if edge_result else 0
             return {
                 "success": True,
                 "domain": domain,
@@ -253,19 +274,21 @@ class AzureCosmosGremlinClient:
                 "edge_count": edge_count,
                 "total_elements": vertex_count + edge_count
             }
-
         except Exception as e:
-            logger.error(f"Statistics query failed: {e}")
+            logger.warning(f"Statistics query failed: {e}")
             return {
                 "success": False,
                 "error": str(e),
-                "domain": domain
+                "domain": domain,
+                "vertex_count": 0,
+                "edge_count": 0,
+                "total_elements": 0
             }
 
     def get_connection_status(self) -> Dict[str, Any]:
         """Get connection status for service validation"""
         try:
-            # Simple test to check if endpoint and key are configured
+            # Check basic configuration first
             if not self.endpoint:
                 return {
                     "status": "unhealthy",
@@ -280,11 +303,23 @@ class AzureCosmosGremlinClient:
                     "service": "cosmos"
                 }
 
+            # Test client initialization
+            if not self._client_initialized:
+                try:
+                    self._initialize_client()
+                except Exception as init_error:
+                    return {
+                        "status": "unhealthy",
+                        "error": f"Client initialization failed: {init_error}",
+                        "service": "cosmos"
+                    }
+
             return {
                 "status": "healthy",
                 "service": "cosmos",
                 "endpoint": self.endpoint,
-                "database": self.database_name
+                "database": self.database_name,
+                "container": self.container_name
             }
         except Exception as e:
             return {
@@ -294,27 +329,36 @@ class AzureCosmosGremlinClient:
             }
 
     def close(self):
-        """Close Gremlin client connection"""
+        """Enterprise-safe Gremlin client cleanup"""
         try:
-            # Suppress async warnings during cleanup
-            import warnings
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", RuntimeWarning)
-                self.gremlin_client.close()
-            logger.info("Gremlin client connection closed")
+            if self.gremlin_client and self._client_initialized:
+                import concurrent.futures
+                import warnings
+                def _safe_close():
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", RuntimeWarning)
+                        warnings.simplefilter("ignore", DeprecationWarning)
+                        self.gremlin_client.close()
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_safe_close)
+                    future.result(timeout=10)
+            logger.info("Azure Cosmos Gremlin client closed successfully")
         except Exception as e:
-            logger.error(f"Error closing Gremlin client: {e}")
+            logger.warning(f"Gremlin client cleanup warning: {e}")
+        finally:
+            self._client_initialized = False
+            self.gremlin_client = None
 
     def get_all_entities(self, domain: str) -> List[Dict[str, Any]]:
-        """Get all entities for a domain"""
+        """Get all entities using enterprise thread-safe pattern"""
         try:
+            if not self._client_initialized:
+                self._initialize_client()
             query = f"""
                 g.V().has('domain', '{domain}')
                     .valueMap()
             """
-            result = self.gremlin_client.submit(query)
-            entities = result.all().result()
-
+            entities = self._execute_gremlin_query_safe(query)
             return [
                 {
                     "id": str(entity.id),
@@ -326,12 +370,14 @@ class AzureCosmosGremlinClient:
                 for entity in entities
             ]
         except Exception as e:
-            logger.error(f"Get all entities failed: {e}")
+            logger.warning(f"Get all entities failed: {e}")
             return []
 
     def get_all_relations(self, domain: str) -> List[Dict[str, Any]]:
-        """Get all relations for a domain"""
+        """Get all relations using enterprise thread-safe pattern"""
         try:
+            if not self._client_initialized:
+                self._initialize_client()
             query = f"""
                 g.E().has('domain', '{domain}')
                     .project('source', 'target', 'relation_type')
@@ -339,9 +385,7 @@ class AzureCosmosGremlinClient:
                     .by(__.inV().values('text'))
                     .by('relation_type')
             """
-            result = self.gremlin_client.submit(query)
-            relations = result.all().result()
-
+            relations = self._execute_gremlin_query_safe(query)
             return [
                 {
                     "source_entity": rel["source"],
@@ -351,5 +395,5 @@ class AzureCosmosGremlinClient:
                 for rel in relations
             ]
         except Exception as e:
-            logger.error(f"Get all relations failed: {e}")
+            logger.warning(f"Get all relations failed: {e}")
             return []

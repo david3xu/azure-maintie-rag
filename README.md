@@ -281,6 +281,11 @@ make data-prep
 
 ---
 
+## 📚 Further Reading
+
+For details on how Azure Universal RAG resolves async event loop conflicts in Cosmos DB Gremlin integration, see [docs/ENTERPRISE_THREAD_ISOLATION.md](docs/ENTERPRISE_THREAD_ISOLATION.md).
+For Cosmos DB Gremlin configuration troubleshooting and validation, see the “Success Assessment & Service Configuration Guidance” section in [docs/ENTERPRISE_THREAD_ISOLATION.md](docs/ENTERPRISE_THREAD_ISOLATION.md).
+
 ## 📝 Documentation Setup
 
 ### VSCode Environment (Recommended)
