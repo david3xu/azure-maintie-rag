@@ -97,10 +97,10 @@ class AzureCosmosGremlinClient:
             escaped_entity_text = entity_text.replace("'", "\\'")
 
             # Check if entity already exists
-            check_query = f"g.V().has('id', '{entity_id}').has('domain', '{domain}').hasNext()"
+            check_query = f"g.V().has('id', '{entity_id}').has('domain', '{domain}').count()"
             exists_result = self._execute_gremlin_query_safe(check_query, timeout_seconds=10)
 
-            if exists_result and exists_result[0]:
+            if exists_result and exists_result[0] > 0:
                 logger.info(f"Entity {entity_id} already exists - deleting and recreating to avoid partition key conflicts")
 
                 # Delete existing vertex (as recommended by error message)
