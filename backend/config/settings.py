@@ -329,6 +329,19 @@ class Settings(BaseSettings):
             "openai_configured": bool(self.openai_api_key and self.openai_api_base),
         }
 
+    # Raw data processing configuration
+    @property
+    def raw_data_include_patterns(self) -> List[str]:
+        """Get supported file patterns from environment"""
+        patterns_env = os.getenv('RAW_DATA_INCLUDE_PATTERNS', '*.md,*.txt')
+        return [pattern.strip() for pattern in patterns_env.split(',')]
+
+    @property
+    def supported_text_formats(self) -> List[str]:
+        """Get supported file extensions from environment"""
+        formats_env = os.getenv('SUPPORTED_TEXT_FORMATS', '.md,.txt')
+        return [fmt.strip() for fmt in formats_env.split(',')]
+
     class Config:
         env_file = ".env"
         case_sensitive = False
