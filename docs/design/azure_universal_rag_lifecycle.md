@@ -9,21 +9,21 @@ graph TB
     subgraph "Raw Text Data Layer"
         A[Raw Text Files] --> B[Azure Blob Storage Multi-Container]
     end
-    
+
     subgraph "Azure Cognitive Processing Layer"
         B --> C[Azure OpenAI GPT-4]
         C --> D[Knowledge Extraction Service]
         D --> E[Azure Cognitive Search Vector Index]
         D --> F[Azure Cosmos DB Gremlin Graph]
     end
-    
+
     subgraph "Azure Intelligence Layer"
         E --> G[Vector Search Engine]
         F --> H[Graph Query Engine]
         G --> I[Azure ML Workspace GNN]
         H --> I
     end
-    
+
     subgraph "Azure Response Generation Layer"
         I --> J[Query Processing Service]
         J --> K[Azure OpenAI Response Generation]
@@ -53,7 +53,7 @@ graph TB
 # Development Environment (Cost-Optimized)
 backend/config/environments/dev.env:
 ├── AZURE_SEARCH_SKU=basic
-├── AZURE_STORAGE_SKU=Standard_LRS  
+├── AZURE_STORAGE_SKU=Standard_LRS
 ├── AZURE_COSMOS_THROUGHPUT=400
 ├── AZURE_ML_COMPUTE_INSTANCES=1
 ├── AZURE_OPENAI_MAX_TOKENS_PER_MINUTE=10000
@@ -125,7 +125,7 @@ cd backend && make data-prep
 
 **Service Architecture Components**:
 - **Azure Blob Storage Integration**: Multi-container document ingestion
-- **Azure OpenAI Knowledge Extraction**: GPT-4 powered entity/relation extraction  
+- **Azure OpenAI Knowledge Extraction**: GPT-4 powered entity/relation extraction
 - **Azure Cognitive Search Indexing**: Vector embedding generation & indexing
 - **Azure Cosmos DB Graph Construction**: Knowledge graph persistence
 
@@ -137,7 +137,7 @@ sequenceDiagram
     participants AOAI as Azure OpenAI
     participant ACS as Azure Cognitive Search
     participant ACDB as Azure Cosmos DB
-    
+
     RT->>ABS: Upload to rag-data-{domain} container
     ABS->>AOAI: Process documents for knowledge extraction
     AOAI->>ACS: Generate vector embeddings & create search index
@@ -170,7 +170,7 @@ sequenceDiagram
     participant ACDB as Azure Cosmos DB
     participant AOAI as Azure OpenAI
     participant API as Enterprise API Gateway
-    
+
     UQ->>ACS: Semantic vector search
     UQ->>ACDB: Knowledge graph query (Gremlin)
     ACS->>AOAI: Vector search results
@@ -187,6 +187,9 @@ sequenceDiagram
 ```bash
 # Complete Universal RAG lifecycle demonstration
 cd backend && make lifecycle-demo
+# Azure ecosystem aligned logging with structured output
+make lifecycle-demo 2>&1 | tee "azure-rag-lifecycle-$(date +%Y%m%d-%H%M%S).log"
+
 ```
 
 **Lifecycle Service Integration**:
@@ -221,7 +224,7 @@ curl http://localhost:8000/health/detailed
 class AzureServicesManager:
     services = {
         'rag_storage': AzureBlobStorageClient,      # RAG data persistence
-        'ml_storage': AzureBlobStorageClient,       # ML model storage  
+        'ml_storage': AzureBlobStorageClient,       # ML model storage
         'app_storage': AzureBlobStorageClient,      # Application data
         'search': AzureCognitiveSearchClient,       # Vector search engine
         'cosmos': AzureCosmosDBClient,              # Graph knowledge store
@@ -337,7 +340,7 @@ AZURE_ENABLE_TELEMETRY=true
 # Configuration validation pipeline
 python scripts/validate-configuration.py
 
-# Health validation pipeline  
+# Health validation pipeline
 ./scripts/test-azure-deployment-fixes.sh
 ```
 
@@ -348,7 +351,7 @@ export AZURE_ENVIRONMENT=prod
 export AZURE_LOCATION=eastus2
 
 # Staging environment validation
-export AZURE_ENVIRONMENT=staging  
+export AZURE_ENVIRONMENT=staging
 export AZURE_LOCATION=westus2
 
 # Development environment testing
@@ -417,7 +420,7 @@ For advanced enterprise architecture patterns, Azure Well-Architected Framework 
 
 ---
 
-**Document Version**: 1.0  
-**Architecture Compliance**: Azure Well-Architected Framework  
-**Security Standard**: Enterprise-grade with Azure Security Center  
+**Document Version**: 1.0
+**Architecture Compliance**: Azure Well-Architected Framework
+**Security Standard**: Enterprise-grade with Azure Security Center
 **Cost Optimization**: Multi-tier environment-specific resource allocation
