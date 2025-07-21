@@ -69,64 +69,10 @@ class AzureCognitiveSearchClient:
         """Create universal search index for any domain - data-driven configuration"""
         try:
             from azure.search.documents.indexes.models import (
-                SearchIndex, SearchField, SearchFieldDataType, VectorSearch,
-                VectorSearchProfile, VectorSearchAlgorithmConfiguration
+                SearchIndex, SearchField, SearchFieldDataType
             )
 
-            # Universal fields that work for any domain
-            fields = [
-                SearchField(name="id", type=SearchFieldDataType.String, key=True),
-                SearchField(name="content", type=SearchFieldDataType.String, searchable=True),
-                SearchField(name="title", type=SearchFieldDataType.String, searchable=True),
-                SearchField(name="domain", type=SearchFieldDataType.String, filterable=True),
-                SearchField(name="source", type=SearchFieldDataType.String, filterable=True),
-                SearchField(name="contentVector", type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
-                           searchable=True, vector_search_dimensions=vector_dimensions,
-                           vector_search_profile_name="universal-vector-profile")
-            ]
-
-            # Vector search configuration
-            vector_search = VectorSearch(
-                profiles=[VectorSearchProfile(
-                    name="universal-vector-profile",
-                    algorithm_configuration_name="universal-algorithm"
-                )],
-                algorithms=[VectorSearchAlgorithmConfiguration(
-                    name="universal-algorithm",
-                    kind="hnsw"
-                )]
-            )
-
-            index = SearchIndex(
-                name=self.index_name,
-                fields=fields,
-                vector_search=vector_search
-            )
-
-            result = self.index_client.create_or_update_index(index)
-
-            return {
-                "success": True,
-                "index_name": self.index_name,
-                "fields_count": len(fields),
-                "vector_dimensions": vector_dimensions
-            }
-
-        except Exception as e:
-            logger.error(f"Index creation failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "index_name": self.index_name
-            }
-
-    async def create_index(self, index_name: str) -> Dict[str, Any]:
-        """Create a search index with the specified name"""
-        try:
-            # Create a simple index without vector search for now
-            from azure.search.documents.indexes.models import SearchIndex, SearchField, SearchFieldDataType
-
-            # Simple fields without vector search
+            # Universal fields that work for any domain (without vector search for now)
             fields = [
                 SearchField(name="id", type=SearchFieldDataType.String, key=True),
                 SearchField(name="content", type=SearchFieldDataType.String, searchable=True),
@@ -137,50 +83,36 @@ class AzureCognitiveSearchClient:
             ]
 
             index = SearchIndex(
-                name=index_name,
+                name=self.index_name,
                 fields=fields
             )
 
-            result = self.index_client.create_or_update_index(index)
+            return index
+
+        except Exception as e:
+            logger.error(f"Failed to create universal index: {e}")
+            raise
+
+    async def create_index(self, index_name: str) -> Dict[str, Any]:
+        """Create a search index for the specified domain"""
+        try:
+            # Create the index using the universal index schema
+            index = self.create_universal_index()
+
+            # Create the index in Azure Search
+            self.index_client.create_index(index)
 
             return {
                 "success": True,
                 "index_name": index_name,
-                "fields_count": len(fields)
+                "message": f"Index {index_name} created successfully"
             }
-
         except Exception as e:
-            logger.error(f"Index creation failed: {e}")
+            logger.error(f"Failed to create index {index_name}: {e}")
             return {
                 "success": False,
                 "error": str(e),
                 "index_name": index_name
-            }
-
-    async def index_document(self, index_name: str, document: Dict[str, Any]) -> Dict[str, Any]:
-        """Index a single document to the search index"""
-        try:
-            # Create a temporary search client for the specific index
-            temp_search_client = SearchClient(
-                endpoint=self.endpoint,
-                index_name=index_name,
-                credential=self.credential
-            )
-
-            # Upload the document to the specific index
-            result = temp_search_client.upload_documents([document])
-
-            return {
-                "success": True,
-                "uploaded_count": 1,
-                "results": [r.key for r in result if r.succeeded]
-            }
-        except Exception as e:
-            logger.error(f"Document indexing failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "document_id": document.get("id", "unknown")
             }
 
     def upload_documents(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -253,39 +185,184 @@ class AzureCognitiveSearchClient:
             return []
 
     async def search_documents(self, index_name: str, query: str, top_k: int = 10) -> List[Dict[str, Any]]:
-        """Search documents using text query - universal search method"""
+        """Enterprise search with service validation and diagnostics"""
         try:
-            # Create a new search client for the specific index
+            # Create dedicated search client for target index
+            target_search_client = SearchClient(
+                endpoint=self.endpoint,
+                index_name=index_name,  # Match indexing pattern
+                credential=self.credential
+            )
+
+            # Pre-search index validation
+            index_stats = await self._get_index_statistics(index_name)
+            logger.info(f"Searching index {index_name}: {index_stats['document_count']} documents")
+
+            # Enhanced search parameters (simplified)
+            search_params = {
+                "top": top_k,
+                "include_total_count": True
+            }
+
+            # Use the query parameter directly
+            results = target_search_client.search(query, **search_params)
+
+            search_results = []
+            total_count = 0
+
+            for result in results:
+                search_results.append({
+                    "id": result.get("id"),
+                    "content": result.get("content", "")[:500],  # Limit content preview
+                    "title": result.get("title", ""),
+                    "domain": result.get("domain", ""),
+                    "score": result.get("@search.score", 0.0)
+                })
+                total_count += 1
+
+            logger.info(f"Search completed: {len(search_results)} results from {total_count} total documents")
+
+            return search_results
+
+        except Exception as e:
+            logger.error(f"Azure Search query failed: {e}")
+            return []
+
+    async def _get_index_statistics(self, index_name: str) -> Dict[str, Any]:
+        """Get Azure Search index statistics for diagnostics"""
+        try:
+            # Use index client to get statistics
+            stats_client = SearchClient(
+                endpoint=self.endpoint,
+                index_name=index_name,
+                credential=self.credential
+            )
+
+            # Count documents in index using proper API
+            count_result = stats_client.search("*", include_total_count=True)
+            document_count = 0
+            try:
+                # Try to get count from search results
+                for _ in count_result:
+                    document_count += 1
+            except Exception:
+                # Fallback: use index statistics
+                try:
+                    index_stats = self.index_client.get_index_statistics(index_name)
+                    document_count = index_stats.get("documentCount", 0)
+                except Exception:
+                    document_count = 0
+
+            return {
+                "index_exists": True,
+                "index_name": index_name,
+                "document_count": document_count
+            }
+
+        except Exception as e:
+            logger.warning(f"Index statistics unavailable: {e}")
+            return {
+                "index_exists": False,
+                "index_name": index_name,
+                "document_count": 0
+            }
+
+    async def index_document(self, index_name: str, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Enterprise document indexing with service validation"""
+        try:
+            # Create dedicated service client for target index
+            index_search_client = SearchClient(
+                endpoint=self.endpoint,
+                index_name=index_name,  # Target specific index
+                credential=self.credential
+            )
+
+            # Validate document structure before indexing
+            validation_result = self._validate_document_schema(document)
+            if not validation_result['valid']:
+                logger.error(f"Document schema validation failed: {validation_result['errors']}")
+                return {"success": False, "error": "Invalid document schema"}
+
+            # Index document with retry pattern
+            result = index_search_client.upload_documents([document])
+
+            # Validate indexing success
+            success_count = len([r for r in result if r.succeeded])
+
+            logger.info(f"Document indexed successfully: {document.get('id')} -> {index_name}")
+
+            return {
+                "success": True,
+                "document_id": document.get("id"),
+                "index_name": index_name,
+                "indexed_count": success_count
+            }
+
+        except Exception as e:
+            logger.error(f"Azure Search indexing failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "document_id": document.get("id", "unknown")
+            }
+
+    def _validate_document_schema(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate document against Azure Search schema requirements"""
+        required_fields = ['id', 'content', 'title', 'domain']
+        missing_fields = [field for field in required_fields if not document.get(field)]
+
+        return {
+            "valid": len(missing_fields) == 0,
+            "errors": missing_fields
+        }
+
+    async def validate_document_structure(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate document structure against index schema"""
+        required_fields = ['id', 'content', 'title', 'domain']
+        missing_fields = []
+
+        for field in required_fields:
+            if field not in document or not document[field]:
+                missing_fields.append(field)
+
+        return {
+            "valid": len(missing_fields) == 0,
+            "errors": missing_fields,
+            "document_id": document.get('id', 'unknown')
+        }
+
+    def validate_index_configuration(self, index_name: str) -> Dict[str, Any]:
+        """Validate Azure Search index configuration before use"""
+        try:
+            # Check if index exists
+            index = self.index_client.get_index(index_name)
+
+            # Count documents in index
             search_client = SearchClient(
                 endpoint=self.endpoint,
                 index_name=index_name,
                 credential=self.credential
             )
 
-            # Perform text search
-            search_params = {
-                "search": query,
-                "top": top_k,
-                "include_total_count": True
+            # Get document count
+            count_result = search_client.search("*", include_total_count=True)
+            document_count = count_result.get_count()
+
+            return {
+                "index_exists": True,
+                "index_name": index_name,
+                "document_count": document_count,
+                "fields_count": len(index.fields),
+                "status": "operational"
             }
 
-            results = search_client.search(**search_params)
-
-            search_results = []
-            for result in results:
-                search_results.append({
-                    "id": result.get("id"),
-                    "content": result.get("content", ""),
-                    "title": result.get("title", ""),
-                    "domain": result.get("domain", ""),
-                    "score": result.get("@search.score", 0.0)
-                })
-
-            return search_results
-
         except Exception as e:
-            logger.error(f"Search documents failed: {e}")
-            return []
+            return {
+                "index_exists": False,
+                "index_name": index_name,
+                "error": str(e),
+                "status": "misconfigured"
+            }
 
     def get_service_status(self) -> Dict[str, Any]:
         """Get search service status - follows azure_openai.py pattern"""

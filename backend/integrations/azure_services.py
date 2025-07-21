@@ -23,25 +23,70 @@ class AzureServicesManager:
         self.config = config or {}
         self.services = {}
         self.service_status = {}
+        self.initialization_status = {}
 
-        # Initialize all services (follows azure_openai.py error handling)
+        # Safe service initialization with dependency validation
+        self._safe_initialize_services()
+
+        logger.info("AzureServicesManager initialized with all services including storage factory")
+
+    def _safe_initialize_services(self) -> None:
+        """Safe service initialization with dependency validation"""
+        initialization_status = {}
+
+        # Core services (required)
         try:
             self.services['openai'] = AzureOpenAIClient(self.config.get('openai'))
+            initialization_status['openai'] = True
+        except ImportError as e:
+            logger.error(f"OpenAI service initialization failed: {e}")
+            initialization_status['openai'] = False
 
-            # Initialize storage factory with multiple storage accounts
+        # Storage services (required)
+        try:
             self.storage_factory = get_storage_factory()
             self.services['rag_storage'] = self.storage_factory.get_rag_data_client()
             self.services['ml_storage'] = self.storage_factory.get_ml_models_client()
             self.services['app_storage'] = self.storage_factory.get_app_data_client()
-
-            self.services['search'] = AzureCognitiveSearchClient(self.config.get('search'))
-            self.services['cosmos'] = AzureCosmosGremlinClient(self.config.get('cosmos'))
-            self.services['ml'] = AzureMLClient(self.config.get('ml'))
+            initialization_status['storage'] = True
         except Exception as e:
-            logger.error(f"Failed to initialize Azure services: {e}")
-            raise
+            logger.error(f"Storage services initialization failed: {e}")
+            initialization_status['storage'] = False
 
-        logger.info("AzureServicesManager initialized with all services including storage factory")
+        # Search service (required)
+        try:
+            self.services['search'] = AzureCognitiveSearchClient(self.config.get('search'))
+            initialization_status['search'] = True
+        except Exception as e:
+            logger.error(f"Search service initialization failed: {e}")
+            initialization_status['search'] = False
+
+        # Cosmos DB service (required)
+        try:
+            self.services['cosmos'] = AzureCosmosGremlinClient(self.config.get('cosmos'))
+            initialization_status['cosmos'] = True
+        except Exception as e:
+            logger.error(f"Cosmos DB service initialization failed: {e}")
+            initialization_status['cosmos'] = False
+
+        # Optional services (graceful degradation)
+        try:
+            from azure.ai.textanalytics import TextAnalyticsClient
+            # Initialize text analytics if available
+            initialization_status['text_analytics'] = True
+        except ImportError:
+            logger.warning("Azure Text Analytics not available - continuing without it")
+            initialization_status['text_analytics'] = False
+
+        try:
+            from azure.ai.ml import MLClient
+            self.services['ml'] = AzureMLClient(self.config.get('ml'))
+            initialization_status['ml'] = True
+        except ImportError:
+            logger.warning("Azure ML client not available - continuing without it")
+            initialization_status['ml'] = False
+
+        self.initialization_status = initialization_status
 
     async def initialize(self) -> None:
         """Async initialization for Azure services - enterprise pattern"""

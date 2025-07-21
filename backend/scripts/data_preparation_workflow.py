@@ -126,19 +126,66 @@ async def main():
         await search_client.create_index(index_name)
 
         for i, doc in enumerate(raw_documents):
+            # Use consistent document ID pattern
+            document_id = f"doc_{i}_{doc['filename'].replace('.md', '').replace('.txt', '')}"
+
             document = {
-                "id": f"doc_{i}_{doc['filename'].replace('.md', '')}",
+                "id": document_id,  # Must match search client expectations
                 "content": doc['content'],
                 "title": doc['filename'],
                 "domain": domain,
+                "source": f"data/raw/{doc['filename']}",  # Full source path
                 "metadata": json.dumps({
-                    "source": "data/raw",
-                    "filename": doc['filename'],
-                    "size": doc['size'],
-                    "index": i
+                    "original_filename": doc['filename'],
+                    "file_size": doc['size'],
+                    "processing_timestamp": datetime.now().isoformat(),
+                    "index_position": i,
+                    "content_type": "markdown" if doc['filename'].endswith('.md') else "text"
                 })
             }
-            await search_client.index_document(index_name, document)
+
+            # Validate document structure before indexing
+            validation = await search_client.validate_document_structure(document)
+            if validation['valid']:
+                index_result = await search_client.index_document(index_name, document)
+                if not index_result['success']:
+                    logger.error(f"Failed to index document {document_id}: {index_result['error']}")
+            else:
+                logger.error(f"Document structure validation failed: {validation['errors']}")
+
+        # Step 3.5: Validate search index population
+        print(f"\n🔍 Step 3.5: Validating search index population...")
+
+        # Wait for indexing to complete
+        import asyncio
+        await asyncio.sleep(2)  # Allow Azure Search indexing propagation
+
+        # Validate indexed documents are searchable
+        validation_results = []
+        for i, doc in enumerate(raw_documents):
+            test_query = doc['filename'].replace('.md', '').replace('.txt', '')
+            search_results = await search_client.search_documents(index_name, test_query, top_k=1)
+
+            validation_results.append({
+                "document": doc['filename'],
+                "query": test_query,
+                "found": len(search_results) > 0,
+                "results_count": len(search_results)
+            })
+
+        # Report validation results
+        found_count = sum(1 for v in validation_results if v['found'])
+        print(f"📊 Index Validation: {found_count}/{len(validation_results)} documents searchable")
+
+        if found_count == 0:
+            print(f"⚠️  Warning: No documents found in search index - investigating...")
+            # Get index statistics for diagnostics
+            index_stats = await search_client._get_index_statistics(index_name)
+            print(f"📈 Index Statistics: {index_stats}")
+
+        for validation in validation_results:
+            status = "✅" if validation['found'] else "❌"
+            print(f"   {status} {validation['document']}: {validation['results_count']} results")
 
         # Step 4: Store metadata in Azure Cosmos DB
         print(f"\n💾 Step 4: Storing metadata in Azure Cosmos DB...")
