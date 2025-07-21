@@ -32,6 +32,8 @@ class AzureCognitiveSearchClient:
 
         self.endpoint = f"https://{self.service_name}.search.windows.net"
         self.credential = self._get_azure_credential()
+        # Always set index_name (from config or default)
+        self.index_name = self.config.get('index_name', 'default-index')
 
         # Initialize clients (follows azure_openai.py pattern)
         try:
@@ -88,18 +90,31 @@ class AzureCognitiveSearchClient:
             raise
 
     async def create_index(self, index_name: str) -> Dict[str, Any]:
-        """Create a search index for the specified domain"""
+        """Create search index with enterprise idempotency pattern"""
         try:
+            # Check if index already exists
+            try:
+                existing_index = self.index_client.get_index(index_name)
+                logger.info(f"Index {index_name} already exists - skipping creation")
+                return {
+                    "success": True,
+                    "index_name": index_name,
+                    "message": f"Index {index_name} already exists (idempotent operation)",
+                    "action": "skipped"
+                }
+            except Exception:
+                # Index doesn't exist, proceed with creation
+                pass
+
             # Create the index using the universal index schema
             index = self.create_universal_index(index_name)
-
-            # Create the index in Azure Search
             self.index_client.create_index(index)
 
             return {
                 "success": True,
                 "index_name": index_name,
-                "message": f"Index {index_name} created successfully"
+                "message": f"Index {index_name} created successfully",
+                "action": "created"
             }
         except Exception as e:
             logger.error(f"Failed to create index {index_name}: {e}")
@@ -262,41 +277,83 @@ class AzureCognitiveSearchClient:
             }
 
     async def index_document(self, index_name: str, document: Dict[str, Any]) -> Dict[str, Any]:
-        """Enterprise document indexing with service validation"""
+        """Enterprise document indexing with chunking for large documents"""
         try:
-            # Create dedicated service client for target index
+            content = document.get('content', '')
+            max_content_size = 32000  # Azure Search limit is ~32KB per field
+            if len(content) > max_content_size:
+                logger.info(f"Document {document.get('id')} exceeds size limit - applying chunking strategy")
+                return await self._index_large_document_with_chunking(index_name, document)
+
+            # Existing logic
             index_search_client = SearchClient(
                 endpoint=self.endpoint,
                 index_name=index_name,  # Target specific index
                 credential=self.credential
             )
-
-            # Validate document structure before indexing
             validation_result = self._validate_document_schema(document)
             if not validation_result['valid']:
                 logger.error(f"Document schema validation failed: {validation_result['errors']}")
                 return {"success": False, "error": "Invalid document schema"}
-
-            # Index document with retry pattern
             result = index_search_client.upload_documents([document])
-
-            # Validate indexing success
             success_count = len([r for r in result if r.succeeded])
-
             logger.info(f"Document indexed successfully: {document.get('id')} -> {index_name}")
-
             return {
                 "success": True,
                 "document_id": document.get("id"),
                 "index_name": index_name,
                 "indexed_count": success_count
             }
-
         except Exception as e:
             logger.error(f"Azure Search indexing failed: {e}")
             return {
                 "success": False,
                 "error": str(e),
+                "document_id": document.get("id", "unknown")
+            }
+
+    async def _index_large_document_with_chunking(self, index_name: str, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Enterprise chunking strategy for large documents"""
+        try:
+            content = document.get('content', '')
+            chunk_size = 30000  # Safe size under Azure limit
+            chunks = []
+            for i in range(0, len(content), chunk_size):
+                chunk_content = content[i:i + chunk_size]
+                chunk_doc = {
+                    "id": f"{document['id']}_chunk_{i // chunk_size}",
+                    "content": chunk_content,
+                    "title": f"{document.get('title', 'Document')} (Part {i // chunk_size + 1})",
+                    "domain": document.get('domain'),
+                    "source": document.get('source'),
+                    "metadata": json.dumps({
+                        **json.loads(document.get('metadata', '{}')),
+                        "chunk_index": i // chunk_size,
+                        "is_chunk": True,
+                        "parent_document_id": document['id']
+                    })
+                }
+                chunks.append(chunk_doc)
+            index_search_client = SearchClient(
+                endpoint=self.endpoint,
+                index_name=index_name,
+                credential=self.credential
+            )
+            result = index_search_client.upload_documents(chunks)
+            success_count = len([r for r in result if r.succeeded])
+            logger.info(f"Large document chunked and indexed: {document.get('id')} -> {success_count} chunks")
+            return {
+                "success": True,
+                "document_id": document.get('id'),
+                "chunks_created": len(chunks),
+                "chunks_indexed": success_count,
+                "strategy": "chunking"
+            }
+        except Exception as e:
+            logger.error(f"Large document chunking failed: {e}")
+            return {
+                "success": False,
+                "error": f"Chunking failed: {str(e)}",
                 "document_id": document.get("id", "unknown")
             }
 
@@ -381,7 +438,7 @@ class AzureCognitiveSearchClient:
     def get_connection_status(self) -> Dict[str, Any]:
         """Get connection status for service validation"""
         try:
-            # Simple test to check if service name and admin key are configured
+            # Check basic configuration
             if not self.service_name:
                 return {
                     "status": "unhealthy",
@@ -396,15 +453,28 @@ class AzureCognitiveSearchClient:
                     "service": "search"
                 }
 
-            return {
-                "status": "healthy",
-                "service": "search",
-                "endpoint": self.endpoint,
-                "index_name": self.index_name
-            }
+            # Test actual connection by listing indexes
+            try:
+                index_list = list(self.index_client.list_indexes())
+                return {
+                    "status": "healthy",
+                    "service": "search",
+                    "endpoint": self.endpoint,
+                    "index_count": len(index_list),
+                    "service_accessible": True
+                }
+            except Exception as connection_error:
+                return {
+                    "status": "unhealthy",
+                    "error": f"Connection test failed: {str(connection_error)}",
+                    "service": "search",
+                    "endpoint": self.endpoint,
+                    "service_accessible": False
+                }
+
         except Exception as e:
             return {
                 "status": "unhealthy",
-                "error": str(e),
+                "error": f"Status check failed: {str(e)}",
                 "service": "search"
             }
