@@ -20,6 +20,15 @@ from pathlib import Path
 from datetime import datetime
 import json
 import glob
+import logging
+import os
+
+# Configure logging for better error visibility
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Add backend to path
 backend_path = Path(__file__).parent.parent
@@ -34,23 +43,44 @@ print('DEBUG: AZURE_SEARCH_SERVICE:', azure_settings.azure_search_service)
 print('DEBUG: AZURE_SEARCH_ADMIN_KEY:', azure_settings.azure_search_admin_key)
 print('DEBUG: AZURE_SEARCH_API_VERSION:', azure_settings.azure_search_api_version)
 
+def _detect_content_type(filename: str) -> str:
+    """Detect content type from file extension"""
+    file_ext = Path(filename).suffix.lower()
+    content_type_mapping = {
+        '.md': 'markdown',
+        '.txt': 'text'
+    }
+    return content_type_mapping.get(file_ext, 'text')
 
 def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
-    """Load all markdown files from the raw data directory"""
+    """Load all supported text files from the raw data directory"""
+    from config.settings import azure_settings
+
     raw_data_path = Path(data_dir)
     if not raw_data_path.exists():
         print(f"❌ Raw data directory not found: {raw_data_path}")
         return []
 
-    # Find all markdown files
-    markdown_files = list(raw_data_path.glob("*.md"))
+    # Get supported file patterns from configuration
+    supported_patterns = getattr(azure_settings, 'raw_data_include_patterns', ["*.md", "*.txt"])
 
-    if not markdown_files:
-        print(f"❌ No markdown files found in {raw_data_path}")
+    # Find all supported text files
+    all_text_files = []
+    for pattern in supported_patterns:
+        files = list(raw_data_path.glob(pattern))
+        all_text_files.extend(files)
+
+    if not all_text_files:
+        supported_formats = ", ".join(supported_patterns)
+        print(f"❌ No supported text files found in {raw_data_path}")
+        print(f"📋 Supported formats: {supported_formats}")
         return []
 
+    # Sort by filename for consistent processing order
+    all_text_files.sort(key=lambda x: x.name)
+
     documents = []
-    for file_path in markdown_files:
+    for file_path in all_text_files:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -58,9 +88,11 @@ def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
                     'filename': file_path.name,
                     'content': content,
                     'size': len(content),
-                    'path': str(file_path)
+                    'path': str(file_path),
+                    'last_modified': datetime.fromtimestamp(file_path.stat().st_mtime).isoformat()
                 })
-            print(f"📄 Loaded: {file_path.name} ({len(content)} characters)")
+            file_type = _detect_content_type(file_path.name)
+            print(f"📄 Loaded: {file_path.name} ({len(content)} characters, {file_type})")
         except Exception as e:
             print(f"❌ Error loading {file_path.name}: {e}")
 
@@ -168,67 +200,96 @@ async def main():
         index_name = f"rag-index-{domain}"
         await search_client.create_index(index_name)
 
+        success_count = 0
         for i, doc in enumerate(raw_documents):
-            # Use consistent document ID pattern
-            document_id = f"doc_{i}_{doc['filename'].replace('.md', '').replace('.txt', '')}"
-
             document = {
-                "id": document_id,  # Must match search client expectations
+                "id": f"doc_{i}_{doc['filename'].replace('.md', '').replace('.txt', '')}",
                 "content": doc['content'],
-                "title": doc['filename'],
-                "domain": domain,
-                "source": f"data/raw/{doc['filename']}",  # Full source path
-                "metadata": json.dumps({
-                    "original_filename": doc['filename'],
-                    "file_size": doc['size'],
-                    "processing_timestamp": datetime.now().isoformat(),
-                    "index_position": i,
-                    "content_type": "markdown" if doc['filename'].endswith('.md') else "text"
-                })
+                "filename": doc['filename'],
+                "size": doc['size'],  # Add size for validation reporting
+                "last_modified": doc['last_modified'],
+                "content_type": _detect_content_type(doc['filename']),
+                "title": doc['filename'],  # Added title field
+                "domain": domain  # Added domain field
             }
 
             # Validate document structure before indexing
-            validation = await search_client.validate_document_structure(document)
-            if validation['valid']:
-                index_result = await search_client.index_document(index_name, document)
-                if not index_result['success']:
-                    logger.error(f"Failed to index document {document_id}: {index_result['error']}")
-            else:
-                logger.error(f"Document structure validation failed: {validation['errors']}")
+            try:
+                validation = await search_client.validate_document_structure(document)
+                if validation['valid']:
+                    index_result = await search_client.index_document(index_name, document)
 
-        # Step 3.5: Validate search index population
-        print(f"\n🔍 Step 3.5: Validating search index population...")
+                    # Add chunking information logging
+                    if index_result.get('strategy') == 'chunked_processing':
+                        chunks_info = f"{index_result.get('indexed_chunks', 0)}/{index_result.get('total_chunks', 0)}"
+                        print(f"   📄 {doc['filename']}: chunked into {chunks_info} segments")
+                    elif index_result.get('strategy') == 'single_document':
+                        print(f"   📄 {doc['filename']}: indexed as single document")
 
-        # Wait for indexing to complete
-        import asyncio
-        await asyncio.sleep(2)  # Allow Azure Search indexing propagation
+                    if not index_result['success']:
+                        print(f"❌ Failed to index document {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
+                        logger.error(f"Failed to index document {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
+                    else:
+                        print(f"✅ Successfully indexed: {doc['filename']}")
+                        success_count += 1 # Increment success_count only on successful index
+                else:
+                    validation_errors = validation.get('errors', ['Unknown validation error'])
+                    print(f"❌ Document structure validation failed for {doc['filename']}: {validation_errors}")
+                    logger.error(f"Document structure validation failed for {doc['filename']}: {validation_errors}")
+            except Exception as e:
+                print(f"❌ Document processing error for {doc['filename']}: {str(e)}")
+                logger.error(f"Document processing error for {doc['filename']}: {str(e)}", exc_info=True)
 
-        # Validate indexed documents are searchable
+        print(f"\n🔍 Step 3.5: Validating search index population ({success_count}/{len(raw_documents)} documents indexed)...")
+        # Validate indexed documents are searchable (handle chunked documents)
         validation_results = []
         for i, doc in enumerate(raw_documents):
-            test_query = doc['filename'].replace('.md', '').replace('.txt', '')
-            search_results = await search_client.search_documents(index_name, test_query, top_k=1)
+            document_id = f"doc_{i}_{doc['filename'].replace('.md', '').replace('.txt', '')}"
+
+            # Search by document content snippet instead of filename for chunked docs
+            content_snippet = doc['content'][:100].strip()  # First 100 chars as search term
+            search_results = await search_client.search_documents(index_name, content_snippet, top_k=5)
+
+            # Also try searching by document ID pattern for chunked documents
+            if not search_results:
+                id_search_query = document_id.replace('_', ' ')  # Convert ID to searchable terms
+                search_results = await search_client.search_documents(index_name, id_search_query, top_k=5)
+
+            # Check if document was chunked by examining search results
+            chunked_results = [r for r in search_results if 'chunk' in r.get('id', '')]
+            total_chunks = len(chunked_results) if chunked_results else len(search_results)
 
             validation_results.append({
                 "document": doc['filename'],
-                "query": test_query,
+                "query": content_snippet[:50] + "...",  # Show actual search query used
                 "found": len(search_results) > 0,
-                "results_count": len(search_results)
+                "results_count": len(search_results),
+                "is_chunked": len(chunked_results) > 0,
+                "chunk_count": total_chunks,
+                "document_size": doc['size']
             })
 
-        # Report validation results
+        # Report validation results with detailed information
         found_count = sum(1 for v in validation_results if v['found'])
-        print(f"📊 Index Validation: {found_count}/{len(validation_results)} documents searchable")
+        total_documents = len(validation_results)
+        print(f"📊 Search Index Validation Results:")
 
         if found_count == 0:
-            print(f"⚠️  Warning: No documents found in search index - investigating...")
-            # Get index statistics for diagnostics
-            index_stats = await search_client._get_index_statistics(index_name)
-            print(f"📈 Index Statistics: {index_stats}")
+            print(f"🔍 Step 3.5: Validating search index population ({found_count}/{total_documents} documents indexed)...")
+        else:
+            print(f"🔍 Step 3.5: Validating search index population ({found_count}/{total_documents} documents indexed)...")
 
         for validation in validation_results:
             status = "✅" if validation['found'] else "❌"
-            print(f"   {status} {validation['document']}: {validation['results_count']} results")
+            chunk_info = f" ({validation['chunk_count']} chunks)" if validation.get('is_chunked') else ""
+            size_info = f" [{validation['document_size']:,} chars]"
+            print(f"   {status} {validation['document']}: {validation['results_count']} results{chunk_info}{size_info}")
+
+        all_found = all(v['found'] for v in validation_results)
+        if all_found:
+            print("✅ All documents validated in search index.")
+        else:
+            print("⚠️ Some documents not found in search index.")
 
         # Step 4: Store metadata in Azure Cosmos DB
         print(f"\n💾 Step 4: Storing metadata in Azure Cosmos DB...")
@@ -275,7 +336,15 @@ async def main():
 
     except Exception as e:
         print(f"❌ Data preparation workflow failed: {e}")
+        logger.error(f"Data preparation failed: {e}", exc_info=True)
         return 1
+    finally:
+        # Ensure cleanup even on exceptions
+        try:
+            if 'cosmos_client' in locals() and hasattr(cosmos_client, 'close'):
+                cosmos_client.close()
+        except Exception:
+            pass
 
     return 0
 
