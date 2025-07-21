@@ -127,6 +127,16 @@ async def main():
         print(f"   🔍 Azure Cognitive Search: {'✅ Has Index' if data_state['azure_cognitive_search']['has_data'] else '❌ No Index'} ({data_state['azure_cognitive_search']['document_count']} docs)")
         print(f"   💾 Azure Cosmos DB: {'✅ Has Metadata' if data_state['azure_cosmos_db']['has_data'] else '❌ No Metadata'} ({data_state['azure_cosmos_db']['vertex_count']} entities)")
         print(f"   📁 Raw Data: {'✅ Available' if data_state['raw_data_directory']['has_files'] else '❌ Missing'} ({data_state['raw_data_directory']['file_count']} files)")
+
+        # Debug core data services logic
+        has_core_data = all([
+            data_state['azure_blob_storage']['has_data'],
+            data_state['azure_cognitive_search']['has_data']
+        ])
+
+        print(f"🔍 Core Data Services Status:")
+        print(f"   📊 Blob Storage + Search Index populated: {'Yes' if has_core_data else 'No'}")
+        print(f"   💡 Cosmos DB metadata alone does not prevent processing")
         # Processing decision based on data state
         processing_requirement = data_state['requires_processing']
         if processing_requirement == "no_raw_data":
@@ -135,8 +145,13 @@ async def main():
         elif processing_requirement == "data_exists_check_policy":
             # Check environment policy for handling existing data
             from config.settings import azure_settings
+            # Explicit environment variable check to debug configuration
             skip_if_exists = getattr(azure_settings, 'skip_processing_if_data_exists', False)
             force_reprocess = getattr(azure_settings, 'force_data_reprocessing', False)
+
+            print(f"🔧 Configuration Check:")
+            print(f"   SKIP_PROCESSING_IF_DATA_EXISTS: {skip_if_exists}")
+            print(f"   FORCE_DATA_REPROCESSING: {force_reprocess}")
             if skip_if_exists and not force_reprocess:
                 print(f"⏭️  Skipping data preparation - Azure services already contain data for domain '{domain}'")
                 print(f"💡 To force reprocessing, set FORCE_DATA_REPROCESSING=true in environment")
@@ -205,12 +220,16 @@ async def main():
             document = {
                 "id": f"doc_{i}_{doc['filename'].replace('.md', '').replace('.txt', '')}",
                 "content": doc['content'],
-                "filename": doc['filename'],
-                "size": doc['size'],  # Add size for validation reporting
-                "last_modified": doc['last_modified'],
-                "content_type": _detect_content_type(doc['filename']),
-                "title": doc['filename'],  # Added title field
-                "domain": domain  # Added domain field
+                "title": doc['filename'],
+                "domain": domain,
+                "source": f"data/raw/{doc['filename']}",
+                "metadata": json.dumps({
+                    "original_filename": doc['filename'],
+                    "file_size": doc['size'],
+                    "processing_timestamp": datetime.now().isoformat(),
+                    "index_position": i,
+                    "content_type": _detect_content_type(doc['filename'])
+                })
             }
 
             # Validate document structure before indexing
@@ -266,7 +285,7 @@ async def main():
                 "results_count": len(search_results),
                 "is_chunked": len(chunked_results) > 0,
                 "chunk_count": total_chunks,
-                "document_size": doc['size']
+                "document_size": doc.get('size', len(doc['content']))  # Use content length if size not available
             })
 
         # Report validation results with detailed information

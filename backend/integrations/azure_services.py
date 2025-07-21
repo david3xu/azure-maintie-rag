@@ -543,16 +543,19 @@ class AzureServicesManager:
         }
 
     def _calculate_processing_requirement(self, blob_state: Dict, search_state: Dict, cosmos_state: Dict, raw_data_state: Dict) -> str:
-        """Calculate processing requirement based on data state"""
-        has_azure_data = any([
-            blob_state.get("has_data", False),
-            search_state.get("has_data", False),
-            cosmos_state.get("has_data", False)
+        """Calculate processing requirement based on data state - focus on core data services"""
+
+        # Core data services must have data for system to be considered populated
+        has_core_data = all([
+            blob_state.get("has_data", False),      # Documents must be in Blob Storage
+            search_state.get("has_data", False)     # Search index must be populated
         ])
+
         has_raw_data = raw_data_state.get("has_files", False)
+
         if not has_raw_data:
             return "no_raw_data"
-        elif not has_azure_data:
+        elif not has_core_data:
             return "full_processing_required"
         else:
             return "data_exists_check_policy"

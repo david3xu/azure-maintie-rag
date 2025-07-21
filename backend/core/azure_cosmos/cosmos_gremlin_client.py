@@ -75,45 +75,74 @@ class AzureCosmosGremlinClient:
             logger.error(f"Gremlin connection test failed: {e}")
             raise
 
+    def _delete_existing_vertex(self, entity_id: str, domain: str) -> bool:
+        """Delete existing vertex to handle partition key conflicts"""
+        try:
+            delete_query = f"g.V().has('id', '{entity_id}').has('domain', '{domain}').drop()"
+            result = self._execute_gremlin_query_safe(delete_query, timeout_seconds=15)
+            logger.info(f"Deleted existing vertex: {entity_id} in domain {domain}")
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to delete existing vertex {entity_id}: {e}")
+            return False
+
     def add_entity(self, entity_data: Dict[str, Any], domain: str) -> Dict[str, Any]:
-        """Enterprise thread-safe entity addition with proper error handling"""
+        """Enterprise thread-safe entity addition with partition key conflict handling"""
         try:
             if not self._client_initialized:
                 self._initialize_client()
+
             entity_id = entity_data.get('id', f"entity_{int(time.time())}")
             entity_text = str(entity_data.get('text', ''))[:500]
             escaped_entity_text = entity_text.replace("'", "\\'")
-            query = f"""
+
+            # Check if entity already exists
+            check_query = f"g.V().has('id', '{entity_id}').has('domain', '{domain}').hasNext()"
+            exists_result = self._execute_gremlin_query_safe(check_query, timeout_seconds=10)
+
+            if exists_result and exists_result[0]:
+                logger.info(f"Entity {entity_id} already exists - deleting and recreating to avoid partition key conflicts")
+
+                # Delete existing vertex (as recommended by error message)
+                if not self._delete_existing_vertex(entity_id, domain):
+                    logger.warning(f"Could not delete existing vertex {entity_id}, attempting direct creation anyway")
+
+            # Create new vertex with partition key
+            create_query = f"""
                 g.addV('Entity')
                     .property('id', '{entity_id}')
+                    .property('partitionKey', '{domain}')
                     .property('text', '{escaped_entity_text}')
                     .property('domain', '{domain}')
                     .property('entity_type', '{entity_data.get("entity_type", "document")}')
                     .property('created_at', '{datetime.now().isoformat()}')
             """
+
             try:
-                result = self._execute_gremlin_query_safe(query, timeout_seconds=30)
+                result = self._execute_gremlin_query_safe(create_query, timeout_seconds=30)
                 if result:
                     logger.info(f"Entity added successfully: {entity_id} in domain {domain}")
                     return {
                         "success": True,
                         "entity_id": entity_id,
-                        "domain": domain
+                        "domain": domain,
+                        "action": "created"
                     }
                 else:
-                    logger.warning(f"Entity addition returned no result: {entity_id}")
+                    logger.warning(f"Entity creation returned no result: {entity_id}")
                     return {
                         "success": False,
                         "error": "No result from Gremlin query",
                         "entity_id": entity_id
                     }
             except Exception as query_error:
-                logger.error(f"Gremlin query execution failed: {query_error}")
+                logger.error(f"Gremlin entity creation failed: {query_error}")
                 return {
                     "success": False,
                     "error": f"Query execution failed: {str(query_error)}",
                     "entity_id": entity_id
                 }
+
         except Exception as e:
             logger.error(f"Entity addition failed: {e}")
             return {
