@@ -190,6 +190,9 @@ cd backend && make lifecycle-demo
 # Azure ecosystem aligned logging with structured output
 make lifecycle-demo 2>&1 | tee "azure-rag-lifecycle-$(date +%Y%m%d-%H%M%S).log"
 
+
+make lifecycle-demo 2>&1 | tee azure-lifecycle-fixed-$(date +%Y%m%d-%H%M%S).log
+
 ```
 
 **Lifecycle Service Integration**:

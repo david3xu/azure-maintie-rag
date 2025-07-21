@@ -95,6 +95,22 @@ class AzureStorageClient:
             logger.error(f"Text upload failed: {e}")
             return ""
 
+    async def download_text(self, container_name: str, blob_name: str) -> str:
+        """Download text content from Azure Blob Storage - enterprise text operations pattern"""
+        try:
+            blob_client = self.blob_service_client.get_blob_client(
+                container=container_name,
+                blob=blob_name
+            )
+            # Download as text with UTF-8 encoding
+            download_stream = blob_client.download_blob()
+            text_content = download_stream.readall().decode('utf-8')
+            logger.info(f"Downloaded text from blob: {blob_name} in container: {container_name}")
+            return text_content
+        except Exception as e:
+            logger.error(f"Text download failed for {blob_name}: {e}")
+            return ""
+
     def upload_file(self, local_path: Path, blob_name: str, overwrite: bool = True) -> Dict[str, Any]:
         """Upload file to Azure Blob Storage with telemetry - data-driven monitoring"""
         start_time = time.time()

@@ -280,3 +280,48 @@ curl -s -X POST "http://localhost:8000/api/v1/query/batch" \
 **Last Updated**: July 2025
 **Version**: 2.0.0
 **Status**: Production Ready ✅
+
+---
+
+## 📑 Quick Reference: All API Test curl Commands
+
+```bash
+# Health Endpoints
+curl -s http://localhost:8000/api/v1/health | jq .
+curl -s http://localhost:8000/health/detailed | jq .
+curl -s http://localhost:8000/api/v1/health | jq .  # (duplicate, but both are valid)
+
+# System Info
+curl -s http://localhost:8000/api/v1/info | jq .
+curl -s http://localhost:8000/api/v1/info | jq '.azure_status.services'
+
+# Universal Query
+curl -s -X POST "http://localhost:8000/api/v1/query/universal" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What are common maintenance issues?", "domain": "general"}' | jq .
+
+# Streaming Query
+curl -s -X POST "http://localhost:8000/api/v1/query/streaming" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "How to fix air conditioner problems?", "domain": "general"}' | jq .
+
+# Streaming Query Progress
+QUERY_ID=$(curl -s -X POST "http://localhost:8000/api/v1/query/streaming" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "air conditioner maintenance", "domain": "general"}' | jq -r '.query_id')
+curl -s "http://localhost:8000/api/v1/query/stream/$QUERY_ID"
+
+# Batch Query
+curl -s -X POST "http://localhost:8000/api/v1/query/batch" \
+  -H "Content-Type: application/json" \
+  -d '{"queries": ["air conditioner", "maintenance", "repair"], "domain": "general"}' | jq .
+
+# Domain Status
+curl -s "http://localhost:8000/api/v1/domain/general/status" | jq .
+
+# List Available Domains
+curl -s "http://localhost:8000/api/v1/domains/list" | jq .
+
+# API Documentation (Swagger UI)
+curl http://localhost:8000/docs
+```

@@ -57,7 +57,8 @@ async def main():
         # Step 1: Search for relevant documents using Azure Cognitive Search
         print(f"\n🔍 Step 1: Searching Azure Cognitive Search")
         index_name = f"rag-index-{domain}"
-        search_results = await azure_services.search_client.search_documents(
+        search_client = azure_services.get_service('search')
+        search_results = await search_client.search_documents(
             index_name, test_query, top_k=5
         )
         print(f"   📊 Found {len(search_results)} relevant documents")
@@ -71,8 +72,8 @@ async def main():
             blob_name = f"document_{i}.txt"
             try:
                 # Use RAG storage for document retrieval
-            rag_storage = azure_services.get_rag_storage_client()
-            content = await rag_storage.download_text(container_name, blob_name)
+                rag_storage = azure_services.get_rag_storage_client()
+                content = await rag_storage.download_text(container_name, blob_name)
                 retrieved_docs.append(content)
             except Exception as e:
                 print(f"   ⚠️  Could not retrieve document {i}: {e}")
@@ -99,7 +100,8 @@ async def main():
         }
 
         try:
-            await azure_services.cosmos_client.add_entity(query_metadata, domain)
+            cosmos_client = azure_services.get_service('cosmos')
+            cosmos_client.add_entity(query_metadata, domain)
         except Exception as e:
             print(f"   ⚠️  Could not store metadata: {e}")
 

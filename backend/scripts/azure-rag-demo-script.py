@@ -111,11 +111,11 @@ class UniversalRAGDemo:
 
             # Store texts in Azure Blob Storage
             container_name = f"rag-data-{domain}"
-            await self.azure_services.storage_client.create_container(container_name)
+            await self.azure_services.get_service('rag_storage').create_container(container_name)
 
             for i, text in enumerate(texts):
                 blob_name = f"document_{i}.txt"
-                await self.azure_services.storage_client.upload_text(container_name, blob_name, text)
+                await self.azure_services.get_service('rag_storage').upload_text(container_name, blob_name, text)
 
             # Process with Azure OpenAI
             processed_docs = await self.openai_integration.process_documents(texts, domain)
@@ -138,7 +138,7 @@ class UniversalRAGDemo:
             query_start = time.time()
 
             # Use Azure Cognitive Search for query processing
-            search_results = await self.azure_services.search_client.search_documents(
+            search_results = await self.azure_services.get_service('search').search_documents(
                 domain, query, top_k=5
             )
 
@@ -170,11 +170,11 @@ class UniversalRAGDemo:
 
                 # Store in Azure Blob Storage
                 container_name = f"rag-data-{domain}"
-                await self.azure_services.storage_client.create_container(container_name)
+                await self.azure_services.get_service('rag_storage').create_container(container_name)
 
                 for i, text in enumerate(texts):
                     blob_name = f"document_{i}.txt"
-                    await self.azure_services.storage_client.upload_text(container_name, blob_name, text)
+                    await self.azure_services.get_service('rag_storage').upload_text(container_name, blob_name, text)
 
                 # Process with Azure OpenAI
                 processed_docs = await self.openai_integration.process_documents(texts, domain)
@@ -187,7 +187,7 @@ class UniversalRAGDemo:
                 query = query_map[domain]
 
                 # Search and generate response
-                search_results = await self.azure_services.search_client.search_documents(
+                search_results = await self.azure_services.get_service('search').search_documents(
                     domain, query, top_k=3
                 )
                 response = await self.openai_integration.generate_response(
