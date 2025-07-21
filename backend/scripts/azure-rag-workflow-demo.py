@@ -22,8 +22,8 @@ backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 # Import Azure services architecture components
-from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIClient
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 
 # Configure logging

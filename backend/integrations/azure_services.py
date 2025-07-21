@@ -43,6 +43,16 @@ class AzureServicesManager:
 
         logger.info("AzureServicesManager initialized with all services including storage factory")
 
+    async def initialize(self) -> None:
+        """Async initialization for Azure services - enterprise pattern"""
+        logger.info("Initializing Azure services with async pattern...")
+        # Initialize any async-required services
+        if hasattr(self.services.get('cosmos'), 'initialize_async'):
+            await self.services['cosmos'].initialize_async()
+        if hasattr(self.services.get('search'), 'initialize_async'):
+            await self.services['search'].initialize_async()
+        logger.info("Azure services async initialization completed")
+
     def check_all_services_health(self) -> Dict[str, Any]:
         """Concurrent service health check - enterprise monitoring"""
         health_results = {}

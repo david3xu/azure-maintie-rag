@@ -24,6 +24,9 @@ from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 from config.settings import settings
 
+# Import dependency functions from dependencies module
+from api.dependencies import get_azure_services, get_openai_integration
+
 logger = logging.getLogger(__name__)
 
 # Create router
@@ -91,8 +94,8 @@ class BatchQueryRequest(BaseModel):
 @router.post("/query/universal", response_model=AzureQueryResponse)
 async def process_azure_query(
     request: AzureQueryRequest,
-    azure_services: AzureServicesManager = Depends(lambda: getattr(Request.state, 'azure_services', None)),
-    openai_integration: AzureOpenAIClient = Depends(lambda: getattr(Request.state, 'openai_integration', None))
+    azure_services: AzureServicesManager = Depends(get_azure_services),
+    openai_integration: AzureOpenAIClient = Depends(get_openai_integration)
 ) -> Dict[str, Any]:
     """
     Process an Azure-powered query that works with any domain
@@ -109,7 +112,8 @@ async def process_azure_query(
         # Step 1: Search for relevant documents using Azure Cognitive Search
         logger.info("Searching Azure Cognitive Search...")
         index_name = f"rag-index-{request.domain}"
-        search_results = await azure_services.search_client.search_documents(
+        search_client = azure_services.get_service('search')
+        search_results = await search_client.search_documents(
             index_name, request.query, top_k=request.max_results
         )
         azure_services_used.append("Azure Cognitive Search")
@@ -153,7 +157,8 @@ async def process_azure_query(
 
         try:
             # Store as vertex in graph
-            await azure_services.cosmos_client.add_entity(query_metadata, request.domain)
+            cosmos_client = azure_services.get_service('cosmos')
+            await cosmos_client.add_entity(query_metadata, request.domain)
             azure_services_used.append("Azure Cosmos DB Gremlin")
         except Exception as e:
             logger.warning(f"Could not store metadata: {e}")
@@ -314,7 +319,8 @@ async def initialize_domain(request: DomainInitializationRequest) -> Dict[str, A
 
         # Step 2: Create Azure Cognitive Search index
         index_name = f"rag-index-{request.domain}"
-        await azure_services.search_client.create_index(index_name)
+        search_client = azure_services.get_service('search')
+        await search_client.create_index(index_name)
 
         # Step 3: Initialize Azure Cosmos DB Gremlin graph
         # Gremlin automatically creates graph structure
@@ -355,7 +361,8 @@ async def process_batch_queries(request: BatchQueryRequest) -> Dict[str, Any]:
         for i, query in enumerate(request.queries):
             try:
                 # Process each query using Azure services
-                search_results = await azure_services.search_client.search_documents(
+                search_client = azure_services.get_service('search')
+                search_results = await search_client.search_documents(
                     f"rag-index-{request.domain}", query, top_k=request.max_results
                 )
 
@@ -477,7 +484,8 @@ async def _process_streaming_query_with_azure(
         openai_integration = AzureOpenAIClient()
 
         # Process the query using Azure services
-        search_results = await azure_services.search_client.search_documents(
+        search_client = azure_services.get_service('search')
+        search_results = await search_client.search_documents(
             f"rag-index-{request.domain}", request.query, top_k=request.max_results
         )
 

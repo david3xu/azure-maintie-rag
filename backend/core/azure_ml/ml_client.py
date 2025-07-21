@@ -254,3 +254,42 @@ class AzureMLClient:
         except Exception as e:
             logger.error(f"Environments listing failed: {e}")
             return []
+
+    def get_connection_status(self) -> Dict[str, Any]:
+        """Get connection status for service validation"""
+        try:
+            # Simple test to check if required ML settings are configured
+            if not self.subscription_id:
+                return {
+                    "status": "unhealthy",
+                    "error": "ML subscription ID not configured",
+                    "service": "ml"
+                }
+
+            if not self.resource_group:
+                return {
+                    "status": "unhealthy",
+                    "error": "ML resource group not configured",
+                    "service": "ml"
+                }
+
+            if not self.workspace_name:
+                return {
+                    "status": "unhealthy",
+                    "error": "ML workspace name not configured",
+                    "service": "ml"
+                }
+
+            return {
+                "status": "healthy",
+                "service": "ml",
+                "subscription_id": self.subscription_id,
+                "resource_group": self.resource_group,
+                "workspace_name": self.workspace_name
+            }
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "service": "ml"
+            }

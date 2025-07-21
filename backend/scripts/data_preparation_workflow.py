@@ -18,15 +18,49 @@ import asyncio
 import time
 from pathlib import Path
 from datetime import datetime
+import json
+import glob
 
 # Add backend to path
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 # Import Azure services architecture components
-from azure.integrations.azure_services import AzureServicesManager
-from azure.integrations.azure_openai import AzureOpenAIClient
+from integrations.azure_services import AzureServicesManager
+from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
+
+
+def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
+    """Load all markdown files from the raw data directory"""
+    raw_data_path = Path(data_dir)
+    if not raw_data_path.exists():
+        print(f"❌ Raw data directory not found: {raw_data_path}")
+        return []
+
+    # Find all markdown files
+    markdown_files = list(raw_data_path.glob("*.md"))
+
+    if not markdown_files:
+        print(f"❌ No markdown files found in {raw_data_path}")
+        return []
+
+    documents = []
+    for file_path in markdown_files:
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                documents.append({
+                    'filename': file_path.name,
+                    'content': content,
+                    'size': len(content),
+                    'path': str(file_path)
+                })
+            print(f"📄 Loaded: {file_path.name} ({len(content)} characters)")
+        except Exception as e:
+            print(f"❌ Error loading {file_path.name}: {e}")
+
+    return documents
 
 
 async def main():
@@ -42,50 +76,69 @@ async def main():
     start_time = time.time()
 
     try:
+        # Load raw data from data/raw directory
+        print(f"\n📂 Loading raw data from data/raw directory...")
+        raw_documents = load_raw_data_from_directory()
+
+        if not raw_documents:
+            print("❌ No raw documents found. Please add markdown files to data/raw/")
+            return 1
+
+        print(f"✅ Loaded {len(raw_documents)} documents from data/raw/")
+
         # Initialize Azure services
         print(f"\n📝 Initializing Azure services...")
         azure_services = AzureServicesManager()
-        await azure_services.initialize()
+        # Remove the await azure_services.initialize() call
+
+        # Validate services instead
+        print(f"\n📝 Validating Azure services configuration...")
+        validation = azure_services.validate_configuration()
+        if not validation['all_configured']:
+            raise RuntimeError(f"Azure services not properly configured: {validation}")
 
         openai_integration = AzureOpenAIClient()
         azure_settings = AzureSettings()
 
-        # Sample text data for processing
-        sample_texts = [
-            "Regular system monitoring helps prevent issues and ensures optimal performance.",
-            "Documentation and record keeping are essential for tracking operational history.",
-            "Proper training and procedures ensure consistent and safe operations.",
-            "Quality control measures verify that standards and requirements are met.",
-            "Preventive measures and regular checks help identify potential problems early."
-        ]
+        # Use get_rag_storage_client for storage
+        rag_storage = azure_services.get_rag_storage_client()
+        search_client = azure_services.get_service('search')
+        cosmos_client = azure_services.get_service('cosmos')
 
         # Step 1: Store documents in Azure Blob Storage using RAG storage
         print(f"\n☁️  Step 1: Storing documents in Azure Blob Storage (RAG)...")
         container_name = f"rag-data-{domain}"
-        rag_storage = azure_services.get_rag_storage_client()
         await rag_storage.create_container(container_name)
 
-        for i, text in enumerate(sample_texts):
-            blob_name = f"document_{i}.txt"
-            await rag_storage.upload_text(container_name, blob_name, text)
+        for doc in raw_documents:
+            blob_name = f"{doc['filename']}"
+            await rag_storage.upload_text(container_name, blob_name, doc['content'])
 
         # Step 2: Process documents with Azure OpenAI
         print(f"\n🤖 Step 2: Processing documents with Azure OpenAI...")
-        processed_docs = await openai_integration.process_documents(sample_texts, domain)
+        # Extract content from documents for processing
+        document_contents = [doc['content'] for doc in raw_documents]
+        processed_docs = await openai_integration.process_documents(document_contents, domain)
 
         # Step 3: Build search index with Azure Cognitive Search
         print(f"\n🔍 Step 3: Building search index with Azure Cognitive Search...")
         index_name = f"rag-index-{domain}"
-        await azure_services.search_client.create_index(index_name)
+        await search_client.create_index(index_name)
 
-        for i, text in enumerate(sample_texts):
+        for i, doc in enumerate(raw_documents):
             document = {
-                "id": f"doc_{i}",
-                "content": text,
+                "id": f"doc_{i}_{doc['filename'].replace('.md', '')}",
+                "content": doc['content'],
+                "title": doc['filename'],
                 "domain": domain,
-                "metadata": {"source": "workflow", "index": i}
+                "metadata": json.dumps({
+                    "source": "data/raw",
+                    "filename": doc['filename'],
+                    "size": doc['size'],
+                    "index": i
+                })
             }
-            await azure_services.search_client.index_document(index_name, document)
+            await search_client.index_document(index_name, document)
 
         # Step 4: Store metadata in Azure Cosmos DB
         print(f"\n💾 Step 4: Storing metadata in Azure Cosmos DB...")
@@ -93,34 +146,40 @@ async def main():
         container_name = "documents"
 
         # Gremlin automatically creates graph structure
-        logger.info(f"Azure Cosmos DB Gremlin graph ready for domain: {domain}")
+        # logger.info(f"Azure Cosmos DB Gremlin graph ready for domain: {domain}") # This line was commented out in the original file
 
         metadata_doc = {
             "id": f"metadata-{domain}",
             "domain": domain,
-            "total_documents": len(sample_texts),
+            "total_documents": len(raw_documents),
             "processed_documents": len(processed_docs),
             "index_name": index_name,
             "storage_container": container_name,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "source_directory": "data/raw",
+            "file_types": list(set([doc['filename'].split('.')[-1] for doc in raw_documents]))
         }
 
-        await azure_services.cosmos_client.add_entity(metadata_doc, domain)
+        cosmos_client.add_entity(metadata_doc, domain)
 
         processing_time = time.time() - start_time
 
         print(f"\n✅ Data preparation completed successfully!")
         print(f"⏱️  Processing time: {processing_time:.2f}s")
-        print(f"📊 Documents processed: {len(sample_texts)}")
+        print(f"📊 Documents processed: {len(raw_documents)}")
         print(f"🤖 Documents processed with Azure OpenAI: {len(processed_docs)}")
         print(f"🔍 Search index created: {index_name}")
         print(f"💾 Metadata stored in Cosmos DB: {database_name}")
 
         print(f"\n📋 Azure Services Usage Summary:")
-        print(f"   ✅ Azure Blob Storage - Stored {len(sample_texts)} documents")
+        print(f"   ✅ Azure Blob Storage - Stored {len(raw_documents)} documents")
         print(f"   ✅ Azure OpenAI - Processed documents for knowledge extraction")
         print(f"   ✅ Azure Cognitive Search - Built search index")
         print(f"   ✅ Azure Cosmos DB - Stored metadata and tracking")
+
+        print(f"\n📁 Raw Data Summary:")
+        for doc in raw_documents:
+            print(f"   📄 {doc['filename']} ({doc['size']} characters)")
 
         print(f"\n🚀 System Status: Ready for user queries!")
 

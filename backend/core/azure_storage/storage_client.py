@@ -66,6 +66,35 @@ class AzureStorageClient:
             logger.error(f"Container operation failed: {e}")
             raise
 
+    async def create_container(self, container_name: str) -> bool:
+        """Create a new container in Azure Blob Storage, returns True if created or already exists"""
+        try:
+            container_client = self.blob_service_client.get_container_client(container_name)
+            if not container_client.exists():
+                container_client.create_container()
+                logger.info(f"Created container: {container_name}")
+            else:
+                logger.info(f"Container already exists: {container_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Container creation failed: {e}")
+            return False
+
+    async def upload_text(self, container_name: str, blob_name: str, text: str) -> str:
+        """Upload text content to Azure Blob Storage, returns blob name on success"""
+        try:
+            blob_client = self.blob_service_client.get_blob_client(
+                container=container_name,
+                blob=blob_name
+            )
+            text_bytes = text.encode('utf-8')
+            blob_client.upload_blob(text_bytes, overwrite=True)
+            logger.info(f"Uploaded text to blob: {blob_name} in container: {container_name}")
+            return blob_name
+        except Exception as e:
+            logger.error(f"Text upload failed: {e}")
+            return ""
+
     def upload_file(self, local_path: Path, blob_name: str, overwrite: bool = True) -> Dict[str, Any]:
         """Upload file to Azure Blob Storage with telemetry - data-driven monitoring"""
         start_time = time.time()
