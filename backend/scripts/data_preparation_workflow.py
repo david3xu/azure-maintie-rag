@@ -29,6 +29,10 @@ sys.path.insert(0, str(backend_path))
 from integrations.azure_services import AzureServicesManager
 from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
+azure_settings = AzureSettings()
+print('DEBUG: AZURE_SEARCH_SERVICE:', azure_settings.azure_search_service)
+print('DEBUG: AZURE_SEARCH_ADMIN_KEY:', azure_settings.azure_search_admin_key)
+print('DEBUG: AZURE_SEARCH_API_VERSION:', azure_settings.azure_search_api_version)
 
 
 def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:

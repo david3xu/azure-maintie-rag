@@ -25,7 +25,6 @@ class AzureCognitiveSearchClient:
         # Load from environment (matches azure_openai.py pattern)
         self.service_name = self.config.get('service_name') or azure_settings.azure_search_service
         self.admin_key = self.config.get('admin_key') or azure_settings.azure_search_admin_key
-        self.index_name = self.config.get('index_name') or azure_settings.azure_search_index
         self.api_version = azure_settings.azure_search_api_version
 
         if not self.service_name:
@@ -36,11 +35,6 @@ class AzureCognitiveSearchClient:
 
         # Initialize clients (follows azure_openai.py pattern)
         try:
-            self.search_client = SearchClient(
-                endpoint=self.endpoint,
-                index_name=self.index_name,
-                credential=self.credential
-            )
             self.index_client = SearchIndexClient(
                 endpoint=self.endpoint,
                 credential=self.credential
@@ -49,7 +43,7 @@ class AzureCognitiveSearchClient:
             logger.error(f"Failed to initialize Azure Search client: {e}")
             raise
 
-        logger.info(f"AzureCognitiveSearchClient initialized for index: {self.index_name}")
+        logger.info(f"AzureCognitiveSearchClient initialized for endpoint: {self.endpoint}")
 
     def _get_azure_credential(self):
         """Enterprise credential management - data-driven from config"""
@@ -65,7 +59,7 @@ class AzureCognitiveSearchClient:
         from azure.identity import DefaultAzureCredential
         return DefaultAzureCredential()
 
-    def create_universal_index(self, vector_dimensions: int = 1536) -> Dict[str, Any]:
+    def create_universal_index(self, index_name: str, vector_dimensions: int = 1536) -> Dict[str, Any]:
         """Create universal search index for any domain - data-driven configuration"""
         try:
             from azure.search.documents.indexes.models import (
@@ -83,7 +77,7 @@ class AzureCognitiveSearchClient:
             ]
 
             index = SearchIndex(
-                name=self.index_name,
+                name=index_name,
                 fields=fields
             )
 
@@ -97,7 +91,7 @@ class AzureCognitiveSearchClient:
         """Create a search index for the specified domain"""
         try:
             # Create the index using the universal index schema
-            index = self.create_universal_index()
+            index = self.create_universal_index(index_name)
 
             # Create the index in Azure Search
             self.index_client.create_index(index)
@@ -364,16 +358,16 @@ class AzureCognitiveSearchClient:
                 "status": "misconfigured"
             }
 
-    def get_service_status(self) -> Dict[str, Any]:
+    def get_service_status(self, index_name: str) -> Dict[str, Any]:
         """Get search service status - follows azure_openai.py pattern"""
         try:
             # Test connection by getting index stats
-            index_stats = self.index_client.get_index_statistics(self.index_name)
+            index_stats = self.index_client.get_index_statistics(index_name)
 
             return {
                 "status": "healthy",
                 "service_name": self.service_name,
-                "index_name": self.index_name,
+                "index_name": index_name,
                 "document_count": index_stats.get("documentCount", 0),
                 "storage_size": index_stats.get("storageSize", 0)
             }
