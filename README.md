@@ -231,6 +231,56 @@ python scripts/validate-configuration.py
 
 ---
 
+## 📊 Data Lifecycle Management
+
+### New Makefile Targets
+
+- `make data-state`
+  Analyze the current state of Azure data services (Blob Storage, Cognitive Search, Cosmos DB, and raw data) for the selected domain.
+
+- `make data-prep-conditional`
+  Run data preparation only if required, based on Azure data state and environment policy.
+
+- `make data-prep-force`
+  Force data preparation, ignoring existing Azure data (useful for reprocessing).
+
+- `make data-prep`
+  Traditional data preparation (always runs, regardless of state).
+
+### Data State Management Environment Variables
+
+Set these in your `.env` or environment config files:
+
+- `SKIP_PROCESSING_IF_DATA_EXISTS` (default: false)
+  Skip data preparation if Azure services already contain data.
+
+- `FORCE_DATA_REPROCESSING` (default: false)
+  Force data reprocessing even if Azure services contain data.
+
+- `DATA_STATE_VALIDATION_ENABLED` (default: true)
+  Enable Azure data state validation before processing.
+
+- `AZURE_DATA_STATE_CACHE_TTL` (default: 300)
+  Cache TTL for Azure data state validation (in seconds).
+
+### Usage Examples
+
+```sh
+# Analyze Azure data state
+make data-state
+
+# Smart data preparation (checks state first)
+make data-prep-conditional
+
+# Force reprocessing (ignores existing data)
+make data-prep-force
+
+# Traditional processing (always runs)
+make data-prep
+```
+
+---
+
 ## 📝 Documentation Setup
 
 ### VSCode Environment (Recommended)
