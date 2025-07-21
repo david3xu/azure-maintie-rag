@@ -226,6 +226,183 @@ class AzureServicesManager:
             "services": validation_results
         }
 
+    async def cleanup_all_azure_data(self, domain: str = "general") -> Dict[str, Any]:
+        """Enterprise Azure data cleanup orchestration across all services"""
+        logger.info(f"Starting Azure data cleanup for domain: {domain}")
+
+        cleanup_results = {}
+        cleanup_start = time.time()
+
+        # 1. Orchestrate blob storage cleanup
+        try:
+            rag_storage = self.get_rag_storage_client()
+            if rag_storage:
+                container_name = f"rag-data-{domain}"
+                cleanup_results["blob_storage"] = await self._cleanup_blob_storage_data(
+                    rag_storage, container_name
+                )
+            else:
+                cleanup_results["blob_storage"] = {"success": False, "error": "RAG storage client not available"}
+        except Exception as e:
+            cleanup_results["blob_storage"] = {"success": False, "error": str(e)}
+
+        # 2. Orchestrate search index cleanup
+        try:
+            search_client = self.get_service('search')
+            if search_client:
+                index_name = f"rag-index-{domain}"
+                cleanup_results["cognitive_search"] = await self._cleanup_search_index_data(
+                    search_client, index_name
+                )
+            else:
+                cleanup_results["cognitive_search"] = {"success": False, "error": "Search client not available"}
+        except Exception as e:
+            cleanup_results["cognitive_search"] = {"success": False, "error": str(e)}
+
+        # 3. Orchestrate cosmos graph cleanup
+        try:
+            cosmos_client = self.get_service('cosmos')
+            if cosmos_client:
+                cleanup_results["cosmos_db"] = await self._cleanup_cosmos_graph_data(
+                    cosmos_client, domain
+                )
+            else:
+                cleanup_results["cosmos_db"] = {"success": False, "error": "Cosmos client not available"}
+        except Exception as e:
+            cleanup_results["cosmos_db"] = {"success": False, "error": str(e)}
+
+        cleanup_duration = time.time() - cleanup_start
+
+        return {
+            "success": all(result.get("success", False) for result in cleanup_results.values()),
+            "domain": domain,
+            "cleanup_results": cleanup_results,
+            "cleanup_duration_seconds": cleanup_duration,
+            "timestamp": datetime.now().isoformat(),
+            "enterprise_metrics": {
+                "services_cleaned": len([r for r in cleanup_results.values() if r.get("success")]),
+                "total_services": len(cleanup_results),
+                "cleanup_efficiency": sum(1 for r in cleanup_results.values() if r.get("success")) / len(cleanup_results)
+            }
+        }
+
+    async def _cleanup_blob_storage_data(self, storage_client, container_name: str) -> Dict[str, Any]:
+        """Enterprise blob storage data cleanup using existing client patterns from codebase"""
+        try:
+            from azure.core.exceptions import ResourceNotFoundError
+
+            deleted_count = 0
+            try:
+                # Use existing storage client interface pattern from codebase
+                # Get container client via blob_service_client (from actual implementation)
+                container_client = storage_client.blob_service_client.get_container_client(container_name)
+
+                # Check if container exists first
+                if container_client.exists():
+                    # Use existing list_blobs pattern from codebase
+                    blob_list = storage_client.list_blobs("")  # Empty prefix gets all blobs
+
+                    # Delete each blob using existing patterns
+                    for blob_info in blob_list:
+                        blob_client = storage_client.blob_service_client.get_blob_client(
+                            container=container_name,
+                            blob=blob_info["name"]
+                        )
+                        blob_client.delete_blob()
+                        deleted_count += 1
+                        logger.debug(f"Deleted blob: {blob_info['name']}")
+                else:
+                    logger.info(f"Container {container_name} does not exist - considering it cleaned")
+
+            except ResourceNotFoundError:
+                # Container doesn't exist - consider it cleaned
+                logger.info(f"Container {container_name} not found - already cleaned")
+                pass
+
+            return {
+                "success": True,
+                "blobs_deleted": deleted_count,
+                "container": container_name,
+                "infrastructure_preserved": True
+            }
+        except Exception as e:
+            logger.error(f"Blob storage cleanup failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _cleanup_search_index_data(self, search_client, index_name: str) -> Dict[str, Any]:
+        """Enterprise search index data cleanup using existing client patterns"""
+        try:
+            from azure.search.documents import SearchClient
+            from azure.core.exceptions import ResourceNotFoundError
+
+            # Create search client using existing patterns
+            target_search_client = SearchClient(
+                endpoint=search_client.endpoint,
+                index_name=index_name,
+                credential=search_client.credential
+            )
+
+            documents_deleted = 0
+            try:
+                # Get all document IDs and delete them
+                results = target_search_client.search("*", select="id")
+                documents_to_delete = []
+
+                for result in results:
+                    documents_to_delete.append({
+                        "@search.action": "delete",
+                        "id": result["id"]
+                    })
+
+                if documents_to_delete:
+                    delete_result = target_search_client.upload_documents(documents_to_delete)
+                    documents_deleted = len([r for r in delete_result if r.succeeded])
+
+            except ResourceNotFoundError:
+                # Index doesn't exist - consider it cleaned
+                pass
+
+            return {
+                "success": True,
+                "documents_deleted": documents_deleted,
+                "index_name": index_name,
+                "index_structure_preserved": True
+            }
+        except Exception as e:
+            logger.error(f"Search index cleanup failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _cleanup_cosmos_graph_data(self, cosmos_client, domain: str) -> Dict[str, Any]:
+        """Enterprise Cosmos DB graph data cleanup using existing Gremlin patterns"""
+        try:
+            # Use existing Gremlin query execution patterns
+            edges_deleted = 0
+            vertices_deleted = 0
+
+            # Delete all edges for domain first (prevent orphaned references)
+            edges_query = f"g.E().has('domain', '{domain}').drop()"
+            edges_result = cosmos_client._execute_gremlin_query_safe(edges_query)
+            if edges_result:
+                edges_deleted = len(edges_result)
+
+            # Delete all vertices for domain
+            vertices_query = f"g.V().has('domain', '{domain}').drop()"
+            vertices_result = cosmos_client._execute_gremlin_query_safe(vertices_query)
+            if vertices_result:
+                vertices_deleted = len(vertices_result)
+
+            return {
+                "success": True,
+                "edges_deleted": edges_deleted,
+                "vertices_deleted": vertices_deleted,
+                "total_entities_deleted": edges_deleted + vertices_deleted,
+                "domain": domain,
+                "database_structure_preserved": True
+            }
+        except Exception as e:
+            logger.error(f"Cosmos DB graph cleanup failed: {e}")
+            return {"success": False, "error": str(e)}
+
     async def validate_domain_data_state(self, domain: str) -> Dict[str, Any]:
         """Enterprise Azure data state validation across services"""
         # Azure Blob Storage state validation

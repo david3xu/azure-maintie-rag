@@ -38,15 +38,18 @@ class AzureCosmosGremlinClient:
         logger.info(f"AzureCosmosGremlinClient initialized for database: {self.database_name}")
 
     def _initialize_client(self):
-        """Lazy initialize the Gremlin client to avoid async event loop issues"""
+        """Enterprise Gremlin client initialization with Azure service endpoint validation"""
         if self._client_initialized:
             return
-
         try:
-            # Convert endpoint to Gremlin endpoint
-            gremlin_endpoint = self.endpoint.replace('https://', 'wss://').replace('http://', 'ws://')
-            gremlin_endpoint = gremlin_endpoint.replace(':443/', ':443/gremlin/')
-
+            # Validate Azure Cosmos DB endpoint format
+            if not self.endpoint or 'documents.azure.com' not in self.endpoint:
+                raise ValueError(f"Invalid Azure Cosmos DB endpoint: {self.endpoint}")
+            # Extract account name from endpoint for Gremlin URL construction
+            account_name = self.endpoint.replace('https://', '').replace('.documents.azure.com:443/', '')
+            # Construct proper Gremlin WebSocket endpoint for Azure
+            gremlin_endpoint = f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
+            logger.info(f"Initializing Gremlin client with endpoint: {gremlin_endpoint}")
             self.gremlin_client = client.Client(
                 gremlin_endpoint,
                 'g',
@@ -55,8 +58,10 @@ class AzureCosmosGremlinClient:
                 message_serializer=serializer.GraphSONSerializersV2d0()
             )
             self._client_initialized = True
+            logger.info("Azure Cosmos DB Gremlin client initialized successfully")
         except Exception as e:
-            logger.error(f"Failed to initialize Azure Cosmos Gremlin client: {e}")
+            logger.error(f"Azure Cosmos DB Gremlin client initialization failed: {e}")
+            self._client_initialized = False
             raise
 
     def _test_connection(self):

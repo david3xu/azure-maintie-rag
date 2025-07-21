@@ -276,34 +276,38 @@ class AzureCognitiveSearchClient:
                 "document_count": 0
             }
 
+    def _calculate_optimal_chunk_strategy(self, content: str) -> Dict[str, Any]:
+        """Enterprise chunking strategy calculation based on Azure Search limits"""
+        content_length = len(content)
+        max_field_size = 32766  # Azure Search maximum field size
+        optimal_chunk_size = 30000  # Safe margin under limit
+        overlap_size = 1000  # Semantic continuity overlap
+        if content_length <= max_field_size:
+            return {
+                "strategy": "single_document",
+                "chunks_required": 1,
+                "chunk_size": content_length
+            }
+        chunks_needed = (content_length + optimal_chunk_size - 1) // optimal_chunk_size
+        return {
+            "strategy": "chunked_processing",
+            "chunks_required": chunks_needed,
+            "chunk_size": optimal_chunk_size,
+            "overlap_size": overlap_size,
+            "total_content_size": content_length
+        }
+
     async def index_document(self, index_name: str, document: Dict[str, Any]) -> Dict[str, Any]:
-        """Enterprise document indexing with chunking for large documents"""
+        """Enterprise document indexing with intelligent chunking for Azure Search"""
         try:
             content = document.get('content', '')
-            max_content_size = 32000  # Azure Search limit is ~32KB per field
-            if len(content) > max_content_size:
-                logger.info(f"Document {document.get('id')} exceeds size limit - applying chunking strategy")
-                return await self._index_large_document_with_chunking(index_name, document)
-
-            # Existing logic
-            index_search_client = SearchClient(
-                endpoint=self.endpoint,
-                index_name=index_name,  # Target specific index
-                credential=self.credential
-            )
-            validation_result = self._validate_document_schema(document)
-            if not validation_result['valid']:
-                logger.error(f"Document schema validation failed: {validation_result['errors']}")
-                return {"success": False, "error": "Invalid document schema"}
-            result = index_search_client.upload_documents([document])
-            success_count = len([r for r in result if r.succeeded])
-            logger.info(f"Document indexed successfully: {document.get('id')} -> {index_name}")
-            return {
-                "success": True,
-                "document_id": document.get("id"),
-                "index_name": index_name,
-                "indexed_count": success_count
-            }
+            chunk_strategy = self._calculate_optimal_chunk_strategy(content)
+            logger.info(f"Document {document.get('id')}: {chunk_strategy['strategy']} (" \
+                        f"{chunk_strategy['chunks_required']} chunks)")
+            if chunk_strategy["strategy"] == "single_document":
+                return await self._index_single_document(index_name, document)
+            else:
+                return await self._index_chunked_document(index_name, document, chunk_strategy)
         except Exception as e:
             logger.error(f"Azure Search indexing failed: {e}")
             return {
@@ -312,59 +316,60 @@ class AzureCognitiveSearchClient:
                 "document_id": document.get("id", "unknown")
             }
 
-    async def _index_large_document_with_chunking(self, index_name: str, document: Dict[str, Any]) -> Dict[str, Any]:
-        """Enterprise chunking strategy for large documents"""
-        try:
-            content = document.get('content', '')
-            chunk_size = 30000  # Safe size under Azure limit
-            chunks = []
-            for i in range(0, len(content), chunk_size):
-                chunk_content = content[i:i + chunk_size]
-                chunk_doc = {
-                    "id": f"{document['id']}_chunk_{i // chunk_size}",
-                    "content": chunk_content,
-                    "title": f"{document.get('title', 'Document')} (Part {i // chunk_size + 1})",
-                    "domain": document.get('domain'),
-                    "source": document.get('source'),
-                    "metadata": json.dumps({
-                        **json.loads(document.get('metadata', '{}')),
-                        "chunk_index": i // chunk_size,
-                        "is_chunk": True,
-                        "parent_document_id": document['id']
-                    })
-                }
-                chunks.append(chunk_doc)
-            index_search_client = SearchClient(
-                endpoint=self.endpoint,
-                index_name=index_name,
-                credential=self.credential
-            )
-            result = index_search_client.upload_documents(chunks)
-            success_count = len([r for r in result if r.succeeded])
-            logger.info(f"Large document chunked and indexed: {document.get('id')} -> {success_count} chunks")
-            return {
-                "success": True,
-                "document_id": document.get('id'),
-                "chunks_created": len(chunks),
-                "chunks_indexed": success_count,
-                "strategy": "chunking"
-            }
-        except Exception as e:
-            logger.error(f"Large document chunking failed: {e}")
-            return {
-                "success": False,
-                "error": f"Chunking failed: {str(e)}",
-                "document_id": document.get("id", "unknown")
-            }
-
-    def _validate_document_schema(self, document: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate document against Azure Search schema requirements"""
-        required_fields = ['id', 'content', 'title', 'domain']
-        missing_fields = [field for field in required_fields if not document.get(field)]
-
+    async def _index_single_document(self, index_name: str, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Standard single document indexing"""
+        index_search_client = SearchClient(
+            endpoint=self.endpoint,
+            index_name=index_name,
+            credential=self.credential
+        )
+        result = index_search_client.upload_documents([document])
+        success_count = len([r for r in result if r.succeeded])
         return {
-            "valid": len(missing_fields) == 0,
-            "errors": missing_fields
+            "success": success_count > 0,
+            "document_id": document.get('id'),
+            "strategy": "single_document",
+            "indexed_count": success_count
+        }
+
+    async def _index_chunked_document(self, index_name: str, document: Dict[str, Any], strategy: Dict[str, Any]) -> Dict[str, Any]:
+        """Enterprise chunked document processing for large content"""
+        content = document.get('content', '')
+        chunk_size = strategy['chunk_size']
+        overlap_size = strategy.get('overlap_size', 0)
+        chunks = []
+        for i in range(0, len(content), chunk_size - overlap_size):
+            chunk_content = content[i:i + chunk_size]
+            chunk_doc = {
+                "id": f"{document['id']}_chunk_{i // (chunk_size - overlap_size)}",
+                "content": chunk_content,
+                "title": f"{document.get('title', 'Document')} (Part {len(chunks) + 1})",
+                "domain": document.get('domain'),
+                "source": document.get('source'),
+                "metadata": json.dumps({
+                    **json.loads(document.get('metadata', '{}')),
+                    "chunk_index": len(chunks),
+                    "is_chunk": True,
+                    "parent_document_id": document['id'],
+                    "chunk_strategy": "enterprise_overlap"
+                })
+            }
+            chunks.append(chunk_doc)
+        index_search_client = SearchClient(
+            endpoint=self.endpoint,
+            index_name=index_name,
+            credential=self.credential
+        )
+        result = index_search_client.upload_documents(chunks)
+        success_count = len([r for r in result if r.succeeded])
+        logger.info(f"Large document chunked: {document.get('id')} -> {success_count}/{len(chunks)} chunks indexed")
+        return {
+            "success": success_count > 0,
+            "document_id": document.get('id'),
+            "strategy": "chunked_processing",
+            "total_chunks": len(chunks),
+            "indexed_chunks": success_count,
+            "indexing_efficiency": f"{success_count}/{len(chunks)}"
         }
 
     async def validate_document_structure(self, document: Dict[str, Any]) -> Dict[str, Any]:

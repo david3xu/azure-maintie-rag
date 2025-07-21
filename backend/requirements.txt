@@ -44,7 +44,10 @@ azure-monitor-opentelemetry>=1.2.0
 azure-core>=1.29.0
 
 # Graph Database Libraries
-gremlinpython>=3.7.0
+# gremlinpython>=3.7.0
+# Use versions compatible with Cosmos DB Gremlin API and aiohttp
+aiohttp==3.8.1
+gremlinpython==3.6.6
 
 # Testing
 pytest>=7.4.0

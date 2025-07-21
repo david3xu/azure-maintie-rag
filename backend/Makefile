@@ -149,6 +149,17 @@ data-prep-force:
 	@echo "⚠️  This will reprocess data even if Azure services contain existing data"
 	FORCE_DATA_REPROCESSING=true PYTHONPATH=. .venv/bin/python scripts/data_preparation_workflow.py
 
+azure-clean-data:
+	@echo "🧹 Automated Azure data cleanup (preserving infrastructure)..."
+	@echo "⚠️  This will delete ALL data in Azure services but preserve infrastructure"
+	@echo "💡 Infrastructure will remain ready for new data processing"
+	PYTHONPATH=. ./.venv/bin/python scripts/azure_data_cleanup_workflow.py
+
+data-clean:
+	@echo "🔄 Local and Azure data cleanup..."
+	make clean
+	make azure-clean-data
+
 # Testing - Updated for Universal RAG architecture
 test: test-unit test-integration test-workflow test-universal
 
