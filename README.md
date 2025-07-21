@@ -22,25 +22,48 @@ Azure Universal RAG is a **production-grade backend system** for advanced univer
 
 ## 📚 Documentation
 
-### **Complete Implementation Guide**
+### **📖 Complete Implementation Guide**
 - **[AZURE_UNIVERSAL_RAG_DOCUMENTATION.md](AZURE_UNIVERSAL_RAG_DOCUMENTATION.md)** - Comprehensive documentation covering:
   - Critical error fixes and architecture improvements
   - Data-driven configuration implementation
   - Enterprise architecture compliance
   - Deployment guides and usage instructions
   - Configuration validation and troubleshooting
+
+### **⚙️ Setup & Configuration**
 - **[AZURE_SETUP_GUIDE.md](AZURE_SETUP_GUIDE.md)** - Minimal Azure setup instructions:
   - Environment configuration
   - Azure service endpoints setup
   - API keys configuration
   - Startup validation and troubleshooting
 
-### **Key Features Documented**
+### **🔄 Workflow Documentation**
+- **[Data Preparation Workflow](docs/workflows/data_preparation_workflow.md)** - Complete guide for `make data-prep`:
+  - Step-by-step Azure services integration
+  - Architecture diagrams and component interactions
+  - Performance metrics and optimization
+  - Error handling and troubleshooting
+
+- **[Data Preparation Architecture](docs/workflows/data_preparation_architecture.md)** - Technical architecture details:
+  - Component interaction diagrams
+  - Azure services integration patterns
+  - Data flow and processing pipeline
+  - Security and scalability considerations
+
+### **🧪 Testing & Verification**
+- **[System Verification Guide](docs/testing/system_verification_guide.md)** - Comprehensive testing guide:
+  - Step-by-step verification procedures
+  - Expected results and benchmarks
+  - Troubleshooting common issues
+  - Performance testing and load testing
+
+### **🎯 Key Features Documented**
 - ✅ **Critical Error Fixes**: Azure CLI response stream consumption error resolved
 - ✅ **Data-Driven Configuration**: 100% environment-driven configuration with no hardcoded values
 - ✅ **Cost Optimization**: Environment-specific resource allocation (dev/staging/prod)
 - ✅ **Enterprise Architecture**: Production-grade deployment patterns and validation
 - ✅ **Comprehensive Testing**: Automated validation and testing suites
+- ✅ **Workflow Documentation**: Complete guides for data preparation and system verification
 
 ---
 

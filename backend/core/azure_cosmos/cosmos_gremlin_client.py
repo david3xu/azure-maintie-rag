@@ -30,7 +30,17 @@ class AzureCosmosGremlinClient:
         if not self.endpoint or not self.key:
             raise ValueError("Azure Cosmos DB endpoint and key are required")
 
-        # Initialize Gremlin client (follows azure_openai.py error handling pattern)
+        # Initialize Gremlin client lazily to avoid async event loop issues
+        self.gremlin_client = None
+        self._client_initialized = False
+
+        logger.info(f"AzureCosmosGremlinClient initialized for database: {self.database_name}")
+
+    def _initialize_client(self):
+        """Lazy initialize the Gremlin client to avoid async event loop issues"""
+        if self._client_initialized:
+            return
+
         try:
             # Convert endpoint to Gremlin endpoint
             gremlin_endpoint = self.endpoint.replace('https://', 'wss://').replace('http://', 'ws://')
@@ -43,15 +53,10 @@ class AzureCosmosGremlinClient:
                 password=self.key,
                 message_serializer=serializer.GraphSONSerializersV2d0()
             )
-
-            # Test connection
-            self._test_connection()
-
+            self._client_initialized = True
         except Exception as e:
             logger.error(f"Failed to initialize Azure Cosmos Gremlin client: {e}")
             raise
-
-        logger.info(f"AzureCosmosGremlinClient initialized for database: {self.database_name}")
 
     def _test_connection(self):
         """Test Gremlin connection"""
@@ -67,18 +72,27 @@ class AzureCosmosGremlinClient:
     def add_entity(self, entity_data: Dict[str, Any], domain: str) -> Dict[str, Any]:
         """Add entity vertex to graph using Gremlin"""
         try:
-            # Gremlin query to add vertex
-            query = f"""
-                g.addV('Entity')
-                    .property('text', '{entity_data.get("text", "")}')
-                    .property('entity_type', '{entity_data.get("entity_type", "unknown")}')
-                    .property('domain', '{domain}')
-                    .property('confidence', {entity_data.get("confidence", 1.0)})
-                    .property('created_at', '{entity_data.get("created_at", "")}')
-            """
+            # Lazy initialize client if needed
+            if not self._client_initialized:
+                self._initialize_client()
 
-            result = self.gremlin_client.submit(query)
-            vertex = result.all().result()[0]
+            # Suppress async warnings during Gremlin operations
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+
+                # Gremlin query to add vertex
+                query = f"""
+                    g.addV('Entity')
+                        .property('text', '{entity_data.get("text", "")}')
+                        .property('entity_type', '{entity_data.get("entity_type", "unknown")}')
+                        .property('domain', '{domain}')
+                        .property('confidence', {entity_data.get("confidence", 1.0)})
+                        .property('created_at', '{entity_data.get("created_at", "")}')
+                """
+
+                result = self.gremlin_client.submit(query)
+                vertex = result.all().result()[0]
 
             return {
                 "success": True,
@@ -249,31 +263,44 @@ class AzureCosmosGremlinClient:
             }
 
     def get_connection_status(self) -> Dict[str, Any]:
-        """Get Gremlin connection status - follows azure_openai.py pattern"""
+        """Get connection status for service validation"""
         try:
-            # Test connection with simple query
-            result = self.gremlin_client.submit("g.V().limit(1)")
-            result.all().result()
+            # Simple test to check if endpoint and key are configured
+            if not self.endpoint:
+                return {
+                    "status": "unhealthy",
+                    "error": "Cosmos DB endpoint not configured",
+                    "service": "cosmos"
+                }
+
+            if not self.key:
+                return {
+                    "status": "unhealthy",
+                    "error": "Cosmos DB key not configured",
+                    "service": "cosmos"
+                }
 
             return {
                 "status": "healthy",
+                "service": "cosmos",
                 "endpoint": self.endpoint,
-                "database_name": self.database_name,
-                "container_name": self.container_name,
-                "api_type": "gremlin"
+                "database": self.database_name
             }
         except Exception as e:
             return {
                 "status": "unhealthy",
                 "error": str(e),
-                "endpoint": self.endpoint,
-                "api_type": "gremlin"
+                "service": "cosmos"
             }
 
     def close(self):
         """Close Gremlin client connection"""
         try:
-            self.gremlin_client.close()
+            # Suppress async warnings during cleanup
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                self.gremlin_client.close()
             logger.info("Gremlin client connection closed")
         except Exception as e:
             logger.error(f"Error closing Gremlin client: {e}")

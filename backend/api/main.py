@@ -20,6 +20,7 @@ from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 from config.settings import settings
 from api.endpoints import health
+from api.dependencies import set_azure_services, set_openai_integration, set_azure_settings
 import importlib
 
 # Fix import for azure-query-endpoint (hyphen in filename)
@@ -40,48 +41,35 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Azure Universal RAG API...")
 
     try:
-        # Initialize Azure services
+        # Initialize Azure services using existing pattern
         logger.info("Initializing Azure services...")
         azure_services = AzureServicesManager()
-        await azure_services.initialize()
+        # Remove: await azure_services.initialize()
+
+        # Validate services instead
+        validation = azure_services.validate_configuration()
+        if not validation['all_configured']:
+            raise RuntimeError(f"Azure services validation failed: {validation}")
 
         openai_integration = AzureOpenAIClient()
         azure_settings = AzureSettings()
 
-                # ADD: Check for automated configuration
-        if azure_settings.azure_use_managed_identity:
-            logger.info("Using automated Azure configuration with Managed Identity")
-            logger.info("No manual keys required - uses Azure credential chain")
-        else:
-            logger.info("Using manual configuration from environment variables")
-
-        # ADD: Validation check
-        validation_result = azure_settings.validate_azure_config()
-        logger.info(f"Azure configuration validation: {validation_result}")
-
-        # Log validation details
-        for service, configured in validation_result.items():
-            status = "✅" if configured else "❌"
-            logger.info(f"  {status} {service}: {'Configured' if configured else 'Not configured'}")
-
-        # Store Azure services in app state
+        # Store in app state following your existing pattern
         app.state.azure_services = azure_services
         app.state.openai_integration = openai_integration
         app.state.azure_settings = azure_settings
 
-        logger.info("Azure services initialized successfully")
-        logger.info(f"Azure location: {azure_settings.azure_location}")
-        logger.info(f"Azure resource prefix: {azure_settings.azure_resource_prefix}")
+        # Set global dependencies for endpoints
+        set_azure_services(azure_services)
+        set_openai_integration(openai_integration)
+        set_azure_settings(azure_settings)
+
+        logger.info("Azure Universal RAG API startup completed")
+        yield
 
     except Exception as e:
-        logger.error(f"Failed to initialize Azure services: {e}", exc_info=True)
-        # ❌ REMOVED: Silent fallback - let the error propagate
-        raise RuntimeError(f"Azure services initialization failed: {e}")
-
-    yield
-
-    # Shutdown
-    logger.info("Shutting down Azure Universal RAG API...")
+        logger.error(f"Azure services initialization failed: {e}")
+        raise
 
 
 # Create FastAPI app with Azure services support
@@ -195,15 +183,15 @@ async def get_system_info():
 
         azure_status = {
             "initialized": azure_services is not None,
-            "location": azure_settings.azure_location if azure_settings else None,
+            "location": azure_settings.azure_region if azure_settings else None,
             "resource_prefix": azure_settings.azure_resource_prefix if azure_settings else None,
             "services": {
                 "rag_storage": azure_services.get_rag_storage_client() is not None if azure_services else False,
                 "ml_storage": azure_services.get_ml_storage_client() is not None if azure_services else False,
                 "app_storage": azure_services.get_app_storage_client() is not None if azure_services else False,
-                "cognitive_search": azure_services.search_client is not None if azure_services else False,
-                "cosmos_db_gremlin": azure_services.cosmos_client is not None if azure_services else False,
-                "machine_learning": azure_services.ml_client is not None if azure_services else False
+                "cognitive_search": azure_services.get_service('search') is not None if azure_services else False,
+                "cosmos_db_gremlin": azure_services.get_service('cosmos') is not None if azure_services else False,
+                "machine_learning": azure_services.get_service('ml') is not None if azure_services else False
             }
         }
 
@@ -237,28 +225,7 @@ async def get_system_info():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def get_azure_services() -> AzureServicesManager:
-    """Get Azure services instance"""
-    azure_services = getattr(app.state, 'azure_services', None)
-    if not azure_services:
-        raise HTTPException(status_code=503, detail="Azure services not initialized")
-    return azure_services
-
-
-async def get_openai_integration() -> AzureOpenAIClient:
-    """Get Azure OpenAI integration instance"""
-    openai_integration = getattr(app.state, 'openai_integration', None)
-    if not openai_integration:
-        raise HTTPException(status_code=503, detail="Azure OpenAI integration not initialized")
-    return openai_integration
-
-
-async def get_azure_settings() -> AzureSettings:
-    """Get Azure settings instance"""
-    azure_settings = getattr(app.state, 'azure_settings', None)
-    if not azure_settings:
-        raise HTTPException(status_code=503, detail="Azure settings not initialized")
-    return azure_settings
+# Dependency functions moved to api/dependencies.py to avoid circular imports
 
 
 if __name__ == "__main__":

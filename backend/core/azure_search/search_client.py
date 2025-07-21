@@ -120,6 +120,69 @@ class AzureCognitiveSearchClient:
                 "index_name": self.index_name
             }
 
+    async def create_index(self, index_name: str) -> Dict[str, Any]:
+        """Create a search index with the specified name"""
+        try:
+            # Create a simple index without vector search for now
+            from azure.search.documents.indexes.models import SearchIndex, SearchField, SearchFieldDataType
+
+            # Simple fields without vector search
+            fields = [
+                SearchField(name="id", type=SearchFieldDataType.String, key=True),
+                SearchField(name="content", type=SearchFieldDataType.String, searchable=True),
+                SearchField(name="title", type=SearchFieldDataType.String, searchable=True),
+                SearchField(name="domain", type=SearchFieldDataType.String, filterable=True),
+                SearchField(name="source", type=SearchFieldDataType.String, filterable=True),
+                SearchField(name="metadata", type=SearchFieldDataType.String, searchable=False, filterable=False)
+            ]
+
+            index = SearchIndex(
+                name=index_name,
+                fields=fields
+            )
+
+            result = self.index_client.create_or_update_index(index)
+
+            return {
+                "success": True,
+                "index_name": index_name,
+                "fields_count": len(fields)
+            }
+
+        except Exception as e:
+            logger.error(f"Index creation failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "index_name": index_name
+            }
+
+    async def index_document(self, index_name: str, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Index a single document to the search index"""
+        try:
+            # Create a temporary search client for the specific index
+            temp_search_client = SearchClient(
+                endpoint=self.endpoint,
+                index_name=index_name,
+                credential=self.credential
+            )
+
+            # Upload the document to the specific index
+            result = temp_search_client.upload_documents([document])
+
+            return {
+                "success": True,
+                "uploaded_count": 1,
+                "results": [r.key for r in result if r.succeeded]
+            }
+        except Exception as e:
+            logger.error(f"Document indexing failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "document_id": document.get("id", "unknown")
+            }
+
     def upload_documents(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Upload documents to search index - universal format"""
         try:
@@ -189,6 +252,41 @@ class AzureCognitiveSearchClient:
             logger.error(f"Vector search failed: {e}")
             return []
 
+    async def search_documents(self, index_name: str, query: str, top_k: int = 10) -> List[Dict[str, Any]]:
+        """Search documents using text query - universal search method"""
+        try:
+            # Create a new search client for the specific index
+            search_client = SearchClient(
+                endpoint=self.endpoint,
+                index_name=index_name,
+                credential=self.credential
+            )
+
+            # Perform text search
+            search_params = {
+                "search": query,
+                "top": top_k,
+                "include_total_count": True
+            }
+
+            results = search_client.search(**search_params)
+
+            search_results = []
+            for result in results:
+                search_results.append({
+                    "id": result.get("id"),
+                    "content": result.get("content", ""),
+                    "title": result.get("title", ""),
+                    "domain": result.get("domain", ""),
+                    "score": result.get("@search.score", 0.0)
+                })
+
+            return search_results
+
+        except Exception as e:
+            logger.error(f"Search documents failed: {e}")
+            return []
+
     def get_service_status(self) -> Dict[str, Any]:
         """Get search service status - follows azure_openai.py pattern"""
         try:
@@ -207,4 +305,35 @@ class AzureCognitiveSearchClient:
                 "status": "unhealthy",
                 "error": str(e),
                 "service_name": self.service_name
+            }
+
+    def get_connection_status(self) -> Dict[str, Any]:
+        """Get connection status for service validation"""
+        try:
+            # Simple test to check if service name and admin key are configured
+            if not self.service_name:
+                return {
+                    "status": "unhealthy",
+                    "error": "Search service name not configured",
+                    "service": "search"
+                }
+
+            if not self.admin_key:
+                return {
+                    "status": "unhealthy",
+                    "error": "Search admin key not configured",
+                    "service": "search"
+                }
+
+            return {
+                "status": "healthy",
+                "service": "search",
+                "endpoint": self.endpoint,
+                "index_name": self.index_name
+            }
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "service": "search"
             }

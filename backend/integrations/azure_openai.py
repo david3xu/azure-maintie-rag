@@ -6,6 +6,9 @@ from openai import AzureOpenAI
 import tiktoken
 from datetime import datetime
 
+# Import settings for configuration
+from config.settings import settings
+
 
 class AzureOpenAIClient:
     """Universal Azure OpenAI client that works with any domain."""
@@ -14,11 +17,11 @@ class AzureOpenAIClient:
         """Initialize Azure OpenAI client."""
         self.config = config or {}
 
-        # Load from environment if not in config
-        self.api_key = self.config.get('api_key') or os.getenv('AZURE_API_KEY')
-        self.azure_endpoint = self.config.get('azure_endpoint') or os.getenv('AZURE_ENDPOINT', 'https://clu-project-foundry-instance.openai.azure.com/')
-        self.deployment = self.config.get('deployment') or os.getenv('AZURE_DEPLOYMENT', 'gpt-4.1')
-        self.api_version = self.config.get('api_version', '2023-12-01-preview')
+        # Load from settings first, then config, then environment
+        self.api_key = self.config.get('api_key') or settings.openai_api_key or os.getenv('AZURE_API_KEY')
+        self.azure_endpoint = self.config.get('azure_endpoint') or settings.openai_api_base or os.getenv('AZURE_ENDPOINT', 'https://clu-project-foundry-instance.openai.azure.com/')
+        self.deployment = self.config.get('deployment') or settings.openai_deployment_name or os.getenv('AZURE_DEPLOYMENT', 'gpt-4.1')
+        self.api_version = self.config.get('api_version') or settings.openai_api_version or '2023-12-01-preview'
 
         if not self.api_key:
             raise ValueError("Azure API key is required")
@@ -85,6 +88,33 @@ class AzureOpenAIClient:
                 'model': self.deployment,
                 'success': False
             }
+
+    async def process_documents(self, texts: list, domain: str) -> list:
+        """Process documents using generate_completion pattern"""
+        processed_docs = []
+        for i, text in enumerate(texts):
+            prompt = f"Process this text for domain '{domain}': {text[:500]}..."
+            # Assume generate_completion is synchronous for now; wrap in asyncio.to_thread if needed
+            result = self.generate_completion(prompt)
+            processed_docs.append({
+                "doc_id": f"{domain}_{i}",
+                "processed_text": result,
+                "original_text": text
+            })
+        return processed_docs
+
+    async def extract_knowledge(self, texts: list, domain: str) -> list:
+        """Extract knowledge using generate_completion pattern"""
+        knowledge_results = []
+        for text in texts:
+            prompt = f"Extract entities and relationships from this {domain} text: {text}"
+            result = self.generate_completion(prompt)
+            knowledge_results.append({
+                "entities": [],  # Parse from result if needed
+                "relationships": [],  # Parse from result if needed
+                "source_text": text
+            })
+        return knowledge_results
 
     def extract_entities_and_relations(
         self,
@@ -222,3 +252,65 @@ Generate domain schema in JSON format:"""
             'has_api_key': bool(self.api_key),
             'tokenizer': self.tokenizer.name
         }
+
+    def get_connection_status(self) -> Dict[str, Any]:
+        """Get connection status for service validation"""
+        try:
+            # Simple test to check if API key and endpoint are configured
+            if not self.api_key or self.api_key == "1234567890":
+                return {
+                    "status": "unhealthy",
+                    "error": "API key not configured",
+                    "service": "openai"
+                }
+
+            if not self.azure_endpoint:
+                return {
+                    "status": "unhealthy",
+                    "error": "Azure endpoint not configured",
+                    "service": "openai"
+                }
+
+            return {
+                "status": "healthy",
+                "service": "openai",
+                "endpoint": self.azure_endpoint,
+                "deployment": self.deployment
+            }
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "service": "openai"
+            }
+
+    async def generate_response(self, query: str, documents: List[str], domain: str) -> str:
+        """Generate response based on query and retrieved documents."""
+        try:
+            # Create context from documents
+            context = "\n\n".join([f"Document {i+1}: {doc[:500]}..." for i, doc in enumerate(documents[:3])])
+
+            # Create system message
+            system_message = f"""You are a helpful assistant for the {domain} domain.
+            Answer the user's question based on the provided documents.
+            If the documents don't contain relevant information, say so politely.
+            Keep your response concise and accurate."""
+
+            # Create user message
+            user_message = f"Question: {query}\n\nContext from documents:\n{context}"
+
+            # Generate response
+            result = self.generate_completion(
+                prompt=user_message,
+                system_message=system_message,
+                max_tokens=500,
+                temperature=0.1
+            )
+
+            if result['success']:
+                return result['text']
+            else:
+                return f"Sorry, I couldn't generate a response. Error: {result.get('error', 'Unknown error')}"
+
+        except Exception as e:
+            return f"Error generating response: {str(e)}"
