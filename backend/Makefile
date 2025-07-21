@@ -137,21 +137,7 @@ workflow-demo:
 data-state:
 	@echo "🔍 Azure Data State Analysis..."
 	@echo "📊 Analyzing Azure services data state for domain: general"
-	PYTHONPATH=. ./.venv/bin/python -c "
-import asyncio
-import json
-from integrations.azure_services import AzureServicesManager
-async def analyze_state():
-    services = AzureServicesManager()
-    state = await services.validate_domain_data_state('general')
-    print('Azure Data State Analysis:')
-    print(f'  Blob Storage: {state[\"azure_blob_storage\"][\"document_count\"]} documents')
-    print(f'  Search Index: {state[\"azure_cognitive_search\"][\"document_count\"]} documents')
-    print(f'  Cosmos DB: {state[\"azure_cosmos_db\"][\"vertex_count\"]} entities')
-    print(f'  Raw Data: {state[\"raw_data_directory\"][\"file_count\"]} files')
-    print(f'  Processing Required: {state[\"requires_processing\"]}')
-asyncio.run(analyze_state())
-"
+	PYTHONPATH=. ./.venv/bin/python scripts/azure_data_state.py
 
 data-prep-conditional:
 	@echo "🧠 Conditional Data Preparation (with Azure state validation)..."

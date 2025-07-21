@@ -249,7 +249,7 @@ class AzureServicesManager:
         """Validate Azure Blob Storage container state"""
         try:
             from azure.core.exceptions import ResourceNotFoundError
-            blobs = await storage_client.list_blobs(container_name)
+            blobs = storage_client.list_blobs(container_name)
             blob_count = len(list(blobs)) if blobs else 0
             return {
                 "container_exists": True,
@@ -295,7 +295,25 @@ class AzureServicesManager:
     async def _validate_cosmos_metadata_state(self, cosmos_client, domain: str) -> Dict[str, Any]:
         """Validate Azure Cosmos DB metadata state"""
         try:
+            if cosmos_client is None:
+                logger.warning("Cosmos client is None in _validate_cosmos_metadata_state")
+                return {
+                    "metadata_exists": False,
+                    "vertex_count": 0,
+                    "edge_count": 0,
+                    "has_data": False,
+                    "error": "Cosmos client is None"
+                }
             stats = cosmos_client.get_graph_statistics(domain)
+            if stats is None:
+                logger.warning("Cosmos DB statistics result is None in _validate_cosmos_metadata_state")
+                return {
+                    "metadata_exists": False,
+                    "vertex_count": 0,
+                    "edge_count": 0,
+                    "has_data": False,
+                    "error": "Cosmos DB statistics result is None"
+                }
             has_metadata = stats.get("success", False) and (
                 stats.get("vertex_count", 0) > 0 or stats.get("edge_count", 0) > 0
             )
