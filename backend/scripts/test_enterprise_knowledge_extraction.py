@@ -133,25 +133,9 @@ async def test_enterprise_services_individually():
 
         quality_assessor = AzureMLQualityAssessment("test_domain")
 
-        # Mock extraction context
-        extraction_context = {
-            "domain": "test_domain",
-            "entity_count": 5,
-            "relation_count": 3,
-            "entity_types": ["Person", "Organization", "Technology"],
-            "relation_types": ["works_for", "develops", "uses"],
-            "documents_processed": 1
-        }
-
-        mock_entities = {
-            "entity_1": {"confidence": 0.9, "text": "Microsoft"},
-            "entity_2": {"confidence": 0.8, "text": "Azure"}
-        }
-
-        mock_relations = [
-            {"confidence": 0.85, "source": "Microsoft", "target": "Azure"},
-            {"confidence": 0.75, "source": "Azure", "target": "Cloud"}
-        ]
+        # Remove all mock extraction context, mock_entities, mock_relations, and any test code that uses them.
+        # If the test cannot run without real data, raise NotImplementedError or print a message and exit.
+        raise NotImplementedError("This test requires real extraction data. All mock/test data has been removed.")
 
         quality_results = await quality_assessor.assess_extraction_quality(
             extraction_context, mock_entities, mock_relations

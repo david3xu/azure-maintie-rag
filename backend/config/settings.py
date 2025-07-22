@@ -342,6 +342,12 @@ class Settings(BaseSettings):
         formats_env = os.getenv('SUPPORTED_TEXT_FORMATS', '.md,.txt')
         return [fmt.strip() for fmt in formats_env.split(',')]
 
+    # Azure Session and Connection Management
+    azure_session_refresh_minutes: int = Field(default=50, env="AZURE_SESSION_REFRESH_MINUTES")
+    azure_connection_pool_size: int = Field(default=10, env="AZURE_CONNECTION_POOL_SIZE")
+    azure_health_check_timeout_seconds: int = Field(default=30, env="AZURE_HEALTH_CHECK_TIMEOUT_SECONDS")
+    azure_circuit_breaker_failure_threshold: int = Field(default=5, env="AZURE_CIRCUIT_BREAKER_FAILURE_THRESHOLD")
+
     class Config:
         env_file = ".env"
         case_sensitive = False

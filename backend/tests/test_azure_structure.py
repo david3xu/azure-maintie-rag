@@ -73,3 +73,12 @@ def test_integrations():
             all_exist = False
 
     assert all_exist, "Missing one or more required Azure integration files."
+
+def test_azure_session_management_config():
+    """Test Azure session management and connection config"""
+    from config.settings import Settings
+    settings = Settings()
+    assert settings.azure_session_refresh_minutes > 0
+    assert settings.azure_connection_pool_size > 0
+    assert settings.azure_health_check_timeout_seconds > 0
+    assert settings.azure_circuit_breaker_failure_threshold > 0

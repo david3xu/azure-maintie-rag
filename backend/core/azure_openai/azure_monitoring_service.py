@@ -38,13 +38,8 @@ class AzureKnowledgeMonitor:
 
     def _initialize_telemetry_client(self):
         """Initialize Application Insights telemetry client"""
-        try:
-            # For now, return a mock client
-            # In production, this would use the actual Azure Application Insights SDK
-            return MockTelemetryClient()
-        except Exception as e:
-            logger.warning(f"Application Insights initialization failed: {e}")
-            return None
+        # REMOVE MOCK: In production, this must use the actual Azure Application Insights SDK
+        raise NotImplementedError("Real Application Insights telemetry client must be implemented here.")
 
     async def track_extraction_quality(self, quality_results: Dict[str, Any]) -> None:
         """Track quality metrics in Azure Application Insights"""
@@ -204,56 +199,4 @@ class AzureKnowledgeMonitor:
                 "error_tracking",
                 "business_metrics"
             ]
-        }
-
-
-class MockTelemetryClient:
-    """Mock telemetry client for development and testing"""
-
-    def __init__(self):
-        self.metrics = []
-        self.events = []
-        self.exceptions = []
-
-    def track_metric(self, name: str, value: float, properties: Optional[Dict[str, Any]] = None):
-        """Track a custom metric"""
-        self.metrics.append({
-            "name": name,
-            "value": value,
-            "properties": properties or {},
-            "timestamp": datetime.now().isoformat()
-        })
-        logger.info(f"Tracked metric: {name} = {value}")
-
-    def track_event(self, name: str, properties: Optional[Dict[str, Any]] = None):
-        """Track a custom event"""
-        self.events.append({
-            "name": name,
-            "properties": properties or {},
-            "timestamp": datetime.now().isoformat()
-        })
-        logger.info(f"Tracked event: {name}")
-
-    def track_exception(self, exception: Exception, properties: Optional[Dict[str, Any]] = None):
-        """Track an exception"""
-        self.exceptions.append({
-            "exception": str(exception),
-            "properties": properties or {},
-            "timestamp": datetime.now().isoformat()
-        })
-        logger.error(f"Tracked exception: {exception}")
-
-    def flush(self):
-        """Flush telemetry data"""
-        logger.info(f"Flushed telemetry: {len(self.metrics)} metrics, {len(self.events)} events, {len(self.exceptions)} exceptions")
-
-    def get_telemetry_summary(self) -> Dict[str, Any]:
-        """Get summary of tracked telemetry"""
-        return {
-            "metrics_count": len(self.metrics),
-            "events_count": len(self.events),
-            "exceptions_count": len(self.exceptions),
-            "latest_metrics": self.metrics[-5:] if self.metrics else [],
-            "latest_events": self.events[-5:] if self.events else [],
-            "latest_exceptions": self.exceptions[-5:] if self.exceptions else []
         }

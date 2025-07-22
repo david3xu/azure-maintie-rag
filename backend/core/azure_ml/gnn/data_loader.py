@@ -102,17 +102,15 @@ def convert_to_pytorch_geometric(entities: List[Dict[str, Any]],
             x = torch.tensor(node_features, dtype=torch.float)
             y = torch.tensor(node_labels, dtype=torch.long)
         else:
-            # Create dummy data if no entities
-            x = torch.zeros((1, 64), dtype=torch.float)
-            y = torch.zeros(1, dtype=torch.long)
+            # Raise error if no entities
+            raise NotImplementedError("No entities found. Dummy data is not allowed. Provide real data.")
 
         if edge_indices:
             edge_index = torch.tensor(edge_indices, dtype=torch.long).t().contiguous()
             edge_attr = torch.tensor(edge_features, dtype=torch.float)
         else:
-            # Create dummy edge if no relations
-            edge_index = torch.zeros((2, 1), dtype=torch.long)
-            edge_attr = torch.zeros((1, 32), dtype=torch.float)
+            # Raise error if no relations
+            raise NotImplementedError("No relations found. Dummy data is not allowed. Provide real data.")
 
         # Create PyTorch Geometric Data object
         data = Data(
@@ -283,24 +281,17 @@ def load_graph_data(data_path: Optional[str] = None,
         Tuple of (train_loader, val_loader)
     """
     if data_path and Path(data_path).exists():
-        # Load from file (for future implementation)
         logger.info(f"Loading graph data from file: {data_path}")
-        # TODO: Implement file-based loading
-        return DataLoader([]), DataLoader([])
+        raise NotImplementedError("File-based loading is not implemented. Provide real Cosmos DB data.")
     else:
-        # Load from Cosmos DB
         logger.info(f"Loading graph data from Cosmos DB for domain: {domain}")
         train_data, val_data = load_graph_data_from_cosmos(domain)
 
         if not train_data:
-            logger.warning("No training data loaded")
-            return DataLoader([]), DataLoader([])
+            raise NotImplementedError("No training data loaded from Cosmos DB. Provide real data.")
 
         train_loader, val_loader = create_data_loaders(train_data, val_data, batch_size)
-
-        logger.info(f"Created data loaders: train={len(train_data)} graphs, "
-                   f"val={len(val_data)} graphs")
-
+        logger.info(f"Created data loaders: train={len(train_data)} graphs, val={len(val_data)} graphs")
         return train_loader, val_loader
 
 

@@ -268,18 +268,15 @@ class EnterpriseGremlinGraphManager:
         for entity in graph_data.get("entities", []):
             entity_id = entity.get("entity_id")
             if entity_id:
-                # Use model to generate embedding
-                # This is placeholder - actual implementation depends on your model
-                embedding = np.random.rand(128)  # Placeholder
-                embeddings["entities"][entity_id] = embedding
+                # Raise error if no real model is provided
+                raise NotImplementedError("Real model inference required for entity embeddings. No placeholders allowed.")
 
         # Generate relation embeddings
         for relation in graph_data.get("relations", []):
             relation_id = relation.get("relation_id")
             if relation_id:
-                # Use model to generate embedding
-                embedding = np.random.rand(128)  # Placeholder
-                embeddings["relations"][relation_id] = embedding
+                # Raise error if no real model is provided
+                raise NotImplementedError("Real model inference required for relation embeddings. No placeholders allowed.")
 
         return embeddings
 

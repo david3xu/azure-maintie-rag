@@ -168,12 +168,8 @@ class AzureMLQualityAssessment:
 
         try:
             # This would be the actual ML endpoint call
-            # For now, return a mock response
-            return {
-                "ml_score": 0.85,
-                "confidence": 0.9,
-                "assessment_quality": "ml_enhanced"
-            }
+            # REMOVE MOCK: Implement real call to Azure ML endpoint
+            raise NotImplementedError("Real Azure ML endpoint call must be implemented here.")
         except Exception as e:
             logger.error(f"ML endpoint call failed: {e}")
             raise
