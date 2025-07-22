@@ -51,78 +51,58 @@ def convert_to_pytorch_geometric(entities: List[Dict[str, Any]],
                                 relations: List[Dict[str, Any]]) -> List[Data]:
     """
     Convert entities and relations to PyTorch Geometric Data format
-
     Args:
         entities: List of entity dictionaries
         relations: List of relation dictionaries
-
     Returns:
         List of PyTorch Geometric Data objects
     """
     try:
-        # Create entity mapping
+        # Entity mapping service
         entity_to_id = {}
         node_features = []
         node_labels = []
-
-        # Process entities
+        # Process entities with feature engineering
         for i, entity in enumerate(entities):
-            entity_to_id[entity["text"]] = i
-
-            # Create node features (simple encoding for now)
-            # In practice, you might use embeddings from a language model
+            entity_id = entity.get("id", f"entity_{i}")
+            entity_to_id[entity.get("text", entity_id)] = i
+            # Feature vector creation (enterprise pattern)
             feature_vector = create_node_features(entity)
             node_features.append(feature_vector)
-
-            # Create node labels (entity type classification)
-            label = encode_entity_type(entity.get("entity_type", "unknown"))
+            # Label assignment
+            entity_type = entity.get("entity_type", "unknown")
+            label = encode_entity_type(entity_type)
             node_labels.append(label)
-
-        # Create edge indices and features
+        # Edge construction service
         edge_indices = []
         edge_features = []
-
         for relation in relations:
             source_text = relation.get("source_entity", "")
             target_text = relation.get("target_entity", "")
-
             if source_text in entity_to_id and target_text in entity_to_id:
                 source_id = entity_to_id[source_text]
                 target_id = entity_to_id[target_text]
-
-                # Add directed edge
                 edge_indices.append([source_id, target_id])
-
-                # Create edge features
                 edge_feature = create_edge_features(relation)
                 edge_features.append(edge_feature)
-
-        # Convert to tensors
         if node_features:
             x = torch.tensor(node_features, dtype=torch.float)
             y = torch.tensor(node_labels, dtype=torch.long)
         else:
-            # Raise error if no entities
             raise NotImplementedError("No entities found. Dummy data is not allowed. Provide real data.")
-
         if edge_indices:
             edge_index = torch.tensor(edge_indices, dtype=torch.long).t().contiguous()
             edge_attr = torch.tensor(edge_features, dtype=torch.float)
         else:
-            # Raise error if no relations
             raise NotImplementedError("No relations found. Dummy data is not allowed. Provide real data.")
-
-        # Create PyTorch Geometric Data object
         data = Data(
             x=x,
             edge_index=edge_index,
             edge_attr=edge_attr,
             y=y
         )
-
         logger.info(f"Created graph with {len(node_features)} nodes and {len(edge_indices)} edges")
         return [data]
-
     except Exception as e:
         logger.error(f"Failed to convert to PyTorch Geometric format: {e}")
         return []

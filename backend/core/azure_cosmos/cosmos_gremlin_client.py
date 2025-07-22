@@ -457,3 +457,47 @@ class AzureCosmosGremlinClient:
         except Exception as e:
             logger.warning(f"Get all relations failed: {e}")
             return []
+
+    def export_graph_for_training(self, domain: str) -> Dict[str, Any]:
+        """Export graph data for GNN training pipeline with quality validation"""
+        export_context = {
+            "domain": domain,
+            "export_id": str(int(time.time())),
+            "start_time": time.time(),
+            "quality_metrics": {}
+        }
+        try:
+            entities = self.get_all_entities(domain)
+            relations = self.get_all_relations(domain)
+            quality_validation = self._validate_graph_quality(entities, relations)
+            export_context["quality_metrics"] = quality_validation
+            if not quality_validation["sufficient_for_training"]:
+                raise ValueError(f"Insufficient graph quality for training: {quality_validation}")
+            return {
+                "success": True,
+                "domain": domain,
+                "entities": entities,
+                "relations": relations,
+                "entities_count": len(entities),
+                "relations_count": len(relations),
+                "quality_metrics": quality_validation,
+                "export_context": export_context
+            }
+        except Exception as e:
+            logger.error(f"Graph export failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "export_context": export_context
+            }
+
+    def _validate_graph_quality(self, entities: List[Dict[str, Any]], relations: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Graph data quality validation service"""
+        return {
+            "entity_count": len(entities),
+            "relation_count": len(relations),
+            "connectivity_ratio": len(relations) / max(len(entities), 1),
+            "sufficient_for_training": len(entities) >= 10 and len(relations) >= 5,
+            "quality_score": min(1.0, (len(entities) + len(relations)) / 100),
+            "validation_timestamp": datetime.now().isoformat()
+        }
