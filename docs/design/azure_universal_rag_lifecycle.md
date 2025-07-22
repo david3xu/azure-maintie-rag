@@ -192,6 +192,10 @@ make lifecycle-demo 2>&1 | tee "azure-rag-lifecycle-$(date +%Y%m%d-%H%M%S).log"
 
 make workflow-analysis 2>&1 | tee workflow-analysis-$(date +%Y%m%d-%H%M%S).log
 
+make data-prep 2>&1 | tee data-prep-$(date +%Y%m%d-%H%M%S).log
+
+make query-demo 2>&1 | tee query-demo-$(date +%Y%m%d-%H%M%S).log
+
 ```
 
 **Lifecycle Service Integration**:
