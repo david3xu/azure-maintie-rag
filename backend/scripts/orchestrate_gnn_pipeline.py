@@ -15,7 +15,7 @@ from azure.identity import DefaultAzureCredential
 
 from core.azure_cosmos.enhanced_gremlin_client import EnterpriseGremlinGraphManager
 from core.azure_ml.gnn_orchestrator import AzureGNNTrainingOrchestrator, AzureGNNModelService
-from config.settings import get_settings
+from config.settings import azure_settings
 
 # Configure logging
 logging.basicConfig(
@@ -29,7 +29,7 @@ class EnterpriseGNNPipelineOrchestrator:
     """Complete GNN pipeline orchestration"""
 
     def __init__(self):
-        self.settings = get_settings()
+        self.settings = azure_settings
         self.ml_client = self._initialize_ml_client()
         self.cosmos_client = self._initialize_cosmos_client()
         self.training_orchestrator = AzureGNNTrainingOrchestrator(
