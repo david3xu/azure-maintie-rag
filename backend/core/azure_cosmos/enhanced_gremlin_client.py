@@ -207,38 +207,96 @@ class EnterpriseGremlinGraphManager:
             raise
 
     async def get_graph_change_metrics(self, domain: str = "general") -> Dict[str, int]:
-        """Get metrics about graph changes for triggering retraining"""
-
+        """Graph change detection with temporal analytics using Gremlin traversals"""
         try:
-            client = await self._get_client()
+            if not hasattr(self, '_client_initialized') or not self._client_initialized:
+                if hasattr(self, '_initialize_client'):
+                    self._initialize_client()
 
-            # Count new entities in last 24 hours
+            from config.settings import azure_settings
+            from datetime import datetime, timedelta
+            import json
+            trigger_threshold = getattr(azure_settings, 'gnn_training_trigger_threshold', 50)
+            change_metrics = {
+                "domain": domain,
+                "analysis_timestamp": datetime.now().isoformat(),
+                "trigger_threshold": trigger_threshold,
+                "new_entities": 0,
+                "new_relations": 0,
+                "updated_entities": 0,
+                "total_changes": 0,
+                "requires_training": False
+            }
+            yesterday = (datetime.now() - timedelta(days=1)).isoformat()
+            # Query new entities with temporal filtering
             new_entities_query = f"""
                 g.V().has('domain', '{domain}')
-                    .has('last_updated', P.gte('{datetime.now().replace(hour=0, minute=0, second=0).isoformat()}'))
+                    .has('label', 'Entity')
+                    .has('created_at', gt('{yesterday}'))
                     .count()
             """
-
-            # Count new relations in last 24 hours
+            # Query new relations with temporal filtering
             new_relations_query = f"""
                 g.E().has('domain', '{domain}')
-                    .has('last_updated', P.gte('{datetime.now().replace(hour=0, minute=0, second=0).isoformat()}'))
+                    .has('created_at', gt('{yesterday}'))
                     .count()
             """
-
-            new_entities = await self._execute_gremlin_query(new_entities_query)
-            new_relations = await self._execute_gremlin_query(new_relations_query)
-
-            return {
-                "new_entities": new_entities[0] if new_entities else 0,
-                "new_relations": new_relations[0] if new_relations else 0,
-                "total_entities": await self._get_total_entities(domain),
-                "total_relations": await self._get_total_relations(domain)
-            }
-
+            # Query updated entities (entities with recent confidence score changes)
+            updated_entities_query = f"""
+                g.V().has('domain', '{domain}')
+                    .has('label', 'Entity')
+                    .has('confidence_updated_at', gt('{yesterday}'))
+                    .count()
+            """
+            try:
+                new_entities_result = await self._execute_gremlin_query(new_entities_query)
+                change_metrics["new_entities"] = new_entities_result[0] if new_entities_result else 0
+            except Exception as e:
+                logger.warning(f"New entities query failed: {e}")
+                change_metrics["new_entities"] = 0
+            try:
+                new_relations_result = await self._execute_gremlin_query(new_relations_query)
+                change_metrics["new_relations"] = new_relations_result[0] if new_relations_result else 0
+            except Exception as e:
+                logger.warning(f"New relations query failed: {e}")
+                change_metrics["new_relations"] = 0
+            try:
+                updated_entities_result = await self._execute_gremlin_query(updated_entities_query)
+                change_metrics["updated_entities"] = updated_entities_result[0] if updated_entities_result else 0
+            except Exception as e:
+                logger.warning(f"Updated entities query failed: {e}")
+                change_metrics["updated_entities"] = 0
+            change_metrics["total_changes"] = (
+                change_metrics["new_entities"] +
+                change_metrics["new_relations"] +
+                change_metrics["updated_entities"]
+            )
+            change_metrics["requires_training"] = change_metrics["total_changes"] >= trigger_threshold
+            # Optionally cache results using Redis if available
+            try:
+                cache_key = f"graph_change_metrics:{domain}:{change_metrics['analysis_timestamp'][:10]}"
+                if hasattr(self, '_redis_client') and self._redis_client:
+                    await self._redis_client.setex(
+                        cache_key,
+                        getattr(azure_settings, 'azure_data_state_cache_ttl', 3600),
+                        json.dumps(change_metrics)
+                    )
+            except Exception as e:
+                logger.debug(f"Cache storage failed (non-critical): {e}")
+            logger.info(f"Graph change analysis for {domain}: {change_metrics['total_changes']} total changes, training required: {change_metrics['requires_training']}")
+            return change_metrics
         except Exception as e:
-            logger.error(f"Failed to get graph change metrics: {e}")
-            return {"new_entities": 0, "new_relations": 0, "total_entities": 0, "total_relations": 0}
+            logger.error(f"Graph change metrics analysis failed: {e}")
+            return {
+                "domain": domain,
+                "analysis_timestamp": datetime.now().isoformat(),
+                "error": str(e),
+                "new_entities": 0,
+                "new_relations": 0,
+                "updated_entities": 0,
+                "total_changes": 0,
+                "requires_training": False
+            }
 
     async def _execute_gremlin_query(self, query: str) -> List[Any]:
         """Execute Gremlin query and return results"""
