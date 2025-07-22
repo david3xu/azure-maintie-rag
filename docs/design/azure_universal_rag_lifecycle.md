@@ -193,6 +193,8 @@ make lifecycle-demo 2>&1 | tee "azure-rag-lifecycle-$(date +%Y%m%d-%H%M%S).log"
 
 make lifecycle-demo 2>&1 | tee azure-lifecycle-fixed-$(date +%Y%m%d-%H%M%S).log
 
+make workflow-analysis 2>&1 | tee workflow-analysis-$(date +%Y%m%d-%H%M%S).log
+
 ```
 
 **Lifecycle Service Integration**:
