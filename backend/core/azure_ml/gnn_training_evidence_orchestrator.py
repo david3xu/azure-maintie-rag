@@ -4,7 +4,7 @@ import time
 from typing import Dict, Any, List, Optional
 from config.settings import azure_settings
 from core.workflow.data_workflow_evidence import AzureDataWorkflowEvidenceCollector
-from core.workflow.data_workflow_evidence import AzureServiceCostTracker
+from core.workflow.cost_tracker import AzureServiceCostTracker
 
 class GNNTrainingEvidenceOrchestrator:
     """Enterprise GNN training with comprehensive evidence collection"""

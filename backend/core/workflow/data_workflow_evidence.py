@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from config.settings import azure_settings
-from core.workflow.data_workflow_evidence import AzureServiceCostTracker
+from core.workflow.cost_tracker import AzureServiceCostTracker
 
 @dataclass
 class DataWorkflowEvidence:
