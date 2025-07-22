@@ -38,6 +38,8 @@ sys.path.insert(0, str(backend_path))
 from integrations.azure_services import AzureServicesManager
 from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
+from core.workflow.data_workflow_evidence import AzureDataWorkflowEvidenceCollector
+from core.workflow.data_workflow_evidence import AzureServiceCostTracker
 azure_settings = AzureSettings()
 print('DEBUG: AZURE_SEARCH_SERVICE:', azure_settings.azure_search_service)
 print('DEBUG: AZURE_SEARCH_ADMIN_KEY:', azure_settings.azure_search_admin_key)

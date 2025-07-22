@@ -1,5 +1,41 @@
 # **Azure Universal RAG: Data Workflow & GNN Training Architecture**
 
+## 🚀 Quick Start: End-to-End GNN Lifecycle
+
+Follow these steps to run the full, auditable GNN lifecycle with evidence tracking:
+
+### 1. **Prepare Your Data**
+- Place your raw markdown files in `data/raw/`.
+
+### 2. **Run Data Preparation Workflow**
+```bash
+cd backend
+PYTHONPATH=. ./.venv/bin/python scripts/data_preparation_workflow.py
+```
+- This ingests raw data, processes with Azure OpenAI, indexes with Cognitive Search, stores metadata in Cosmos DB, and saves a full evidence report.
+
+### 3. **Run GNN Training Pipeline**
+```bash
+cd backend
+PYTHONPATH=. ./.venv/bin/python scripts/orchestrate_gnn_pipeline.py --domain <your_domain>
+```
+- Replace `<your_domain>` with your use case (e.g., `general`).
+- This checks for graph changes, exports data, runs Azure ML GNN training, and saves a full evidence report.
+
+### 4. **Retrieve Evidence Reports (Optional)**
+- Use the API to retrieve workflow or GNN training evidence:
+    - **Workflow Evidence:**
+      ```
+      GET /api/v1/workflow/{workflow_id}/evidence
+      ```
+    - **GNN Training Evidence:**
+      ```
+      GET /api/v1/gnn-training/{domain}/evidence
+      ```
+- Or query Cosmos DB directly for evidence reports.
+
+---
+
 ## **Enterprise Workflow Analysis**
 
 Based on your current Azure Universal RAG implementation, I'll design comprehensive data workflow orchestration with clear input/output evidence tracking for both raw data processing and GNN training pipelines.
@@ -391,3 +427,201 @@ Your GNN training framework exists but needs completion:
 - **Data Lineage**: Complete traceability from raw data to deployed models
 
 **Recommendation**: Your raw data workflow is excellent. Focus implementation effort on completing the GNN training evidence pipeline to achieve comprehensive enterprise data workflow visibility.
+
+
+I'll help you identify the GNN training command line execution and debug the current implementation.Based on the existing codebase analysis, here are the **exact execution commands** and **debugging instructions** for the GNN lifecycle training:
+
+## GNN Training Execution Commands
+
+### 1. **Direct Python Execution** (Current Implementation)
+```bash
+# Navigate to project root directory
+cd /path/to/project
+
+# Set Python path and execute training script
+PYTHONPATH=./backend python backend/scripts/train_comprehensive_gnn.py [OPTIONS]
+```
+
+### 2. **Available Command Line Options** (From Existing Code)
+```bash
+# Create example configuration file
+python backend/scripts/train_comprehensive_gnn.py --create-config
+
+# Create conda environment file
+python backend/scripts/train_comprehensive_gnn.py --create-env
+
+# Run training with custom config
+python backend/scripts/train_comprehensive_gnn.py --config your_config.json
+
+# Run with specific Azure ML workspace
+python backend/scripts/train_comprehensive_gnn.py --workspace your-workspace-name
+
+# Run with custom experiment name
+python backend/scripts/train_comprehensive_gnn.py --experiment custom-experiment-name
+```
+
+### 3. **Environment-Specific Execution** (Based on Config Files)
+```bash
+# Staging environment
+AZURE_ENVIRONMENT=staging python backend/scripts/train_comprehensive_gnn.py
+
+# Production environment
+AZURE_ENVIRONMENT=prod python backend/scripts/train_comprehensive_gnn.py
+```
+
+## GNN Training Debugging Instructions
+
+### 1. **Check Training Status** (From Existing Implementation)
+```bash
+# Enable debug logging
+PYTHONPATH=./backend python -c "
+import logging
+logging.basicConfig(level=logging.DEBUG)
+from backend.scripts.train_comprehensive_gnn import run_comprehensive_gnn_training
+result = run_comprehensive_gnn_training()
+print('Training result:', result)
+"
+```
+
+### 2. **Validate Configuration** (Based on Environment Files)
+```bash
+# Check staging environment config
+python -c "
+import os
+from pathlib import Path
+env_file = Path('backend/config/environments/staging.env')
+if env_file.exists():
+    with open(env_file) as f:
+        for line in f:
+            if 'GNN_' in line and not line.startswith('#'):
+                print(line.strip())
+else:
+    print('Staging environment file not found')
+"
+```
+
+### 3. **Verify Azure ML Integration** (From Existing Code)
+```bash
+# Test Azure ML connection
+python -c "
+try:
+    from azureml.core import Workspace
+    from azureml.core.run import Run
+    run = Run.get_context()
+    print(f'Run context: {run.id}')
+    if run.id.startswith('OfflineRun'):
+        print('Running locally - Azure ML offline mode')
+    else:
+        print('Running in Azure ML environment')
+except Exception as e:
+    print(f'Azure ML check failed: {e}')
+"
+```
+
+### 4. **Monitor Training Progress** (From Trainer Implementation)
+```bash
+# Check model output directory
+ls -la models/gnn/
+
+# Monitor training logs
+tail -f training_logs.log
+
+# Check training history (if model exists)
+python -c "
+import json
+from pathlib import Path
+history_file = Path('models/gnn/training_history.json')
+if history_file.exists():
+    with open(history_file) as f:
+        history = json.load(f)
+        print(f'Total epochs: {len(history)}')
+        if history:
+            latest = history[-1]
+            print(f'Latest metrics: {latest}')
+"
+```
+
+### 5. **Validate Data Pipeline** (From Configuration)
+```bash
+# Check data directory structure
+find backend/data/ -type f -name "*.pt" -o -name "*.json" | head -10
+
+# Verify data path configuration
+python -c "
+import os
+data_path = os.environ.get('GNN_DATA_PATH', 'backend/data/')
+print(f'Data path: {data_path}')
+from pathlib import Path
+if Path(data_path).exists():
+    files = list(Path(data_path).rglob('*'))
+    print(f'Data files found: {len(files)}')
+else:
+    print('Data path does not exist')
+"
+```
+
+### 6. **Azure ML Experiment Monitoring** (From ML Client Code)
+```bash
+# Check Azure ML experiment status
+python -c "
+try:
+    from azureml.core import Workspace, Experiment
+    ws = Workspace.from_config()
+    exp = Experiment(workspace=ws, name='universal-rag-gnn')
+    runs = list(exp.get_runs())
+    print(f'Total runs: {len(runs)}')
+    if runs:
+        latest_run = runs[0]
+        print(f'Latest run status: {latest_run.status}')
+        print(f'Latest run ID: {latest_run.id}')
+except Exception as e:
+    print(f'Azure ML experiment check failed: {e}')
+"
+```
+
+## Training Health Check Commands
+
+### **Quick Health Check Script** (Based on Existing Components)
+```bash
+# Create comprehensive health check
+python -c "
+import logging
+import json
+from pathlib import Path
+
+# Check 1: Configuration files
+configs = {
+    'staging': Path('backend/config/environments/staging.env'),
+    'prod': Path('backend/config/environments/prod.env')
+}
+
+for env, config_path in configs.items():
+    if config_path.exists():
+        print(f'✅ {env} config exists')
+    else:
+        print(f'❌ {env} config missing')
+
+# Check 2: Training script
+script_path = Path('backend/scripts/train_comprehensive_gnn.py')
+if script_path.exists():
+    print('✅ Training script exists')
+else:
+    print('❌ Training script missing')
+
+# Check 3: Model output directory
+model_dir = Path('models/gnn')
+model_dir.mkdir(parents=True, exist_ok=True)
+print(f'✅ Model directory: {model_dir}')
+
+# Check 4: Data directory
+data_dir = Path('backend/data')
+if data_dir.exists():
+    print(f'✅ Data directory exists with {len(list(data_dir.rglob(\"*\")))} items')
+else:
+    print('❌ Data directory missing')
+
+print('Health check complete')
+"
+```
+
+These commands are all based on the **existing codebase structure** and provide **data-driven debugging** without any hardcoded assumptions.
