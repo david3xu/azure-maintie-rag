@@ -17,9 +17,9 @@ PYTHONPATH=. ./.venv/bin/python scripts/data_preparation_workflow.py
 ### 3. **Run GNN Training Pipeline**
 ```bash
 cd backend
-PYTHONPATH=. ./.venv/bin/python scripts/orchestrate_gnn_pipeline.py --domain <your_domain>
+PYTHONPATH=. ./.venv/bin/python scripts/orchestrate_gnn_pipeline.py --domain general
 ```
-- Replace `<your_domain>` with your use case (e.g., `general`).
+- The `--domain` argument is a logical label for grouping data, models, and evidence. If you only use one dataset (e.g., `backend/data/raw`), use `general` as the domain. For multiple datasets or use cases, use a different domain name for each.
 - This checks for graph changes, exports data, runs Azure ML GNN training, and saves a full evidence report.
 
 ### 4. **Retrieve Evidence Reports (Optional)**
@@ -33,6 +33,12 @@ PYTHONPATH=. ./.venv/bin/python scripts/orchestrate_gnn_pipeline.py --domain <yo
       GET /api/v1/gnn-training/{domain}/evidence
       ```
 - Or query Cosmos DB directly for evidence reports.
+
+---
+
+> **What is a domain?**
+>
+> The `domain` is a logical label or namespace that groups together related data, models, and Azure resources for a specific use case, business area, or dataset. It helps you organize and isolate different knowledge graphs, training runs, and search indices within the same system. If you only use one dataset, just use `general` for the domain everywhere.
 
 ---
 
