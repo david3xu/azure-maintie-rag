@@ -11,6 +11,19 @@ from pydantic import Field
 
 
 class Settings(BaseSettings):
+    # Azure Search Enterprise Extension
+    azure_search_index_prefix: str = Field(default="universal-rag", env="AZURE_SEARCH_INDEX_PREFIX")
+    azure_search_batch_size: int = Field(default=100, env="AZURE_SEARCH_BATCH_SIZE")
+
+    # Azure ML Enterprise Extension
+    azure_ml_endpoint_prefix: str = Field(default="gnn-model", env="AZURE_ML_ENDPOINT_PREFIX")
+    azure_ml_deployment_name: str = Field(default="default", env="AZURE_ML_DEPLOYMENT_NAME")
+    azure_ml_inference_timeout: int = Field(default=300, env="AZURE_ML_INFERENCE_TIMEOUT")
+    gnn_model_version: str = Field(default="latest", env="GNN_MODEL_VERSION")
+
+    # Embedding Update Extension
+    embedding_batch_size: int = Field(default=50, env="EMBEDDING_BATCH_SIZE")
+    embedding_update_interval_hours: int = Field(default=24, env="EMBEDDING_UPDATE_INTERVAL_HOURS")
     """Unified application configuration settings for Azure services - single source of truth"""
 
     # --- Azure Data Processing Policy Configuration ---

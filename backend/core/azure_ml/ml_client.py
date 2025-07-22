@@ -15,6 +15,55 @@ logger = logging.getLogger(__name__)
 
 
 class AzureMLClient:
+
+    async def invoke_gnn_endpoint(self, endpoint_name: str, deployment_name: str, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Invoke GNN model endpoint for embedding generation."""
+        try:
+            import aiohttp
+            import json
+            # Get endpoint details (assume endpoint_name is the full name)
+            # In real Azure ML, you may need to fetch the scoring URI from the endpoint object
+            # For this example, assume endpoint_name is the scoring URI
+            scoring_uri = endpoint_name if endpoint_name.startswith("http") else None
+            if not scoring_uri:
+                # Try to get endpoint from MLClient if not a URI
+                try:
+                    endpoint = self.ml_client.online_endpoints.get(name=endpoint_name)
+                    scoring_uri = endpoint.scoring_uri
+                except Exception as e:
+                    logger.error(f"Failed to get endpoint URI: {e}")
+                    return {"success": False, "error": f"Endpoint not found: {endpoint_name}"}
+            # Prepare authentication headers (assume admin key or token)
+            headers = {"Content-Type": "application/json"}
+            # If using Azure ML token auth, add Authorization header
+            # (In production, use DefaultAzureCredential or ManagedIdentityCredential)
+            # For now, skip auth for local dev
+            timeout = getattr(azure_settings, 'azure_ml_inference_timeout', 300)
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    scoring_uri,
+                    headers=headers,
+                    json=request_data,
+                    timeout=aiohttp.ClientTimeout(total=timeout)
+                ) as response:
+                    if response.status == 200:
+                        result_data = await response.json()
+                        return {
+                            "success": True,
+                            "embeddings": result_data.get("embeddings", {}),
+                            "model_version": result_data.get("model_version"),
+                            "inference_time_ms": result_data.get("inference_time_ms")
+                        }
+                    else:
+                        error_text = await response.text()
+                        return {
+                            "success": False,
+                            "error": f"HTTP {response.status}: {error_text}",
+                            "endpoint": endpoint_name
+                        }
+        except Exception as e:
+            logger.error(f"GNN endpoint invocation failed: {e}")
+            return {"success": False, "error": str(e)}
     """Universal Azure ML client for model training - follows azure_openai.py pattern"""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):

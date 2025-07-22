@@ -181,11 +181,17 @@ class EnterpriseGNNPipelineOrchestrator:
             raise
 
     async def _get_entities_without_embeddings(self, domain: str) -> List[str]:
-        """Get entities without GNN embeddings"""
+        """Get entities without GNN embeddings from Cosmos DB"""
         try:
-            # This would query Cosmos DB for entities without embeddings
-            # Simplified implementation
-            return []
+            entities_query = f"""
+                g.V().has('domain', '{domain}')
+                    .not(__.has('gnn_embeddings'))
+                    .values('entity_id')
+            """
+            query_results = await self.cosmos_client._execute_gremlin_query(entities_query)
+            entity_ids = [result for result in query_results if result]
+            logger.info(f"Found {len(entity_ids)} entities without embeddings in domain '{domain}'")
+            return entity_ids
         except Exception as e:
             logger.error(f"Failed to get entities without embeddings: {e}")
             return []
@@ -195,11 +201,50 @@ class EnterpriseGNNPipelineOrchestrator:
         entities: List[str],
         domain: str
     ) -> Dict[str, Any]:
-        """Generate embeddings for entities using deployed model"""
+        """Generate embeddings using deployed Azure ML GNN model endpoint"""
         try:
-            # This would call the deployed model endpoint
-            # Simplified implementation
-            return {}
+            ml_client = self.ml_client
+            if not ml_client:
+                raise RuntimeError("Azure ML client not initialized")
+            endpoint_name = f"{azure_settings.azure_ml_endpoint_prefix}-{domain}"
+            deployment_name = getattr(azure_settings, 'azure_ml_deployment_name', 'default')
+            entity_features = []
+            for entity_id in entities:
+                entity_query = f"""
+                    g.V().has('entity_id', '{entity_id}')
+                        .project('text', 'entity_type', 'confidence')
+                        .by('text')
+                        .by('entity_type')
+                        .by('confidence')
+                """
+                entity_result = await self.cosmos_client._execute_gremlin_query(entity_query)
+                if entity_result:
+                    entity_data = entity_result[0]
+                    entity_features.append({
+                        "entity_id": entity_id,
+                        "text": entity_data.get("text", ""),
+                        "entity_type": entity_data.get("entity_type", "unknown"),
+                        "confidence": entity_data.get("confidence", 1.0)
+                    })
+            if not entity_features:
+                return {}
+            inference_request = {
+                "domain": domain,
+                "entities": entity_features,
+                "model_version": getattr(azure_settings, 'gnn_model_version', 'latest')
+            }
+            inference_result = await ml_client.invoke_gnn_endpoint(
+                endpoint_name=endpoint_name,
+                deployment_name=deployment_name,
+                request_data=inference_request
+            )
+            if inference_result.get("success", False):
+                embeddings = inference_result.get("embeddings", {})
+                logger.info(f"Generated embeddings for {len(embeddings)} entities")
+                return embeddings
+            else:
+                logger.error(f"Inference failed: {inference_result.get('error', 'Unknown error')}")
+                return {}
         except Exception as e:
             logger.error(f"Failed to generate embeddings for entities: {e}")
             return {}

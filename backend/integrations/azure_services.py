@@ -89,54 +89,54 @@ class AzureServicesManager:
             return {"success": False, "error": str(e)}
 
     async def _migrate_to_search(self, source_data_path: str, domain: str, migration_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Azure Cognitive Search index creation with vector capabilities"""
+        """Azure Cognitive Search migration with semantic search configuration"""
         try:
             from pathlib import Path
-            search_service = self.get_service('search')
-            if not search_service:
-                raise RuntimeError("Search service not initialized")
-            index_name = f"rag-index-{domain}"
-            index_schema = {
-                "name": index_name,
-                "fields": [
-                    {"name": "id", "type": "Edm.String", "key": True, "searchable": False},
-                    {"name": "content", "type": "Edm.String", "searchable": True, "analyzer": "standard.lucene"},
-                    {"name": "title", "type": "Edm.String", "searchable": True, "filterable": True},
-                    {"name": "domain", "type": "Edm.String", "filterable": True, "facetable": True},
-                    {"name": "source", "type": "Edm.String", "filterable": True},
-                    {"name": "contentVector", "type": "Collection(Edm.Single)", "searchable": True, "dimensions": 1536, "vectorSearchProfile": "vector-profile"}
-                ],
-                "vectorSearch": {
-                    "profiles": [
-                        {"name": "vector-profile", "algorithm": "hnsw-config"}
-                    ],
-                    "algorithms": [
-                        {"name": "hnsw-config"}
-                    ]
-                }
-            }
-            index_result = await search_service.create_index_async(index_schema)
-            if not index_result.get("success", False):
-                return {"success": False, "error": f"Index creation failed: {index_result.get('error')}"}
+            from core.azure_search.search_client import AzureCognitiveSearchClient
             from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
+            search_client = self.get_service('search')
+            if not search_client:
+                raise RuntimeError("Azure Search client not initialized")
+            index_name = f"{azure_settings.get_resource_name('search', domain)}"
             knowledge_extractor = AzureOpenAIKnowledgeExtractor(domain)
             source_path = Path(source_data_path)
-            texts = []
-            sources = []
+            processed_documents = []
             for file_path in source_path.glob("*.md"):
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                        if content.strip():
-                            texts.append(content)
-                            sources.append(str(file_path))
-                except Exception as e:
-                    logger.warning(f"Failed to read {file_path}: {e}")
-            if not texts:
-                return {"success": False, "error": "No valid text content found for indexing"}
-            extraction_results = await knowledge_extractor.extract_knowledge_from_texts(texts, sources)
-            if not extraction_results.get("success", False):
-                return {"success": False, "error": f"Knowledge extraction failed: {extraction_results.get('error')}"}
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                extraction_result = await knowledge_extractor.extract_knowledge_from_texts([content], [file_path.name])
+                if extraction_result.get("success", False):
+                    knowledge_data = knowledge_extractor.get_extracted_knowledge()
+                    search_document = {
+                        "id": f"{domain}_{file_path.stem}",
+                        "domain": domain,
+                        "title": file_path.stem.replace('_', ' ').title(),
+                        "content": content,
+                        "file_name": file_path.name,
+                        "entities": list(knowledge_data.get("entities", {}).keys()),
+                        "entity_types": [entity.get("entity_type", "") for entity in knowledge_data.get("entities", {}).values()],
+                        "relation_types": list(set(rel.get("relation_type", "") for rel in knowledge_data.get("relations", []))),
+                        "extraction_confidence": knowledge_data.get("extraction_metadata", {}).get("confidence", 1.0),
+                        "last_updated": migration_context["start_time"]
+                    }
+                    processed_documents.append(search_document)
+            if not processed_documents:
+                return {"success": False, "error": "No documents processed for search indexing"}
+            index_result = await search_client.create_or_update_index(
+                index_name=index_name,
+                documents=processed_documents,
+                domain=domain
+            )
+            return {
+                "success": True,
+                "index_name": index_name,
+                "documents_indexed": len(processed_documents),
+                "index_operation_result": index_result,
+                "migration_context": migration_context
+            }
+        except Exception as e:
+            logger.error(f"Search migration failed: {e}")
+            return {"success": False, "error": str(e)}
             knowledge_data = knowledge_extractor.get_extracted_knowledge()
             search_documents = []
             for doc_id, doc_data in knowledge_data["documents"].items():
@@ -190,7 +190,7 @@ class AzureServicesManager:
             return {"success": False, "error": str(e)}
 
     async def _migrate_to_cosmos(self, source_data_path: str, domain: str, migration_context: Dict[str, Any]) -> Dict[str, Any]:
-        """Azure Cosmos DB Gremlin graph population with entity/relation migration"""
+        """Azure Cosmos DB Gremlin graph population with async entity/relation migration and robust error handling."""
         try:
             from pathlib import Path
             import json
@@ -207,9 +207,9 @@ class AzureServicesManager:
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
-                        if content.strip():
-                            texts.append(content)
-                            sources.append(str(file_path))
+                    if content.strip():
+                        texts.append(content)
+                        sources.append(str(file_path))
                 except Exception as e:
                     logger.warning(f"Failed to read {file_path}: {e}")
             if not texts:
@@ -220,53 +220,71 @@ class AzureServicesManager:
             knowledge_data = knowledge_extractor.get_extracted_knowledge()
             entities_created = []
             entity_failures = []
+            # Async batch entity insertion
             for entity_id, entity_data in knowledge_data["entities"].items():
                 try:
                     entity_creation_data = {
-                        "id": entity_id,
+                        "entity_id": entity_id,
                         "text": entity_data["text"],
                         "entity_type": entity_data["entity_type"],
+                        "domain": domain,
                         "confidence": entity_data.get("confidence", 1.0),
+                        "extraction_method": "azure_openai",
+                        "source_documents": entity_data.get("source_documents", []),
+                        "migration_id": migration_context.get("migration_id"),
+                        "created_at": datetime.now().isoformat(),
                         "metadata": json.dumps({
-                            "migration_id": migration_context["migration_id"],
+                            "migration_id": migration_context.get("migration_id"),
                             "source": entity_data.get("source", "migration")
                         })
                     }
-                    result = cosmos_client.add_entity(entity_creation_data, domain)
-                    if result.get("success", False):
+                    result = await cosmos_client.store_entity_with_embeddings(entity_creation_data)
+                    if result:
                         entities_created.append(entity_id)
                     else:
-                        entity_failures.append({"entity_id": entity_id, "error": result.get("error")})
+                        entity_failures.append({"entity_id": entity_id, "error": "Insert failed"})
                 except Exception as e:
                     entity_failures.append({"entity_id": entity_id, "error": str(e)})
             relations_created = []
             relation_failures = []
+            # Async batch relation insertion
             for relation_data in knowledge_data["relations"]:
                 try:
                     relation_creation_data = {
-                        "id": relation_data["relation_id"],
-                        "head_entity": relation_data["head_entity"],
-                        "tail_entity": relation_data["tail_entity"],
+                        "relation_id": relation_data["relation_id"],
                         "relation_type": relation_data["relation_type"],
+                        "domain": domain,
                         "confidence": relation_data.get("confidence", 1.0),
-                        "created_at": datetime.now().isoformat()
+                        "extraction_method": "azure_openai",
+                        "source_documents": relation_data.get("source_documents", []),
+                        "migration_id": migration_context.get("migration_id"),
+                        "created_at": datetime.now().isoformat(),
+                        "metadata": json.dumps({
+                            "migration_id": migration_context.get("migration_id"),
+                            "source": relation_data.get("source", "migration")
+                        })
                     }
-                    result = cosmos_client.add_relationship(relation_creation_data, domain)
-                    if result.get("success", False):
+                    result = await cosmos_client.store_relation_with_embeddings(
+                        source_entity_id=relation_data["head_entity"],
+                        target_entity_id=relation_data["tail_entity"],
+                        relation_data=relation_creation_data
+                    )
+                    if result:
                         relations_created.append(relation_data["relation_id"])
                     else:
-                        relation_failures.append({"relation_id": relation_data["relation_id"], "error": result.get("error")})
+                        relation_failures.append({"relation_id": relation_data["relation_id"], "error": "Insert failed"})
                 except Exception as e:
                     relation_failures.append({"relation_id": relation_data["relation_id"], "error": str(e)})
-            graph_stats = cosmos_client.get_graph_statistics(domain)
-            validated_entities = graph_stats.get("vertex_count", 0)
-            validated_relations = graph_stats.get("edge_count", 0)
+            # Validate graph statistics
+            graph_stats = await cosmos_client.get_graph_change_metrics(domain)
+            validated_entities = graph_stats.get("new_entities", 0)
+            validated_relations = graph_stats.get("new_relations", 0)
             if self.app_insights and self.app_insights.enabled:
                 self.app_insights.track_event(
                     name="azure_cosmos_migration",
                     properties={
                         "domain": domain,
-                        "migration_id": migration_context["migration_id"],
+                        "migration_id": migration_context.get("migration_id"),
                         "database": azure_settings.azure_cosmos_database
                     },
                     measurements={

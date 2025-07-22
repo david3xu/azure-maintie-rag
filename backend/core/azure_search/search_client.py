@@ -16,6 +16,58 @@ logger = logging.getLogger(__name__)
 
 
 class AzureCognitiveSearchClient:
+
+    async def create_or_update_index(self, index_name: str, documents: List[Dict[str, Any]], domain: str) -> Dict[str, Any]:
+        """Create or update search index with domain-specific schema and upload documents in batches."""
+        try:
+            from azure.search.documents.indexes.models import SearchIndex, SearchField, SearchFieldDataType
+            # Define index schema
+            fields = [
+                SearchField(name="id", type=SearchFieldDataType.String, key=True),
+                SearchField(name="domain", type=SearchFieldDataType.String, filterable=True),
+                SearchField(name="title", type=SearchFieldDataType.String, searchable=True),
+                SearchField(name="content", type=SearchFieldDataType.String, searchable=True),
+                SearchField(name="file_name", type=SearchFieldDataType.String, filterable=True),
+                SearchField(name="entities", type=SearchFieldDataType.Collection(SearchFieldDataType.String), searchable=True, filterable=True),
+                SearchField(name="entity_types", type=SearchFieldDataType.Collection(SearchFieldDataType.String), filterable=True),
+                SearchField(name="relation_types", type=SearchFieldDataType.Collection(SearchFieldDataType.String), filterable=True),
+                SearchField(name="extraction_confidence", type=SearchFieldDataType.Double, filterable=True),
+                SearchField(name="last_updated", type=SearchFieldDataType.String, filterable=True)
+            ]
+            index_schema = SearchIndex(name=index_name, fields=fields)
+            # Create or update index
+            try:
+                self.index_client.get_index(index_name)
+                self.index_client.delete_index(index_name)
+            except Exception:
+                pass
+            self.index_client.create_index(index_schema)
+            # Upload documents in batches
+            search_client = SearchClient(
+                endpoint=self.endpoint,
+                index_name=index_name,
+                credential=self.credential
+            )
+            batch_size = getattr(azure_settings, 'azure_search_batch_size', 100)
+            upload_results = []
+            for i in range(0, len(documents), batch_size):
+                batch = documents[i:i + batch_size]
+                result = search_client.upload_documents(documents=batch)
+                upload_results.append({
+                    "batch_start": i,
+                    "batch_size": len(batch),
+                    "success_count": len([r for r in result if r.succeeded]),
+                    "failed_count": len([r for r in result if not r.succeeded])
+                })
+            return {
+                "index_created": True,
+                "index_name": index_name,
+                "documents_uploaded": len(documents),
+                "upload_results": upload_results
+            }
+        except Exception as e:
+            logger.error(f"Index creation or document upload failed: {e}")
+            return {"index_created": False, "error": str(e), "index_name": index_name}
     """Universal Azure Cognitive Search client - follows azure_openai.py pattern"""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
