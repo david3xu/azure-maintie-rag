@@ -211,13 +211,34 @@ class EnterpriseGNNPipelineOrchestrator:
         domain: str
     ) -> Dict[str, int]:
         """Update entity embeddings in Cosmos DB"""
+        updated_count = 0
         try:
-            # This would update entities with new embeddings
-            # Simplified implementation
-            return {"entities_updated": 0}
+            for entity_id in entities:
+                embedding = embeddings.get(entity_id)
+                if embedding is not None:
+                    # Convert embedding to comma-separated string if needed
+                    if hasattr(embedding, 'tolist'):
+                        embedding_str = ','.join(map(str, embedding.tolist()))
+                        embedding_dim = len(embedding)
+                    elif isinstance(embedding, (list, tuple)):
+                        embedding_str = ','.join(map(str, embedding))
+                        embedding_dim = len(embedding)
+                    else:
+                        embedding_str = str(embedding)
+                        embedding_dim = 0
+                    update_query = f"""
+                        g.V().has('entity_id', '{entity_id}')
+                            .property('gnn_embeddings', '{embedding_str}')
+                            .property('embedding_dimension', {embedding_dim})
+                            .property('embedding_updated_at', '{datetime.now().isoformat()}')
+                    """
+                    await self.cosmos_client._execute_gremlin_query(update_query)
+                    updated_count += 1
+            logger.info(f"Updated {updated_count} entity embeddings in Cosmos DB for domain '{domain}'")
+            return {"entities_updated": updated_count}
         except Exception as e:
             logger.error(f"Failed to update entity embeddings: {e}")
-            return {"entities_updated": 0}
+            return {"entities_updated": updated_count}
 
 
 async def main():

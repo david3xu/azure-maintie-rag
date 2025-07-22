@@ -31,6 +31,166 @@ logger = logging.getLogger(__name__)
 
 
 class AzureMLGNNProcessor:
+
+    async def enhance_search_results(
+        self,
+        search_results: List[Dict[str, Any]],
+        analysis_results: Dict[str, Any],
+        knowledge_graph: Any = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Enterprise GNN-powered search enhancement using pre-computed embeddings
+        Integrates with Azure Cosmos DB for embedding retrieval and similarity computation
+        """
+        import numpy as np
+        import logging
+        logger = logging.getLogger(__name__)
+        if not search_results:
+            logger.info("No search results to enhance")
+            return search_results
+        try:
+            enhancement_weight = 0.3
+            vector_weight = 0.7
+            query_entities = analysis_results.get("entities_detected", [])
+            query_concepts = analysis_results.get("concepts_detected", [])
+            if not query_entities and not query_concepts:
+                logger.info("No entities or concepts detected for GNN enhancement")
+                return search_results
+            logger.info(f"Enhancing {len(search_results)} search results using {len(query_entities)} entities and {len(query_concepts)} concepts")
+            query_embeddings = await self._retrieve_query_embeddings(query_entities + query_concepts)
+            if not query_embeddings:
+                logger.info("No GNN embeddings found for query entities")
+                return search_results
+            enhanced_results = []
+            for result in search_results:
+                try:
+                    enhanced_result = result.copy()
+                    doc_entities = result.get("entities", [])
+                    doc_content = result.get("content", "")
+                    if not doc_entities and doc_content:
+                        doc_entities = await self._extract_entities_from_content(doc_content)
+                    gnn_similarity = await self._calculate_gnn_similarity(query_embeddings, doc_entities)
+                    original_score = result.get("score", 0.0)
+                    enhanced_score = (
+                        original_score * vector_weight +
+                        gnn_similarity * enhancement_weight
+                    )
+                    enhanced_result.update({
+                        "gnn_similarity": gnn_similarity,
+                        "enhanced_score": enhanced_score,
+                        "original_score": original_score,
+                        "enhancement_method": "gnn_pre_computed",
+                        "doc_entities": doc_entities,
+                        "enhancement_weight": enhancement_weight
+                    })
+                    enhanced_results.append(enhanced_result)
+                except Exception as e:
+                    logger.warning(f"Failed to enhance result {result.get('doc_id', 'unknown')}: {e}")
+                    enhanced_results.append(result)
+            enhanced_results.sort(key=lambda x: x.get("enhanced_score", x.get("score", 0.0)), reverse=True)
+            original_scores = [r.get("score", 0.0) for r in search_results]
+            enhanced_scores = [r.get("enhanced_score", r.get("score", 0.0)) for r in enhanced_results]
+            avg_improvement = (
+                (sum(enhanced_scores) / len(enhanced_scores)) -
+                (sum(original_scores) / len(original_scores))
+            ) if enhanced_scores and original_scores else 0.0
+            logger.info(f"GNN enhancement completed: average score improvement = {avg_improvement:.4f}")
+            return enhanced_results
+        except Exception as e:
+            logger.error(f"GNN search enhancement failed: {e}")
+            return search_results
+
+    async def _retrieve_query_embeddings(self, entities: List[str]) -> Dict[str, Any]:
+        """
+        Retrieve pre-computed GNN embeddings from Azure Cosmos DB
+        Uses batch querying for performance optimization
+        """
+        if not entities:
+            return {}
+        try:
+            from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
+            cosmos_client = AzureCosmosGremlinClient()
+            embeddings = {}
+            batch_size = 10
+            entity_batches = [entities[i:i + batch_size] for i in range(0, len(entities), batch_size)]
+            for batch in entity_batches:
+                try:
+                    entity_filters = " or ".join([f"has('text', '{entity}')" for entity in batch])
+                    batch_query = f"""
+                        g.V().has('domain', '{self.domain}')
+                            .where({entity_filters})
+                            .by('gnn_embeddings')
+                    """
+                    batch_results = cosmos_client._execute_gremlin_query_safe(batch_query, timeout_seconds=30)
+                    if batch_results:
+                        for result in batch_results:
+                            entity_text = result.get('text')
+                            embedding = result.get('gnn_embeddings')
+                            if entity_text and embedding is not None:
+                                embeddings[entity_text] = embedding
+                except Exception as e:
+                    continue
+            return embeddings
+        except Exception as e:
+            return {}
+
+    async def _calculate_gnn_similarity(
+        self,
+        query_embeddings: Dict[str, Any],
+        doc_entities: List[str]
+    ) -> float:
+        """
+        Calculate similarity using pre-computed GNN embeddings
+        Implements vectorized computation for performance
+        """
+        import numpy as np
+        if not query_embeddings or not doc_entities:
+            return 0.0
+        try:
+            doc_embeddings = await self._retrieve_query_embeddings(doc_entities)
+            if not doc_embeddings:
+                return 0.0
+            query_vecs = list(query_embeddings.values())
+            doc_vecs = list(doc_embeddings.values())
+            if not query_vecs or not doc_vecs:
+                return 0.0
+            query_avg = np.mean(query_vecs, axis=0)
+            doc_avg = np.mean(doc_vecs, axis=0)
+            dot_product = np.dot(query_avg, doc_avg)
+            query_norm = np.linalg.norm(query_avg)
+            doc_norm = np.linalg.norm(doc_avg)
+            if query_norm == 0 or doc_norm == 0:
+                return 0.0
+            similarity = dot_product / (query_norm * doc_norm)
+            similarity = max(0.0, min(1.0, (similarity + 1.0) / 2.0))
+            return float(similarity)
+        except Exception as e:
+            return 0.0
+
+    async def _extract_entities_from_content(self, content: str) -> List[str]:
+        """
+        Extract entities from document content using existing knowledge extractor
+        Fallback method when entities are not available in search metadata
+        """
+        try:
+            if not content or len(content.strip()) < 10:
+                return []
+            from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
+            extractor = AzureOpenAIKnowledgeExtractor(self.domain)
+            extraction_results = await extractor.extract_knowledge_from_texts([content], ["search_result"])
+            if extraction_results.get("success", False):
+                knowledge_data = extractor.get_extracted_knowledge()
+                entities = list(knowledge_data.get("entities", {}).keys())
+                entity_texts = []
+                for entity_id, entity_data in knowledge_data.get("entities", {}).items():
+                    entity_text = entity_data.get("text", "")
+                    if entity_text:
+                        entity_texts.append(entity_text)
+                return entity_texts[:10]
+            else:
+                return []
+        except Exception as e:
+            return []
     """Convert universal text knowledge to GNN-ready format for any domain"""
 
     def __init__(self, text_processor: AzureOpenAITextProcessor, domain: str = "general"):

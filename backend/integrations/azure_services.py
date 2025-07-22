@@ -19,6 +19,278 @@ logger = logging.getLogger(__name__)
 
 
 class AzureServicesManager:
+    async def _migrate_to_storage(self, source_data_path: str, domain: str, migration_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Azure Blob Storage migration with multi-account orchestration"""
+        try:
+            from pathlib import Path
+            import aiofiles
+
+            storage_client = self.get_rag_storage_client()
+            if not storage_client:
+                raise RuntimeError("RAG storage client not initialized")
+
+            container_name = f"{azure_settings.azure_blob_container}-{domain}"
+            source_path = Path(source_data_path)
+            if not source_path.exists():
+                return {"success": False, "error": f"Source path not found: {source_data_path}"}
+
+            uploaded_files = []
+            failed_uploads = []
+
+            for file_path in source_path.glob("*.md"):
+                try:
+                    async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
+                        content = await f.read()
+                    blob_name = f"{domain}/{file_path.name}"
+                    blob_metadata = {
+                        "domain": domain,
+                        "migration_id": migration_context["migration_id"],
+                        "source_file": file_path.name,
+                        "environment": azure_settings.azure_environment
+                    }
+                    upload_result = await storage_client.upload_blob_async(
+                        container_name=container_name,
+                        blob_name=blob_name,
+                        data=content.encode('utf-8'),
+                        metadata=blob_metadata,
+                        overwrite=True
+                    )
+                    if upload_result.get("success", False):
+                        uploaded_files.append(blob_name)
+                    else:
+                        failed_uploads.append({"file": file_path.name, "error": upload_result.get("error")})
+                except Exception as file_error:
+                    failed_uploads.append({"file": file_path.name, "error": str(file_error)})
+
+            if self.app_insights and self.app_insights.enabled:
+                self.app_insights.track_event(
+                    name="azure_storage_migration",
+                    properties={
+                        "domain": domain,
+                        "migration_id": migration_context["migration_id"],
+                        "container": container_name
+                    },
+                    measurements={
+                        "files_uploaded": len(uploaded_files),
+                        "files_failed": len(failed_uploads),
+                        "duration_seconds": time.time() - migration_context["start_time"]
+                    }
+                )
+
+            return {
+                "success": len(failed_uploads) == 0,
+                "uploaded_files": uploaded_files,
+                "failed_uploads": failed_uploads,
+                "container_name": container_name,
+                "total_files": len(uploaded_files) + len(failed_uploads)
+            }
+        except Exception as e:
+            logger.error(f"Storage migration failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _migrate_to_search(self, source_data_path: str, domain: str, migration_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Azure Cognitive Search index creation with vector capabilities"""
+        try:
+            from pathlib import Path
+            search_service = self.get_service('search')
+            if not search_service:
+                raise RuntimeError("Search service not initialized")
+            index_name = f"rag-index-{domain}"
+            index_schema = {
+                "name": index_name,
+                "fields": [
+                    {"name": "id", "type": "Edm.String", "key": True, "searchable": False},
+                    {"name": "content", "type": "Edm.String", "searchable": True, "analyzer": "standard.lucene"},
+                    {"name": "title", "type": "Edm.String", "searchable": True, "filterable": True},
+                    {"name": "domain", "type": "Edm.String", "filterable": True, "facetable": True},
+                    {"name": "source", "type": "Edm.String", "filterable": True},
+                    {"name": "contentVector", "type": "Collection(Edm.Single)", "searchable": True, "dimensions": 1536, "vectorSearchProfile": "vector-profile"}
+                ],
+                "vectorSearch": {
+                    "profiles": [
+                        {"name": "vector-profile", "algorithm": "hnsw-config"}
+                    ],
+                    "algorithms": [
+                        {"name": "hnsw-config"}
+                    ]
+                }
+            }
+            index_result = await search_service.create_index_async(index_schema)
+            if not index_result.get("success", False):
+                return {"success": False, "error": f"Index creation failed: {index_result.get('error')}"}
+            from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
+            knowledge_extractor = AzureOpenAIKnowledgeExtractor(domain)
+            source_path = Path(source_data_path)
+            texts = []
+            sources = []
+            for file_path in source_path.glob("*.md"):
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        if content.strip():
+                            texts.append(content)
+                            sources.append(str(file_path))
+                except Exception as e:
+                    logger.warning(f"Failed to read {file_path}: {e}")
+            if not texts:
+                return {"success": False, "error": "No valid text content found for indexing"}
+            extraction_results = await knowledge_extractor.extract_knowledge_from_texts(texts, sources)
+            if not extraction_results.get("success", False):
+                return {"success": False, "error": f"Knowledge extraction failed: {extraction_results.get('error')}"}
+            knowledge_data = knowledge_extractor.get_extracted_knowledge()
+            search_documents = []
+            for doc_id, doc_data in knowledge_data["documents"].items():
+                content = doc_data["text"]
+                from core.azure_search.vector_service import AzureSearchVectorService
+                vector_service = AzureSearchVectorService(domain)
+                try:
+                    embedding = await vector_service._get_embedding(content)
+                    embedding_list = embedding.tolist() if hasattr(embedding, 'tolist') else list(embedding)
+                except Exception as e:
+                    logger.warning(f"Embedding generation failed for {doc_id}: {e}")
+                    embedding_list = [0.0] * 1536
+                search_doc = {
+                    "id": doc_id,
+                    "content": content,
+                    "title": doc_data.get("title", ""),
+                    "domain": domain,
+                    "source": doc_data.get("metadata", {}).get("source", "unknown"),
+                    "contentVector": embedding_list
+                }
+                search_documents.append(search_doc)
+            if search_documents:
+                upload_result = await search_service.upload_documents_async(search_documents)
+                indexed_count = upload_result.get("uploaded_count", 0)
+            else:
+                indexed_count = 0
+            if self.app_insights and self.app_insights.enabled:
+                self.app_insights.track_event(
+                    name="azure_search_migration",
+                    properties={
+                        "domain": domain,
+                        "migration_id": migration_context["migration_id"],
+                        "index_name": index_name
+                    },
+                    measurements={
+                        "documents_indexed": indexed_count,
+                        "extraction_entities": len(knowledge_data.get("entities", {})),
+                        "extraction_relations": len(knowledge_data.get("relations", [])),
+                        "duration_seconds": time.time() - migration_context["start_time"]
+                    }
+                )
+            return {
+                "success": indexed_count > 0,
+                "index_name": index_name,
+                "documents_indexed": indexed_count,
+                "entities_extracted": len(knowledge_data.get("entities", {})),
+                "relations_extracted": len(knowledge_data.get("relations", []))
+            }
+        except Exception as e:
+            logger.error(f"Search migration failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _migrate_to_cosmos(self, source_data_path: str, domain: str, migration_context: Dict[str, Any]) -> Dict[str, Any]:
+        """Azure Cosmos DB Gremlin graph population with entity/relation migration"""
+        try:
+            from pathlib import Path
+            import json
+            from datetime import datetime
+            cosmos_client = self.get_service('cosmos')
+            if not cosmos_client:
+                raise RuntimeError("Cosmos DB client not initialized")
+            from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
+            knowledge_extractor = AzureOpenAIKnowledgeExtractor(domain)
+            source_path = Path(source_data_path)
+            texts = []
+            sources = []
+            for file_path in source_path.glob("*.md"):
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        if content.strip():
+                            texts.append(content)
+                            sources.append(str(file_path))
+                except Exception as e:
+                    logger.warning(f"Failed to read {file_path}: {e}")
+            if not texts:
+                return {"success": False, "error": "No valid text content found for graph creation"}
+            extraction_results = await knowledge_extractor.extract_knowledge_from_texts(texts, sources)
+            if not extraction_results.get("success", False):
+                return {"success": False, "error": f"Knowledge extraction failed: {extraction_results.get('error')}"}
+            knowledge_data = knowledge_extractor.get_extracted_knowledge()
+            entities_created = []
+            entity_failures = []
+            for entity_id, entity_data in knowledge_data["entities"].items():
+                try:
+                    entity_creation_data = {
+                        "id": entity_id,
+                        "text": entity_data["text"],
+                        "entity_type": entity_data["entity_type"],
+                        "confidence": entity_data.get("confidence", 1.0),
+                        "metadata": json.dumps({
+                            "migration_id": migration_context["migration_id"],
+                            "source": entity_data.get("source", "migration")
+                        })
+                    }
+                    result = cosmos_client.add_entity(entity_creation_data, domain)
+                    if result.get("success", False):
+                        entities_created.append(entity_id)
+                    else:
+                        entity_failures.append({"entity_id": entity_id, "error": result.get("error")})
+                except Exception as e:
+                    entity_failures.append({"entity_id": entity_id, "error": str(e)})
+            relations_created = []
+            relation_failures = []
+            for relation_data in knowledge_data["relations"]:
+                try:
+                    relation_creation_data = {
+                        "id": relation_data["relation_id"],
+                        "head_entity": relation_data["head_entity"],
+                        "tail_entity": relation_data["tail_entity"],
+                        "relation_type": relation_data["relation_type"],
+                        "confidence": relation_data.get("confidence", 1.0),
+                        "created_at": datetime.now().isoformat()
+                    }
+                    result = cosmos_client.add_relationship(relation_creation_data, domain)
+                    if result.get("success", False):
+                        relations_created.append(relation_data["relation_id"])
+                    else:
+                        relation_failures.append({"relation_id": relation_data["relation_id"], "error": result.get("error")})
+                except Exception as e:
+                    relation_failures.append({"relation_id": relation_data["relation_id"], "error": str(e)})
+            graph_stats = cosmos_client.get_graph_statistics(domain)
+            validated_entities = graph_stats.get("vertex_count", 0)
+            validated_relations = graph_stats.get("edge_count", 0)
+            if self.app_insights and self.app_insights.enabled:
+                self.app_insights.track_event(
+                    name="azure_cosmos_migration",
+                    properties={
+                        "domain": domain,
+                        "migration_id": migration_context["migration_id"],
+                        "database": azure_settings.azure_cosmos_database
+                    },
+                    measurements={
+                        "entities_created": len(entities_created),
+                        "relations_created": len(relations_created),
+                        "validated_entities": validated_entities,
+                        "validated_relations": validated_relations,
+                        "duration_seconds": time.time() - migration_context["start_time"]
+                    }
+                )
+            return {
+                "success": len(entity_failures) == 0 and len(relation_failures) == 0,
+                "entities_created": entities_created,
+                "relations_created": relations_created,
+                "entity_failures": entity_failures,
+                "relation_failures": relation_failures,
+                "validated_entities": validated_entities,
+                "validated_relations": validated_relations,
+                "total_entities": len(entities_created) + len(entity_failures),
+                "total_relations": len(relations_created) + len(relation_failures)
+            }
+        except Exception as e:
+            logger.error(f"Cosmos migration failed: {e}")
+            return {"success": False, "error": str(e)}
     """Unified manager for all Azure services - enterprise health monitoring"""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
