@@ -329,36 +329,8 @@ class AzureOpenAITextProcessor:
             logger.error(f"Error saving universal processed data: {e}")
 
     def _create_sample_knowledge(self) -> Dict[str, Any]:
-        """Create sample knowledge for demonstration when no text files exist"""
-        logger.info("Creating sample knowledge for demonstration...")
-
-        # Create sample document
-        sample_doc = UniversalDocument(
-            doc_id="sample_doc",
-            text="This is a sample document for Universal RAG demonstration.",
-            title="Sample Document",
-            metadata={"source": "sample_data", "domain": self.domain_name}
-        )
-        self.documents["sample_doc"] = sample_doc
-
-        # Create sample entity
-        sample_entity = UniversalEntity(
-            entity_id="sample_entity",
-            text="sample text",
-            entity_type="sample_type",
-            confidence=0.8,
-            metadata={"source": "sample_data"}
-        )
-        self.entities["sample_entity"] = sample_entity
-        self.discovered_entity_types.add("sample_type")
-
-        return {
-            "domain_name": self.domain_name,
-            "processing_approach": "universal_sample",
-            "total_entities": 1,
-            "total_documents": 1,
-            "message": "Sample data created - add .txt/.md files to data/raw/ for real processing"
-        }
+        """Raise error if no real data is present. No sample/placeholder knowledge allowed."""
+        raise NotImplementedError("No real data found. Sample/placeholder knowledge is not allowed. Please add real .txt/.md files to data/raw/.")
 
     def get_text_corpus(self) -> List[str]:
         """Get all text content as a corpus for further processing"""

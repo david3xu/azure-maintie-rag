@@ -751,33 +751,5 @@ async def create_universal_rag_from_directory(
 
 
 if __name__ == "__main__":
-    # Example usage
-    async def main():
-        # Test with sample texts
-        sample_texts = [
-            "The system includes multiple components that work together for optimal performance.",
-            "Regular maintenance is essential for preventing failures and ensuring reliability.",
-            "When issues occur, systematic troubleshooting helps identify root causes quickly."
-        ]
-
-        # Create Universal RAG system
-        orchestrator = await create_universal_rag_from_texts(sample_texts, "test_domain")
-
-        # Test query processing
-        query = "How can I prevent system failures?"
-        results = await orchestrator.process_query(query)
-
-        print("Universal RAG Test Results:")
-        print(f"Success: {results['success']}")
-        if results['success']:
-            print(f"Query: {results['query']}")
-            print(f"Response: {results['response']}")
-            print(f"Processing time: {results['processing_time']:.2f}s")
-        else:
-            print(f"Error: {results['error']}")
-
-        # Print system status
-        status = orchestrator.get_system_status()
-        print(f"\nSystem Status: {status}")
-
-    asyncio.run(main())
+    # No sample/example/demo logic allowed. Raise error if run as script.
+    raise NotImplementedError("Running this module as a script is not allowed. No sample/demo logic permitted.")

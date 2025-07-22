@@ -302,25 +302,5 @@ def create_universal_llm_interface(domain: str = "general") -> AzureOpenAIComple
 
 
 if __name__ == "__main__":
-    # Example usage
-    llm = AzureOpenAICompletionService("general")
-
-    # Test connection
-    test_result = llm.test_connection()
-    print(f"Connection test: {test_result}")
-
-    # Sample response generation
-    sample_results = [
-        UniversalSearchResult(
-            doc_id="doc1",
-            content="System monitoring requires regular inspection",
-            score=0.8,
-            source="universal_search"
-        )
-    ]
-
-    response = llm.generate_universal_response(
-        "How do I monitor a system?",
-        sample_results
-    )
-    print(f"Generated response: {response.answer[:100]}...")
+    # No sample/example/demo logic allowed. Raise error if run as script.
+    raise NotImplementedError("Running this module as a script is not allowed. No sample/demo logic permitted.")

@@ -22,7 +22,6 @@ The Universal RAG system will:
 4. Generate responses based on the information
 
 ## Key Features
-
 - **No domain assumptions**: Works with any markdown content
 - **Dynamic entity types**: Automatically identifies entities
 - **Universal relations**: Finds relationships between concepts
