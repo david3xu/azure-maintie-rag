@@ -18,146 +18,55 @@ from integrations.azure_services import AzureServicesManager
 from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 
+from backend.core.workflow.azure_workflow_manager import get_workflow_manager
+from fastapi import Query
+from typing import Optional
+
 router = APIRouter()
 
-async def stream_azure_workflow(query_id: str, query: str, domain: str = "general") -> AsyncGenerator[str, None]:
+@router.get("/api/v1/query/stream/{query_id}")
+async def stream_azure_rag_workflow(
+    query_id: str,
+    include_diagnostics: bool = Query(False, description="Include Azure service diagnostics"),
+    azure_service_filter: Optional[str] = Query(None, description="Filter by specific Azure service")
+):
     """
-    Stream real Azure workflow steps from query_processing_workflow.py logic
-
-    This connects the frontend WorkflowProgress component to the actual
-    Azure services backend implementation, ensuring the UI reflects real processing steps.
+    Stream Azure RAG workflow with service-centric transparency
+    Simplified from three-layer to single configurable stream
     """
-
     try:
-        # Step 1: Azure Services Initialization
-        data = {
-            'event_type': 'progress',
-            'step_number': 1,
-            'step_name': 'azure_services_initialization',
-            'user_friendly_name': '[AZURE] Azure Services Initialization',
-            'status': 'in_progress',
-            'technology': 'AzureServicesManager',
-            'details': 'Initializing Azure services...',
-            'progress_percentage': 14
-        }
-        yield f"data: {json.dumps(data)}\n\n"
+        workflow_manager = get_workflow_manager(query_id)
+        if not workflow_manager:
+            raise HTTPException(status_code=404, detail=f"Workflow {query_id} not found")
 
-        # Initialize Azure services (real backend logic)
-        azure_services = AzureServicesManager()
-        await azure_services.initialize()
+        async def generate_azure_service_stream():
+            for step in workflow_manager.azure_steps:
+                if azure_service_filter and step.azure_service.value != azure_service_filter:
+                    continue
+                step_data = step.to_dict(include_diagnostics=include_diagnostics)
+                step_data.update({
+                    "stream_type": "azure_service_step",
+                    "azure_region": step.azure_region,
+                    "service_endpoint": step.service_endpoint
+                })
+                yield f"data: {json.dumps(step_data)}\n\n"
+                await asyncio.sleep(0.1)
+            summary = workflow_manager.get_azure_service_summary()
+            summary["stream_type"] = "azure_service_summary"
+            yield f"data: {json.dumps(summary)}\n\n"
 
-        data = {
-            'event_type': 'progress',
-            'step_number': 1,
-            'step_name': 'azure_services_initialization',
-            'user_friendly_name': '[AZURE] Azure Services Initialization',
-            'status': 'completed',
-            'technology': 'AzureServicesManager',
-            'details': 'Azure services initialized successfully',
-            'progress_percentage': 28
-        }
-        yield f"data: {json.dumps(data)}\n\n"
-
-        # Step 2: Azure OpenAI Integration
-        data = {
-            'event_type': 'progress',
-            'step_number': 2,
-            'step_name': 'azure_openai_integration',
-            'user_friendly_name': '[OPENAI] Azure OpenAI Integration',
-            'status': 'in_progress',
-            'technology': 'AzureOpenAIClient',
-            'details': 'Setting up Azure OpenAI integration...',
-            'progress_percentage': 35
-        }
-        yield f"data: {json.dumps(data)}\n\n"
-
-        openai_integration = AzureOpenAIClient()
-
-        data = {
-            'event_type': 'progress',
-            'step_number': 2,
-            'step_name': 'azure_openai_integration',
-            'user_friendly_name': '[OPENAI] Azure OpenAI Integration',
-            'status': 'completed',
-            'technology': 'AzureOpenAIClient',
-            'details': 'Azure OpenAI integration ready',
-            'progress_percentage': 42
-        }
-        yield f"data: {json.dumps(data)}\n\n"
-
-        # Step 3: Azure Cognitive Search
-        data = {
-            'event_type': 'progress',
-            'step_number': 3,
-            'step_name': 'azure_cognitive_search',
-            'user_friendly_name': '[SEARCH] Azure Cognitive Search',
-            'status': 'in_progress',
-            'technology': 'Azure Cognitive Search',
-            'details': 'Searching for relevant documents...',
-            'progress_percentage': 56
-        }
-        yield f"data: {json.dumps(data)}\n\n"
-
-        # Execute real Azure search (same as scripts/query_processing_workflow.py)
-        index_name = f"rag-index-{domain}"
-        search_results = await azure_services.get_service('search').search_documents(
-            index_name, query, top_k=5
+        return StreamingResponse(
+            generate_azure_service_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Azure-RAG-Stream": "service-centric"
+            }
         )
-
-        data = {
-            'event_type': 'progress',
-            'step_number': 3,
-            'step_name': 'azure_cognitive_search',
-            'user_friendly_name': '[SEARCH] Azure Cognitive Search',
-            'status': 'completed',
-            'technology': 'Azure Cognitive Search',
-            'details': f'Found {len(search_results)} relevant documents',
-            'progress_percentage': 64
-        }
-        yield f"data: {json.dumps(data)}\n\n"
-
-        # Step 4: Azure Blob Storage Retrieval
-        data = {
-            'event_type': 'progress',
-            'step_number': 4,
-            'step_name': 'azure_blob_storage_retrieval',
-            'user_friendly_name': '[STORAGE] Azure Blob Storage Retrieval',
-            'status': 'in_progress',
-            'technology': 'Azure Blob Storage',
-            'details': 'Retrieving document content...',
-            'progress_percentage': 72
-        }
-        yield f"data: {json.dumps(data)}\n\n"
-
-        # Retrieve documents from Azure Blob Storage
-        container_name = f"rag-data-{domain}"
-        retrieved_docs = []
-
-        for i, result in enumerate(search_results[:3]):
-            blob_name = f"document_{i}.txt"
-            try:
-                content = await azure_services.get_service('rag_storage').download_text(container_name, blob_name)
-                retrieved_docs.append(content)
-            except Exception as e:
-                logger.warning(f"Could not retrieve document {i}: {e}")
-
-        data = {
-            'event_type': 'progress',
-            'step_number': 4,
-            'step_name': 'azure_blob_storage_retrieval',
-            'user_friendly_name': '[STORAGE] Azure Blob Storage Retrieval',
-            'status': 'completed',
-            'technology': 'Azure Blob Storage',
-            'details': f'Retrieved {len(retrieved_docs)} documents',
-            'progress_percentage': 80
-        }
-        yield f"data: {json.dumps(data)}\n\n"
-
-        # Step 5: Azure OpenAI Processing
-        data = {
-            'event_type': 'progress',
-            'step_number': 5,
-            'step_name': 'azure_openai_processing',
+    except Exception as e:
+        logger.error(f"Azure workflow streaming failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
             'user_friendly_name': '[OPENAI] Azure OpenAI Processing',
             'status': 'in_progress',
             'technology': 'Azure OpenAI',

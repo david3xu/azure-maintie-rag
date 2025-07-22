@@ -380,6 +380,23 @@ class Settings(BaseSettings):
         extra = "ignore"  # Allow extra fields from environment
 
 
+class AzureRegionalSettings(BaseSettings):
+    """Regional Azure service performance optimization"""
+    azure_primary_region: str = Field(env="AZURE_PRIMARY_REGION")
+    azure_secondary_regions: List[str] = Field(default_factory=list, env="AZURE_SECONDARY_REGIONS")
+    enable_regional_performance_tracking: bool = Field(default=True)
+
+    def get_optimal_service_region(self, service_type: str) -> str:
+        """Determine optimal Azure region for service type"""
+        regional_mapping = {
+            "azure_openai": self.azure_primary_region,  # Consistency priority
+            "cognitive_search": self.azure_primary_region,  # Data locality
+            "cosmos_db": "global",  # Multi-master deployment
+            "blob_storage": self.azure_primary_region  # Bandwidth optimization
+        }
+        return regional_mapping.get(service_type, self.azure_primary_region)
+
+
 # Global settings instance
 settings = Settings()
 
