@@ -218,6 +218,19 @@ class Settings(BaseSettings):
     ml_experiment_name: str = Field(default="universal-rag-gnn", env="ML_EXPERIMENT_NAME")
     ml_environment_name: str = Field(default="gnn-training-env", env="ML_ENVIRONMENT_NAME")
 
+    # Azure ML GNN Training Configuration
+    azure_ml_compute_cluster_name: str = Field(default="gnn-cluster", env="AZURE_ML_COMPUTE_CLUSTER_NAME")
+    azure_ml_training_environment: str = Field(default="gnn-training-env", env="AZURE_ML_TRAINING_ENVIRONMENT")
+    gnn_model_deployment_tier: str = Field(default="standard", env="GNN_MODEL_DEPLOYMENT_TIER")
+    gnn_batch_size: int = Field(default=32, env="GNN_BATCH_SIZE")
+    gnn_learning_rate: float = Field(default=0.01, env="GNN_LEARNING_RATE")
+    gnn_num_epochs: int = Field(default=100, env="GNN_NUM_EPOCHS")
+    gnn_training_compute_sku: str = Field(default="Standard_DS3_v2", env="GNN_TRAINING_COMPUTE_SKU")
+    gnn_model_deployment_endpoint: str = Field(default="gnn-inference-dev", env="GNN_MODEL_DEPLOYMENT_ENDPOINT")
+    gnn_training_enabled: bool = Field(default=True, env="GNN_TRAINING_ENABLED")
+    gnn_quality_threshold: float = Field(default=0.6, env="GNN_QUALITY_THRESHOLD")
+    gnn_testing_mode: str = Field(default="disabled", env="GNN_TESTING_MODE")
+
     # Environment-specific service configurations
     SERVICE_CONFIGS: ClassVar[Dict[str, Dict[str, Any]]] = {
         'dev': {

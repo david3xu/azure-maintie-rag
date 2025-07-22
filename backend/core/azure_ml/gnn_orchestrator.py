@@ -18,6 +18,7 @@ from azure.core.exceptions import ResourceNotFoundError
 from ..azure_cosmos.enhanced_gremlin_client import EnterpriseGremlinGraphManager
 from .gnn.trainer import UniversalGNNTrainer
 from .gnn.data_loader import load_graph_data_from_cosmos
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -95,17 +96,14 @@ class AzureGNNTrainingOrchestrator:
         training_type: str = "full"
     ) -> Job:
         """Submit GNN training job to Azure ML"""
-
         try:
-            # Prepare job configuration
             job_name = f"gnn-training-{domain}-{int(time.time())}"
-
             job_config = {
                 "display_name": job_name,
-                "experiment_name": "universal-rag-gnn",
+                "experiment_name": settings.azure_ml_experiment_name,
                 "description": f"GNN training for domain {domain} ({training_type})",
-                "compute": "gnn-cluster",  # Your compute cluster name
-                "environment": "gnn-training-env:latest",
+                "compute": settings.azure_ml_compute_cluster_name,
+                "environment": settings.azure_ml_training_environment,
                 "code": "backend/",
                 "command": [
                     "python", "scripts/train_comprehensive_gnn.py",
@@ -118,7 +116,7 @@ class AzureGNNTrainingOrchestrator:
                 "inputs": {
                     "graph_data": {
                         "type": AssetTypes.URI_FOLDER,
-                        "path": "azureml://datastores/workspaceblobstore/paths/graph_data/"
+                        "path": graph_data.get("export_path", "azureml://datastores/workspaceblobstore/paths/graph_data/")
                     },
                     "config": {
                         "type": AssetTypes.URI_FILE,
@@ -131,14 +129,10 @@ class AzureGNNTrainingOrchestrator:
                     }
                 }
             }
-
-            # Create and submit job
             job = Job(**job_config)
             submitted_job = self.ml_client.jobs.create_or_update(job)
-
             logger.info(f"Submitted GNN training job: {submitted_job.id}")
             return submitted_job
-
         except Exception as e:
             logger.error(f"Failed to submit Azure ML training job: {e}")
             raise
