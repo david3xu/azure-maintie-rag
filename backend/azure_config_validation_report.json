@@ -1,0 +1,32 @@
+{
+  "validation_summary": {
+    "overall_status": "healthy",
+    "total_validations": 3,
+    "healthy_validations": 3,
+    "validation_duration_ms": 37458.53638648987,
+    "timestamp": "2025-07-23T09:40:39.784556"
+  },
+  "validation_results": {
+    "core_configuration": {
+      "status": "healthy",
+      "services_validated": 4,
+      "timestamp": "2025-07-23T09:40:03.234878"
+    },
+    "optional_services": {
+      "status": "healthy",
+      "configured_services": 4,
+      "total_services": 4,
+      "timestamp": "2025-07-23T09:40:03.234952"
+    },
+    "environment_configuration": {
+      "status": "healthy",
+      "environment": "dev",
+      "region": "eastus",
+      "debug_mode": true,
+      "timestamp": "2025-07-23T09:40:39.784496"
+    }
+  },
+  "recommendations": [
+    "Verify Azure service credentials and network connectivity"
+  ]
+}
