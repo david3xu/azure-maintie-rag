@@ -374,6 +374,13 @@ class Settings(BaseSettings):
     azure_health_check_timeout_seconds: int = Field(default=30, env="AZURE_HEALTH_CHECK_TIMEOUT_SECONDS")
     azure_circuit_breaker_failure_threshold: int = Field(default=5, env="AZURE_CIRCUIT_BREAKER_FAILURE_THRESHOLD")
 
+    # Knowledge Discovery Settings
+    discovery_sample_size: int = Field(default=20, env="DISCOVERY_SAMPLE_SIZE")
+    max_discovery_batches: int = Field(default=20, env="MAX_DISCOVERY_BATCHES")
+    max_entity_types_discovery: int = Field(default=50, env="MAX_ENTITY_TYPES_DISCOVERY")
+    max_relation_types_discovery: int = Field(default=30, env="MAX_RELATION_TYPES_DISCOVERY")
+    max_triplet_extraction_batches: int = Field(default=100, env="MAX_TRIPLET_EXTRACTION_BATCHES")
+
     class Config:
         env_file = ".env"
         case_sensitive = False
