@@ -24,13 +24,14 @@ class OptimizedLLMExtractor:
     """Performance and cost optimized LLM knowledge extractor"""
 
     def __init__(self, domain_name: str, cache_dir: Optional[Path] = None):
-        super().__init__(domain_name, cache_dir)
+        # Remove the incorrect super().__init__ call
+        self.domain_name = domain_name
         self.cache_dir = cache_dir or (settings.BASE_DIR / "data" / "cache" / "llm_extractions")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
         # Performance settings
-        self.max_texts_for_discovery = 100  # Sample size for entity/relation discovery
-        self.batch_size = 10  # Process multiple texts per LLM call
+        self.max_texts_for_discovery = 100
+        self.batch_size = 10
         self.cache_enabled = True
 
         # Azure OpenAI client setup

@@ -37,6 +37,22 @@ class AzureServicesManager:
             uploaded_files = []
             failed_uploads = []
 
+            # ENTERPRISE CONTAINER PROVISIONING - Ensure container exists before upload
+            container_created = await storage_client.create_container(container_name)
+            if not container_created:
+                return {"success": False, "error": f"Failed to create or access container: {container_name}"}
+
+            # Container validation for enterprise compliance
+            if self.app_insights and self.app_insights.enabled:
+                self.app_insights.track_event(
+                    name="azure_container_provisioning",
+                    properties={
+                        "domain": domain,
+                        "container_name": container_name,
+                        "migration_id": migration_context["migration_id"]
+                    }
+                )
+
             for file_path in source_path.glob("*.md"):
                 try:
                     async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
@@ -48,17 +64,15 @@ class AzureServicesManager:
                         "source_file": file_path.name,
                         "environment": azure_settings.azure_environment
                     }
-                    upload_result = await storage_client.upload_blob_async(
+                    upload_result = await storage_client.upload_text(
                         container_name=container_name,
                         blob_name=blob_name,
-                        data=content.encode('utf-8'),
-                        metadata=blob_metadata,
-                        overwrite=True
+                        text=content
                     )
-                    if upload_result.get("success", False):
+                    if upload_result:
                         uploaded_files.append(blob_name)
                     else:
-                        failed_uploads.append({"file": file_path.name, "error": upload_result.get("error")})
+                        failed_uploads.append({"file": file_path.name, "error": "Upload failed - no blob name returned"})
                 except Exception as file_error:
                     failed_uploads.append({"file": file_path.name, "error": str(file_error)})
 
