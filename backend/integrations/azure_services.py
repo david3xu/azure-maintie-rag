@@ -82,7 +82,8 @@ class AzureServicesManager:
                 "uploaded_files": uploaded_files,
                 "failed_uploads": failed_uploads,
                 "container_name": container_name,
-                "total_files": len(uploaded_files) + len(failed_uploads)
+                "total_files": len(uploaded_files) + len(failed_uploads),
+                "error": f"Failed to upload {len(failed_uploads)} files: {[f['error'] for f in failed_uploads]}" if len(failed_uploads) > 0 else None
             }
         except Exception as e:
             logger.error(f"Storage migration failed: {e}")
@@ -133,57 +134,6 @@ class AzureServicesManager:
                 "documents_indexed": len(processed_documents),
                 "index_operation_result": index_result,
                 "migration_context": migration_context
-            }
-        except Exception as e:
-            logger.error(f"Search migration failed: {e}")
-            return {"success": False, "error": str(e)}
-            knowledge_data = knowledge_extractor.get_extracted_knowledge()
-            search_documents = []
-            for doc_id, doc_data in knowledge_data["documents"].items():
-                content = doc_data["text"]
-                from core.azure_search.vector_service import AzureSearchVectorService
-                vector_service = AzureSearchVectorService(domain)
-                try:
-                    embedding = await vector_service._get_embedding(content)
-                    embedding_list = embedding.tolist() if hasattr(embedding, 'tolist') else list(embedding)
-                except Exception as e:
-                    logger.warning(f"Embedding generation failed for {doc_id}: {e}")
-                    embedding_list = [0.0] * 1536
-                search_doc = {
-                    "id": doc_id,
-                    "content": content,
-                    "title": doc_data.get("title", ""),
-                    "domain": domain,
-                    "source": doc_data.get("metadata", {}).get("source", "unknown"),
-                    "contentVector": embedding_list
-                }
-                search_documents.append(search_doc)
-            if search_documents:
-                upload_result = await search_service.upload_documents_async(search_documents)
-                indexed_count = upload_result.get("uploaded_count", 0)
-            else:
-                indexed_count = 0
-            if self.app_insights and self.app_insights.enabled:
-                self.app_insights.track_event(
-                    name="azure_search_migration",
-                    properties={
-                        "domain": domain,
-                        "migration_id": migration_context["migration_id"],
-                        "index_name": index_name
-                    },
-                    measurements={
-                        "documents_indexed": indexed_count,
-                        "extraction_entities": len(knowledge_data.get("entities", {})),
-                        "extraction_relations": len(knowledge_data.get("relations", [])),
-                        "duration_seconds": time.time() - migration_context["start_time"]
-                    }
-                )
-            return {
-                "success": indexed_count > 0,
-                "index_name": index_name,
-                "documents_indexed": indexed_count,
-                "entities_extracted": len(knowledge_data.get("entities", {})),
-                "relations_extracted": len(knowledge_data.get("relations", []))
             }
         except Exception as e:
             logger.error(f"Search migration failed: {e}")
@@ -484,7 +434,7 @@ class AzureServicesManager:
         else:
             return {"status": "unknown", "service": service_name}
 
-    def migrate_data_to_azure(self, source_data_path: str, domain: str) -> Dict[str, Any]:
+    async def migrate_data_to_azure(self, source_data_path: str, domain: str) -> Dict[str, Any]:
         """Enterprise data migration with comprehensive error tracking"""
         import uuid
         migration_results = {
@@ -502,21 +452,21 @@ class AzureServicesManager:
 
         try:
             # 1. Storage migration with detailed tracking
-            storage_result = self._migrate_to_storage(source_data_path, domain, migration_context) if hasattr(self, '_migrate_to_storage') else {"success": False, "error": "Not implemented"}
+            storage_result = await self._migrate_to_storage(source_data_path, domain, migration_context)
             migration_results["storage_migration"] = storage_result
 
             if not storage_result["success"]:
                 raise RuntimeError(f"Storage migration failed: {storage_result.get('error')}")
 
             # 2. Search index migration with validation
-            search_result = self._migrate_to_search(source_data_path, domain, migration_context) if hasattr(self, '_migrate_to_search') else {"success": False, "error": "Not implemented"}
+            search_result = await self._migrate_to_search(source_data_path, domain, migration_context)
             migration_results["search_migration"] = search_result
 
             if not search_result["success"]:
                 raise RuntimeError(f"Search migration failed: {search_result.get('error')}")
 
             # 3. Cosmos DB migration with consistency checks
-            cosmos_result = self._migrate_to_cosmos(source_data_path, domain, migration_context) if hasattr(self, '_migrate_to_cosmos') else {"success": False, "error": "Not implemented"}
+            cosmos_result = await self._migrate_to_cosmos(source_data_path, domain, migration_context)
             migration_results["cosmos_migration"] = cosmos_result
 
             if not cosmos_result["success"]:
@@ -950,7 +900,7 @@ class AzureServicesManager:
         else:
             return "data_exists_check_policy"
 
-    def _migrate_to_storage(self, source_data_path: str, domain: str, migration_context: Dict) -> Dict[str, Any]:
+    async def _migrate_to_storage(self, source_data_path: str, domain: str, migration_context: Dict) -> Dict[str, Any]:
         """Azure Blob Storage migration using existing client patterns"""
         from pathlib import Path
         storage_client = self.get_rag_storage_client()
@@ -958,14 +908,13 @@ class AzureServicesManager:
         uploaded_files = []
         try:
             # Ensure container exists
-            import asyncio
-            asyncio.run(storage_client.create_container(container_name))
+            await storage_client.create_container(container_name)
             source_path = Path(source_data_path)
             if source_path.is_file():
                 with open(source_path, 'r', encoding='utf-8') as f:
                     text_content = f.read()
                 blob_name = f"{source_path.stem}_{domain}.txt"
-                asyncio.run(storage_client.upload_text(container_name, blob_name, text_content))
+                await storage_client.upload_text(container_name, blob_name, text_content)
                 uploaded_files.append(blob_name)
             elif source_path.is_dir():
                 supported_formats = getattr(storage_client, 'supported_text_formats', ['.md', '.txt'])
@@ -974,7 +923,7 @@ class AzureServicesManager:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             text_content = f.read()
                         blob_name = f"{file_path.stem}_{domain}{file_path.suffix}"
-                        asyncio.run(storage_client.upload_text(container_name, blob_name, text_content))
+                        await storage_client.upload_text(container_name, blob_name, text_content)
                         uploaded_files.append(blob_name)
             blob_list = storage_client.list_blobs(f"{domain}_")
             validated_count = len(blob_list)
@@ -1014,7 +963,7 @@ class AzureServicesManager:
                 "container_name": container_name
             }
 
-    def _migrate_to_search(self, source_data_path: str, domain: str, migration_context: Dict) -> Dict[str, Any]:
+    async def _migrate_to_search(self, source_data_path: str, domain: str, migration_context: Dict) -> Dict[str, Any]:
         """Azure Cognitive Search migration using existing client patterns"""
         from pathlib import Path
         import json
@@ -1023,8 +972,7 @@ class AzureServicesManager:
         documents = []
         try:
             # Create index if not exists
-            import asyncio
-            asyncio.run(search_client.create_index(index_name))
+            await search_client.create_index(index_name)
             source_path = Path(source_data_path)
             if source_path.is_file():
                 with open(source_path, 'r', encoding='utf-8') as f:
@@ -1057,7 +1005,7 @@ class AzureServicesManager:
                         doc_index += 1
             upload_result = search_client.upload_documents(documents)
             # Validate indexing
-            validation_results = asyncio.run(search_client.search_documents(index_name, "*", top_k=len(documents)))
+            validation_results = await search_client.search_documents(index_name, "*", top_k=len(documents))
             validated_count = len(validation_results)
             if self.app_insights and self.app_insights.enabled:
                 self.app_insights.track_event(
@@ -1095,7 +1043,7 @@ class AzureServicesManager:
                 "index_name": index_name
             }
 
-    def _migrate_to_cosmos(self, source_data_path: str, domain: str, migration_context: Dict) -> Dict[str, Any]:
+    async def _migrate_to_cosmos(self, source_data_path: str, domain: str, migration_context: Dict) -> Dict[str, Any]:
         """Azure Cosmos DB migration using existing cosmos_gremlin_client.py patterns"""
         from pathlib import Path
         import json
