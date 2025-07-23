@@ -372,3 +372,13 @@ az pipelines variable-group variable create \
 - **Monitoring Integration**: Azure Monitor and Application Insights integration for cost and performance visibility
 
 This implementation leverages your **existing Azure infrastructure and configuration patterns** while migrating to Azure DevOps for enterprise-grade CI/CD orchestration.
+
+
+
+AzureServicesManager.migrate_data_to_azure()
+  └── _migrate_to_storage()
+      ├── 1. Get RAG storage client
+      ├── 2. Validate source path
+      ├── 3. CREATE CONTAINER (NEW STEP)
+      ├── 4. Upload files to existing container
+      └── 5. Report telemetry and results

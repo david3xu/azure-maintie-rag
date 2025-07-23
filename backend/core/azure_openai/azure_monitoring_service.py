@@ -8,6 +8,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 import time
 from config.settings import azure_settings
+from ..azure_monitoring.app_insights_client import AzureApplicationInsightsClient
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,7 @@ class AzureKnowledgeMonitor:
 
     def _initialize_telemetry_client(self):
         """Initialize Application Insights telemetry client"""
-        # REMOVE MOCK: In production, this must use the actual Azure Application Insights SDK
-        raise NotImplementedError("Real Application Insights telemetry client must be implemented here.")
+        return AzureApplicationInsightsClient()
 
     async def track_extraction_quality(self, quality_results: Dict[str, Any]) -> None:
         """Track quality metrics in Azure Application Insights"""
