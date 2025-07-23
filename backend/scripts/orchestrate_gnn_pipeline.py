@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Any
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
 
-from core.azure_cosmos.enhanced_gremlin_client import EnhancedGremlinClient
+from core.azure_cosmos.enhanced_gremlin_client import EnterpriseGremlinGraphManager
 from core.azure_ml.gnn_orchestrator import AzureGNNTrainingOrchestrator, AzureGNNModelService
 from config.settings import azure_settings
 from config.azure_config_validator import AzureConfigValidator
@@ -70,10 +70,10 @@ class EnterpriseGNNPipelineOrchestrator:
             logger.error(f"Failed to initialize ML client: {e}")
             raise
 
-    def _initialize_cosmos_client(self) -> EnhancedGremlinClient:
+    def _initialize_cosmos_client(self) -> EnterpriseGremlinGraphManager:
         """Initialize Cosmos DB Gremlin client"""
         try:
-            cosmos_client = EnhancedGremlinClient(
+            cosmos_client = EnterpriseGremlinGraphManager(
                 cosmos_endpoint=self.settings.azure_cosmos_endpoint,
                 cosmos_key=self.settings.azure_cosmos_key,
                 database_name=self.settings.azure_cosmos_database,
