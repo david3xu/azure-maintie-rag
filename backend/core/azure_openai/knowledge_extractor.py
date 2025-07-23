@@ -22,7 +22,7 @@ from ..azure_ml.classification_service import (
 from .extraction_client import OptimizedLLMExtractor
 from .azure_text_analytics_service import AzureTextAnalyticsService
 from .azure_ml_quality_service import AzureMLQualityAssessment
-from .azure_monitoring_service import AzureKnowledgeMonitor
+from .azure_monitoring_service import AzureEnterpriseKnowledgeMonitor as AzureKnowledgeMonitor
 from .azure_rate_limiter import AzureOpenAIRateLimiter
 from config.settings import settings
 
