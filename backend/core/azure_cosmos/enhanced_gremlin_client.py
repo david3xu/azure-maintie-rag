@@ -76,6 +76,10 @@ class EnterpriseGremlinGraphManager:
             logger.warning(f"Thread execution failed for Gremlin query: {e}")
             return []
 
+    def _execute_gremlin_query(self, query: str, timeout_seconds: int = 30):
+        """Wrapper for backward compatibility - calls synchronous _execute_gremlin_query_safe"""
+        return self._execute_gremlin_query_safe(query, timeout_seconds)
+
     def get_graph_change_metrics(self, domain: str) -> Dict[str, Any]:
         """Get graph change metrics for domain"""
         try:
@@ -159,3 +163,26 @@ class EnterpriseGremlinGraphManager:
         except Exception as e:
             logger.error(f"Failed to store entity with embeddings: {e}")
             return {"success": False, "error": str(e)}
+
+    def close(self):
+        """Enterprise-safe Gremlin client cleanup with connection leak prevention"""
+        try:
+            if self.gremlin_client and self._client_initialized:
+                import concurrent.futures
+                import warnings
+                def _safe_close_with_timeout():
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", RuntimeWarning)
+                        # Add explicit connection pool cleanup
+                        if hasattr(self.gremlin_client, '_transport'):
+                            self.gremlin_client._transport.close()
+                        self.gremlin_client.close()
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_safe_close_with_timeout)
+                    future.result(timeout=5)
+            logger.info("Azure Cosmos Gremlin client closed successfully")
+        except Exception as e:
+            logger.warning(f"Gremlin client cleanup warning: {e}")
+        finally:
+            self._client_initialized = False
+            self.gremlin_client = None

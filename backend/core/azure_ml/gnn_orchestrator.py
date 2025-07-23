@@ -15,7 +15,7 @@ from azure.ai.ml.entities import Job, ManagedOnlineEndpoint, ManagedOnlineDeploy
 from azure.ai.ml.constants import AssetTypes
 from azure.core.exceptions import ResourceNotFoundError
 
-from ..azure_cosmos.enhanced_gremlin_client import EnhancedGremlinClient
+from ..azure_cosmos.enhanced_gremlin_client import EnterpriseGremlinGraphManager
 from .gnn.trainer import UniversalGNNTrainer
 from .gnn.data_loader import load_graph_data_from_cosmos
 from config.settings import settings
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class AzureGNNTrainingOrchestrator:
     """Enterprise GNN training orchestration with Azure ML"""
 
-    def __init__(self, ml_client: MLClient, cosmos_client: EnhancedGremlinClient):
+    def __init__(self, ml_client: MLClient, cosmos_client: EnterpriseGremlinGraphManager):
         self.ml_client = ml_client
         self.cosmos_client = cosmos_client
         self.training_schedule = self._load_training_schedule()
