@@ -13,9 +13,10 @@ from typing import Dict, List, Optional, Any
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
 
-from core.azure_cosmos.enhanced_gremlin_client import EnterpriseGremlinGraphManager
+from core.azure_cosmos.enhanced_gremlin_client import EnhancedGremlinClient
 from core.azure_ml.gnn_orchestrator import AzureGNNTrainingOrchestrator, AzureGNNModelService
 from config.settings import azure_settings
+from config.azure_config_validator import AzureConfigValidator
 
 # Configure logging
 logging.basicConfig(
@@ -30,6 +31,21 @@ class EnterpriseGNNPipelineOrchestrator:
 
     def __init__(self):
         self.settings = azure_settings
+        # Azure configuration validation
+        validator = AzureConfigValidator()
+        cosmos_validation = validator.validate_cosmos_db_configuration()
+        if not cosmos_validation["valid"]:
+            for error in cosmos_validation["errors"]:
+                logger.error(f"Azure Cosmos DB configuration error: {error}")
+            raise ValueError(f"Invalid Azure Cosmos DB configuration: {cosmos_validation['errors']}")
+        for warning in cosmos_validation["warnings"]:
+            logger.warning(f"Azure Cosmos DB configuration warning: {warning}")
+        ml_validation = validator.validate_azure_ml_configuration()
+        if not ml_validation["valid"]:
+            for error in ml_validation["errors"]:
+                logger.error(f"Azure ML configuration error: {error}")
+            raise ValueError(f"Invalid Azure ML configuration: {ml_validation['errors']}")
+        logger.info("✅ Azure configuration validation passed")
         self.ml_client = self._initialize_ml_client()
         self.cosmos_client = self._initialize_cosmos_client()
         self.training_orchestrator = AzureGNNTrainingOrchestrator(
@@ -46,29 +62,30 @@ class EnterpriseGNNPipelineOrchestrator:
                 credential=credential,
                 subscription_id=self.settings.azure_subscription_id,
                 resource_group_name=self.settings.azure_resource_group,
-                workspace_name=self.settings.ml_workspace_name
+                workspace_name=self.settings.azure_ml_workspace_name
             )
-            logger.info(f"Initialized ML client for workspace: {self.settings.ml_workspace_name}")
+            logger.info(f"Initialized ML client for workspace: {self.settings.azure_ml_workspace_name}")
             return ml_client
         except Exception as e:
             logger.error(f"Failed to initialize ML client: {e}")
             raise
 
-    def _initialize_cosmos_client(self) -> EnterpriseGremlinGraphManager:
+    def _initialize_cosmos_client(self) -> EnhancedGremlinClient:
         """Initialize Cosmos DB Gremlin client"""
         try:
-            cosmos_client = EnterpriseGremlinGraphManager(
-                cosmos_endpoint=self.settings.cosmos_db_endpoint,
-                cosmos_key=self.settings.cosmos_db_key,
-                database_name=self.settings.cosmos_db_database_name
+            cosmos_client = EnhancedGremlinClient(
+                cosmos_endpoint=self.settings.azure_cosmos_endpoint,
+                cosmos_key=self.settings.azure_cosmos_key,
+                database_name=self.settings.azure_cosmos_database,
+                container_name=self.settings.azure_cosmos_container
             )
-            logger.info(f"Initialized Cosmos DB client for database: {self.settings.cosmos_db_database_name}")
+            logger.info(f"Initialized Cosmos DB client for database: {self.settings.azure_cosmos_database}")
             return cosmos_client
         except Exception as e:
             logger.error(f"Failed to initialize Cosmos DB client: {e}")
             raise
 
-    async def run_complete_pipeline(
+    def run_complete_pipeline(
         self,
         domain: str,
         trigger_training: bool = True,
@@ -86,21 +103,21 @@ class EnterpriseGNNPipelineOrchestrator:
             logger.info(f"Starting GNN pipeline for domain: {domain}")
 
             # Step 1: Check graph change metrics
-            pipeline_results["steps"]["change_metrics"] = await self._check_graph_changes(domain)
+            pipeline_results["steps"]["change_metrics"] = self._check_graph_changes(domain)
 
             # Step 2: Orchestrate incremental training (if triggered)
             if trigger_training:
-                pipeline_results["steps"]["training"] = await self._orchestrate_training(domain)
+                pipeline_results["steps"]["training"] = self._orchestrate_training(domain)
 
                 # Step 3: Deploy model (if training completed successfully)
                 if deploy_model and pipeline_results["steps"]["training"]["status"] == "completed":
-                    pipeline_results["steps"]["deployment"] = await self._deploy_model(
+                    pipeline_results["steps"]["deployment"] = self._deploy_model(
                         model_uri=pipeline_results["steps"]["training"]["model_uri"],
                         domain=domain
                     )
 
             # Step 4: Generate embeddings for new entities
-            pipeline_results["steps"]["embeddings"] = await self._generate_embeddings(domain)
+            pipeline_results["steps"]["embeddings"] = self._generate_embeddings(domain)
 
             pipeline_results["end_time"] = datetime.now().isoformat()
             pipeline_results["status"] = "completed"
@@ -114,20 +131,20 @@ class EnterpriseGNNPipelineOrchestrator:
             pipeline_results["error"] = str(e)
             return pipeline_results
 
-    async def _check_graph_changes(self, domain: str) -> Dict[str, Any]:
+    def _check_graph_changes(self, domain: str) -> Dict[str, Any]:
         """Check graph change metrics"""
         try:
-            change_metrics = await self.cosmos_client.get_graph_change_metrics(domain)
+            change_metrics = self.cosmos_client.get_graph_change_metrics(domain)
             logger.info(f"Graph change metrics for {domain}: {change_metrics}")
             return change_metrics
         except Exception as e:
             logger.error(f"Failed to check graph changes: {e}")
             raise
 
-    async def _orchestrate_training(self, domain: str) -> Dict[str, Any]:
+    def _orchestrate_training(self, domain: str) -> Dict[str, Any]:
         """Orchestrate GNN training"""
         try:
-            training_results = await self.training_orchestrator.orchestrate_incremental_training(
+            training_results = self.training_orchestrator.orchestrate_incremental_training(
                 domain=domain,
                 trigger_threshold=self.settings.gnn_training_trigger_threshold
             )
@@ -137,10 +154,10 @@ class EnterpriseGNNPipelineOrchestrator:
             logger.error(f"Failed to orchestrate training: {e}")
             raise
 
-    async def _deploy_model(self, model_uri: str, domain: str) -> Dict[str, Any]:
+    def _deploy_model(self, model_uri: str, domain: str) -> Dict[str, Any]:
         """Deploy trained model"""
         try:
-            deployment_results = await self.model_service.deploy_trained_gnn_model(
+            deployment_results = self.model_service.deploy_trained_gnn_model(
                 model_uri=model_uri,
                 domain=domain,
                 deployment_tier=self.settings.gnn_model_deployment_tier
@@ -151,18 +168,18 @@ class EnterpriseGNNPipelineOrchestrator:
             logger.error(f"Failed to deploy model: {e}")
             raise
 
-    async def _generate_embeddings(self, domain: str) -> Dict[str, Any]:
+    def _generate_embeddings(self, domain: str) -> Dict[str, Any]:
         """Generate embeddings for new entities"""
         try:
             # Get new entities without embeddings
-            new_entities = await self._get_entities_without_embeddings(domain)
+            new_entities = self._get_entities_without_embeddings(domain)
 
             if new_entities:
                 # Generate embeddings using deployed model (if available)
-                embeddings = await self._generate_embeddings_for_entities(new_entities, domain)
+                embeddings = self._generate_embeddings_for_entities(new_entities, domain)
 
                 # Update entities with embeddings
-                update_stats = await self._update_entity_embeddings(new_entities, embeddings, domain)
+                update_stats = self._update_entity_embeddings(new_entities, embeddings, domain)
 
                 return {
                     "entities_processed": len(new_entities),
@@ -180,7 +197,7 @@ class EnterpriseGNNPipelineOrchestrator:
             logger.error(f"Failed to generate embeddings: {e}")
             raise
 
-    async def _get_entities_without_embeddings(self, domain: str) -> List[str]:
+    def _get_entities_without_embeddings(self, domain: str) -> List[str]:
         """Get entities without GNN embeddings from Cosmos DB"""
         try:
             entities_query = f"""
@@ -188,7 +205,7 @@ class EnterpriseGNNPipelineOrchestrator:
                     .not(__.has('gnn_embeddings'))
                     .values('entity_id')
             """
-            query_results = await self.cosmos_client._execute_gremlin_query(entities_query)
+            query_results = self.cosmos_client._execute_gremlin_query(entities_query)
             entity_ids = [result for result in query_results if result]
             logger.info(f"Found {len(entity_ids)} entities without embeddings in domain '{domain}'")
             return entity_ids
@@ -196,7 +213,7 @@ class EnterpriseGNNPipelineOrchestrator:
             logger.error(f"Failed to get entities without embeddings: {e}")
             return []
 
-    async def _generate_embeddings_for_entities(
+    def _generate_embeddings_for_entities(
         self,
         entities: List[str],
         domain: str
@@ -217,7 +234,7 @@ class EnterpriseGNNPipelineOrchestrator:
                         .by('entity_type')
                         .by('confidence')
                 """
-                entity_result = await self.cosmos_client._execute_gremlin_query(entity_query)
+                entity_result = self.cosmos_client._execute_gremlin_query(entity_query)
                 if entity_result:
                     entity_data = entity_result[0]
                     entity_features.append({
@@ -233,7 +250,7 @@ class EnterpriseGNNPipelineOrchestrator:
                 "entities": entity_features,
                 "model_version": getattr(azure_settings, 'gnn_model_version', 'latest')
             }
-            inference_result = await ml_client.invoke_gnn_endpoint(
+            inference_result = ml_client.invoke_gnn_endpoint(
                 endpoint_name=endpoint_name,
                 deployment_name=deployment_name,
                 request_data=inference_request
@@ -249,7 +266,7 @@ class EnterpriseGNNPipelineOrchestrator:
             logger.error(f"Failed to generate embeddings for entities: {e}")
             return {}
 
-    async def _update_entity_embeddings(
+    def _update_entity_embeddings(
         self,
         entities: List[str],
         embeddings: Dict[str, Any],
@@ -277,7 +294,7 @@ class EnterpriseGNNPipelineOrchestrator:
                             .property('embedding_dimension', {embedding_dim})
                             .property('embedding_updated_at', '{datetime.now().isoformat()}')
                     """
-                    await self.cosmos_client._execute_gremlin_query(update_query)
+                    self.cosmos_client._execute_gremlin_query(update_query)
                     updated_count += 1
             logger.info(f"Updated {updated_count} entity embeddings in Cosmos DB for domain '{domain}'")
             return {"entities_updated": updated_count}
@@ -303,7 +320,7 @@ async def main():
     orchestrator = EnterpriseGNNPipelineOrchestrator()
 
     # Run pipeline
-    results = await orchestrator.run_complete_pipeline(
+    results = orchestrator.run_complete_pipeline(
         domain=args.domain,
         trigger_training=args.trigger_training,
         deploy_model=args.deploy_model
