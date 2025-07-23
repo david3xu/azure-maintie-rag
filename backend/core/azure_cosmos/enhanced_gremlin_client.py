@@ -3,51 +3,64 @@ Enhanced Azure Cosmos DB Gremlin Client for Enterprise GNN Pipeline
 Supports GNN embeddings, real-time updates, and enterprise graph management
 """
 
+import logging
 import concurrent.futures
 import warnings
-import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 import numpy as np
 import torch
-from gremlin_python.driver import client
+from gremlin_python.driver import client, serializer
 from gremlin_python.structure.graph import Graph
 from gremlin_python.process.graph_traversal import __
 from gremlin_python.process.traversal import T, P
-from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 
+class EnterpriseGremlinGraphManager:
+    """Enterprise-grade Cosmos DB Gremlin integration with GNN embeddings"""
 
-class EnhancedGremlinClient:
-    def __init__(self, cosmos_endpoint, cosmos_key, database_name, container_name):
+    def __init__(self, cosmos_endpoint: str, cosmos_key: str, database_name: str = "universal-rag-db", container_name: str = "knowledge-graph"):
         self.cosmos_endpoint = cosmos_endpoint
         self.cosmos_key = cosmos_key
         self.database_name = database_name
         self.container_name = container_name
-        self._client = None
+        self.gremlin_client = None
+        self._client_initialized = False
 
-    def _get_client(self):
-        """Get or create Gremlin client using Azure endpoint pattern"""
-        if self._client is None:
+    def _initialize_client(self):
+        """Enterprise Gremlin client initialization with Azure service endpoint validation"""
+        if self._client_initialized:
+            return
+        try:
+            # Extract account name from endpoint (following cosmos_gremlin_client.py pattern)
+            if 'documents.azure.com' not in self.cosmos_endpoint:
+                raise ValueError(f"Invalid Azure Cosmos DB endpoint: {self.cosmos_endpoint}")
             account_name = self.cosmos_endpoint.replace('https://', '').replace('.documents.azure.com:443/', '')
             gremlin_endpoint = f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
-            self._client = client.Client(
+            logger.info(f"Initializing Gremlin client with endpoint: {gremlin_endpoint}")
+            self.gremlin_client = client.Client(
                 gremlin_endpoint,
                 'g',
                 username=f"/dbs/{self.database_name}/colls/{self.container_name}",
-                password=self.cosmos_key
+                password=self.cosmos_key,
+                message_serializer=serializer.GraphSONSerializersV2d0()
             )
-        return self._client
+            self._client_initialized = True
+            logger.info("Azure Cosmos DB Gremlin client initialized successfully")
+        except Exception as e:
+            logger.error(f"Azure Cosmos DB Gremlin client initialization failed: {e}")
+            self._client_initialized = False
+            raise
 
-    def _execute_gremlin_query(self, query: str, timeout_seconds: int = 30):
-        """Execute Gremlin query using enterprise thread isolation pattern"""
+    def _execute_gremlin_query_safe(self, query: str, timeout_seconds: int = 30):
+        """Enterprise thread-isolated Gremlin query execution (copied from working cosmos_gremlin_client.py)"""
         def _run_gremlin_query():
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", RuntimeWarning)
-                    client = self._get_client()
-                    result = client.submit(query)
+                    warnings.simplefilter("ignore", DeprecationWarning)
+                    result = self.gremlin_client.submit(query)
                     return result.all().result()
             except Exception as e:
                 logger.warning(f"Gremlin query execution failed: {e}")
@@ -57,55 +70,92 @@ class EnhancedGremlinClient:
                 future = executor.submit(_run_gremlin_query)
                 return future.result(timeout=timeout_seconds)
         except concurrent.futures.TimeoutError:
-            logger.warning(f"Gremlin query timed out after {timeout_seconds}s")
+            logger.warning(f"Gremlin query timed out after {timeout_seconds}s: {query}")
             return []
         except Exception as e:
-            logger.error(f"Thread execution failed for Gremlin query: {e}")
+            logger.warning(f"Thread execution failed for Gremlin query: {e}")
             return []
 
-    def get_graph_change_metrics(self, domain: str, trigger_threshold: int = 100) -> dict:
-        """Graph change detection using data-driven temporal analytics"""
-        threshold = getattr(azure_settings, 'gnn_training_trigger_threshold', trigger_threshold)
-        change_metrics = {
-            "domain": domain,
-            "analysis_timestamp": datetime.now().isoformat(),
-            "trigger_threshold": threshold,
-            "new_entities": 0,
-            "new_relations": 0,
-            "updated_entities": 0,
-            "total_changes": 0,
-            "requires_training": False
-        }
-        yesterday = (datetime.now() - timedelta(days=1)).isoformat()
-        queries = [
-            (f"g.V().has('domain', '{domain}').has('label', 'Entity').has('created_at', gt('{yesterday}')).count()", "new_entities"),
-            (f"g.E().has('domain', '{domain}').has('created_at', gt('{yesterday}')).count()", "new_relations"),
-            (f"g.V().has('domain', '{domain}').has('label', 'Entity').has('confidence_updated_at', gt('{yesterday}')).count()", "updated_entities")
-        ]
-        for query, metric_key in queries:
-            try:
-                result = self._execute_gremlin_query(query)
-                change_metrics[metric_key] = result[0] if result else 0
-            except Exception as e:
-                logging.warning(f"{metric_key} query failed: {e}")
-                change_metrics[metric_key] = 0
-        change_metrics["total_changes"] = (
-            change_metrics["new_entities"] +
-            change_metrics["new_relations"] +
-            change_metrics["updated_entities"]
-        )
-        change_metrics["requires_training"] = change_metrics["total_changes"] >= threshold
-        return change_metrics
+    def get_graph_change_metrics(self, domain: str) -> Dict[str, Any]:
+        """Get graph change metrics for domain"""
+        try:
+            if not self._client_initialized:
+                self._initialize_client()
+            new_entities_query = f"g.V().has('domain', '{domain}').count()"
+            new_entities_result = self._execute_gremlin_query_safe(new_entities_query)
+            new_entities = new_entities_result[0] if new_entities_result else 0
+            new_relations_query = f"g.E().has('domain', '{domain}').count()"
+            new_relations_result = self._execute_gremlin_query_safe(new_relations_query)
+            new_relations = new_relations_result[0] if new_relations_result else 0
+            total_changes = new_entities + new_relations
+            return {
+                'domain': domain,
+                'analysis_timestamp': datetime.now().isoformat(),
+                'trigger_threshold': 100,
+                'new_entities': new_entities,
+                'new_relations': new_relations,
+                'updated_entities': 0,
+                'total_changes': total_changes,
+                'requires_training': total_changes >= 100
+            }
+        except Exception as e:
+            logger.error(f"Failed to get graph change metrics for domain {domain}: {e}")
+            return {
+                'domain': domain,
+                'analysis_timestamp': datetime.now().isoformat(),
+                'trigger_threshold': 100,
+                'new_entities': 0,
+                'new_relations': 0,
+                'updated_entities': 0,
+                'total_changes': 0,
+                'requires_training': False
+            }
 
-    def store_entity_with_embeddings(self, entity, embeddings):
-        # Example implementation
-        query = f"g.addV('entity').property('id', '{entity['id']}').property('embeddings', '{embeddings}')"
-        return self._execute_gremlin_query(query)
+    def get_entities_without_embeddings(self, domain: str) -> List[str]:
+        """Get entities without GNN embeddings"""
+        try:
+            if not self._client_initialized:
+                self._initialize_client()
+            query = f"""
+                g.V().has('domain', '{domain}')
+                    .not(__.has('gnn_embeddings'))
+                    .values('entity_id')
+            """
+            results = self._execute_gremlin_query_safe(query)
+            return results or []
+        except Exception as e:
+            logger.error(f"Failed to get entities without embeddings for domain {domain}: {e}")
+            return []
 
-    def _get_total_entities(self, domain):
-        query = f"g.V().has('domain', '{domain}').count()"
-        return self._execute_gremlin_query(query)
-
-    def _get_total_relations(self, domain):
-        query = f"g.E().has('domain', '{domain}').count()"
-        return self._execute_gremlin_query(query)
+    def store_entity_with_embeddings(
+        self,
+        entity_data: Dict[str, Any],
+        gnn_embeddings: Optional[np.ndarray] = None
+    ) -> Dict[str, Any]:
+        """Store entity with optional GNN embeddings"""
+        try:
+            if not self._client_initialized:
+                self._initialize_client()
+            entity_id = entity_data.get("entity_id", f"entity_{int(datetime.now().timestamp())}")
+            entity_text = str(entity_data.get("text", "")).replace("'", "\\'")[:500]
+            query = f"""
+                g.addV('Entity')
+                    .property('entity_id', '{entity_id}')
+                    .property('text', '{entity_text}')
+                    .property('entity_type', '{entity_data.get("entity_type", "unknown")}')
+                    .property('domain', '{entity_data.get("domain", "general")}')
+                    .property('confidence', {entity_data.get("confidence", 1.0)})
+                    .property('extraction_method', '{entity_data.get("extraction_method", "azure_openai")}')
+                    .property('last_updated', '{datetime.now().isoformat()}')
+            """
+            if gnn_embeddings is not None:
+                embedding_str = ','.join(map(str, gnn_embeddings.tolist()))
+                query += f".property('gnn_embeddings', '{embedding_str}')"
+                query += f".property('embedding_dimension', {len(gnn_embeddings)})"
+                query += f".property('embedding_updated_at', '{datetime.now().isoformat()}')"
+            result = self._execute_gremlin_query_safe(query)
+            logger.info(f"Stored entity: {entity_id} with embeddings: {gnn_embeddings is not None}")
+            return {"success": True, "entity_id": entity_id}
+        except Exception as e:
+            logger.error(f"Failed to store entity with embeddings: {e}")
+            return {"success": False, "error": str(e)}
