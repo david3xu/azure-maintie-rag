@@ -5,7 +5,7 @@ Optimized LLM Knowledge Extractor - performance and cost optimized
 import logging
 import hashlib
 import json
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Set
 from pathlib import Path
 import random
 from datetime import datetime
@@ -43,6 +43,9 @@ class OptimizedLLMExtractor:
         )
 
         logger.info(f"OptimizedLLMExtractor initialized with Azure deployment {self.deployment_name}")
+        # Knowledge Discovery State Management - Azure Enterprise Pattern
+        self.discovered_entities: Set[str] = set()
+        self.discovered_relations: Set[str] = set()
 
     def extract_domain_knowledge(self, text_corpus: List[str]) -> Dict[str, Any]:
         """Optimized domain knowledge extraction with caching and sampling"""

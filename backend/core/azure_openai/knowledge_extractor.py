@@ -530,7 +530,9 @@ class AzureOpenAIKnowledgeExtractor:
 
         # Execute extraction with rate limiting
         extraction_results = await self.rate_limiter.execute_with_rate_limiting(
-            extraction_function=lambda: self.llm_extractor.extract_entities_and_relations(all_texts),
+            extraction_function=lambda: asyncio.get_event_loop().run_in_executor(
+                None, self.llm_extractor.extract_entities_and_relations, all_texts
+            ),
             estimated_tokens=estimated_tokens,
             priority="standard"
         )
