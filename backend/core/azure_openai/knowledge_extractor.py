@@ -24,7 +24,7 @@ from .azure_text_analytics_service import AzureTextAnalyticsService
 from .azure_ml_quality_service import AzureMLQualityAssessment
 from .azure_monitoring_service import AzureEnterpriseKnowledgeMonitor as AzureKnowledgeMonitor
 from .azure_rate_limiter import AzureOpenAIRateLimiter
-from config.settings import settings
+from config.settings import settings, azure_settings
 
 logger = logging.getLogger(__name__)
 
@@ -85,13 +85,16 @@ class AzureOpenAIKnowledgeExtractor:
         logger.info(f"AzureOpenAIKnowledgeExtractor initialized for domain: {domain_name}")
 
     def _load_extraction_config(self) -> Dict[str, Any]:
-        """Load domain-specific extraction configuration"""
+        """Load extraction configuration from azure_settings"""
         return {
             "quality_tier": settings.extraction_quality_tier,
             "confidence_threshold": settings.extraction_confidence_threshold,
             "max_entities_per_document": settings.max_entities_per_document,
             "batch_size": settings.extraction_batch_size,
-            "enable_preprocessing": settings.enable_text_analytics_preprocessing
+            "enable_preprocessing": settings.enable_text_analytics_preprocessing,
+            "enable_post_classification": getattr(azure_settings, 'enable_post_classification', False),
+            "trust_llm_types": getattr(azure_settings, 'trust_llm_types', True),
+            "extraction_method": "llm_only"  # vs "llm_with_classification"
         }
 
     async def extract_knowledge_from_texts(
@@ -135,7 +138,10 @@ class AzureOpenAIKnowledgeExtractor:
 
             # Step 3: Classify and normalize extracted knowledge
             logger.info("Step 3: Classifying and normalizing knowledge...")
-            await self._classify_and_normalize()
+            if self.extraction_config.get("enable_post_classification", False):
+                await self._classify_and_normalize()
+            else:
+                logger.info("Skipping post-classification - trusting LLM extraction results")
 
             # Step 4: Build knowledge graph
             logger.info("Step 4: Building knowledge graph...")
