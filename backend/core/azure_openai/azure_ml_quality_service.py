@@ -90,8 +90,8 @@ class AzureMLQualityAssessment:
 
         # Prepare features for ML model
         confidence_features = {
-            "entity_confidence_distribution": [e.get("confidence", 0.5) for e in entities.values()],
-            "relation_confidence_distribution": [r.get("confidence", 0.5) for r in relations],
+            "entity_confidence_distribution": [e.confidence for e in entities.values()],
+            "relation_confidence_distribution": [r.confidence for r in relations],
             "confidence_variance": self._calculate_confidence_variance(entities, relations),
             "low_confidence_ratio": self._calculate_low_confidence_ratio(entities, relations)
         }
@@ -180,13 +180,13 @@ class AzureMLQualityAssessment:
 
         # Entity confidences
         for entity in entities.values():
-            if isinstance(entity, dict) and "confidence" in entity:
-                all_confidences.append(entity["confidence"])
+            if hasattr(entity, 'confidence'):
+                all_confidences.append(entity.confidence)
 
         # Relation confidences
         for relation in relations:
-            if isinstance(relation, dict) and "confidence" in relation:
-                all_confidences.append(relation["confidence"])
+            if hasattr(relation, 'confidence'):
+                all_confidences.append(relation.confidence)
 
         if len(all_confidences) < 2:
             return 0.0
@@ -202,13 +202,13 @@ class AzureMLQualityAssessment:
         # Count entity confidences
         for entity in entities.values():
             total_items += 1
-            if isinstance(entity, dict) and entity.get("confidence", 1.0) < low_confidence_threshold:
+            if hasattr(entity, 'confidence') and entity.confidence < low_confidence_threshold:
                 low_confidence_items += 1
 
         # Count relation confidences
         for relation in relations:
             total_items += 1
-            if isinstance(relation, dict) and relation.get("confidence", 1.0) < low_confidence_threshold:
+            if hasattr(relation, 'confidence') and relation.confidence < low_confidence_threshold:
                 low_confidence_items += 1
 
         return low_confidence_items / max(total_items, 1)
