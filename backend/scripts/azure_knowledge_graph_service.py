@@ -25,8 +25,7 @@ async def orchestrate_knowledge_graph_population():
     # Execute using existing azure_services.migrate_data_to_azure
     result = await azure_services.migrate_data_to_azure(
         source_data_path=source_data_path,
-        domain=domain,
-        migration_context=migration_context
+        domain=domain
     )
     # Azure service result validation
     if result.get("success"):
