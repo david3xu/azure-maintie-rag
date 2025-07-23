@@ -116,7 +116,8 @@ class OptimizedLLMExtractor:
         batched_texts = self._create_batches(text_sample, self.batch_size)
         all_entities = set()
 
-        for batch in batched_texts[:5]:  # Limit to 5 batches for discovery
+        max_discovery_batches = getattr(settings, 'max_discovery_batches', 20)
+        for batch in batched_texts[:max_discovery_batches]:
             batch_text = "\n---\n".join(batch)
 
             prompt = f"""
@@ -151,7 +152,8 @@ class OptimizedLLMExtractor:
 
         # Return top entities by frequency/importance
         entity_list = list(all_entities)
-        return entity_list[:15]  # Reasonable limit
+        max_entity_types = getattr(settings, 'max_entity_types_discovery', 50)
+        return entity_list[:max_entity_types]  # Reasonable limit
 
     def _discover_relationships_optimized(self, text_sample: List[str], entities: List[str]) -> List[str]:
         """Optimized relationship discovery using entity context"""
@@ -163,7 +165,8 @@ class OptimizedLLMExtractor:
         # Sample entity types for context
         entity_context = entities[:10] if entities else ["component", "system", "process", "action"]
 
-        for batch in batched_texts[:5]:  # Limit to 5 batches for discovery
+        max_discovery_batches = getattr(settings, 'max_discovery_batches', 20)
+        for batch in batched_texts[:max_discovery_batches]:
             batch_text = "\n---\n".join(batch)
 
             prompt = f"""
@@ -200,7 +203,8 @@ class OptimizedLLMExtractor:
 
         # Return top relationships
         relationship_list = list(all_relationships)
-        return relationship_list[:12]  # Reasonable limit
+        max_relation_types = getattr(settings, 'max_relation_types_discovery', 30)
+        return relationship_list[:max_relation_types]  # Reasonable limit
 
     def _extract_triplets_batched(self, text_corpus: List[str], entities: List[str], relationships: List[str]) -> List[tuple]:
         """Extract triplets using batched processing"""
@@ -209,7 +213,8 @@ class OptimizedLLMExtractor:
         text_batches = self._create_batches(text_corpus, self.batch_size)
 
         # Process only a reasonable number of batches
-        max_batches = min(50, len(text_batches))  # Limit processing
+        max_triplet_batches = getattr(settings, 'max_triplet_extraction_batches', 100)
+        max_batches = min(max_triplet_batches, len(text_batches))
 
         for i, batch in enumerate(text_batches[:max_batches]):
             if i % 10 == 0:
