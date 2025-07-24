@@ -166,8 +166,9 @@ class OptimizedLLMExtractor:
         batched_texts = self._create_batches(text_sample, self.batch_size)
         all_relationships = set()
 
-        # Sample entity types for context
-        entity_context = entities[:10] if entities else ["component", "system", "process", "action"]
+        # Remove hardcoded fallback for entity context
+        # entity_context = entities[:10] if entities else ["component", "system", "process", "action"]
+        entity_context = entities[:10] if entities else []
 
         max_discovery_batches = getattr(settings, 'max_discovery_batches', 20)
         for batch in batched_texts[:max_discovery_batches]:
@@ -311,11 +312,14 @@ class OptimizedLLMExtractor:
         return list(entities)
 
     def _extract_relationships(self, texts: List[str]) -> List[str]:
-        """Extract relationships from texts using LLM"""
+        """Extract relationships from texts using LLM with proper entity context"""
         relationships = set()
 
-        # Use the optimized relationship discovery
-        discovered_relationships = self._discover_relationships_optimized(texts, [])
+        # FIX: Ensure entity context is available for relationship discovery
+        # First extract entities to provide context for relationships
+        discovered_entities = self._discover_entities_optimized(texts)
+        # Now use proper entity context for relationship discovery
+        discovered_relationships = self._discover_relationships_optimized(texts, discovered_entities)
         relationships.update(discovered_relationships)
 
         return list(relationships)
@@ -399,35 +403,48 @@ class OptimizedLLMExtractor:
         logger.info(f"Generated schema with {len(entity_types)} entity types and {len(relation_types)} relation types")
         return schema
 
-    def _categorize_entity(self, entity: str) -> str:
-        """Categorize entity type based on content"""
-        entity_lower = entity.lower()
+    # Refactor prompt generation to use universal, non-biased instructions
+    def generate_universal_entity_prompt(self, texts: List[str]) -> str:
+        return f"""
+        Analyze the following text and extract all significant entities.
+        Universal Instructions:
+        1. Identify noun phrases, key concepts, and important terms
+        2. Do not impose predetermined categories or types
+        3. Let the entities emerge naturally from the text
+        4. Focus on terms that carry semantic meaning
+        5. Extract entities as they appear in the text
+        Text samples:
+        {chr(10).join(texts[:3])}
+        Return entities as JSON array of strings (entity names only):
+        """
 
-        if any(word in entity_lower for word in ['component', 'system', 'unit', 'module']):
-            return 'component'
-        elif any(word in entity_lower for word in ['part', 'component', 'element']):
-            return 'component'
-        elif any(word in entity_lower for word in ['problem', 'issue', 'fault', 'error']):
-            return 'issue'
-        elif any(word in entity_lower for word in ['action', 'task', 'procedure']):
-            return 'action'
-        else:
-            return 'general'
+    def generate_universal_relationship_prompt(self, texts: List[str], entities: List[str] = None) -> str:
+        entity_context = ""
+        if entities:
+            entity_context = f"Focus on relationships involving these entities: {', '.join(entities[:10])}"
+        return f"""
+        Analyze the following text and identify relationships between entities.
+        {entity_context}
+        Universal Instructions:
+        1. Identify relationships as they are expressed in the text
+        2. Use simple, descriptive terms for relationship types
+        3. Do not assume domain-specific relationship categories
+        4. Focus on actual connections mentioned or implied in the text
+        5. Use verbs or verb phrases that describe the connections
+        Text samples:
+        {chr(10).join(texts[:3])}
+        Return relationship types as JSON array of strings:
+        """
 
+    # Remove any mention of hardcoded relationship types in docstrings, comments, or code
     def _categorize_relation(self, relation: str) -> str:
-        """Categorize relation type based on content"""
-        relation_lower = relation.lower()
+        """Universal relation categorization (no hardcoded types)"""
+        # Instead of hardcoded categories, return the relation as-is or use a universal prompt
+        return relation
 
-        if any(word in relation_lower for word in ['requires', 'needs', 'depends']):
-            return 'dependency'
-        elif any(word in relation_lower for word in ['causes', 'leads', 'results']):
-            return 'causality'
-        elif any(word in relation_lower for word in ['part_of', 'contains', 'includes']):
-            return 'composition'
-        elif any(word in relation_lower for word in ['located', 'position', 'place']):
-            return 'spatial'
-        else:
-            return 'general'
+    def _categorize_entity(self, entity: str) -> str:
+        """Universal entity categorization (no hardcoded types)"""
+        return entity
 
     def _parse_entity_response(self, response_content: str) -> List[str]:
         """Parse entity response from LLM"""

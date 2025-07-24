@@ -30,8 +30,18 @@ async def orchestrate_knowledge_graph_population():
     # Azure service result validation
     if result.get("success"):
         print(f"✅ Azure Cosmos DB population completed")
-        print(f"📊 Entities: {len(result.get('entities_created', []))}")
-        print(f"📊 Relations: {len(result.get('relations_created', []))}")
+        # FIX: Access correct result structure
+        cosmos_result = result.get("migration_results", {}).get("cosmos_migration", {})
+        cosmos_details = cosmos_result.get("details", {})
+        entities_count = cosmos_details.get("entities_migrated", 0)
+        relations_count = cosmos_details.get("relations_migrated", 0)
+        print(f"📊 Entities: {entities_count}")
+        print(f"📊 Relations: {relations_count}")
+        # Additional extraction summary if available
+        extraction_summary = cosmos_details.get("extraction_summary", {})
+        if extraction_summary:
+            print(f"📈 Entity Types: {len(extraction_summary.get('unique_entity_types', []))}")
+            print(f"📈 Relation Types: {len(extraction_summary.get('unique_relation_types', []))}")
         return 0
     else:
         print(f"❌ Azure service error: {result.get('error')}")

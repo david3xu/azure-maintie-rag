@@ -39,14 +39,14 @@ class AzureOpenAIClient:
         except:
             self.tokenizer = tiktoken.get_encoding("cl100k_base")
 
-    def generate_completion(
+    async def generate_completion(
         self,
         prompt: str,
         max_tokens: int = 1000,
         temperature: float = 0.1,
         system_message: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Generate completion from prompt."""
+        """Generate completion from prompt - async version."""
         messages = []
 
         if system_message:
@@ -57,7 +57,9 @@ class AzureOpenAIClient:
         start_time = datetime.now()
 
         try:
-            response = self.client.chat.completions.create(
+            import asyncio
+            response = await asyncio.to_thread(
+                self.client.chat.completions.create,
                 model=self.deployment,
                 messages=messages,
                 max_tokens=max_tokens,
@@ -94,8 +96,7 @@ class AzureOpenAIClient:
         processed_docs = []
         for i, text in enumerate(texts):
             prompt = f"Process this text for domain '{domain}': {text[:500]}..."
-            # Assume generate_completion is synchronous for now; wrap in asyncio.to_thread if needed
-            result = self.generate_completion(prompt)
+            result = await self.generate_completion(prompt)
             processed_docs.append({
                 "doc_id": f"{domain}_{i}",
                 "processed_text": result,
@@ -108,7 +109,7 @@ class AzureOpenAIClient:
         knowledge_results = []
         for text in texts:
             prompt = f"Extract entities and relationships from this {domain} text: {text}"
-            result = self.generate_completion(prompt)
+            result = await self.generate_completion(prompt)
             knowledge_results.append({
                 "entities": [],  # Parse from result if needed
                 "relationships": [],  # Parse from result if needed
@@ -300,7 +301,7 @@ Generate domain schema in JSON format:"""
             user_message = f"Question: {query}\n\nContext from documents:\n{context}"
 
             # Generate response
-            result = self.generate_completion(
+            result = await self.generate_completion(
                 prompt=user_message,
                 system_message=system_message,
                 max_tokens=500,

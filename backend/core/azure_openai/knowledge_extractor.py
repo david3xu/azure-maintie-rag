@@ -571,7 +571,6 @@ class AzureOpenAIKnowledgeExtractor:
                 self.entities[entity.entity_id] = entity
                 self.discovered_entity_types.add(entity.entity_type)
                 self.type_frequencies[entity.entity_type] += 1
-
         # Process extracted relations
         for relation_data in extraction_results.get("relations", []):
             if isinstance(relation_data, dict):
@@ -589,6 +588,23 @@ class AzureOpenAIKnowledgeExtractor:
                 )
                 self.relations.append(relation)
                 self.discovered_relation_types.add(relation.relation_type)
+            # FIX: Also handle string relations for type discovery
+            elif isinstance(relation_data, str):
+                relation = UniversalRelation(
+                    relation_id=f"relation_{len(self.relations)}",
+                    source_entity_id="",
+                    target_entity_id="",
+                    relation_type=relation_data,
+                    confidence=0.8,
+                    context="",
+                    metadata={
+                        "extraction_method": "llm",
+                        "domain": self.domain_name,
+                        "extracted_at": datetime.now().isoformat()
+                    }
+                )
+                self.relations.append(relation)
+                self.discovered_relation_types.add(relation_data)
 
     async def _assess_extraction_quality_enterprise(self) -> Dict[str, Any]:
         """Enterprise quality assessment using Azure ML models"""

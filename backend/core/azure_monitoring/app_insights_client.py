@@ -25,7 +25,9 @@ class AzureApplicationInsightsClient:
             try:
                 configure_azure_monitor(
                     connection_string=self.connection_string,
-                    sampling_ratio=self.sampling_rate / 100.0
+                    sampling_ratio=self.sampling_rate / 100.0,
+                    enable_logging=True,
+                    logging_formatter=None
                 )
                 AzureApplicationInsightsClient._configured = True
             except Exception as e:
