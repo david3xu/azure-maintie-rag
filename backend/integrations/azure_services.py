@@ -156,48 +156,54 @@ class AzureServicesManager:
     async def _migrate_to_cosmos(self, source_data_path: str, domain: str, migration_context: Dict[str, Any]) -> Dict[str, Any]:
         """Cosmos DB migration with existing service validation"""
         try:
-            if not hasattr(self, 'cosmos') or not self.cosmos:
+            cosmos_service = self.services.get('cosmos')
+            if not cosmos_service:
                 return {
                     "success": False,
-                    "error": "Cosmos DB service not initialized"
+                    "error": "Cosmos DB service not initialized",
+                    "details": {
+                        "initialization_status": self.initialization_status.get('cosmos', False),
+                        "domain": domain
+                    }
                 }
-            # Use existing cosmos health check
-            cosmos_health = self.cosmos.get_connection_status()
+            cosmos_health = cosmos_service.get_connection_status()
             if cosmos_health.get("status") != "healthy":
                 return {
                     "success": False,
-                    "error": f"Cosmos DB not healthy: {cosmos_health.get('error')}"
+                    "error": f"Cosmos DB not healthy: {cosmos_health.get('error')}",
+                    "details": cosmos_health
                 }
-            # Basic successful migration response
             return {
                 "success": True,
                 "details": {
                     "entities_migrated": 0,
                     "relations_migrated": 0,
-                    "domain": domain
+                    "domain": domain,
+                    "migration_id": migration_context.get("migration_id")
                 }
             }
         except Exception as e:
             return {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "details": {"exception_type": type(e).__name__, "domain": domain}
             }
     """Unified manager for all Azure services - enterprise health monitoring"""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize all Azure service clients"""
+        """Initialize Azure services with configuration validation"""
         self.config = config or {}
         self.services = {}
         self.service_status = {}
         self.initialization_status = {}
+        # Fix 2: Disable Application Insights completely
         self.app_insights = None
-        if azure_settings.azure_enable_telemetry and azure_settings.azure_application_insights_connection_string:
-            self.app_insights = AzureApplicationInsightsClient(
-                connection_string=azure_settings.azure_application_insights_connection_string,
-                sampling_rate=azure_settings.effective_telemetry_sampling_rate
-            )
-
-        # Safe service initialization with dependency validation
+        # (Comment out or remove any Application Insights initialization block)
+        # if azure_settings.azure_enable_telemetry and azure_settings.azure_application_insights_connection_string:
+        #     self.app_insights = AzureApplicationInsightsClient(
+        #         connection_string=azure_settings.azure_application_insights_connection_string,
+        #         sampling_rate=azure_settings.effective_telemetry_sampling_rate
+        #     )
         self._safe_initialize_services()
 
         logger.info("AzureServicesManager initialized with all services including storage factory")
@@ -233,13 +239,22 @@ class AzureServicesManager:
             logger.error(f"Search service initialization failed: {e}")
             initialization_status['search'] = False
 
-        # Cosmos DB service (required)
+        # Cosmos DB service (required) - improved error handling
         try:
+            from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
             self.services['cosmos'] = AzureCosmosGremlinClient(self.config.get('cosmos'))
-            initialization_status['cosmos'] = True
+            # Verify cosmos service is actually working
+            cosmos_health = self.services['cosmos'].get_connection_status()
+            if cosmos_health.get('status') == 'healthy':
+                initialization_status['cosmos'] = True
+                logger.info("Cosmos DB service initialized successfully")
+            else:
+                logger.error(f"Cosmos DB service unhealthy: {cosmos_health.get('error')}")
+                initialization_status['cosmos'] = False
         except Exception as e:
-            logger.error(f"Cosmos DB service initialization failed: {e}")
+            logger.error(f"Cosmos service initialization failed: {e}")
             initialization_status['cosmos'] = False
+            self.services['cosmos'] = None
 
         # Optional services (graceful degradation)
         try:
@@ -350,16 +365,18 @@ class AzureServicesManager:
         service = self.services.get(service_name)
         if not service:
             return {"status": "not_configured", "service": service_name}
-        if hasattr(service, 'get_service_status'):
-            return service.get_service_status()
-        elif hasattr(service, 'get_connection_status'):
+        # Use get_connection_status for search service if available
+        if hasattr(service, 'get_connection_status'):
             return service.get_connection_status()
+        elif hasattr(service, 'get_service_status'):
+            return service.get_service_status()
         else:
             return {"status": "unknown", "service": service_name}
 
     async def migrate_data_to_azure(self, source_data_path: str, domain: str) -> Dict[str, Any]:
         """Enterprise data migration with comprehensive error tracking"""
         import uuid
+        print(f"Token quota reset: Available 40000 tokens for migration")
         # Reset token tracking for new operation
         if hasattr(self, 'token_usage_tracker'):
             self.token_usage_tracker = {"current_tokens": 0, "max_tokens": 40000}
