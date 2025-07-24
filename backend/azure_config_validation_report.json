@@ -1,39 +1,37 @@
 {
   "validation_summary": {
-    "overall_status": "unhealthy",
+    "overall_status": "healthy",
     "total_validations": 4,
-    "healthy_validations": 3,
-    "validation_duration_ms": 11406.383514404297,
-    "timestamp": "2025-07-24T02:54:26.218263"
+    "healthy_validations": 4,
+    "validation_duration_ms": 10764.986038208008,
+    "timestamp": "2025-07-24T05:37:24.442903"
   },
   "validation_results": {
     "core_configuration": {
       "status": "healthy",
       "services_validated": 4,
-      "timestamp": "2025-07-24T02:54:14.956282"
+      "timestamp": "2025-07-24T05:37:13.824956"
     },
     "optional_services": {
       "status": "healthy",
       "configured_services": 3,
       "total_services": 4,
-      "timestamp": "2025-07-24T02:54:14.956361"
+      "timestamp": "2025-07-24T05:37:13.824996"
     },
     "service_connectivity": {
-      "status": "degraded",
-      "healthy_services": 5,
+      "status": "healthy",
+      "healthy_services": 6,
       "total_services": 6,
-      "check_duration_ms": 918.9331531524658,
-      "timestamp": "2025-07-24T02:54:26.218100"
+      "check_duration_ms": 877.9091835021973,
+      "timestamp": "2025-07-24T05:37:24.442810"
     },
     "environment_configuration": {
       "status": "healthy",
       "environment": "dev",
       "region": "eastus",
       "debug_mode": true,
-      "timestamp": "2025-07-24T02:54:26.218231"
+      "timestamp": "2025-07-24T05:37:24.442887"
     }
   },
-  "recommendations": [
-    "Verify Azure service credentials and network connectivity"
-  ]
+  "recommendations": []
 }
