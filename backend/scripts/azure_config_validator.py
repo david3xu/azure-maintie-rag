@@ -152,7 +152,7 @@ class AzureEnterpriseConfigValidator:
         try:
             from integrations.azure_services import AzureServicesManager
             azure_services = AzureServicesManager()
-            health_results = azure_services.get_service_health()
+            health_results = azure_services.check_all_services_health()
             print(f"   🔍 Overall Health Status: {health_results['overall_status'].upper()}")
             print(f"   📊 Service Health Ratio: {health_results['healthy_count']}/{health_results['total_count']}")
             print(f"   ⏱️  Health Check Duration: {health_results['health_check_duration_ms']:.2f}ms")
