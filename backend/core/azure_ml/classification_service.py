@@ -86,16 +86,8 @@ class UniversalEntityClassifier:
         }
 
     def _classify_equipment(self, entity_text: str, context: str) -> Optional[ClassificationResult]:
-        """Classify equipment-type entities"""
-        equipment_keywords = ["system", "machine", "equipment", "device", "unit", "apparatus"]
-
-        if any(keyword in entity_text.lower() for keyword in equipment_keywords):
-            return ClassificationResult(
-                entity_type="equipment",
-                confidence=0.85,
-                category="physical",
-                metadata={"rule": "equipment_keywords"}
-            )
+        """Universal equipment classification (no hardcoded keywords)"""
+        # Use only data-driven or Azure Language Services-based classification
         return None
 
     def _classify_component(self, entity_text: str, context: str) -> Optional[ClassificationResult]:

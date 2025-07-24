@@ -25,11 +25,12 @@ class AzureOpenAIRateLimiter:
 
     def __init__(self):
         self.quota_config = self._load_quota_config()
+        current_time = time.time()
         self.usage_tracker = {
             "tokens_used_this_minute": 0,
             "requests_this_minute": 0,
             "cost_this_hour": 0.0,
-            "last_reset_time": time.time()
+            "last_reset_time": current_time  # Initialize with current time
         }
 
         # Rate limiting state
@@ -127,15 +128,17 @@ class AzureOpenAIRateLimiter:
         """Reset usage counters based on time intervals"""
         time_since_reset = current_time - self.usage_tracker["last_reset_time"]
 
-        # Reset minute counters
+        # Reset minute counters every 60 seconds
         if time_since_reset >= 60:
             self.usage_tracker["tokens_used_this_minute"] = 0
             self.usage_tracker["requests_this_minute"] = 0
             self.usage_tracker["last_reset_time"] = current_time
+            logger.info(f"Token quota reset: Available {self.quota_config.max_tokens_per_minute} tokens for migration")
 
-        # Reset hour counters
+        # Reset hour counters every 3600 seconds
         if time_since_reset >= 3600:
             self.usage_tracker["cost_this_hour"] = 0.0
+            logger.info(f"Cost quota reset: Available ${self.quota_config.cost_threshold_per_hour} budget")
 
     async def _update_usage_tracking(self, actual_tokens: int, execution_time: float) -> None:
         """Update usage tracking with actual consumption"""
