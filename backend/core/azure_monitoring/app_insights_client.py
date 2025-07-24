@@ -9,22 +9,34 @@ from config.settings import azure_settings
 logger = logging.getLogger(__name__)
 
 class AzureApplicationInsightsClient:
+    _configured = False
     """Production Application Insights client using Azure Monitor OpenTelemetry."""
     def __init__(self, connection_string: Optional[str] = None, sampling_rate: float = 1.0):
         self.connection_string = connection_string or azure_settings.azure_application_insights_connection_string
         self.sampling_rate = sampling_rate
         self.enabled = bool(self.connection_string)
         if not self.enabled:
-            logger.warning("Application Insights connection string not set. Telemetry is disabled.")
+            logger.warning("Application Insights disabled - no connection string")
+            self.tracer = None
+            self.meter = None
             return
-        try:
-            configure_azure_monitor(connection_string=self.connection_string, sampling_ratio=self.sampling_rate / 100.0)
-            self.tracer: Tracer = trace.get_tracer(__name__)
-            self.meter: Meter = metrics.get_meter(__name__)
-            logger.info("Azure Application Insights OpenTelemetry configured.")
-        except Exception as e:
-            logger.error(f"Failed to configure Azure Monitor OpenTelemetry: {e}")
-            self.enabled = False
+        # Only configure once globally
+        if not AzureApplicationInsightsClient._configured:
+            try:
+                configure_azure_monitor(
+                    connection_string=self.connection_string,
+                    sampling_ratio=self.sampling_rate / 100.0
+                )
+                AzureApplicationInsightsClient._configured = True
+            except Exception as e:
+                logger.warning(f"Failed to configure Azure Monitor OpenTelemetry: {e}")
+                self.enabled = False
+                self.tracer = None
+                self.meter = None
+                return
+        # Get tracer and meter
+        self.tracer = trace.get_tracer(__name__)
+        self.meter = metrics.get_meter(__name__)
 
     def track_event(self, name: str, properties: Optional[Dict[str, Any]] = None, measurements: Optional[Dict[str, float]] = None):
         if not self.enabled:
