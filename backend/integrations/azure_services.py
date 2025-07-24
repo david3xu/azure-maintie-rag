@@ -132,7 +132,7 @@ class AzureServicesManager:
                         "entity_types": [entity.get("entity_type", "") for entity in knowledge_data.get("entities", {}).values()],
                         "relation_types": list(set(rel.get("relation_type", "") for rel in knowledge_data.get("relations", []))),
                         "extraction_confidence": knowledge_data.get("extraction_metadata", {}).get("confidence", 1.0),
-                        "last_updated": migration_context["start_time"]
+                        "last_updated": datetime.fromtimestamp(migration_context["start_time"]).isoformat()
                     }
                     processed_documents.append(search_document)
             if not processed_documents:
@@ -240,9 +240,9 @@ class AzureServicesManager:
                 except Exception as e:
                     relation_failures.append({"relation_id": relation_data["relation_id"], "error": str(e)})
             # Validate graph statistics
-            graph_stats = await cosmos_client.get_graph_change_metrics(domain)
-            validated_entities = graph_stats.get("new_entities", 0)
-            validated_relations = graph_stats.get("new_relations", 0)
+            graph_stats = cosmos_client.get_graph_statistics(domain)
+            validated_entities = graph_stats.get("vertex_count", 0)
+            validated_relations = graph_stats.get("edge_count", 0)
             if self.app_insights and self.app_insights.enabled:
                 self.app_insights.track_event(
                     name="azure_cosmos_migration",

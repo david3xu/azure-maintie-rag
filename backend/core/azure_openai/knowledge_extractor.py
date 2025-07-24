@@ -157,7 +157,7 @@ class AzureOpenAIKnowledgeExtractor:
 
             # Track performance metrics
             performance_metrics = self.monitor.end_performance_tracking()
-            await self.monitor.track_azure_openai_usage(
+            self.monitor.track_azure_openai_usage(
                 operation_type="knowledge_extraction",
                 tokens_used=performance_metrics["tokens_used"],
                 response_time_ms=performance_metrics["duration_ms"],
