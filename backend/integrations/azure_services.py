@@ -265,26 +265,23 @@ class AzureServicesManager:
             }
     """Unified manager for all Azure services - enterprise health monitoring"""
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize Azure services with configuration validation"""
+    def __init__(self, config: Optional[Dict[str, Any]] = None, storage_factory: Optional[Any] = None):
+        """Initialize Azure services with configuration validation and dependency injection"""
         self.config = config or {}
         self.services = {}
         self.service_status = {}
         self.initialization_status = {}
-        # Fix 2: Disable Application Insights completely
         self.app_insights = None
-        # (Comment out or remove any Application Insights initialization block)
-        # if azure_settings.azure_enable_telemetry and azure_settings.azure_application_insights_connection_string:
-        #     self.app_insights = AzureApplicationInsightsClient(
-        #         connection_string=azure_settings.azure_application_insights_connection_string,
-        #         sampling_rate=azure_settings.effective_telemetry_sampling_rate
-        #     )
+        self.storage_factory = storage_factory
         self._safe_initialize_services()
-
         logger.info("AzureServicesManager initialized with all services including storage factory")
 
+    def _validate_storage_service_interface(self, factory) -> bool:
+        required_methods = ['get_rag_data_client', 'get_ml_models_client', 'get_app_data_client']
+        return all(hasattr(factory, method) for method in required_methods)
+
     def _safe_initialize_services(self) -> None:
-        """Safe service initialization with dependency validation"""
+        """Safe service initialization with dependency validation and interface check"""
         initialization_status = {}
 
         # Core services (required)
@@ -297,7 +294,11 @@ class AzureServicesManager:
 
         # Storage services (required)
         try:
-            self.storage_factory = get_storage_factory()
+            if self.storage_factory is None:
+                self.storage_factory = get_storage_factory()
+            if not self._validate_storage_service_interface(self.storage_factory):
+                from core.azure_storage.storage_factory import AzureStorageFactory
+                self.storage_factory = AzureStorageFactory()
             self.services['rag_storage'] = self.storage_factory.get_rag_data_client()
             self.services['ml_storage'] = self.storage_factory.get_ml_models_client()
             self.services['app_storage'] = self.storage_factory.get_app_data_client()

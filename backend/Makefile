@@ -133,6 +133,9 @@ query-demo-enterprise: ## Query processing with Azure performance tracking
 	@echo "📋 Enterprise query processing completed"
 	@cat $(SESSION_SUMMARY)
 
+data-state:
+	PYTHONPATH=. python scripts/azure_data_state.py
+
 backend-summary: ## Display current backend session summary
 	@if [ -f "$(SESSION_SUMMARY)" ]; then \
 		echo "📋 Current Backend Session Summary:"; \

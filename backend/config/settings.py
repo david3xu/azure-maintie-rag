@@ -4,6 +4,7 @@ Centralizes all application settings and environment variables for Azure service
 """
 
 import os
+import json
 from pathlib import Path
 from typing import Optional, List, ClassVar, Dict, Any
 from pydantic_settings import BaseSettings
@@ -61,8 +62,8 @@ class Settings(BaseSettings):
 
     # Azure OpenAI Settings
     openai_api_type: str = Field(default="azure", env="OPENAI_API_TYPE")
-    openai_api_key: str = Field(default="1234567890", env="OPENAI_API_KEY")
-    openai_api_base: str = Field(default="https://clu-project-foundry-instance.openai.azure.com/", env="OPENAI_API_BASE")
+    openai_api_key: str = Field(env="OPENAI_API_KEY")
+    openai_api_base: str = Field(env="OPENAI_API_BASE")
     openai_api_version: str = Field(default="2025-03-01-preview", env="OPENAI_API_VERSION")
     openai_deployment_name: str = Field(default="gpt-4.1", env="OPENAI_DEPLOYMENT_NAME")
     openai_model: str = Field(default="gpt-4.1", env="OPENAI_MODEL")
@@ -77,19 +78,19 @@ class Settings(BaseSettings):
     # Azure Storage Settings - RAG Data Storage
     azure_storage_account: str = Field(default="", env="AZURE_STORAGE_ACCOUNT")
     azure_storage_key: str = Field(default="", env="AZURE_STORAGE_KEY")
-    azure_blob_container: str = Field(default="universal-rag-data", env="AZURE_BLOB_CONTAINER")
+    azure_blob_container: str = Field(env="AZURE_BLOB_CONTAINER")
     azure_storage_connection_string: str = Field(default="", env="AZURE_STORAGE_CONNECTION_STRING")
 
     # Azure ML Storage Settings - ML Models and Artifacts
     azure_ml_storage_account: str = Field(default="", env="AZURE_ML_STORAGE_ACCOUNT")
     azure_ml_storage_key: str = Field(default="", env="AZURE_ML_STORAGE_KEY")
-    azure_ml_blob_container: str = Field(default="ml-models", env="AZURE_ML_BLOB_CONTAINER")
+    azure_ml_blob_container: str = Field(env="AZURE_ML_BLOB_CONTAINER")
     azure_ml_storage_connection_string: str = Field(default="", env="AZURE_ML_STORAGE_CONNECTION_STRING")
 
     # Azure Application Storage Settings - App Data and Logs
     azure_app_storage_account: str = Field(default="", env="AZURE_APP_STORAGE_ACCOUNT")
     azure_app_storage_key: str = Field(default="", env="AZURE_APP_STORAGE_KEY")
-    azure_app_blob_container: str = Field(default="app-data", env="AZURE_APP_BLOB_CONTAINER")
+    azure_app_blob_container: str = Field(env="AZURE_APP_BLOB_CONTAINER")
     azure_app_storage_connection_string: str = Field(default="", env="AZURE_APP_STORAGE_CONNECTION_STRING")
 
     # Azure Cognitive Search Settings
@@ -146,9 +147,9 @@ class Settings(BaseSettings):
     azure_enable_telemetry: bool = Field(default=True, env="AZURE_ENABLE_TELEMETRY")
 
     # Azure Resource Naming Convention
-    azure_resource_prefix: str = Field(default="maintie", env="AZURE_RESOURCE_PREFIX")
-    azure_environment: str = Field(default="dev", env="AZURE_ENVIRONMENT")
-    azure_region: str = Field(default="eastus", env="AZURE_REGION")
+    azure_resource_prefix: str = Field(env="AZURE_RESOURCE_PREFIX")
+    azure_environment: str = Field(env="AZURE_ENVIRONMENT")
+    azure_region: str = Field(env="AZURE_REGION")
 
     # Data Paths (for local development)
     BASE_DIR: ClassVar[Path] = Path(__file__).parent.parent
@@ -315,32 +316,21 @@ class Settings(BaseSettings):
     def effective_retention_days(self) -> int:
         return self.get_service_config('retention_days')
 
+    @property
+    def resource_type_mappings(self) -> Dict[str, str]:
+        """Get resource type mappings from environment"""
+        mappings_env = os.getenv('AZURE_RESOURCE_TYPE_MAPPINGS', '{"storage":"stor","search":"srch","keyvault":"kv","cosmos":"cosmos","ml":"ml","appinsights":"ai","loganalytics":"law"}')
+        return json.loads(mappings_env)
+
     def get_resource_name(self, resource_type: str, suffix: str = "") -> str:
-        """Generate Azure resource names following enterprise convention"""
-        # Resource type mappings for consistent naming
-        resource_mappings = {
-            'storage': 'stor',
-            'search': 'srch',
-            'keyvault': 'kv',
-            'cosmos': 'cosmos',
-            'ml': 'ml',
-            'appinsights': 'ai',
-            'loganalytics': 'law'
-        }
-
-        # Get short name for resource type
-        short_type = resource_mappings.get(resource_type, resource_type)
-
-        # Base name components
+        """Generate Azure resource names from configuration"""
+        mappings = self.resource_type_mappings
+        short_type = mappings.get(resource_type, resource_type)
         parts = [self.azure_resource_prefix, self.azure_environment, short_type]
-
-        # Add suffix if provided
         if suffix:
             parts.append(suffix)
-
-        # Join with appropriate separator based on resource type
-        if resource_type in ['storage']:
-            # Storage accounts cannot have hyphens
+        hyphen_excluded_types = os.getenv('AZURE_HYPHEN_EXCLUDED_TYPES', 'storage').split(',')
+        if resource_type in hyphen_excluded_types:
             return "".join(parts)
         else:
             return "-".join(parts)
@@ -385,6 +375,32 @@ class Settings(BaseSettings):
         env_file = ".env"
         case_sensitive = False
         extra = "ignore"  # Allow extra fields from environment
+
+    def get_storage_config(self, storage_type: str) -> Dict[str, str]:
+        """Get storage configuration with consistent priority order"""
+        config_map = {
+            'rag_data': {
+                'connection_string': self.azure_storage_connection_string,
+                'account_name': self.azure_storage_account,
+                'account_key': self.azure_storage_key,
+                'container_name': self.azure_blob_container
+            },
+            'ml_models': {
+                'connection_string': self.azure_ml_storage_connection_string,
+                'account_name': self.azure_ml_storage_account,
+                'account_key': self.azure_ml_storage_key,
+                'container_name': self.azure_ml_blob_container
+            },
+            'app_data': {
+                'connection_string': self.azure_app_storage_connection_string,
+                'account_name': self.azure_app_storage_account,
+                'account_key': self.azure_app_storage_key,
+                'container_name': self.azure_app_blob_container
+            }
+        }
+        if storage_type not in config_map:
+            raise ValueError(f"Unknown storage type: {storage_type}")
+        return config_map[storage_type]
 
 
 class AzureRegionalSettings(BaseSettings):
