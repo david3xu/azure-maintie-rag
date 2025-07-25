@@ -54,7 +54,7 @@ class EnterpriseGremlinGraphManager:
             raise
 
     def _execute_gremlin_query_safe(self, query: str, timeout_seconds: int = 30):
-        """Enterprise thread-isolated Gremlin query execution (copied from working cosmos_gremlin_client.py)"""
+        """Enterprise thread-isolated Gremlin query execution with proper error propagation"""
         def _run_gremlin_query():
             try:
                 with warnings.catch_warnings():
@@ -63,18 +63,20 @@ class EnterpriseGremlinGraphManager:
                     result = self.gremlin_client.submit(query)
                     return result.all().result()
             except Exception as e:
-                logger.warning(f"Gremlin query execution failed: {e}")
-                return []
+                logger.error(f"Gremlin query execution failed: {e}", exc_info=True)
+                raise RuntimeError(f"Azure Cosmos DB Gremlin query failed: {e}") from e  # ✅ Raise error
+
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(_run_gremlin_query)
                 return future.result(timeout=timeout_seconds)
-        except concurrent.futures.TimeoutError:
-            logger.warning(f"Gremlin query timed out after {timeout_seconds}s: {query}")
-            return []
+        except concurrent.futures.TimeoutError as e:
+            error_msg = f"Gremlin query timed out after {timeout_seconds}s: {query}"
+            logger.error(error_msg)
+            raise TimeoutError(error_msg) from e  # ✅ Raise timeout error
         except Exception as e:
-            logger.warning(f"Thread execution failed for Gremlin query: {e}")
-            return []
+            logger.error(f"Thread execution failed for Gremlin query: {e}", exc_info=True)
+            raise RuntimeError(f"Azure Cosmos DB thread execution failed: {e}") from e  # ✅ Raise error
 
     def _execute_gremlin_query(self, query: str, timeout_seconds: int = 30):
         """Wrapper for backward compatibility - calls synchronous _execute_gremlin_query_safe"""

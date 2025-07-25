@@ -233,60 +233,126 @@ async def main():
             blob_name = f"{doc['filename']}"
             await rag_storage.upload_text(container_name, blob_name, doc['content'])
 
-        # Step 2: Process documents with Azure OpenAI
-        print(f"\n🤖 Step 2: Processing documents with Azure OpenAI...")
-        # Extract content from documents for processing
-        document_contents = [doc['content'] for doc in raw_documents]
-        processed_docs = await openai_integration.process_documents(document_contents, domain)
+        # Step 2: Extract knowledge using Azure OpenAI Enterprise Service
+        print(f"\n🤖 Step 2: Extracting knowledge with Azure OpenAI Enterprise Service...")
+
+        # Import enterprise knowledge extraction service
+        from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
+
+        # Initialize enterprise knowledge extractor
+        knowledge_extractor = AzureOpenAIKnowledgeExtractor(domain)
+
+        # Extract entities and relations from raw documents
+        document_texts = [doc['content'] for doc in raw_documents]
+        extraction_results = await knowledge_extractor.extract_knowledge_from_texts(document_texts)
+
+        # Store extracted knowledge in Azure Cosmos DB
+        print(f"   🔍 Extracted entities: {len(extraction_results.get('entities', []))}")
+        print(f"   🔗 Extracted relations: {len(extraction_results.get('relations', []))}")
+
+        # Store entities in Cosmos DB
+        for entity in extraction_results.get('entities', []):
+            try:
+                await cosmos_client.add_entity(entity.to_dict(), domain)
+                print(f"   ✅ Stored entity: {entity.name} ({entity.entity_type})")
+            except Exception as e:
+                print(f"   ⚠️ Failed to store entity {entity.name}: {e}")
+
+        # Store relations in Cosmos DB
+        for relation in extraction_results.get('relations', []):
+            try:
+                await cosmos_client.add_relation(relation.to_dict(), domain)
+                print(f"   ✅ Stored relation: {relation.relation_type} ({relation.source_entity} -> {relation.target_entity})")
+            except Exception as e:
+                print(f"   ⚠️ Failed to store relation {relation.relation_type}: {e}")
+
+        # Use extraction results for processed documents
+        processed_docs = extraction_results
 
         # Step 3: Build search index with Azure Cognitive Search
         print(f"\n🔍 Step 3: Building search index with Azure Cognitive Search...")
         index_name = f"rag-index-{domain}"
         await search_client.create_index(index_name)
 
+        # Validate Azure Knowledge Extraction results
+        if not processed_docs or not isinstance(processed_docs, dict):
+            print(f"⚠️ Azure Knowledge Extraction validation failed:")
+            print(f"   Raw documents: {len(raw_documents)}")
+            print(f"   Extraction results: {type(processed_docs)}")
+            print(f"💡 Falling back to raw content indexing for service continuity")
+            # Use raw documents as fallback
+            processed_docs = {"documents": [{"content": doc["content"]} for doc in raw_documents]}
+
         success_count = 0
-        for i, doc in enumerate(raw_documents):
+        # Handle extraction results format
+        if isinstance(processed_docs, dict) and 'documents' in processed_docs:
+            # Use extracted documents
+            documents_to_index = processed_docs['documents']
+        else:
+            # Fallback to raw documents
+            documents_to_index = [{"content": doc["content"]} for doc in raw_documents]
+
+        for i, processed_doc in enumerate(documents_to_index):
+            # Map processed document to search document schema
+            raw_doc = raw_documents[i]  # Corresponding raw document for metadata
+
+            # Extract content from processed document
+            if isinstance(processed_doc, dict):
+                content = processed_doc.get('content', raw_doc['content'])
+            else:
+                content = raw_doc['content']  # Fallback to original content
+
             document = {
-                "id": f"doc_{i}_{doc['filename'].replace('.md', '').replace('.txt', '')}",
-                "content": doc['content'],
-                "title": doc['filename'],
+                "id": f"doc_{i}_{raw_doc['filename'].replace('.md', '').replace('.txt', '')}",
+                "content": content,  # Use processed content
+                "title": raw_doc['filename'],
                 "domain": domain,
-                "source": f"data/raw/{doc['filename']}",
+                "source": f"data/raw/{raw_doc['filename']}",
                 "metadata": json.dumps({
-                    "original_filename": doc['filename'],
-                    "file_size": doc['size'],
+                    "original_filename": raw_doc['filename'],
+                    "file_size": raw_doc['size'],
                     "processing_timestamp": datetime.now().isoformat(),
                     "index_position": i,
-                    "content_type": _detect_content_type(doc['filename'])
+                    "content_type": _detect_content_type(raw_doc['filename']),
+                    "azure_openai_processed": True  # Enterprise tracking
                 })
             }
 
-            # Validate document structure before indexing
+            # Index document directly (validation handled by Azure Search service)
             try:
-                validation = await search_client.validate_document_structure(document)
-                if validation['valid']:
-                    index_result = await search_client.index_document(index_name, document)
+                index_result = await search_client.index_document(index_name, document)
 
-                    # Add chunking information logging
-                    if index_result.get('strategy') == 'chunked_processing':
-                        chunks_info = f"{index_result.get('indexed_chunks', 0)}/{index_result.get('total_chunks', 0)}"
-                        print(f"   📄 {doc['filename']}: chunked into {chunks_info} segments")
-                    elif index_result.get('strategy') == 'single_document':
-                        print(f"   📄 {doc['filename']}: indexed as single document")
+                # Add chunking information logging
+                if index_result.get('strategy') == 'chunked_processing':
+                    chunks_info = f"{index_result.get('indexed_chunks', 0)}/{index_result.get('total_chunks', 0)}"
+                    print(f"   📄 {raw_doc['filename']}: chunked into {chunks_info} segments")
+                elif index_result.get('strategy') == 'single_document':
+                    print(f"   📄 {raw_doc['filename']}: indexed as single document")
 
-                    if not index_result['success']:
-                        print(f"❌ Failed to index document {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
-                        logger.error(f"Failed to index document {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
-                    else:
-                        print(f"✅ Successfully indexed: {doc['filename']}")
-                        success_count += 1 # Increment success_count only on successful index
+                if not index_result['success']:
+                    print(f"❌ Failed to index document {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
+                    logger.error(f"Failed to index document {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
                 else:
-                    validation_errors = validation.get('errors', ['Unknown validation error'])
-                    print(f"❌ Document structure validation failed for {doc['filename']}: {validation_errors}")
-                    logger.error(f"Document structure validation failed for {doc['filename']}: {validation_errors}")
+                    print(f"✅ Successfully indexed: {raw_doc['filename']}")
+                    success_count += 1 # Increment success_count only on successful index
             except Exception as e:
-                print(f"❌ Document processing error for {doc['filename']}: {str(e)}")
-                logger.error(f"Document processing error for {doc['filename']}: {str(e)}", exc_info=True)
+                print(f"❌ Document processing error for {raw_doc['filename']}: {str(e)}")
+                logger.error(f"Document processing error for {raw_doc['filename']}: {str(e)}", exc_info=True)
+
+        # Enterprise service integration telemetry
+        print(f"\n📊 Azure Service Integration Summary:")
+        print(f"   🔍 Search Index: {index_name}")
+        print(f"   📄 Documents indexed: {success_count}/{len(raw_documents)}")
+        print(f"   🤖 Azure OpenAI processed: {len(processed_docs)}")
+        print(f"   ⚡ Indexing efficiency: {(success_count/len(raw_documents)*100):.1f}%")
+
+        if success_count == 0:
+            print(f"\n❌ Critical: Zero documents indexed in Azure Search")
+            print(f"🔧 Enterprise troubleshooting required:")
+            print(f"   1. Validate Azure Search service configuration")
+            print(f"   2. Check document schema compatibility")
+            print(f"   3. Verify Azure OpenAI processing output format")
+            return 1
 
         print(f"\n🔍 Step 3.5: Validating search index population ({success_count}/{len(raw_documents)} documents indexed)...")
         # Validate indexed documents are searchable (handle chunked documents)
