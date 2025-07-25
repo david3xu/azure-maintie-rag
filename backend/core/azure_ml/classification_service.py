@@ -1,290 +1,339 @@
 """
-Universal Entity and Relation Classifier
-Provides domain-agnostic classification capabilities that work with any domain
+Azure Universal Entity and Relation Classifier
+Enterprise-grade classification service using Azure Cognitive Services
+Eliminates hardcoded patterns through data-driven Azure integration
 """
 
 import logging
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
+from core.azure_openai.azure_text_analytics_service import AzureTextAnalyticsService
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class ClassificationResult:
-    """Universal classification result"""
+    """Enterprise classification result with Azure service metadata"""
     entity_type: str
     confidence: float
     category: str
     metadata: Dict[str, Any]
 
 
-class UniversalEntityClassifier:
-    """Universal entity classifier that works with any domain through configuration"""
+class AzureEntityClassifier:
+    """Azure-powered entity classifier with fail-fast architecture"""
 
     def __init__(self, domain_config: Optional[Dict[str, Any]] = None):
-        """Initialize universal entity classifier"""
+        """Initialize Azure entity classifier"""
         self.domain_config = domain_config or {}
-        self.entity_types = self._load_entity_types()
-        self.classification_rules = self._build_classification_rules()
+        self.azure_text_service = AzureTextAnalyticsService()
 
-        logger.info(f"Universal entity classifier initialized with {len(self.entity_types)} entity types")
+        # Configuration-driven thresholds (no hardcoded values)
+        self.confidence_threshold = float(settings.extraction_confidence_threshold)
+        self.pattern_threshold = float(settings.pattern_confidence_threshold)
 
-    def classify_entity(self, entity_text: str, context: str = "") -> ClassificationResult:
-        """Classify an entity using universal rules"""
+        # Discovered patterns storage (populated by data discovery)
+        self.discovered_entity_patterns = {}
 
-        # Apply universal classification rules
-        for rule_name, rule_func in self.classification_rules.items():
-            result = rule_func(entity_text, context)
-            if result:
-                return result
+        logger.info(f"Azure entity classifier initialized with confidence threshold: {self.confidence_threshold}")
 
-        # ❌ REMOVED: Silent fallback - let the error propagate
-        raise RuntimeError(f"Entity classification failed for: {entity_text}")
+    async def classify_entity(self, entity_text: str, context: str = "") -> ClassificationResult:
+        """Azure Text Analytics entity classification with fail-fast architecture"""
 
-    def classify_entities_batch(self, entities: List[str], contexts: List[str] = None) -> List[ClassificationResult]:
-        """Classify multiple entities efficiently"""
+        try:
+            # Primary classification: Azure Text Analytics
+            entity_results = await self.azure_text_service._recognize_entities_batch([entity_text])
+
+            if not entity_results:
+                error_msg = f"Azure Text Analytics returned no results for entity: {entity_text}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+
+            if not entity_results[0]["entities"]:
+                error_msg = f"Azure Text Analytics found no entities in text: {entity_text}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+
+            azure_entity = entity_results[0]["entities"][0]
+
+            # Validate confidence meets enterprise threshold
+            if azure_entity["confidence"] < self.confidence_threshold:
+                error_msg = f"Azure classification confidence {azure_entity['confidence']:.3f} below threshold {self.confidence_threshold} for entity: {entity_text}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+
+            return ClassificationResult(
+                entity_type=azure_entity["category"].lower(),
+                confidence=azure_entity["confidence"],
+                category=azure_entity["category"],
+                metadata={
+                    "source": "azure_text_analytics",
+                    "azure_category": azure_entity["category"],
+                    "text_length": len(entity_text),
+                    "context_length": len(context)
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Azure entity classification failed for '{entity_text}': {e}")
+            raise RuntimeError(f"Azure Text Analytics entity classification failed: {e}") from e
+
+    async def classify_entities_batch(self, entities: List[str], contexts: List[str] = None) -> List[ClassificationResult]:
+        """Batch entity classification with Azure Text Analytics"""
         if contexts is None:
             contexts = [""] * len(entities)
 
-        results = []
-        for entity, context in zip(entities, contexts):
-            result = self.classify_entity(entity, context)
-            results.append(result)
+        try:
+            # Batch processing through Azure Text Analytics
+            entity_results = await self.azure_text_service._recognize_entities_batch(entities)
 
-        return results
+            if len(entity_results) != len(entities):
+                error_msg = f"Azure batch processing mismatch: {len(entity_results)} results for {len(entities)} entities"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
 
-    def _load_entity_types(self) -> Dict[str, Dict[str, Any]]:
-        """Load entity types from domain configuration"""
-        entity_types = {}
+            results = []
+            for i, (entity_text, context) in enumerate(zip(entities, contexts)):
+                if not entity_results[i]["entities"]:
+                    error_msg = f"No Azure classification for entity {i}: {entity_text}"
+                    logger.error(error_msg)
+                    raise RuntimeError(error_msg)
 
-        # Load base universal types
-        base_types = {
-            "object": {"category": "physical", "confidence_base": 0.8},
-            "concept": {"category": "abstract", "confidence_base": 0.7},
-            "process": {"category": "action", "confidence_base": 0.8},
-            "attribute": {"category": "property", "confidence_base": 0.6},
-            "entity": {"category": "generic", "confidence_base": 0.5}
-        }
-        entity_types.update(base_types)
+                azure_entity = entity_results[i]["entities"][0]
 
-        # Load domain-specific types if available
-        if self.domain_config:
-            domain_types = self.domain_config.get("entity_types", {})
-            entity_types.update(domain_types)
+                if azure_entity["confidence"] < self.confidence_threshold:
+                    error_msg = f"Batch entity {i} confidence {azure_entity['confidence']:.3f} below threshold {self.confidence_threshold}"
+                    logger.error(error_msg)
+                    raise ValueError(error_msg)
 
-        return entity_types
+                results.append(ClassificationResult(
+                    entity_type=azure_entity["category"].lower(),
+                    confidence=azure_entity["confidence"],
+                    category=azure_entity["category"],
+                    metadata={
+                        "source": "azure_text_analytics_batch",
+                        "batch_index": i,
+                        "azure_category": azure_entity["category"]
+                    }
+                ))
 
-    def _build_classification_rules(self) -> Dict[str, callable]:
-        """Build universal classification rules"""
-        return {
-            "equipment_rule": self._classify_equipment,
-            "component_rule": self._classify_component,
-            "action_rule": self._classify_action,
-            "issue_rule": self._classify_issue,
-            "attribute_rule": self._classify_attribute
-        }
+            return results
 
-    def _classify_equipment(self, entity_text: str, context: str) -> Optional[ClassificationResult]:
-        """Universal equipment classification (no hardcoded keywords)"""
-        # Use only data-driven or Azure Language Services-based classification
-        return None
+        except Exception as e:
+            logger.error(f"Azure batch entity classification failed: {e}")
+            raise RuntimeError(f"Azure batch processing failed: {e}") from e
 
-    def _classify_component(self, entity_text: str, context: str) -> Optional[ClassificationResult]:
-        """Classify component-type entities"""
-        component_keywords = ["part", "component", "element", "piece", "section"]
+    async def validate_azure_service(self) -> None:
+        """Validate Azure Text Analytics service availability"""
+        try:
+            test_results = await self.azure_text_service._detect_language_batch(["test connectivity"])
 
-        if any(keyword in entity_text.lower() for keyword in component_keywords):
-            return ClassificationResult(
-                entity_type="component",
-                confidence=0.8,
-                category="physical",
-                metadata={"rule": "component_keywords"}
-            )
-        return None
+            if not test_results or not test_results[0].get("language"):
+                raise RuntimeError("Azure Text Analytics service validation failed")
 
-    def _classify_action(self, entity_text: str, context: str) -> Optional[ClassificationResult]:
-        """Classify action-type entities"""
-        action_keywords = ["replace", "repair", "check", "install", "remove", "adjust", "fix"]
+            logger.info("Azure Text Analytics service validation successful")
 
-        if any(keyword in entity_text.lower() for keyword in action_keywords):
-            return ClassificationResult(
-                entity_type="action",
-                confidence=0.9,
-                category="process",
-                metadata={"rule": "action_keywords"}
-            )
-        return None
-
-    def _classify_issue(self, entity_text: str, context: str) -> Optional[ClassificationResult]:
-        """Classify issue-type entities"""
-        issue_keywords = ["problem", "issue", "fault", "error", "failure", "malfunction"]
-
-        if any(keyword in entity_text.lower() for keyword in issue_keywords):
-            return ClassificationResult(
-                entity_type="issue",
-                confidence=0.85,
-                category="problem",
-                metadata={"rule": "issue_keywords"}
-            )
-        return None
-
-    def _classify_attribute(self, entity_text: str, context: str) -> Optional[ClassificationResult]:
-        """Classify attribute-type entities"""
-        # Look for descriptive words or properties
-        if len(entity_text.split()) == 1 and entity_text.lower() in ["broken", "damaged", "faulty", "working"]:
-            return ClassificationResult(
-                entity_type="attribute",
-                confidence=0.7,
-                category="property",
-                metadata={"rule": "attribute_keywords"}
-            )
-        return None
+        except Exception as e:
+            logger.error(f"Azure service validation failed: {e}")
+            raise RuntimeError(f"Required Azure Text Analytics service unavailable: {e}") from e
 
 
-class UniversalRelationClassifier:
-    """Universal relation classifier that works with any domain through configuration"""
+class AzureRelationClassifier:
+    """Azure-powered relation classifier using key phrase extraction"""
 
     def __init__(self, domain_config: Optional[Dict[str, Any]] = None):
-        """Initialize universal relation classifier"""
+        """Initialize Azure relation classifier"""
         self.domain_config = domain_config or {}
-        self.relation_types = self._load_relation_types()
-        self.classification_rules = self._build_classification_rules()
+        self.azure_text_service = AzureTextAnalyticsService()
 
-        logger.info(f"Universal relation classifier initialized with {len(self.relation_types)} relation types")
+        # Configuration-driven parameters
+        self.confidence_threshold = float(settings.extraction_confidence_threshold)
+        self.min_phrases_required = int(getattr(settings, 'min_key_phrases_for_relations', 1))
 
-    def classify_relation(self, relation_text: str, entity1: str = "", entity2: str = "") -> ClassificationResult:
-        """Classify a relation using universal rules"""
+        logger.info(f"Azure relation classifier initialized with confidence threshold: {self.confidence_threshold}")
 
-        # Apply universal classification rules
-        for rule_name, rule_func in self.classification_rules.items():
-            result = rule_func(relation_text, entity1, entity2)
-            if result:
-                return result
+    async def classify_relation(self, relation_text: str, entity1: str = "", entity2: str = "") -> ClassificationResult:
+        """Azure key phrase-based relation classification"""
 
-        # ❌ REMOVED: Silent fallback - let the error propagate
-        raise RuntimeError(f"Relation classification failed for: {relation_text}")
+        try:
+            # Use Azure Text Analytics key phrase extraction
+            phrase_results = await self.azure_text_service._extract_key_phrases_batch([relation_text])
 
-    def _load_relation_types(self) -> Dict[str, Dict[str, Any]]:
-        """Load relation types from domain configuration"""
-        relation_types = {}
+            if not phrase_results:
+                error_msg = f"Azure Text Analytics returned no phrase results for relation: {relation_text}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
 
-        # Load base universal types
-        base_types = {
-            "part_of": {"category": "structural", "confidence_base": 0.9},
-            "requires": {"category": "dependency", "confidence_base": 0.8},
-            "causes": {"category": "causality", "confidence_base": 0.8},
-            "located_at": {"category": "spatial", "confidence_base": 0.7},
-            "follows": {"category": "temporal", "confidence_base": 0.7}
-        }
-        relation_types.update(base_types)
+            key_phrases = phrase_results[0]["key_phrases"]
 
-        # Load domain-specific types if available
-        if self.domain_config:
-            domain_types = self.domain_config.get("relation_types", {})
-            relation_types.update(domain_types)
+            if len(key_phrases) < self.min_phrases_required:
+                error_msg = f"Azure found {len(key_phrases)} key phrases, minimum required: {self.min_phrases_required} for relation: {relation_text}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
-        return relation_types
+            # Data-driven relation classification from Azure key phrases
+            relation_type = self._determine_relation_from_phrases(key_phrases)
+            confidence = self._calculate_phrase_confidence(key_phrases, relation_text)
 
-    def _build_classification_rules(self) -> Dict[str, callable]:
-        """Build universal classification rules"""
-        return {
-            "dependency_rule": self._classify_dependency,
-            "causality_rule": self._classify_causality,
-            "composition_rule": self._classify_composition,
-            "spatial_rule": self._classify_spatial,
-            "temporal_rule": self._classify_temporal
-        }
+            if confidence < self.confidence_threshold:
+                error_msg = f"Relation confidence {confidence:.3f} below threshold {self.confidence_threshold} for: {relation_text}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
-    def _classify_dependency(self, relation_text: str, entity1: str, entity2: str) -> Optional[ClassificationResult]:
-        """Classify dependency relations"""
-        dependency_keywords = ["requires", "needs", "depends", "relies"]
-
-        if any(keyword in relation_text.lower() for keyword in dependency_keywords):
             return ClassificationResult(
-                entity_type="requires",
-                confidence=0.9,
-                category="dependency",
-                metadata={"rule": "dependency_keywords"}
+                entity_type=relation_type,
+                confidence=confidence,
+                category="relation",
+                metadata={
+                    "source": "azure_key_phrases",
+                    "key_phrases": key_phrases,
+                    "entity1": entity1,
+                    "entity2": entity2,
+                    "phrase_count": len(key_phrases)
+                }
             )
-        return None
 
-    def _classify_causality(self, relation_text: str, entity1: str, entity2: str) -> Optional[ClassificationResult]:
-        """Classify causality relations"""
-        causality_keywords = ["causes", "leads", "results", "triggers"]
+        except Exception as e:
+            logger.error(f"Azure relation classification failed for '{relation_text}': {e}")
+            raise RuntimeError(f"Azure relation classification failed: {e}") from e
 
-        if any(keyword in relation_text.lower() for keyword in causality_keywords):
-            return ClassificationResult(
-                entity_type="causes",
-                confidence=0.9,
-                category="causality",
-                metadata={"rule": "causality_keywords"}
-            )
-        return None
+    def _determine_relation_from_phrases(self, key_phrases: List[str]) -> str:
+        """Determine relation type from Azure key phrases"""
+        if not key_phrases:
+            raise ValueError("No key phrases available for relation type determination")
 
-    def _classify_composition(self, relation_text: str, entity1: str, entity2: str) -> Optional[ClassificationResult]:
-        """Classify composition relations"""
-        composition_keywords = ["part_of", "contains", "includes", "comprises"]
+        # Use most prominent key phrase as relation type (data-driven)
+        primary_phrase = key_phrases[0].lower().replace(' ', '_').replace('-', '_')
 
-        if any(keyword in relation_text.lower() for keyword in composition_keywords):
-            return ClassificationResult(
-                entity_type="part_of",
-                confidence=0.9,
-                category="structural",
-                metadata={"rule": "composition_keywords"}
-            )
-        return None
+        # Validate relation type format
+        if not primary_phrase or len(primary_phrase) < 2:
+            raise ValueError(f"Invalid relation type derived from phrase: {key_phrases[0]}")
 
-    def _classify_spatial(self, relation_text: str, entity1: str, entity2: str) -> Optional[ClassificationResult]:
-        """Classify spatial relations"""
-        spatial_keywords = ["located", "positioned", "placed", "situated"]
+        return primary_phrase
 
-        if any(keyword in relation_text.lower() for keyword in spatial_keywords):
-            return ClassificationResult(
-                entity_type="located_at",
-                confidence=0.8,
-                category="spatial",
-                metadata={"rule": "spatial_keywords"}
-            )
-        return None
+    def _calculate_phrase_confidence(self, key_phrases: List[str], original_text: str) -> float:
+        """Calculate confidence based on key phrase relevance and coverage"""
+        if not key_phrases:
+            raise ValueError("No key phrases for confidence calculation")
 
-    def _classify_temporal(self, relation_text: str, entity1: str, entity2: str) -> Optional[ClassificationResult]:
-        """Classify temporal relations"""
-        temporal_keywords = ["follows", "precedes", "before", "after"]
+        # Calculate confidence based on phrase density and text coverage
+        total_phrase_length = sum(len(phrase) for phrase in key_phrases)
+        text_coverage = min(1.0, total_phrase_length / len(original_text))
+        phrase_density = min(1.0, len(key_phrases) / 5.0)  # Normalize to max 5 phrases
 
-        if any(keyword in relation_text.lower() for keyword in temporal_keywords):
-            return ClassificationResult(
-                entity_type="follows",
-                confidence=0.8,
-                category="temporal",
-                metadata={"rule": "temporal_keywords"}
-            )
-        return None
+        # Weighted confidence calculation
+        confidence = (text_coverage * 0.6) + (phrase_density * 0.4)
+
+        return round(confidence, 3)
 
 
-class UniversalClassificationPipeline:
-    """Complete universal classification pipeline"""
+class AzureClassificationPipeline:
+    """Enterprise Azure classification pipeline orchestrator"""
 
     def __init__(self, domain_config: Optional[Dict[str, Any]] = None):
-        """Initialize universal classification pipeline"""
-        self.entity_classifier = UniversalEntityClassifier(domain_config)
-        self.relation_classifier = UniversalRelationClassifier(domain_config)
+        """Initialize Azure classification pipeline"""
+        self.entity_classifier = AzureEntityClassifier(domain_config)
+        self.relation_classifier = AzureRelationClassifier(domain_config)
 
-        logger.info("Universal classification pipeline initialized")
+        logger.info("Azure classification pipeline initialized")
 
-    def classify_knowledge_triplet(self, entity1: str, relation: str, entity2: str) -> Dict[str, ClassificationResult]:
-        """Classify a complete knowledge triplet"""
-        return {
-            "entity1": self.entity_classifier.classify_entity(entity1),
-            "relation": self.relation_classifier.classify_relation(relation, entity1, entity2),
-            "entity2": self.entity_classifier.classify_entity(entity2)
-        }
+    async def validate_azure_services(self) -> Dict[str, Any]:
+        """Validate all Azure services before processing"""
+        validation_results = {}
+
+        try:
+            # Validate entity classification service
+            await self.entity_classifier.validate_azure_service()
+            validation_results["entity_classifier"] = {"status": "healthy", "service": "azure_text_analytics"}
+
+            # Validate relation classification service (uses same Azure service)
+            validation_results["relation_classifier"] = {"status": "healthy", "service": "azure_text_analytics"}
+
+            validation_results["overall_status"] = "healthy"
+            logger.info("Azure classification pipeline validation successful")
+
+        except Exception as e:
+            error_msg = f"Azure classification pipeline validation failed: {e}"
+            logger.error(error_msg)
+            validation_results["overall_status"] = "failed"
+            validation_results["error"] = str(e)
+            raise RuntimeError(error_msg) from e
+
+        return validation_results
+
+    async def classify_knowledge_triplet(self, entity1: str, relation: str, entity2: str) -> Dict[str, ClassificationResult]:
+        """Classify complete knowledge triplet using Azure services"""
+
+        try:
+            # Validate services before processing
+            await self.validate_azure_services()
+
+            # Classify all components
+            results = {
+                "entity1": await self.entity_classifier.classify_entity(entity1),
+                "relation": await self.relation_classifier.classify_relation(relation, entity1, entity2),
+                "entity2": await self.entity_classifier.classify_entity(entity2)
+            }
+
+            logger.info(f"Successfully classified triplet: {entity1} -> {relation} -> {entity2}")
+            return results
+
+        except Exception as e:
+            error_msg = f"Knowledge triplet classification failed for '{entity1}' -> '{relation}' -> '{entity2}': {e}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg) from e
 
     def get_classification_stats(self) -> Dict[str, Any]:
-        """Get classification statistics"""
+        """Get Azure classification pipeline statistics"""
         return {
-            "entity_types": len(self.entity_classifier.entity_types),
-            "relation_types": len(self.relation_classifier.relation_types),
-            "entity_rules": len(self.entity_classifier.classification_rules),
-            "relation_rules": len(self.relation_classifier.classification_rules)
+            "entity_classifier": {
+                "service": "azure_text_analytics",
+                "confidence_threshold": self.entity_classifier.confidence_threshold,
+                "pattern_threshold": self.entity_classifier.pattern_threshold
+            },
+            "relation_classifier": {
+                "service": "azure_text_analytics_key_phrases",
+                "confidence_threshold": self.relation_classifier.confidence_threshold,
+                "min_phrases_required": self.relation_classifier.min_phrases_required
+            },
+            "pipeline_status": "azure_integrated",
+            "hardcoded_patterns": 0,  # No hardcoded patterns in Azure architecture
+            "data_driven": True
         }
+
+
+class AzureClassificationHealthMonitor:
+    """Azure service health monitoring for classification pipeline"""
+
+    def __init__(self, pipeline: AzureClassificationPipeline):
+        self.pipeline = pipeline
+
+    async def get_health_status(self) -> Dict[str, Any]:
+        """Comprehensive health check for Azure classification services"""
+        try:
+            validation_results = await self.pipeline.validate_azure_services()
+
+            return {
+                "timestamp": "auto-generated",
+                "classification_pipeline": validation_results["overall_status"],
+                "azure_text_analytics": validation_results.get("entity_classifier", {}).get("status", "unknown"),
+                "key_phrase_extraction": validation_results.get("relation_classifier", {}).get("status", "unknown"),
+                "configuration": {
+                    "confidence_threshold": float(settings.extraction_confidence_threshold),
+                    "pattern_threshold": float(settings.pattern_confidence_threshold)
+                },
+                "dependencies": ["azure_text_analytics_service"],
+                "hardcoded_patterns": False,
+                "data_driven_classification": True
+            }
+
+        except Exception as e:
+            logger.error(f"Classification health check failed: {e}")
+            return {
+                "timestamp": "auto-generated",
+                "classification_pipeline": "failed",
+                "error": str(e),
+                "azure_service_available": False
+            }

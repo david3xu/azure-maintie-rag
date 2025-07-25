@@ -17,7 +17,7 @@ from ..models.universal_rag_models import (
 )
 from .text_processor import AzureOpenAITextProcessor
 from ..azure_ml.classification_service import (
-    UniversalEntityClassifier, UniversalRelationClassifier
+    AzureEntityClassifier, AzureRelationClassifier
 )
 from .extraction_client import OptimizedLLMExtractor
 from .azure_text_analytics_service import AzureTextAnalyticsService
@@ -48,8 +48,8 @@ class AzureOpenAIKnowledgeExtractor:
 
         # Initialize universal components
         self.text_processor = AzureOpenAITextProcessor(domain_name)
-        self.entity_classifier = UniversalEntityClassifier()
-        self.relation_classifier = UniversalRelationClassifier()
+        self.entity_classifier = AzureEntityClassifier()
+        self.relation_classifier = AzureRelationClassifier()
         self.llm_extractor = OptimizedLLMExtractor(domain_name)
 
         # Initialize enterprise services
