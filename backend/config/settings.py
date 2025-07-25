@@ -48,6 +48,11 @@ class Settings(BaseSettings):
         env="AZURE_DATA_STATE_CACHE_TTL",
         description="Azure data state cache TTL in seconds"
     )
+    azure_strict_error_handling: bool = Field(
+        default=True,
+        env="AZURE_STRICT_ERROR_HANDLING",
+        description="Enable strict error handling across all Azure services"
+    )
 
     # Application Settings
     app_name: str = "Azure Universal RAG"
@@ -244,6 +249,19 @@ class Settings(BaseSettings):
     gnn_training_enabled: bool = Field(default=True, env="GNN_TRAINING_ENABLED")
     gnn_quality_threshold: float = Field(default=0.6, env="GNN_QUALITY_THRESHOLD")
     gnn_testing_mode: str = Field(default="disabled", env="GNN_TESTING_MODE")
+
+    # Azure Service Error Handling Configuration
+    fail_on_enhancement_error: bool = Field(
+        default=True,
+        env="FAIL_ON_ENHANCEMENT_ERROR",
+        description="Raise errors instead of silent fallbacks in pipeline enhancement"
+    )
+
+    azure_strict_error_handling: bool = Field(
+        default=True,
+        env="AZURE_STRICT_ERROR_HANDLING",
+        description="Enable strict error handling across all Azure services"
+    )
 
     # Environment-specific service configurations
     SERVICE_CONFIGS: ClassVar[Dict[str, Dict[str, Any]]] = {
