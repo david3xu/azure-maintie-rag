@@ -117,7 +117,7 @@ data-prep-enterprise: ## Enterprise data preparation with Azure service integrat
 	@$(call start_backend_session)
 	@echo "🔄 Azure Enterprise Data Preparation - Session: $(BACKEND_SESSION)"
 	@$(call validate_azure_services)
-	@$(call execute_azure_workflow,data_preparation,scripts/azure_knowledge_graph_service.py,general)
+	@$(call execute_azure_workflow,data_preparation,scripts/data_preparation_workflow.py,general)
 	@$(call capture_backend_metrics)
 	@$(call finalize_backend_session)
 	@echo "📋 Enterprise data preparation completed"
