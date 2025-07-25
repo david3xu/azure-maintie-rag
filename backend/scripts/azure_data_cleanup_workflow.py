@@ -2,8 +2,8 @@
 """
 Enterprise Azure Data Cleanup Workflow
 =====================================
-Automated cleanup of Azure Universal RAG data across all services
-Preserves infrastructure while cleaning all data
+Azure Universal RAG data lifecycle management orchestration
+Implements clean data reset across all Azure services while preserving infrastructure
 """
 
 import sys
@@ -20,7 +20,7 @@ from integrations.azure_services import AzureServicesManager
 from config.settings import azure_settings
 
 async def main():
-    """Execute automated Azure data cleanup workflow"""
+    """Execute enterprise Azure data cleanup workflow"""
 
     print("🧹 Enterprise Azure Universal RAG - Data Cleanup Workflow")
     print("=" * 60)
@@ -30,14 +30,14 @@ async def main():
     print()
 
     workflow_start = time.time()
-    domain = "general"  # From your existing data state patterns
+    domain = "general"
 
     try:
-        # Initialize Azure services using existing patterns
+        # Initialize Azure services using existing enterprise patterns
         print("📝 Initializing Azure services manager...")
         azure_services = AzureServicesManager()
 
-        # Validate services before cleanup
+        # Enterprise validation before cleanup
         print("🔍 Validating Azure services configuration...")
         validation = azure_services.validate_configuration()
         if not validation['all_configured']:
@@ -46,12 +46,12 @@ async def main():
 
         print("✅ Azure services validated successfully")
 
-        # Execute automated cleanup
+        # Execute automated cleanup across all Azure services
         print(f"\n🧹 Step 1: Executing automated data cleanup for domain '{domain}'...")
         cleanup_result = await azure_services.cleanup_all_azure_data(domain)
 
-        # Report cleanup results
-        print(f"\n📊 Cleanup Results:")
+        # Enterprise cleanup reporting
+        print(f"\n📊 Azure Service Cleanup Results:")
         for service_name, service_result in cleanup_result["cleanup_results"].items():
             if service_result["success"]:
                 status = "✅"
@@ -59,36 +59,36 @@ async def main():
 
                 # Service-specific cleanup metrics
                 if service_name == "blob_storage":
-                    details = f"({service_result['blobs_deleted']} blobs deleted)"
+                    details = f"({service_result.get('blobs_deleted', 0)} blobs deleted)"
                 elif service_name == "cognitive_search":
-                    details = f"({service_result['documents_deleted']} documents deleted)"
+                    details = f"({service_result.get('documents_deleted', 0)} documents deleted)"
                 elif service_name == "cosmos_db":
-                    details = f"({service_result['total_entities_deleted']} entities deleted)"
+                    details = f"({service_result.get('entities_deleted', 0)} entities deleted)"
 
-                print(f"   {status} {service_name.replace('_', ' ').title()}: {details}")
+                print(f"   {status} {service_name.replace('_', ' ').title()}: Data cleaned {details}")
             else:
                 print(f"   ❌ {service_name.replace('_', ' ').title()}: {service_result.get('error', 'Unknown error')}")
 
-        # Enterprise metrics
-        metrics = cleanup_result["enterprise_metrics"]
-        workflow_time = time.time() - workflow_start
-
-        print(f"\n📈 Enterprise Metrics:")
-        print(f"   🔹 Services cleaned: {metrics['services_cleaned']}/{metrics['total_services']}")
-        print(f"   🔹 Cleanup efficiency: {metrics['cleanup_efficiency']*100:.1f}%")
-        print(f"   🔹 Total cleanup time: {workflow_time:.2f}s")
-        print(f"   🔹 Azure infrastructure: Preserved")
+        # Enterprise workflow summary
+        workflow_duration = time.time() - workflow_start
+        print(f"\n📈 Enterprise Data Cleanup Summary:")
+        print(f"   ⏱️  Total Duration: {workflow_duration:.2f} seconds")
+        print(f"   🏗️  Infrastructure Status: Preserved")
+        print(f"   📊 Data State: Reset to clean slate")
+        print(f"   🚀 Readiness: Ready for fresh data processing")
 
         if cleanup_result["success"]:
-            print(f"\n✅ Azure data cleanup completed successfully!")
-            print(f"🏗️ Azure infrastructure preserved and ready for new data")
+            print(f"\n✅ Enterprise Azure data cleanup completed successfully!")
+            print(f"💡 Azure infrastructure preserved - ready for data-prep-enterprise")
             return 0
         else:
-            print(f"\n⚠️ Partial cleanup completed - some services had issues")
+            print(f"\n❌ Azure data cleanup encountered issues")
             return 1
 
     except Exception as e:
-        print(f"\n❌ Azure data cleanup failed: {e}")
+        print(f"❌ Enterprise Azure data cleanup failed: {e}")
+        import traceback
+        traceback.print_exc()
         return 1
 
 if __name__ == "__main__":

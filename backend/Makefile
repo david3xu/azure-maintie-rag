@@ -136,6 +136,21 @@ query-demo-enterprise: ## Query processing with Azure performance tracking
 data-state:
 	PYTHONPATH=. python scripts/azure_data_state.py
 
+azure-clean-data: ## Enterprise Azure data cleanup preserving infrastructure
+	@$(call start_backend_session)
+	@echo "🧹 Azure Data Cleanup Service Orchestration - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,data_cleanup,scripts/azure_data_cleanup_workflow.py,general)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Azure data cleanup completed"
+	@cat $(SESSION_SUMMARY)
+
+data-clean: ## Complete data lifecycle reset
+	@echo "🔄 Enterprise data lifecycle reset..."
+	make clean
+	make azure-clean-data
+
 backend-summary: ## Display current backend session summary
 	@if [ -f "$(SESSION_SUMMARY)" ]; then \
 		echo "📋 Current Backend Session Summary:"; \
