@@ -165,3 +165,85 @@ You're absolutely correct! The classification service contains **extensive hardc
 **Performance Tuning**: Cross-service orchestration requires optimization for acceptable response times
 
 This architecture completely eliminates hardcoded classification patterns while maintaining enterprise-grade performance, scalability, and reliability through Azure's managed services ecosystem.
+
+
+
+## **Azure Universal Classification Service - Enterprise Architecture**
+
+**File**: `backend/core/azure_ml/classification_service.py`## **🏗️ Azure Universal Classification Service - Enterprise Architecture Summary**
+
+### **Core Components**
+
+**AzureEntityClassifier**
+- **Primary Service**: Azure Text Analytics entity recognition
+- **Configuration-Driven**: Uses `extraction_confidence_threshold` from environment
+- **Fail-Fast Architecture**: Explicit errors when Azure service unavailable or confidence below threshold
+- **Batch Processing**: Optimized for enterprise-scale entity classification workloads
+
+**AzureRelationClassifier**
+- **Primary Service**: Azure Text Analytics key phrase extraction
+- **Data-Driven Relations**: Derives relation types from Azure key phrases (no hardcoded mappings)
+- **Confidence Calculation**: Based on phrase density and text coverage metrics
+- **Enterprise Validation**: Configurable minimum phrase requirements
+
+**AzureClassificationPipeline**
+- **Service Orchestrator**: Coordinates entity and relation classification
+- **Health Validation**: Pre-flight Azure service connectivity checks
+- **Knowledge Triplet Processing**: Complete entity-relation-entity classification workflow
+- **Comprehensive Monitoring**: Pipeline statistics and health metrics
+
+### **Azure Services Integration**
+
+**Dependencies**
+- `AzureTextAnalyticsService` (existing in your codebase)
+- Azure Cognitive Services Text Analytics API
+- Configuration management through `settings`
+
+**Data Flow**
+```
+Text Input → Azure Text Analytics → Entity Categories + Confidence
+Context Text → Azure Key Phrases → Relation Types + Confidence
+Configuration → Validation Thresholds → Pass/Fail Decisions
+```
+
+### **Enterprise Architecture Benefits**
+
+**Zero Hardcoded Patterns**
+- No maintenance-specific keywords or domain assumptions
+- Pure Azure service-driven classification
+- Configuration-based thresholds and validation rules
+
+**Fail-Fast Operational Model**
+- Explicit service validation before processing
+- Clear error propagation with actionable messages
+- No silent fallbacks that mask Azure service issues
+
+**Azure-Native Monitoring**
+- `AzureClassificationHealthMonitor` for service status tracking
+- Integration-ready for Azure Application Insights telemetry
+- Comprehensive pipeline statistics for operational dashboards
+
+**Enterprise Scalability**
+- Batch processing capabilities for high-volume workloads
+- Configuration-driven performance tuning
+- Azure service consumption optimization
+
+### **Configuration Requirements**
+
+**Environment Variables** (already in your config)
+```bash
+EXTRACTION_CONFIDENCE_THRESHOLD=0.7
+PATTERN_CONFIDENCE_THRESHOLD=0.7
+AZURE_TEXT_ANALYTICS_ENDPOINT=<your-endpoint>
+AZURE_TEXT_ANALYTICS_KEY=<your-key>
+```
+
+**Usage Integration**
+```python
+# Replace existing classification_service.py completely
+pipeline = AzureClassificationPipeline()
+await pipeline.validate_azure_services()  # Fails if Azure unavailable
+result = await pipeline.classify_knowledge_triplet(entity1, relation, entity2)
+```
+
+This architecture **completely eliminates the hardcoded patterns** while leveraging your existing Azure Text Analytics investment and maintaining enterprise-grade error handling, monitoring, and scalability.
