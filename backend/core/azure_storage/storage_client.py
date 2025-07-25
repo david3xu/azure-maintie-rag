@@ -185,24 +185,23 @@ class AzureStorageClient:
                 "blob_name": blob_name
             }
 
-    def list_blobs(self, prefix: str = "") -> List[Dict[str, Any]]:
-        """List blobs in container with optional prefix"""
+    def list_blobs(self, container_name: str = None, prefix: str = "") -> List[Dict[str, Any]]:
+        """List blobs in specified container with optional prefix"""
         try:
-            container_client = self.blob_service_client.get_container_client(self.container_name)
+            # Data-driven container selection
+            target_container = container_name or self.container_name
+            container_client = self.blob_service_client.get_container_client(target_container)
             blob_list = []
-
             for blob in container_client.list_blobs(name_starts_with=prefix):
                 blob_list.append({
                     "name": blob.name,
                     "size": blob.size,
                     "last_modified": blob.last_modified,
-                    "content_type": blob.get('content_settings', {}).get('content_type', 'unknown')
+                    "content_type": getattr(blob, 'content_settings', None) and getattr(blob.content_settings, 'content_type', 'unknown') or 'unknown'
                 })
-
             return blob_list
-
         except Exception as e:
-            logger.error(f"Blob listing failed: {e}")
+            logger.error(f"Blob listing failed for container {target_container}: {e}")
             return []
 
     def get_connection_status(self) -> Dict[str, Any]:
