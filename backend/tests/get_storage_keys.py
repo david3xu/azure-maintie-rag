@@ -4,24 +4,37 @@
 import subprocess
 import json
 import sys
+from config.settings import settings
+
+def get_storage_accounts_from_config():
+    """Get storage account names from configuration"""
+    storage_accounts = []
+    if settings.azure_storage_account:
+        storage_accounts.append({
+            "name": settings.azure_storage_account,
+            "purpose": "RAG Data",
+            "env_var": "AZURE_STORAGE_CONNECTION_STRING"
+        })
+    if settings.azure_ml_storage_account:
+        storage_accounts.append({
+            "name": settings.azure_ml_storage_account,
+            "purpose": "ML Models",
+            "env_var": "AZURE_ML_STORAGE_CONNECTION_STRING"
+        })
+    if settings.azure_app_storage_account:
+        storage_accounts.append({
+            "name": settings.azure_app_storage_account,
+            "purpose": "Application Data",
+            "env_var": "AZURE_APP_STORAGE_CONNECTION_STRING"
+        })
+    return storage_accounts
 
 def get_storage_keys_azure_cli():
     """Get storage account keys using Azure CLI"""
     print("🔑 Getting Azure Storage Account Keys...")
     print("=" * 60)
 
-    storage_accounts = [
-        {
-            "name": "maintiedevmlstor1cdd8e11",
-            "purpose": "RAG Data & ML Models",
-            "env_var": "AZURE_STORAGE_KEY"
-        },
-        {
-            "name": "maintiedevstor1cdd8e11",
-            "purpose": "Application Data",
-            "env_var": "AZURE_APP_STORAGE_KEY"
-        }
-    ]
+    storage_accounts = get_storage_accounts_from_config()
 
     for account in storage_accounts:
         print(f"\n📦 Storage Account: {account['name']}")
@@ -60,21 +73,10 @@ def get_connection_strings_azure_cli():
     print("\n🔗 Getting Connection Strings...")
     print("=" * 60)
 
-    storage_accounts = [
-        {
-            "name": "maintiedevmlstor1cdd8e11",
-            "purpose": "RAG Data & ML Models",
-            "env_var": "AZURE_STORAGE_CONNECTION_STRING"
-        },
-        {
-            "name": "maintiedevstor1cdd8e11",
-            "purpose": "Application Data",
-            "env_var": "AZURE_APP_STORAGE_CONNECTION_STRING"
-        }
-    ]
+    storage_accounts = get_storage_accounts_from_config()
 
     for account in storage_accounts:
-        print(f"\n📦 Storage Account: {account['name']}")
+        print(f"\n�� Storage Account: {account['name']}")
         print(f"🎯 Purpose: {account['purpose']}")
         print(f"🔧 Environment Variable: {account['env_var']}")
         print("-" * 40)

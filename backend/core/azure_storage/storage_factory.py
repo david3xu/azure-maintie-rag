@@ -19,68 +19,46 @@ class AzureStorageFactory:
         self._initialize_clients()
 
     def _initialize_clients(self):
-        """Initialize storage clients for different purposes"""
-        try:
-            # RAG Data Storage Client
-            if settings.azure_storage_account and settings.azure_storage_key:
-                rag_config = {
-                    'account_name': settings.azure_storage_account,
-                    'account_key': settings.azure_storage_key,
-                    'container_name': settings.azure_blob_container,
-                    'connection_string': settings.azure_storage_connection_string
-                }
-                self.clients['rag_data'] = AzureStorageClient(rag_config)
-                logger.info(f"RAG Data Storage client initialized: {settings.azure_storage_account}")
+        """Initialize storage clients from configuration"""
+        storage_configs = {
+            'rag_data': {
+                'account_name': settings.azure_storage_account,
+                'account_key': settings.azure_storage_key,
+                'container_name': settings.azure_blob_container,
+                'connection_string': settings.azure_storage_connection_string
+            },
+            'ml_models': {
+                'account_name': settings.azure_ml_storage_account,
+                'account_key': settings.azure_ml_storage_key,
+                'container_name': settings.azure_ml_blob_container,
+                'connection_string': settings.azure_ml_storage_connection_string
+            },
+            'app_data': {
+                'account_name': settings.azure_app_storage_account,
+                'account_key': settings.azure_app_storage_key,
+                'container_name': settings.azure_app_blob_container,
+                'connection_string': settings.azure_app_storage_connection_string
+            }
+        }
+        for client_type, config in storage_configs.items():
+            if config['account_name'] and config['account_key']:
+                self.clients[client_type] = AzureStorageClient(config)
+                logger.info(f"{client_type} storage client initialized")
 
-            # ML Storage Client
-            if settings.azure_ml_storage_account and settings.azure_ml_storage_key:
-                ml_config = {
-                    'account_name': settings.azure_ml_storage_account,
-                    'account_key': settings.azure_ml_storage_key,
-                    'container_name': settings.azure_ml_blob_container,
-                    'connection_string': settings.azure_ml_storage_connection_string
-                }
-                self.clients['ml_models'] = AzureStorageClient(ml_config)
-                logger.info(f"ML Storage client initialized: {settings.azure_ml_storage_account}")
-
-            # Application Storage Client
-            if settings.azure_app_storage_account and settings.azure_app_storage_key:
-                app_config = {
-                    'account_name': settings.azure_app_storage_account,
-                    'account_key': settings.azure_app_storage_key,
-                    'container_name': settings.azure_app_blob_container,
-                    'connection_string': settings.azure_app_storage_connection_string
-                }
-                self.clients['app_data'] = AzureStorageClient(app_config)
-                logger.info(f"Application Storage client initialized: {settings.azure_app_storage_account}")
-
-        except Exception as e:
-            logger.error(f"Failed to initialize storage clients: {e}")
-            raise
-
-    def get_rag_data_client(self) -> AzureStorageClient:
-        """Get RAG data storage client"""
-        if 'rag_data' not in self.clients:
-            raise RuntimeError("RAG data storage client not initialized")
-        return self.clients['rag_data']
-
-    def get_ml_models_client(self) -> AzureStorageClient:
-        """Get ML models storage client"""
-        if 'ml_models' not in self.clients:
-            raise RuntimeError("ML models storage client not initialized")
-        return self.clients['ml_models']
-
-    def get_app_data_client(self) -> AzureStorageClient:
-        """Get application data storage client"""
-        if 'app_data' not in self.clients:
-            raise RuntimeError("Application data storage client not initialized")
-        return self.clients['app_data']
-
-    def get_client(self, client_type: str) -> AzureStorageClient:
-        """Get storage client by type"""
+    def get_storage_client(self, client_type: str) -> AzureStorageClient:
+        """Get storage client by type from configuration"""
         if client_type not in self.clients:
-            raise RuntimeError(f"Storage client '{client_type}' not initialized")
+            raise ValueError(f"Storage client type '{client_type}' not configured")
         return self.clients[client_type]
+
+    def get_rag_data_client(self):
+        return self.get_storage_client('rag_data')
+
+    def get_ml_models_client(self):
+        return self.get_storage_client('ml_models')
+
+    def get_app_data_client(self):
+        return self.get_storage_client('app_data')
 
     def list_available_clients(self) -> Dict[str, str]:
         """List available storage clients and their purposes"""
@@ -113,34 +91,14 @@ class AzureStorageFactory:
 
         return status
 
-    async def upload_rag_document(self, local_path: Path, blob_name: str) -> Dict[str, Any]:
-        """Upload document to RAG data storage"""
-        client = self.get_rag_data_client()
+    async def upload_file(self, local_path: Path, blob_name: str, client_type: str) -> Dict[str, Any]:
+        """Upload file to a specific storage client"""
+        client = self.get_storage_client(client_type)
         return await client.upload_file(local_path, blob_name)
 
-    async def upload_ml_model(self, local_path: Path, blob_name: str) -> Dict[str, Any]:
-        """Upload ML model to ML storage"""
-        client = self.get_ml_models_client()
-        return await client.upload_file(local_path, blob_name)
-
-    async def upload_app_data(self, local_path: Path, blob_name: str) -> Dict[str, Any]:
-        """Upload application data to app storage"""
-        client = self.get_app_data_client()
-        return await client.upload_file(local_path, blob_name)
-
-    async def download_rag_document(self, blob_name: str) -> Dict[str, Any]:
-        """Download document from RAG data storage"""
-        client = self.get_rag_data_client()
-        return await client.download_text(client.container_name, blob_name)
-
-    async def download_ml_model(self, blob_name: str) -> Dict[str, Any]:
-        """Download ML model from ML storage"""
-        client = self.get_ml_models_client()
-        return await client.download_text(client.container_name, blob_name)
-
-    async def download_app_data(self, blob_name: str) -> Dict[str, Any]:
-        """Download application data from app storage"""
-        client = self.get_app_data_client()
+    async def download_text(self, blob_name: str, client_type: str) -> Dict[str, Any]:
+        """Download text from a specific storage client"""
+        client = self.get_storage_client(client_type)
         return await client.download_text(client.container_name, blob_name)
 
 
@@ -153,16 +111,6 @@ def get_storage_factory() -> AzureStorageFactory:
     return storage_factory
 
 
-def get_rag_storage_client() -> AzureStorageClient:
-    """Get RAG data storage client"""
-    return storage_factory.get_rag_data_client()
-
-
-def get_ml_storage_client() -> AzureStorageClient:
-    """Get ML models storage client"""
-    return storage_factory.get_ml_models_client()
-
-
-def get_app_storage_client() -> AzureStorageClient:
-    """Get application data storage client"""
-    return storage_factory.get_app_data_client()
+def get_storage_client(client_type: str) -> AzureStorageClient:
+    """Get storage client by type from configuration"""
+    return storage_factory.get_storage_client(client_type)
