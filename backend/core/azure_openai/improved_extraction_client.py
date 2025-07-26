@@ -1,5 +1,6 @@
 """
-Improved Knowledge Extractor with Real-time Comparison Output
+Improved Knowledge Extractor with Context-Aware Templates
+Uses context engineering instead of constraining prompts for better extraction quality
 Fixes critical issues: entity-relation linking, context preservation, rich extraction
 """
 
@@ -10,6 +11,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from pathlib import Path
 from openai import AzureOpenAI
+from jinja2 import Environment, FileSystemLoader
 
 from config.settings import settings
 
@@ -32,11 +34,23 @@ class ImprovedKnowledgeExtractor:
         )
         self.deployment_name = settings.openai_deployment_name
 
+        # Load context-aware templates
+        template_dir = Path(settings.BASE_DIR) / "prompt_flows" / "universal_knowledge_extraction"
+        self.jinja_env = Environment(loader=FileSystemLoader(template_dir))
+        
+        try:
+            self.entity_template = self.jinja_env.get_template("context_aware_entity_extraction.jinja2")
+            self.relation_template = self.jinja_env.get_template("context_aware_relation_extraction.jinja2")
+            logger.info("Context-aware templates loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to load context-aware templates: {e}")
+            raise
+
         # Output directory for comparisons
         self.output_dir = Path(settings.BASE_DIR) / "data" / "extraction_comparisons"
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"ImprovedKnowledgeExtractor initialized for {domain_name}")
+        logger.info(f"ImprovedKnowledgeExtractor initialized for {domain_name} with context-aware templates")
 
     def extract_with_comparison(self, texts: List[str], sample_size: int = 10) -> Dict[str, Any]:
         """
@@ -105,120 +119,144 @@ class ImprovedKnowledgeExtractor:
 
     def _extract_entities_with_context(self, text: str) -> List[Dict[str, Any]]:
         """
-        Extract entities preserving full context and semantic meaning
+        Extract entities using context-aware template for better quality
         """
-        prompt = f"""
-        Analyze this maintenance text and extract specific entities with their full context.
-
-        Text: "{text}"
-
-        Extract entities as JSON objects with:
-        - "text": exact entity phrase from the text
-        - "entity_type": semantic category (equipment, component, issue, action, location, etc.)
-        - "context": surrounding words that give meaning
-        - "semantic_role": what role this entity plays (subject, object, component, etc.)
-
-        Focus on:
-        1. Specific equipment/components mentioned
-        2. Issues or problems described
-        3. Actions or procedures
-        4. Locations or positions
-        5. States or conditions
-
-        Return JSON array of entity objects:
-        """
-
         try:
+            # Render context-aware prompt using Jinja2 template
+            prompt_content = self.entity_template.render(texts=[text])
+            
+            # Parse system and user prompts from template
+            system_prompt, user_prompt = self._parse_template_content(prompt_content)
+
             response = self.client.chat.completions.create(
                 model=self.deployment_name,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=800,
-                temperature=0.2
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=1000,
+                temperature=0.3
             )
 
             entities_text = response.choices[0].message.content.strip()
             entities = self._parse_json_response(entities_text, "entities")
 
-            # Add unique IDs
+            # Add unique IDs and ensure required fields
             for i, entity in enumerate(entities):
                 entity["entity_id"] = f"entity_{i}"
                 if "context" not in entity:
                     entity["context"] = text  # Fallback to full text
+                if "source_record" not in entity:
+                    entity["source_record"] = 1
 
+            logger.info(f"Context-aware entity extraction: {len(entities)} entities from text")
             return entities
 
         except Exception as e:
-            logger.error(f"Entity extraction failed: {e}")
+            logger.error(f"Context-aware entity extraction failed: {e}")
             return []
 
     def _extract_relations_with_linking(self, text: str, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Extract relations that properly link to extracted entities
+        Extract relations using context-aware template with proper entity linking
         """
         if len(entities) < 2:
             return []
 
-        # Create entity reference for the LLM
-        entity_references = {}
-        entity_list = []
-        for entity in entities:
-            ref = f"{entity['entity_id']}: {entity['text']}"
-            entity_references[entity['entity_id']] = entity['text']
-            entity_list.append(ref)
-
-        prompt = f"""
-        Given this maintenance text and the extracted entities, identify relationships between them.
-
-        Text: "{text}"
-
-        Extracted Entities:
-        {chr(10).join(entity_list)}
-
-        Extract relationships as JSON objects with:
-        - "source_entity_id": ID of source entity (e.g., "entity_0")
-        - "target_entity_id": ID of target entity (e.g., "entity_1")
-        - "relation_type": relationship name (e.g., "has_issue", "requires", "part_of")
-        - "context": text snippet showing this relationship
-        - "confidence": confidence score 0-1
-
-        Only extract relationships that are clearly expressed in the text.
-        Both source and target must be from the entity list above.
-
-        Return JSON array of relation objects:
-        """
-
         try:
+            # Create entity names list for the template
+            entity_names = [entity.get('text', '') for entity in entities]
+            
+            # Render context-aware prompt using Jinja2 template
+            prompt_content = self.relation_template.render(texts=[text], entities=entity_names)
+            
+            # Parse system and user prompts from template
+            system_prompt, user_prompt = self._parse_template_content(prompt_content)
+
             response = self.client.chat.completions.create(
                 model=self.deployment_name,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=600,
-                temperature=0.2
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=800,
+                temperature=0.3
             )
 
             relations_text = response.choices[0].message.content.strip()
             relations = self._parse_json_response(relations_text, "relations")
 
-            # Validate entity IDs exist
+            # Map entity names back to entity IDs for proper linking
             valid_relations = []
-            valid_entity_ids = {entity['entity_id'] for entity in entities}
+            entity_name_to_id = {entity['text']: entity['entity_id'] for entity in entities}
 
             for i, relation in enumerate(relations):
                 relation["relation_id"] = f"relation_{i}"
-
-                # Validate entity IDs
-                source_id = relation.get("source_entity_id", "")
-                target_id = relation.get("target_entity_id", "")
-
-                if source_id in valid_entity_ids and target_id in valid_entity_ids:
+                
+                # Map entity names to IDs if needed
+                source_entity = relation.get("source_entity", "")
+                target_entity = relation.get("target_entity", "")
+                
+                # Try to find matching entity IDs
+                source_id = entity_name_to_id.get(source_entity, "")
+                target_id = entity_name_to_id.get(target_entity, "")
+                
+                if source_id and target_id:
+                    relation["source_entity_id"] = source_id
+                    relation["target_entity_id"] = target_id
+                    relation["source_record"] = 1
                     valid_relations.append(relation)
                 else:
-                    logger.warning(f"Invalid entity IDs in relation: {source_id} -> {target_id}")
+                    logger.warning(f"Could not map entity names to IDs: {source_entity} -> {target_entity}")
 
+            logger.info(f"Context-aware relation extraction: {len(valid_relations)} relations from text")
             return valid_relations
 
         except Exception as e:
-            logger.error(f"Relation extraction failed: {e}")
+            logger.error(f"Context-aware relation extraction failed: {e}")
             return []
+
+    def _parse_template_content(self, template_content: str) -> Tuple[str, str]:
+        """
+        Parse Jinja2 template content to extract system and user prompts
+        """
+        lines = template_content.strip().split('\n')
+        
+        system_prompt = ""
+        user_prompt = ""
+        current_section = None
+        
+        for line in lines:
+            line = line.strip()
+            if line.startswith('system:'):
+                current_section = 'system'
+                continue
+            elif line.startswith('user:'):
+                current_section = 'user'
+                continue
+            elif line.startswith('#'):
+                # Skip comments
+                continue
+            elif line == "":
+                # Add line breaks to preserve formatting
+                if current_section == 'system':
+                    system_prompt += "\n"
+                elif current_section == 'user':
+                    user_prompt += "\n"
+                continue
+            
+            # Add content to appropriate section
+            if current_section == 'system':
+                system_prompt += line + "\n"
+            elif current_section == 'user':
+                user_prompt += line + "\n"
+        
+        # Fallback: if no system/user sections found, treat as user prompt
+        if not system_prompt and not user_prompt:
+            user_prompt = template_content
+            system_prompt = "You are an expert maintenance engineer analyzing equipment maintenance records."
+        
+        return system_prompt.strip(), user_prompt.strip()
 
     def _parse_json_response(self, response_text: str, expected_type: str) -> List[Dict[str, Any]]:
         """

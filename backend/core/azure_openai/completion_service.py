@@ -261,6 +261,21 @@ Context:
             confidence += min(0.2, citation_count * 0.05)
 
         return min(confidence, 0.95)  # Cap at 95%
+    
+    async def complete_chat(self, messages: List[Dict[str, str]], model: str = None, temperature: float = None, max_tokens: int = None):
+        """Simple chat completion method for testing purposes"""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=model or self.deployment_name,
+                messages=messages,
+                max_tokens=max_tokens or self.max_tokens,
+                temperature=temperature or self.temperature
+            )
+            return response
+        except Exception as e:
+            logger.error(f"Chat completion failed: {e}")
+            raise
 
     # ❌ REMOVED: Fallback response method - errors should propagate
 
