@@ -3,34 +3,34 @@
     "overall_status": "healthy",
     "total_validations": 4,
     "healthy_validations": 4,
-    "validation_duration_ms": 7418.7681674957275,
-    "timestamp": "2025-07-26T06:03:35.780953"
+    "validation_duration_ms": 7581.103324890137,
+    "timestamp": "2025-07-26T06:07:05.119725"
   },
   "validation_results": {
     "core_configuration": {
       "status": "healthy",
       "services_validated": 4,
-      "timestamp": "2025-07-26T06:03:28.432816"
+      "timestamp": "2025-07-26T06:06:57.615055"
     },
     "optional_services": {
       "status": "healthy",
       "configured_services": 3,
       "total_services": 4,
-      "timestamp": "2025-07-26T06:03:28.432840"
+      "timestamp": "2025-07-26T06:06:57.615086"
     },
     "service_connectivity": {
       "status": "healthy",
       "healthy_services": 6,
       "total_services": 6,
-      "check_duration_ms": 1106.0791015625,
-      "timestamp": "2025-07-26T06:03:35.780817"
+      "check_duration_ms": 1163.564682006836,
+      "timestamp": "2025-07-26T06:07:05.119693"
     },
     "environment_configuration": {
       "status": "healthy",
       "environment": "dev",
       "region": "eastus",
       "debug_mode": true,
-      "timestamp": "2025-07-26T06:03:35.780925"
+      "timestamp": "2025-07-26T06:07:05.119718"
     }
   },
   "recommendations": []
