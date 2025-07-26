@@ -25,6 +25,7 @@ from .azure_ml_quality_service import AzureMLQualityAssessment
 from .azure_monitoring_service import AzureEnterpriseKnowledgeMonitor as AzureKnowledgeMonitor
 from .azure_rate_limiter import AzureOpenAIRateLimiter
 from config.settings import settings, azure_settings
+import hashlib
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,14 @@ class AzureOpenAIKnowledgeExtractor:
         self.discovered_relation_types: Set[str] = set()
         self.type_frequencies: Dict[str, int] = defaultdict(int)
 
+        # Performance optimizations
+        self.extraction_cache = {}
+        self.cache_dir = settings.BASE_DIR / "data" / "cache" / "extractions"
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+        # Text quality validation
+        self.text_quality_validator = TextQualityValidator()
+
         # Extraction statistics
         self.extraction_stats = {
             "total_texts_processed": 0,
@@ -103,7 +112,7 @@ class AzureOpenAIKnowledgeExtractor:
         text_sources: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
-        Extract knowledge from raw text files
+        Extract knowledge from raw text files with caching
 
         Args:
             texts: List of text content to process
@@ -113,6 +122,13 @@ class AzureOpenAIKnowledgeExtractor:
             Dictionary with extraction results and statistics
         """
         logger.info(f"Starting universal knowledge extraction from {len(texts)} texts...")
+        
+        # Check cache first
+        cache_key = self._generate_cache_key(texts)
+        if cached_result := self._load_cached_extraction(cache_key):
+            logger.info("Using cached extraction results")
+            return cached_result
+        
         start_time = datetime.now()
 
         if text_sources and len(text_sources) != len(texts):
@@ -172,6 +188,8 @@ class AzureOpenAIKnowledgeExtractor:
             results = {
                 "success": True,
                 "domain": self.domain_name,
+                "entities": [entity.to_dict() for entity in self.entities.values()],  # Add serializable entities
+                "relations": [relation.to_dict() for relation in self.relations],  # Add serializable relations
                 "extraction_stats": self.extraction_stats,
                 "discovered_types": {
                     "entity_types": list(self.discovered_entity_types),
@@ -189,6 +207,9 @@ class AzureOpenAIKnowledgeExtractor:
                 "timestamp": datetime.now().isoformat()
             }
 
+            # Cache results for future use
+            self._save_extraction_to_cache(cache_key, results)
+
             logger.info(f"Universal knowledge extraction completed successfully")
             logger.info(f"Extracted: {len(self.entities)} entities, {len(self.relations)} relations")
             logger.info(f"Discovered: {len(self.discovered_entity_types)} entity types, {len(self.discovered_relation_types)} relation types")
@@ -205,14 +226,22 @@ class AzureOpenAIKnowledgeExtractor:
             }
 
     async def _create_universal_documents(self, texts: List[str], sources: List[str]) -> None:
-        """Create universal documents from raw texts"""
+        """Create universal documents from raw texts with quality validation"""
         for i, (text, source) in enumerate(zip(texts, sources)):
             doc_id = f"{self.domain_name}_{i}"
 
-            # Clean and preprocess text
-            cleaned_text = self._clean_text(text)
+            # Validate and enhance text quality
+            quality_assessment = self.text_quality_validator.validate_text_quality(text)
+            
+            if not quality_assessment['is_processable']:
+                logger.warning(f"Text {i} has low quality (score: {quality_assessment['quality_score']:.2f}), issues: {quality_assessment['issues']}")
+                continue
 
-            # Create universal document
+            # Clean and enhance text
+            enhanced_text = self.text_quality_validator.enhance_text_quality(text)
+            cleaned_text = self._clean_text(enhanced_text)
+
+            # Create universal document with quality metadata
             document = UniversalDocument(
                 doc_id=doc_id,
                 text=cleaned_text,
@@ -221,6 +250,8 @@ class AzureOpenAIKnowledgeExtractor:
                     "source": source,
                     "original_length": len(text),
                     "cleaned_length": len(cleaned_text),
+                    "quality_score": quality_assessment['quality_score'],
+                    "quality_issues": quality_assessment['issues'],
                     "domain": self.domain_name,
                     "processed_at": datetime.now().isoformat()
                 }
@@ -528,9 +559,9 @@ class AzureOpenAIKnowledgeExtractor:
                 self.documents[doc_id] = document
 
         except Exception as e:
-            logger.error(f"Enterprise preprocessing failed: {e}")
-            # ❌ REMOVED: Silent fallback - let the error propagate
-            raise RuntimeError(f"Enterprise preprocessing failed: {e}")
+            logger.warning(f"Enterprise preprocessing failed, using basic preprocessing: {e}")
+            # Graceful degradation to basic document processing
+            await self._create_universal_documents(texts, [f"text_{i}" for i in range(len(texts))])
 
     async def _extract_entities_and_relations_with_rate_limiting(self) -> None:
         """Extract entities and relations with enterprise rate limiting"""
@@ -552,59 +583,21 @@ class AzureOpenAIKnowledgeExtractor:
         await self._process_extraction_results(extraction_results)
 
     async def _process_extraction_results(self, extraction_results: Dict[str, Any]) -> None:
-        """Process extraction results with enterprise enhancements"""
-        # Process extracted entities
+        """Process extraction results with standardized data formats"""
+        # Process extracted entities with unified format
         for entity_data in extraction_results.get("entities", []):
-            if isinstance(entity_data, str):
-                entity = UniversalEntity(
-                    entity_id=f"entity_{len(self.entities)}",
-                    text=entity_data,
-                    entity_type=entity_data,
-                    confidence=0.8,
-                    context="",
-                    metadata={
-                        "extraction_method": "enterprise_llm",
-                        "domain": self.domain_name,
-                        "extracted_at": datetime.now().isoformat()
-                    }
-                )
+            entity = self._create_standardized_entity(entity_data)
+            if entity:
                 self.entities[entity.entity_id] = entity
                 self.discovered_entity_types.add(entity.entity_type)
                 self.type_frequencies[entity.entity_type] += 1
-        # Process extracted relations
+        
+        # Process extracted relations with proper linking
         for relation_data in extraction_results.get("relations", []):
-            if isinstance(relation_data, dict):
-                relation = UniversalRelation(
-                    relation_id=f"relation_{len(self.relations)}",
-                    source=relation_data.get("source", ""),
-                    target=relation_data.get("target", ""),
-                    relation_type=relation_data.get("type", "related_to"),
-                    confidence=relation_data.get("confidence", 0.8),
-                    metadata={
-                        "extraction_method": "enterprise_llm",
-                        "domain": self.domain_name,
-                        "extracted_at": datetime.now().isoformat()
-                    }
-                )
+            relation = self._create_standardized_relation(relation_data)
+            if relation and self._validate_relation_entities(relation):
                 self.relations.append(relation)
                 self.discovered_relation_types.add(relation.relation_type)
-            # FIX: Also handle string relations for type discovery
-            elif isinstance(relation_data, str):
-                relation = UniversalRelation(
-                    relation_id=f"relation_{len(self.relations)}",
-                    source_entity_id="",
-                    target_entity_id="",
-                    relation_type=relation_data,
-                    confidence=0.8,
-                    context="",
-                    metadata={
-                        "extraction_method": "llm",
-                        "domain": self.domain_name,
-                        "extracted_at": datetime.now().isoformat()
-                    }
-                )
-                self.relations.append(relation)
-                self.discovered_relation_types.add(relation_data)
 
     async def _assess_extraction_quality_enterprise(self) -> Dict[str, Any]:
         """Enterprise quality assessment using Azure ML models"""
@@ -634,9 +627,9 @@ class AzureOpenAIKnowledgeExtractor:
             return quality_results
 
         except Exception as e:
-            logger.error(f"Enterprise quality assessment failed: {e}")
-            # ❌ REMOVED: Silent fallback - let the error propagate
-            raise RuntimeError(f"Enterprise quality assessment failed: {e}")
+            logger.warning(f"Enterprise quality assessment failed, using lightweight assessment: {e}")
+            # Graceful degradation to lightweight quality assessment
+            return self._assess_extraction_quality_lightweight()
 
     def _assess_extraction_quality_lightweight(self) -> Dict[str, Any]:
         """Lightweight quality assessment without Azure ML dependencies"""
@@ -656,6 +649,73 @@ class AzureOpenAIKnowledgeExtractor:
     def _validate_relations_basic(self):
         """Basic relation validation stub"""
         return {"status": "not_validated", "details": "Basic validation only"}
+
+    def _create_standardized_entity(self, entity_data: Any) -> Optional[UniversalEntity]:
+        """Create entity with standardized format"""
+        if isinstance(entity_data, str):
+            return UniversalEntity(
+                entity_id=f"entity_{len(self.entities)}",
+                text=entity_data,
+                entity_type=entity_data,
+                confidence=0.8,
+                context="",
+                metadata=self._get_standard_metadata("entity")
+            )
+        elif isinstance(entity_data, dict):
+            return UniversalEntity(
+                entity_id=f"entity_{len(self.entities)}",
+                text=entity_data.get("text", ""),
+                entity_type=entity_data.get("type", "unknown"),
+                confidence=entity_data.get("confidence", 0.5),
+                context=entity_data.get("context", ""),
+                metadata=self._get_standard_metadata("entity", entity_data.get("metadata", {}))
+            )
+        return None
+
+    def _create_standardized_relation(self, relation_data: Any) -> Optional[UniversalRelation]:
+        """Create relation with standardized format"""
+        if isinstance(relation_data, str):
+            return UniversalRelation(
+                relation_id=f"relation_{len(self.relations)}",
+                source_entity_id="",  # Will be linked during graph construction
+                target_entity_id="",  # Will be linked during graph construction
+                relation_type=relation_data,
+                confidence=0.8,
+                context="",
+                metadata=self._get_standard_metadata("relation")
+            )
+        elif isinstance(relation_data, dict):
+            return UniversalRelation(
+                relation_id=f"relation_{len(self.relations)}",
+                source_entity_id=relation_data.get("source_entity_id", relation_data.get("source", "")),
+                target_entity_id=relation_data.get("target_entity_id", relation_data.get("target", "")),
+                relation_type=relation_data.get("type", "related_to"),
+                confidence=relation_data.get("confidence", 0.8),
+                context=relation_data.get("context", ""),
+                metadata=self._get_standard_metadata("relation", relation_data.get("metadata", {}))
+            )
+        return None
+
+    def _get_standard_metadata(self, item_type: str, additional_metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Get standardized metadata for entities and relations"""
+        base_metadata = {
+            "extraction_method": "enterprise_llm",
+            "domain": self.domain_name,
+            "extracted_at": datetime.now().isoformat(),
+            "item_type": item_type
+        }
+        if additional_metadata:
+            base_metadata.update(additional_metadata)
+        return base_metadata
+
+    def _validate_relation_entities(self, relation: UniversalRelation) -> bool:
+        """Validate that relation entities exist or can be linked"""
+        # If relation has entity IDs, check they exist
+        if relation.source_entity_id and relation.target_entity_id:
+            return (relation.source_entity_id in self.entities and 
+                   relation.target_entity_id in self.entities)
+        # If no entity IDs, relation is valid for later linking
+        return True
 
     def get_extracted_knowledge(self) -> Dict[str, Any]:
         """Get all extracted knowledge in a structured format"""
@@ -685,6 +745,106 @@ class AzureOpenAIKnowledgeExtractor:
 
         logger.info(f"Extracted knowledge saved to: {output_path}")
         return output_path
+
+    def _generate_cache_key(self, texts: List[str]) -> str:
+        """Generate cache key for text corpus"""
+        import hashlib
+        corpus_hash = hashlib.md5()
+        for text in texts[:50]:  # Sample for hash to avoid memory issues
+            corpus_hash.update(text.encode('utf-8'))
+        return f"{self.domain_name}_{corpus_hash.hexdigest()[:12]}"
+
+    def _load_cached_extraction(self, cache_key: str) -> Optional[Dict[str, Any]]:
+        """Load cached extraction results"""
+        cache_file = self.cache_dir / f"{cache_key}.json"
+        if cache_file.exists():
+            try:
+                import json
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    cached_data = json.load(f)
+                # Check if cache is recent (less than 24 hours old)
+                from datetime import datetime, timedelta
+                cached_time = datetime.fromisoformat(cached_data.get('timestamp', '2000-01-01T00:00:00'))
+                if datetime.now() - cached_time < timedelta(hours=24):
+                    logger.info(f"Using cached results from {cached_time}")
+                    return cached_data
+                else:
+                    logger.info("Cache expired, performing fresh extraction")
+            except Exception as e:
+                logger.warning(f"Cache load failed: {e}")
+        return None
+
+    def _save_extraction_to_cache(self, cache_key: str, results: Dict[str, Any]) -> None:
+        """Save extraction results to cache"""
+        cache_file = self.cache_dir / f"{cache_key}.json"
+        try:
+            import json
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(results, f, indent=2, ensure_ascii=False)
+            logger.debug(f"Cached extraction results to {cache_file}")
+        except Exception as e:
+            logger.warning(f"Cache save failed: {e}")
+
+
+class TextQualityValidator:
+    """Validate and enhance text quality before extraction"""
+    
+    def __init__(self):
+        self.min_text_length = 50
+        self.max_text_length = 10000
+        self.quality_patterns = {
+            'has_sentences': r'[.!?]+\s+[A-Z]',
+            'has_words': r'\b\w+\b',
+            'reasonable_punctuation': r'[.!?,:;]'
+        }
+    
+    def validate_text_quality(self, text: str) -> Dict[str, Any]:
+        """Comprehensive text quality assessment"""
+        import re
+        
+        issues = []
+        quality_score = 1.0
+        
+        # Length validation
+        if len(text) < self.min_text_length:
+            issues.append("text_too_short")
+            quality_score *= 0.5
+        elif len(text) > self.max_text_length:
+            issues.append("text_too_long") 
+            quality_score *= 0.8
+        
+        # Structure validation
+        for pattern_name, pattern in self.quality_patterns.items():
+            if not re.search(pattern, text):
+                issues.append(f"missing_{pattern_name}")
+                quality_score *= 0.7
+        
+        # Encoding validation
+        try:
+            text.encode('utf-8').decode('utf-8')
+        except UnicodeError:
+            issues.append("encoding_issues")
+            quality_score *= 0.3
+        
+        return {
+            'quality_score': max(0.1, quality_score),
+            'issues': issues,
+            'length': len(text),
+            'is_processable': quality_score > 0.3
+        }
+    
+    def enhance_text_quality(self, text: str) -> str:
+        """Clean and enhance text for better extraction"""
+        import re
+        
+        # Remove excessive whitespace
+        text = re.sub(r'\s+', ' ', text)
+        # Fix common encoding issues
+        text = text.replace('"', '"').replace('"', '"')
+        text = text.replace(''', "'").replace(''', "'")
+        # Ensure proper sentence endings
+        text = re.sub(r'([a-z])([A-Z])', r'\1. \2', text)
+        return text.strip()
 
 
 # Convenience function for direct usage

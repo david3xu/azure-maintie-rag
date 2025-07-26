@@ -211,6 +211,50 @@ class OptimizedLLMExtractor:
         max_relation_types = getattr(settings, 'max_relation_types_discovery', 30)
         return relationship_list[:max_relation_types]  # Reasonable limit
 
+    def _parse_entity_response_fallback(self, response_content: str, attempt: int, max_retries: int) -> List[str]:
+        """Fallback entity parsing using simpler approach"""
+        try:
+            # Simple word extraction fallback
+            import re
+            words = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', response_content)
+            # Filter common words and take reasonable entities
+            filtered_words = [w.lower() for w in words if len(w) > 2 and w.lower() not in ['the', 'and', 'for', 'are', 'with']]
+            return list(set(filtered_words))[:10]  # Return unique, limited set
+        except Exception as e:
+            logger.error(f"Fallback entity parsing also failed: {e}")
+            return []
+
+    def _parse_relationship_response_fallback(self, response_content: str, attempt: int, max_retries: int) -> List[str]:
+        """Fallback relationship parsing using simpler approach"""
+        try:
+            # Look for verb-like patterns
+            import re
+            verbs = re.findall(r'\b[a-zA-Z_]+(?:es|ed|ing|s)?\b', response_content)
+            # Filter to likely relationship words
+            filtered_verbs = [v.lower() for v in verbs if len(v) > 2 and v.lower() not in ['the', 'and', 'for', 'are', 'with']]
+            return list(set(filtered_verbs))[:8]  # Return unique, limited set
+        except Exception as e:
+            logger.error(f"Fallback relationship parsing also failed: {e}")
+            return []
+
+    def _parse_triplet_response_fallback(self, response_content: str, attempt: int, max_retries: int) -> List[tuple]:
+        """Fallback triplet parsing using simpler approach"""
+        try:
+            # Simple pattern matching for triplet-like structures
+            import re
+            # Look for patterns like (entity1, relation, entity2)
+            triplet_matches = re.findall(r'\([^)]+,[^)]+,[^)]+\)', response_content)
+            triplets = []
+            for match in triplet_matches[:10]:  # Limit results
+                # Clean and split
+                clean_match = match.strip('()').split(',')
+                if len(clean_match) == 3:
+                    triplets.append(tuple(item.strip().strip('"').strip("'") for item in clean_match))
+            return triplets
+        except Exception as e:
+            logger.error(f"Fallback triplet parsing also failed: {e}")
+            return []
+
     def _extract_triplets_batched(self, text_corpus: List[str], entities: List[str], relationships: List[str]) -> List[tuple]:
         """Extract triplets using batched processing"""
 
@@ -446,8 +490,8 @@ class OptimizedLLMExtractor:
         """Universal entity categorization (no hardcoded types)"""
         return entity
 
-    def _parse_entity_response(self, response_content: str) -> List[str]:
-        """Parse entity response from LLM"""
+    def _parse_entity_response(self, response_content: str, attempt: int = 1, max_retries: int = 2) -> List[str]:
+        """Parse entity response from LLM with retry logic"""
         try:
             # Try to parse as JSON array
             import re
@@ -472,12 +516,17 @@ class OptimizedLLMExtractor:
             return entities[:15]  # Limit
 
         except Exception as e:
-            logger.error(f"Failed to parse entity response: {e}")
-            # ❌ REMOVED: Silent fallback - let the error propagate
-            raise RuntimeError(f"Entity response parsing failed: {e}")
+            logger.error(f"Failed to parse entity response (attempt {attempt}): {e}")
+            if attempt < max_retries:
+                logger.info(f"Retrying entity parsing, attempt {attempt + 1}")
+                # Try alternative parsing approach
+                return self._parse_entity_response_fallback(response_content, attempt + 1, max_retries)
+            else:
+                logger.warning("Entity parsing failed after all retries, using empty result")
+                return []
 
-    def _parse_relationship_response(self, response_content: str) -> List[str]:
-        """Parse relationship response from LLM"""
+    def _parse_relationship_response(self, response_content: str, attempt: int = 1, max_retries: int = 2) -> List[str]:
+        """Parse relationship response from LLM with retry logic"""
         try:
             # Try to parse as JSON array
             import re
@@ -502,12 +551,16 @@ class OptimizedLLMExtractor:
             return relationships[:12]  # Limit
 
         except Exception as e:
-            logger.error(f"Failed to parse relationship response: {e}")
-            # ❌ REMOVED: Silent fallback - let the error propagate
-            raise RuntimeError(f"Relationship response parsing failed: {e}")
+            logger.error(f"Failed to parse relationship response (attempt {attempt}): {e}")
+            if attempt < max_retries:
+                logger.info(f"Retrying relationship parsing, attempt {attempt + 1}")
+                return self._parse_relationship_response_fallback(response_content, attempt + 1, max_retries)
+            else:
+                logger.warning("Relationship parsing failed after all retries, using empty result")
+                return []
 
-    def _parse_triplet_response(self, response_content: str) -> List[tuple]:
-        """Parse triplet response from LLM"""
+    def _parse_triplet_response(self, response_content: str, attempt: int = 1, max_retries: int = 2) -> List[tuple]:
+        """Parse triplet response from LLM with retry logic"""
         try:
             # Try to parse as JSON array of tuples
             import re
@@ -526,6 +579,10 @@ class OptimizedLLMExtractor:
             return []
 
         except Exception as e:
-            logger.error(f"Failed to parse triplet response: {e}")
-            # ❌ REMOVED: Silent fallback - let the error propagate
-            raise RuntimeError(f"Triplet response parsing failed: {e}")
+            logger.error(f"Failed to parse triplet response (attempt {attempt}): {e}")
+            if attempt < max_retries:
+                logger.info(f"Retrying triplet parsing, attempt {attempt + 1}")
+                return self._parse_triplet_response_fallback(response_content, attempt + 1, max_retries)
+            else:
+                logger.warning("Triplet parsing failed after all retries, using empty result")
+                return []

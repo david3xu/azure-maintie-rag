@@ -1,0 +1,427 @@
+{
+  "entities": [
+    {
+      "text": "air conditioner",
+      "entity_type": "equipment",
+      "context": "<id> air conditioner thermostat not working",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 1,
+      "source_text": "<id> air conditioner thermostat not working"
+    },
+    {
+      "text": "thermostat",
+      "entity_type": "component",
+      "context": "air conditioner thermostat not working",
+      "semantic_role": "component",
+      "entity_id": "entity_1",
+      "text_id": 1,
+      "source_text": "<id> air conditioner thermostat not working"
+    },
+    {
+      "text": "not working",
+      "entity_type": "issue",
+      "context": "thermostat not working",
+      "semantic_role": "state/condition",
+      "entity_id": "entity_2",
+      "text_id": 1,
+      "source_text": "<id> air conditioner thermostat not working"
+    },
+    {
+      "text": "air conditioner thermostat",
+      "entity_type": "component",
+      "context": "<id> air conditioner thermostat unserviceable",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 2,
+      "source_text": "<id> air conditioner thermostat unserviceable"
+    },
+    {
+      "text": "unserviceable",
+      "entity_type": "issue",
+      "context": "air conditioner thermostat unserviceable",
+      "semantic_role": "state",
+      "entity_id": "entity_1",
+      "text_id": 2,
+      "source_text": "<id> air conditioner thermostat unserviceable"
+    },
+    {
+      "text": "air conditioner",
+      "entity_type": "equipment",
+      "context": "<id> air conditioner unserviceable",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 3,
+      "source_text": "<id> air conditioner unserviceable"
+    },
+    {
+      "text": "unserviceable",
+      "entity_type": "issue",
+      "context": "air conditioner unserviceable",
+      "semantic_role": "state",
+      "entity_id": "entity_1",
+      "text_id": 3,
+      "source_text": "<id> air conditioner unserviceable"
+    },
+    {
+      "text": "air conditioner",
+      "entity_type": "equipment",
+      "context": "<id> air conditioner unserviceable when stationary",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 4,
+      "source_text": "<id> air conditioner unserviceable when stationary"
+    },
+    {
+      "text": "unserviceable",
+      "entity_type": "issue",
+      "context": "air conditioner unserviceable when stationary",
+      "semantic_role": "state/condition",
+      "entity_id": "entity_1",
+      "text_id": 4,
+      "source_text": "<id> air conditioner unserviceable when stationary"
+    },
+    {
+      "text": "when stationary",
+      "entity_type": "condition",
+      "context": "unserviceable when stationary",
+      "semantic_role": "state/condition",
+      "entity_id": "entity_2",
+      "text_id": 4,
+      "source_text": "<id> air conditioner unserviceable when stationary"
+    },
+    {
+      "text": "air freight bogger",
+      "entity_type": "equipment",
+      "context": "<id> air freight bogger dogbones TBC",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 5,
+      "source_text": "<id> air freight bogger dogbones TBC"
+    },
+    {
+      "text": "dogbones",
+      "entity_type": "component",
+      "context": "<id> air freight bogger dogbones TBC",
+      "semantic_role": "component",
+      "entity_id": "entity_1",
+      "text_id": 5,
+      "source_text": "<id> air freight bogger dogbones TBC"
+    },
+    {
+      "text": "TBC",
+      "entity_type": "state",
+      "context": "<id> air freight bogger dogbones TBC",
+      "semantic_role": "status/condition",
+      "entity_id": "entity_2",
+      "text_id": 5,
+      "source_text": "<id> air freight bogger dogbones TBC"
+    },
+    {
+      "text": "air horn",
+      "entity_type": "equipment",
+      "context": "air horn not working",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 6,
+      "source_text": "<id> air horn not working compressor awaiting"
+    },
+    {
+      "text": "not working",
+      "entity_type": "issue",
+      "context": "air horn not working",
+      "semantic_role": "state",
+      "entity_id": "entity_1",
+      "text_id": 6,
+      "source_text": "<id> air horn not working compressor awaiting"
+    },
+    {
+      "text": "compressor",
+      "entity_type": "component",
+      "context": "compressor awaiting",
+      "semantic_role": "object",
+      "entity_id": "entity_2",
+      "text_id": 6,
+      "source_text": "<id> air horn not working compressor awaiting"
+    },
+    {
+      "text": "awaiting",
+      "entity_type": "action",
+      "context": "compressor awaiting",
+      "semantic_role": "state",
+      "entity_id": "entity_3",
+      "text_id": 6,
+      "source_text": "<id> air horn not working compressor awaiting"
+    },
+    {
+      "text": "air horn",
+      "entity_type": "equipment",
+      "context": "<id> air horn working intermittently",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 7,
+      "source_text": "<id> air horn working intermittently"
+    },
+    {
+      "text": "working intermittently",
+      "entity_type": "issue",
+      "context": "air horn working intermittently",
+      "semantic_role": "state/condition",
+      "entity_id": "entity_1",
+      "text_id": 7,
+      "source_text": "<id> air horn working intermittently"
+    },
+    {
+      "text": "air leak",
+      "entity_type": "issue",
+      "context": "air leak near side of door",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 8,
+      "source_text": "<id> air leak near side of door"
+    },
+    {
+      "text": "side of door",
+      "entity_type": "location",
+      "context": "air leak near side of door",
+      "semantic_role": "location",
+      "entity_id": "entity_1",
+      "text_id": 8,
+      "source_text": "<id> air leak near side of door"
+    },
+    {
+      "text": "air",
+      "entity_type": "component",
+      "context": "air leaking from line outside",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 9,
+      "source_text": "<id> air leaking from line outside"
+    },
+    {
+      "text": "leaking",
+      "entity_type": "issue",
+      "context": "air leaking from line outside",
+      "semantic_role": "predicate",
+      "entity_id": "entity_1",
+      "text_id": 9,
+      "source_text": "<id> air leaking from line outside"
+    },
+    {
+      "text": "line",
+      "entity_type": "equipment",
+      "context": "air leaking from line outside",
+      "semantic_role": "object",
+      "entity_id": "entity_2",
+      "text_id": 9,
+      "source_text": "<id> air leaking from line outside"
+    },
+    {
+      "text": "outside",
+      "entity_type": "location",
+      "context": "air leaking from line outside",
+      "semantic_role": "location",
+      "entity_id": "entity_3",
+      "text_id": 9,
+      "source_text": "<id> air leaking from line outside"
+    },
+    {
+      "text": "air receiver",
+      "entity_type": "equipment",
+      "context": "<id> air receiver safety valves to be replaced",
+      "semantic_role": "subject",
+      "entity_id": "entity_0",
+      "text_id": 10,
+      "source_text": "<id> air receiver safety valves to be replaced"
+    },
+    {
+      "text": "safety valves",
+      "entity_type": "component",
+      "context": "<id> air receiver safety valves to be replaced",
+      "semantic_role": "object",
+      "entity_id": "entity_1",
+      "text_id": 10,
+      "source_text": "<id> air receiver safety valves to be replaced"
+    },
+    {
+      "text": "to be replaced",
+      "entity_type": "action",
+      "context": "<id> air receiver safety valves to be replaced",
+      "semantic_role": "procedure",
+      "entity_id": "entity_2",
+      "text_id": 10,
+      "source_text": "<id> air receiver safety valves to be replaced"
+    }
+  ],
+  "relationships": [
+    {
+      "source_entity_id": "entity_1",
+      "target_entity_id": "entity_2",
+      "relation_type": "has_issue",
+      "context": "thermostat not working",
+      "confidence": 1.0,
+      "relation_id": "relation_0",
+      "text_id": 1,
+      "source_text": "<id> air conditioner thermostat not working"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "has_part",
+      "context": "air conditioner thermostat",
+      "confidence": 0.95,
+      "relation_id": "relation_1",
+      "text_id": 1,
+      "source_text": "<id> air conditioner thermostat not working"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "has_issue",
+      "context": "air conditioner thermostat unserviceable",
+      "confidence": 1.0,
+      "relation_id": "relation_0",
+      "text_id": 2,
+      "source_text": "<id> air conditioner thermostat unserviceable"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "has_issue",
+      "context": "air conditioner unserviceable",
+      "confidence": 1.0,
+      "relation_id": "relation_0",
+      "text_id": 3,
+      "source_text": "<id> air conditioner unserviceable"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "has_issue",
+      "context": "air conditioner unserviceable",
+      "confidence": 1.0,
+      "relation_id": "relation_0",
+      "text_id": 4,
+      "source_text": "<id> air conditioner unserviceable when stationary"
+    },
+    {
+      "source_entity_id": "entity_1",
+      "target_entity_id": "entity_2",
+      "relation_type": "occurs_when",
+      "context": "unserviceable when stationary",
+      "confidence": 1.0,
+      "relation_id": "relation_1",
+      "text_id": 4,
+      "source_text": "<id> air conditioner unserviceable when stationary"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "has_issue",
+      "context": "air horn not working",
+      "confidence": 1.0,
+      "relation_id": "relation_0",
+      "text_id": 6,
+      "source_text": "<id> air horn not working compressor awaiting"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_2",
+      "relation_type": "requires",
+      "context": "air horn not working compressor awaiting",
+      "confidence": 0.8,
+      "relation_id": "relation_1",
+      "text_id": 6,
+      "source_text": "<id> air horn not working compressor awaiting"
+    },
+    {
+      "source_entity_id": "entity_2",
+      "target_entity_id": "entity_3",
+      "relation_type": "awaiting",
+      "context": "compressor awaiting",
+      "confidence": 1.0,
+      "relation_id": "relation_2",
+      "text_id": 6,
+      "source_text": "<id> air horn not working compressor awaiting"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "has_issue",
+      "context": "air horn working intermittently",
+      "confidence": 1.0,
+      "relation_id": "relation_0",
+      "text_id": 7,
+      "source_text": "<id> air horn working intermittently"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "located_near",
+      "context": "air leak near side of door",
+      "confidence": 0.95,
+      "relation_id": "relation_0",
+      "text_id": 8,
+      "source_text": "<id> air leak near side of door"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "has_issue",
+      "context": "air leaking",
+      "confidence": 1.0,
+      "relation_id": "relation_0",
+      "text_id": 9,
+      "source_text": "<id> air leaking from line outside"
+    },
+    {
+      "source_entity_id": "entity_1",
+      "target_entity_id": "entity_2",
+      "relation_type": "from_source",
+      "context": "leaking from line",
+      "confidence": 1.0,
+      "relation_id": "relation_1",
+      "text_id": 9,
+      "source_text": "<id> air leaking from line outside"
+    },
+    {
+      "source_entity_id": "entity_2",
+      "target_entity_id": "entity_3",
+      "relation_type": "location",
+      "context": "line outside",
+      "confidence": 1.0,
+      "relation_id": "relation_2",
+      "text_id": 9,
+      "source_text": "<id> air leaking from line outside"
+    },
+    {
+      "source_entity_id": "entity_1",
+      "target_entity_id": "entity_2",
+      "relation_type": "requires_action",
+      "context": "safety valves to be replaced",
+      "confidence": 1.0,
+      "relation_id": "relation_0",
+      "text_id": 10,
+      "source_text": "<id> air receiver safety valves to be replaced"
+    },
+    {
+      "source_entity_id": "entity_0",
+      "target_entity_id": "entity_1",
+      "relation_type": "has_part",
+      "context": "air receiver safety valves",
+      "confidence": 0.95,
+      "relation_id": "relation_1",
+      "text_id": 10,
+      "source_text": "<id> air receiver safety valves to be replaced"
+    }
+  ],
+  "summary": {
+    "total_texts": 10,
+    "total_entities": 28,
+    "total_relationships": 16,
+    "avg_entities_per_text": 2.8,
+    "avg_relationships_per_text": 1.6,
+    "extraction_method": "hardcoded_prompts_test",
+    "processing_notes": "Limited to first 10 texts for testing"
+  }
+}

@@ -1,0 +1,52 @@
+# Universal Relation Extraction Prompt Template
+# Centralized, domain-agnostic relationship identification
+# NO predetermined relationship types or categories
+
+system:
+You are a universal relationship extraction specialist. Your task is to identify relationships between entities from any domain without imposing predetermined relationship categories.
+
+user:
+Analyze the following {{ domain_name }} text samples and identify relationship types between entities.
+
+**Discovered Entity Context:**
+{% if entities %}
+Focus on relationships involving these entities: {{ entities[:15]|join(', ') }}
+{% endif %}
+
+**Universal Relationship Extraction Principles:**
+1. 🔗 Identify relationships as they are naturally expressed in the text
+2. 🚫 Do NOT assume domain-specific relationship categories
+3. 📝 Use simple, descriptive terms for relationship types
+4. 🎯 Focus on actual connections mentioned or implied in the text
+5. ⚡ Use verbs or verb phrases that describe the connections
+6. 🌱 Let relationship types emerge from the natural language patterns
+7. 🔍 Capture both direct and implied relationships
+
+**Relationship Discovery Guidelines:**
+- Look for action verbs connecting entities (e.g., "controls", "monitors", "contains")
+- Identify positional relationships (e.g., "located_in", "attached_to", "part_of") 
+- Capture functional relationships (e.g., "powered_by", "depends_on", "enables")
+- Include causal relationships (e.g., "causes", "prevents", "affects")
+- Notice state relationships (e.g., "damaged", "operational", "requires")
+
+**Text Samples to Analyze:**
+{% for text in texts[:5] %}
+---
+Sample {{ loop.index }}:
+{{ text[:400] }}
+{% if text|length > 400 %}... [truncated]{% endif %}
+---
+{% endfor %}
+
+**Required Output Format:**
+Return ONLY a JSON array of strings containing relationship type names:
+```json
+["relationship1", "relationship2", "relationship3", ...]
+```
+
+**Important:**
+- NO explanations or additional text
+- NO entity pairs or instances - ONLY relationship type names
+- ONLY the JSON array of discovered relationship types
+- Use underscores for multi-word relationships (e.g., "attached_to", "part_of")
+- Maximum 30 relationship types

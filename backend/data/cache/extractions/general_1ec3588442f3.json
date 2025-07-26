@@ -1,0 +1,1135 @@
+{
+  "success": true,
+  "domain": "general",
+  "entities": [
+    {
+      "entity_id": "entity_0",
+      "text": "fuel_filter",
+      "entity_type": "fuel_filter",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.495893",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_1",
+      "text": "injector_assembly",
+      "entity_type": "injector_assembly",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.495950",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_2",
+      "text": "air_filter\",",
+      "entity_type": "air_filter\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.495968",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_3",
+      "text": "pump",
+      "entity_type": "pump",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.495982",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_4",
+      "text": "blower",
+      "entity_type": "blower",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.495993",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_5",
+      "text": "air_conditioner_system\",",
+      "entity_type": "air_conditioner_system\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496018",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_6",
+      "text": "rope",
+      "entity_type": "rope",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496032",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_7",
+      "text": "pressure_switch\",",
+      "entity_type": "pressure_switch\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496057",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_8",
+      "text": "service_action",
+      "entity_type": "service_action",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496084",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_9",
+      "text": "compressor",
+      "entity_type": "compressor",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496098",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_10",
+      "text": "tyre",
+      "entity_type": "tyre",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496110",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_11",
+      "text": "solenoid",
+      "entity_type": "solenoid",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496123",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_12",
+      "text": "starter_motor",
+      "entity_type": "starter_motor",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496135",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_13",
+      "text": "steering_ball_stud",
+      "entity_type": "steering_ball_stud",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496146",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_14",
+      "text": "platform\",",
+      "entity_type": "platform\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496156",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_15",
+      "text": "[",
+      "entity_type": "[",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496166",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_16",
+      "text": "gearbox",
+      "entity_type": "gearbox",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496176",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_17",
+      "text": "brake",
+      "entity_type": "brake",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496186",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_18",
+      "text": "system_component",
+      "entity_type": "system_component",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496196",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_19",
+      "text": "bucket",
+      "entity_type": "bucket",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496209",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_20",
+      "text": "reflector\",",
+      "entity_type": "reflector\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496219",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_21",
+      "text": "filter\",",
+      "entity_type": "filter\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496229",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_22",
+      "text": "rope_clamp\",",
+      "entity_type": "rope_clamp\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496242",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_23",
+      "text": "equipment_id",
+      "entity_type": "equipment_id",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496252",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_24",
+      "text": "sheave\",",
+      "entity_type": "sheave\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496261",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_25",
+      "text": "inspection_plate",
+      "entity_type": "inspection_plate",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496271",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_26",
+      "text": "lever",
+      "entity_type": "lever",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496280",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_27",
+      "text": "hose\",",
+      "entity_type": "hose\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496289",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_28",
+      "text": "mechanical_assembly",
+      "entity_type": "mechanical_assembly",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496299",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_29",
+      "text": "switch",
+      "entity_type": "switch",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496308",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_30",
+      "text": "hydraulic_tank\",",
+      "entity_type": "hydraulic_tank\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496317",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_31",
+      "text": "window",
+      "entity_type": "window",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496327",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_32",
+      "text": "roller",
+      "entity_type": "roller",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496336",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_33",
+      "text": "tank",
+      "entity_type": "tank",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496345",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_34",
+      "text": "fan",
+      "entity_type": "fan",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496354",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_35",
+      "text": "fault_type",
+      "entity_type": "fault_type",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496363",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_36",
+      "text": "oil_pressure_switch\",",
+      "entity_type": "oil_pressure_switch\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496372",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_37",
+      "text": "process",
+      "entity_type": "process",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496382",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_38",
+      "text": "shock_absorber\",",
+      "entity_type": "shock_absorber\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496390",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_39",
+      "text": "strut",
+      "entity_type": "strut",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496399",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_40",
+      "text": "seal",
+      "entity_type": "seal",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496409",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_41",
+      "text": "pulley",
+      "entity_type": "pulley",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496418",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_42",
+      "text": "capability",
+      "entity_type": "capability",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496427",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_43",
+      "text": "panel",
+      "entity_type": "panel",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496442",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_44",
+      "text": "latch",
+      "entity_type": "latch",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496451",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_45",
+      "text": "turbo",
+      "entity_type": "turbo",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496459",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_46",
+      "text": "blade_protector\",",
+      "entity_type": "blade_protector\",",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496468",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_47",
+      "text": "universal_joint",
+      "entity_type": "universal_joint",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496477",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_48",
+      "text": "headlight_assembly",
+      "entity_type": "headlight_assembly",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496486",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_49",
+      "text": "differential",
+      "entity_type": "differential",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496495",
+        "item_type": "entity"
+      }
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "relation_0",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "contains",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496511",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_1",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "powered_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496534",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_2",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "leaks_from",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496546",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_3",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "located_in",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496556",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_4",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "operates_with",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496567",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_5",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "damaged_in",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496578",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_6",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "serviced_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496589",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_7",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "affected_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496605",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_8",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "controls",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496621",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_9",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "supports",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496632",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_10",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "lubricates",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496641",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_11",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "monitors",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496650",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_12",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "causes",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496658",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_13",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "monitored_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496667",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_14",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "inspected_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496675",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_15",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "mounted_on",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496684",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_16",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "replaces",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496692",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_17",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "services",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496701",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_18",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "damaged_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496710",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_19",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "inspects",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496720",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_20",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "part_of",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496728",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_21",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "located_at",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496737",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_22",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "blocked_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496745",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_23",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "requires",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496753",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_24",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "replaced_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496761",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_25",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "connected_to",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-26T05:46:48.496770",
+        "item_type": "relation"
+      }
+    }
+  ],
+  "extraction_stats": {
+    "total_texts_processed": 123,
+    "total_entities_extracted": 50,
+    "total_relations_extracted": 26,
+    "unique_entity_types": 50,
+    "unique_relation_types": 26,
+    "processing_time": 223.580825
+  },
+  "discovered_types": {
+    "entity_types": [
+      "fuel_filter",
+      "injector_assembly",
+      "air_filter\",",
+      "pump",
+      "blower",
+      "air_conditioner_system\",",
+      "rope",
+      "pressure_switch\",",
+      "service_action",
+      "compressor",
+      "tyre",
+      "solenoid",
+      "starter_motor",
+      "steering_ball_stud",
+      "platform\",",
+      "[",
+      "gearbox",
+      "brake",
+      "system_component",
+      "bucket",
+      "reflector\",",
+      "filter\",",
+      "rope_clamp\",",
+      "equipment_id",
+      "sheave\",",
+      "inspection_plate",
+      "lever",
+      "hose\",",
+      "mechanical_assembly",
+      "switch",
+      "hydraulic_tank\",",
+      "window",
+      "roller",
+      "tank",
+      "fan",
+      "fault_type",
+      "oil_pressure_switch\",",
+      "process",
+      "shock_absorber\",",
+      "strut",
+      "seal",
+      "pulley",
+      "capability",
+      "panel",
+      "latch",
+      "turbo",
+      "blade_protector\",",
+      "universal_joint",
+      "headlight_assembly",
+      "differential"
+    ],
+    "relation_types": [
+      "contains",
+      "powered_by",
+      "leaks_from",
+      "located_in",
+      "operates_with",
+      "damaged_in",
+      "serviced_by",
+      "affected_by",
+      "controls",
+      "supports",
+      "lubricates",
+      "monitors",
+      "causes",
+      "monitored_by",
+      "inspected_by",
+      "mounted_on",
+      "replaces",
+      "services",
+      "damaged_by",
+      "inspects",
+      "part_of",
+      "located_at",
+      "blocked_by",
+      "requires",
+      "replaced_by",
+      "connected_to"
+    ]
+  },
+  "knowledge_summary": {
+    "total_entities": 50,
+    "total_relations": 26,
+    "total_documents": 123,
+    "graph_nodes": 50,
+    "graph_edges": 0
+  },
+  "validation_results": {
+    "enterprise_quality_score": 0.8,
+    "quality_tier": "basic",
+    "assessment_method": "lightweight",
+    "azure_ml_available": false,
+    "entity_validation": {
+      "status": "not_validated",
+      "details": "Basic validation only"
+    },
+    "relation_validation": {
+      "status": "not_validated",
+      "details": "Basic validation only"
+    }
+  },
+  "processing_time": 223.580825,
+  "timestamp": "2025-07-26T05:46:48.503568"
+}

@@ -1,0 +1,45 @@
+# Universal Entity Extraction Prompt Template
+# Centralized, domain-agnostic entity extraction
+# NO predetermined knowledge or hardcoded types
+
+system:
+You are a universal knowledge extraction specialist. Your task is to identify entities from any domain without imposing predetermined categories or types.
+
+user:
+Analyze the following {{ domain_name }} text samples and extract all significant entities.
+
+**Universal Extraction Principles:**
+1. 🎯 Identify noun phrases, key concepts, and meaningful terms
+2. 🚫 Do NOT impose predetermined categories or entity types
+3. 🌱 Let entities emerge naturally from the text content
+4. 🔍 Focus on terms that carry semantic or functional meaning
+5. 📝 Extract entities exactly as they appear in the text
+6. ⚡ Avoid generic terms unless they have specific contextual meaning
+7. 🎭 Capture both concrete objects and abstract concepts mentioned
+
+**Quality Guidelines:**
+- Extract entities that would be meaningful for knowledge graph construction
+- Include technical terms, proper nouns, and domain-specific terminology
+- Capture multi-word phrases when they form coherent concepts
+- Maintain original text form (don't normalize unnecessarily)
+
+**Text Samples to Analyze:**
+{% for text in texts[:5] %}
+---
+Sample {{ loop.index }}:
+{{ text[:500] }}
+{% if text|length > 500 %}... [truncated]{% endif %}
+---
+{% endfor %}
+
+**Required Output Format:**
+Return ONLY a JSON array of strings containing the entity names:
+```json
+["entity1", "entity2", "entity3", ...]
+```
+
+**Important:** 
+- NO explanations or additional text
+- NO categorization or classification
+- ONLY the JSON array of discovered entity names
+- Maximum {{ max_entities|default(50) }} entities

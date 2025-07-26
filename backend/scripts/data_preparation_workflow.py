@@ -242,9 +242,28 @@ async def main():
         # Initialize enterprise knowledge extractor
         knowledge_extractor = AzureOpenAIKnowledgeExtractor(domain)
 
-        # Extract entities and relations from raw documents
-        document_texts = [doc['content'] for doc in raw_documents]
-        extraction_results = await knowledge_extractor.extract_knowledge_from_texts(document_texts)
+        # Use intelligent document processor to chunk documents
+        from core.utilities.intelligent_document_processor import UniversalDocumentProcessor
+        
+        doc_processor = UniversalDocumentProcessor(
+            azure_openai_client=openai_integration,
+            max_chunk_size=2000,  # Optimal size for knowledge extraction
+            overlap_size=200
+        )
+        
+        # Process all documents into intelligent chunks
+        print(f"   🧠 Processing documents with intelligent chunking...")
+        all_chunks = []
+        for doc in raw_documents:
+            chunks = await doc_processor.process_document(doc)
+            all_chunks.extend(chunks)
+            print(f"   📄 {doc['filename']}: {len(chunks)} intelligent chunks")
+        
+        print(f"   ✅ Total chunks for knowledge extraction: {len(all_chunks)}")
+        
+        # Extract knowledge from intelligent chunks
+        chunk_texts = [chunk.content for chunk in all_chunks]
+        extraction_results = await knowledge_extractor.extract_knowledge_from_texts(chunk_texts)
 
         # Store extracted knowledge in Azure Cosmos DB
         print(f"   🔍 Extracted entities: {len(extraction_results.get('entities', []))}")
@@ -284,37 +303,31 @@ async def main():
             processed_docs = {"documents": [{"content": doc["content"]} for doc in raw_documents]}
 
         success_count = 0
-        # Handle extraction results format
-        if isinstance(processed_docs, dict) and 'documents' in processed_docs:
-            # Use extracted documents
-            documents_to_index = processed_docs['documents']
-        else:
-            # Fallback to raw documents
-            documents_to_index = [{"content": doc["content"]} for doc in raw_documents]
-
-        for i, processed_doc in enumerate(documents_to_index):
-            # Map processed document to search document schema
-            raw_doc = raw_documents[i]  # Corresponding raw document for metadata
-
-            # Extract content from processed document
-            if isinstance(processed_doc, dict):
-                content = processed_doc.get('content', raw_doc['content'])
-            else:
-                content = raw_doc['content']  # Fallback to original content
-
+        
+        # Index all intelligent chunks for better search
+        print(f"   📚 Indexing {len(all_chunks)} intelligent chunks...")
+        
+        for i, chunk in enumerate(all_chunks):
+            # Create search document from chunk
             document = {
-                "id": f"doc_{i}_{raw_doc['filename'].replace('.md', '').replace('.txt', '')}",
-                "content": content,  # Use processed content
-                "title": raw_doc['filename'],
+                "id": f"chunk_{i}_{chunk.source_info['filename'].replace('.md', '').replace('.txt', '')}_{chunk.chunk_index}",
+                "content": chunk.content,
+                "title": f"{chunk.source_info['filename']} - Part {chunk.chunk_index + 1}",
                 "domain": domain,
-                "source": f"data/raw/{raw_doc['filename']}",
+                "source": f"data/raw/{chunk.source_info['filename']}",
+                "chunk_type": chunk.chunk_type,
+                "chunk_index": chunk.chunk_index,
                 "metadata": json.dumps({
-                    "original_filename": raw_doc['filename'],
-                    "file_size": raw_doc['size'],
+                    "original_filename": chunk.source_info['filename'],
+                    "chunk_index": chunk.chunk_index,
+                    "chunk_type": chunk.chunk_type,
+                    "total_chunks": chunk.metadata['total_chunks'],
+                    "processing_method": chunk.metadata['processing_method'],
+                    "file_size": chunk.source_info['size'],
                     "processing_timestamp": datetime.now().isoformat(),
-                    "index_position": i,
-                    "content_type": _detect_content_type(raw_doc['filename']),
-                    "azure_openai_processed": True  # Enterprise tracking
+                    "content_type": _detect_content_type(chunk.source_info['filename']),
+                    "azure_openai_processed": True,
+                    "intelligent_chunking": True
                 })
             }
 
@@ -322,29 +335,26 @@ async def main():
             try:
                 index_result = await search_client.index_document(index_name, document)
 
-                # Add chunking information logging
-                if index_result.get('strategy') == 'chunked_processing':
-                    chunks_info = f"{index_result.get('indexed_chunks', 0)}/{index_result.get('total_chunks', 0)}"
-                    print(f"   📄 {raw_doc['filename']}: chunked into {chunks_info} segments")
-                elif index_result.get('strategy') == 'single_document':
-                    print(f"   📄 {raw_doc['filename']}: indexed as single document")
-
                 if not index_result['success']:
-                    print(f"❌ Failed to index document {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
-                    logger.error(f"Failed to index document {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
+                    print(f"❌ Failed to index chunk {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
+                    logger.error(f"Failed to index chunk {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
                 else:
-                    print(f"✅ Successfully indexed: {raw_doc['filename']}")
-                    success_count += 1 # Increment success_count only on successful index
+                    if i % 50 == 0:  # Log every 50th chunk to avoid spam
+                        print(f"✅ Indexed chunk {i+1}/{len(all_chunks)}: {chunk.chunk_type}")
+                    success_count += 1
             except Exception as e:
-                print(f"❌ Document processing error for {raw_doc['filename']}: {str(e)}")
-                logger.error(f"Document processing error for {raw_doc['filename']}: {str(e)}", exc_info=True)
+                print(f"❌ Chunk processing error for {document['id']}: {str(e)}")
+                logger.error(f"Chunk processing error for {document['id']}: {str(e)}", exc_info=True)
 
         # Enterprise service integration telemetry
         print(f"\n📊 Azure Service Integration Summary:")
         print(f"   🔍 Search Index: {index_name}")
-        print(f"   📄 Documents indexed: {success_count}/{len(raw_documents)}")
-        print(f"   🤖 Azure OpenAI processed: {len(processed_docs)}")
-        print(f"   ⚡ Indexing efficiency: {(success_count/len(raw_documents)*100):.1f}%")
+        print(f"   📄 Original documents: {len(raw_documents)}")
+        print(f"   🧠 Intelligent chunks created: {len(all_chunks)}")
+        print(f"   ✅ Chunks indexed: {success_count}/{len(all_chunks)}")
+        print(f"   🔍 Extracted entities: {len(extraction_results.get('entities', []))}")
+        print(f"   🔗 Extracted relations: {len(extraction_results.get('relations', []))}")
+        print(f"   ⚡ Indexing efficiency: {(success_count/len(all_chunks)*100):.1f}%")
 
         if success_count == 0:
             print(f"\n❌ Critical: Zero documents indexed in Azure Search")

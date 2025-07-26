@@ -61,24 +61,42 @@ define finalize_backend_session
 	@echo "📋 Backend session summary: $(SESSION_SUMMARY)"
 endef
 
-.PHONY: help setup run azure-health-check data-prep-enterprise query-demo-enterprise clean
+.PHONY: help setup run azure-health-check data-upload knowledge-extract data-prep-full data-prep-enterprise query-demo-enterprise backend-summary clean
 
-help: ## Azure Universal RAG Backend Operations (Clean Session Management)
-	@echo "🔧 Azure Universal RAG Backend - Clean Azure Service Operations"
-	@echo "=============================================================="
+help: ## Azure Universal RAG Backend Operations (Two-Step Intelligent Processing)
+	@echo "🔧 Azure Universal RAG Backend - Intelligent Document Processing"
+	@echo "================================================================"
 	@echo ""
 	@echo "🚀 Backend Operations:"
 	@echo "  make setup                  - Setup with Azure service validation"
 	@echo "  make run                    - Start FastAPI with session tracking"
 	@echo ""
+	@echo "🧠 Two-Step Intelligent Data Processing:"
+	@echo "  make data-upload           - STEP 1: Upload docs & create intelligent chunks"
+	@echo "  make knowledge-extract     - STEP 2: Extract entities & relations from chunks"
+	@echo "  make data-prep-full        - Complete workflow (STEP 1 + STEP 2)"
+	@echo ""
+	@echo "🎯 Azure Prompt Flow (Centralized Prompts):"
+	@echo "  make prompt-flow-extract   - Extract knowledge using centralized prompts"
+	@echo "  make prompt-flow-setup     - Setup Prompt Flow environment"
+	@echo "  make prompt-templates      - View centralized prompt templates"
+	@echo ""
 	@echo "☁️  Azure Service Operations:"
 	@echo "  make azure-health-check     - Validate Azure service integration"
-	@echo "  make data-prep-enterprise   - Data preparation with Azure services"
 	@echo "  make query-demo-enterprise  - Query processing with Azure tracking"
 	@echo ""
 	@echo "📊 Session Management:"
 	@echo "  make backend-summary        - Display current backend session"
 	@echo "  make clean                  - Clean session with log replacement"
+	@echo ""
+	@echo "📖 Legacy Commands:"
+	@echo "  make data-prep-enterprise   - DEPRECATED: Use data-prep-full instead"
+	@echo ""
+	@echo "💡 Recommended Workflow:"
+	@echo "  1. make data-upload         (Upload & chunk documents intelligently)"
+	@echo "  2. make knowledge-extract   (Extract knowledge graph from chunks)"
+	@echo "  OR: make data-prep-full     (Run both steps automatically)"
+	@echo "  OR: make prompt-flow-extract (Use centralized prompt management)"
 	@echo ""
 	@echo "Current Backend Session: $(shell cat $(CURRENT_BACKEND_SESSION) 2>/dev/null || echo 'No active session')"
 
@@ -113,15 +131,39 @@ azure-health-check: ## Comprehensive Azure service validation
 	@echo "📊 Azure service health check completed"
 	@cat $(SESSION_SUMMARY)
 
-data-prep-enterprise: ## Enterprise data preparation with Azure service integration
+data-upload: ## STEP 1: Upload documents and create intelligent chunks
 	@$(call start_backend_session)
-	@echo "🔄 Azure Enterprise Data Preparation - Session: $(BACKEND_SESSION)"
+	@echo "🔄 STEP 1: Azure Data Upload & Chunking - Session: $(BACKEND_SESSION)"
 	@$(call validate_azure_services)
-	@$(call execute_azure_workflow,data_preparation,scripts/data_preparation_workflow.py,general)
+	@$(call execute_azure_workflow,data_upload_and_chunking,scripts/data_upload_workflow.py,general)
 	@$(call capture_backend_metrics)
 	@$(call finalize_backend_session)
-	@echo "📋 Enterprise data preparation completed"
+	@echo "📋 STEP 1: Data upload and chunking completed"
 	@cat $(SESSION_SUMMARY)
+
+knowledge-extract: ## STEP 2: Extract entities and relations from chunks
+	@$(call start_backend_session)
+	@echo "🔄 STEP 2: Azure Knowledge Extraction - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,knowledge_extraction,scripts/knowledge_extraction_workflow.py,general)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 STEP 2: Knowledge extraction completed"
+	@cat $(SESSION_SUMMARY)
+
+data-prep-full: ## Complete two-step data preparation (upload + extraction)
+	@echo "🚀 Starting complete Azure RAG data preparation..."
+	@$(MAKE) data-upload
+	@echo ""
+	@echo "✅ STEP 1 complete, starting STEP 2..."
+	@echo ""
+	@$(MAKE) knowledge-extract
+	@echo ""
+	@echo "🎉 Complete data preparation finished!"
+
+data-prep-enterprise: ## Legacy: Complete data preparation (use data-prep-full instead)
+	@echo "⚠️  DEPRECATED: Use 'make data-prep-full' for new two-step workflow"
+	@$(MAKE) data-prep-full
 
 query-demo-enterprise: ## Query processing with Azure performance tracking
 	@$(call start_backend_session)
@@ -170,6 +212,49 @@ clean: ## Clean backend session with log replacement
 	@find data/processed -type f -delete 2>/dev/null || true
 	@find data/cache -type f -delete 2>/dev/null || true
 	@echo "✅ Backend session cleaned - logs replaced"
+
+# Azure Prompt Flow Commands (Centralized Prompt Management)
+prompt-flow-extract: ## Extract knowledge using Azure Prompt Flow with centralized prompts
+	@$(call start_backend_session)
+	@echo "🎯 Azure Prompt Flow Knowledge Extraction - Session: $(BACKEND_SESSION)"
+	@echo "Using centralized prompt templates - NO predetermined knowledge!"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,prompt_flow_extraction,scripts/prompt_flow_knowledge_extraction.py,general)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Prompt Flow extraction completed"
+	@cat $(SESSION_SUMMARY)
+
+prompt-flow-setup: ## Setup Azure Prompt Flow environment and dependencies
+	@$(call start_backend_session)
+	@echo "🔧 Setting up Azure Prompt Flow environment - Session: $(BACKEND_SESSION)"
+	@pip install promptflow promptflow-tools promptflow-azure || echo "⚠️ Prompt Flow installation may require additional setup"
+	@echo "📁 Prompt Flow directory: prompt_flows/universal_knowledge_extraction/"
+	@echo "📋 Centralized templates:"
+	@ls -la prompt_flows/universal_knowledge_extraction/*.jinja2 2>/dev/null || echo "   No templates found"
+	@$(call finalize_backend_session)
+	@echo "✅ Prompt Flow setup completed"
+
+prompt-templates: ## View and manage centralized prompt templates
+	@echo "📋 Azure Prompt Flow - Centralized Universal Prompt Templates"
+	@echo "=============================================================="
+	@echo ""
+	@echo "🎯 Universal Extraction Principles:"
+	@echo "   ✅ NO predetermined entity types"
+	@echo "   ✅ NO hardcoded domain knowledge"
+	@echo "   ✅ Domain-agnostic prompt templates"
+	@echo ""
+	@echo "📁 Template Location: prompt_flows/universal_knowledge_extraction/"
+	@echo ""
+	@echo "📄 Available Templates:"
+	@find prompt_flows/universal_knowledge_extraction/ -name "*.jinja2" -exec basename {} \; 2>/dev/null | sed 's/^/   ✅ /' || echo "   ❌ No templates found"
+	@echo ""
+	@echo "🔧 Template Management:"
+	@echo "   - Edit templates directly in prompt_flows/universal_knowledge_extraction/"
+	@echo "   - Templates use Jinja2 syntax for dynamic content"
+	@echo "   - Changes take effect immediately (no restart required)"
+	@echo ""
+	@echo "💡 Usage: make prompt-flow-extract (uses centralized templates)"
 
 # Legacy compatibility with session enhancement
 data-prep: data-prep-enterprise
