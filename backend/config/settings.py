@@ -133,12 +133,17 @@ class Settings(BaseSettings):
     extraction_quality_tier: str = Field(default="standard", env="EXTRACTION_QUALITY_TIER")
     extraction_confidence_threshold: float = Field(default=0.7, env="EXTRACTION_CONFIDENCE_THRESHOLD")
     max_entities_per_document: int = Field(default=100, env="MAX_ENTITIES_PER_DOCUMENT")
-    extraction_batch_size: int = Field(default=10, env="EXTRACTION_BATCH_SIZE")
-    enable_text_analytics_preprocessing: bool = Field(default=True, env="ENABLE_TEXT_ANALYTICS_PREPROCESSING")
+    extraction_batch_size: int = Field(default=50, env="EXTRACTION_BATCH_SIZE")
+    enable_text_analytics_preprocessing: bool = Field(default=False, env="ENABLE_TEXT_ANALYTICS_PREPROCESSING")
 
     # Azure OpenAI Rate Limiting
     azure_openai_max_tokens_per_minute: int = Field(default=40000, env="AZURE_OPENAI_MAX_TOKENS_PER_MINUTE")
     azure_openai_max_requests_per_minute: int = Field(default=60, env="AZURE_OPENAI_MAX_REQUESTS_PER_MINUTE")
+
+    # Azure Prompt Flow Integration
+    enable_prompt_flow: bool = Field(default=False, env="ENABLE_PROMPT_FLOW")
+    prompt_flow_fallback_enabled: bool = Field(default=True, env="PROMPT_FLOW_FALLBACK_ENABLED")
+    enable_prompt_flow_monitoring: bool = Field(default=True, env="ENABLE_PROMPT_FLOW_MONITORING")
     azure_openai_cost_threshold_per_hour: float = Field(default=50.0, env="AZURE_OPENAI_COST_THRESHOLD_PER_HOUR")
     azure_openai_priority_tier: str = Field(default="standard", env="AZURE_OPENAI_PRIORITY_TIER")
 
@@ -165,7 +170,7 @@ class Settings(BaseSettings):
     config_dir: Path = Field(default=BASE_DIR / "config", env="CONFIG_DIR")
 
     # Azure RAG Configuration
-    discovery_sample_size: int = Field(default=10, env="DISCOVERY_SAMPLE_SIZE")
+    discovery_sample_size: int = Field(default=200, env="DISCOVERY_SAMPLE_SIZE")
     pattern_confidence_threshold: float = Field(default=0.7, env="PATTERN_CONFIDENCE_THRESHOLD")
     discovery_min_confidence: float = Field(default=0.6, env="DISCOVERY_MIN_CONFIDENCE")
     discovery_max_patterns: int = Field(default=50, env="DISCOVERY_MAX_PATTERNS")
@@ -382,12 +387,12 @@ class Settings(BaseSettings):
     azure_health_check_timeout_seconds: int = Field(default=30, env="AZURE_HEALTH_CHECK_TIMEOUT_SECONDS")
     azure_circuit_breaker_failure_threshold: int = Field(default=5, env="AZURE_CIRCUIT_BREAKER_FAILURE_THRESHOLD")
 
-    # Knowledge Discovery Settings
-    discovery_sample_size: int = Field(default=20, env="DISCOVERY_SAMPLE_SIZE")
-    max_discovery_batches: int = Field(default=20, env="MAX_DISCOVERY_BATCHES")
-    max_entity_types_discovery: int = Field(default=50, env="MAX_ENTITY_TYPES_DISCOVERY")
-    max_relation_types_discovery: int = Field(default=30, env="MAX_RELATION_TYPES_DISCOVERY")
-    max_triplet_extraction_batches: int = Field(default=100, env="MAX_TRIPLET_EXTRACTION_BATCHES")
+    # Knowledge Discovery Settings - Increased for intelligent chunking
+    discovery_sample_size: int = Field(default=500, env="DISCOVERY_SAMPLE_SIZE")
+    max_discovery_batches: int = Field(default=100, env="MAX_DISCOVERY_BATCHES")
+    max_entity_types_discovery: int = Field(default=100, env="MAX_ENTITY_TYPES_DISCOVERY")
+    max_relation_types_discovery: int = Field(default=60, env="MAX_RELATION_TYPES_DISCOVERY")
+    max_triplet_extraction_batches: int = Field(default=500, env="MAX_TRIPLET_EXTRACTION_BATCHES")
 
     class Config:
         env_file = ".env"
