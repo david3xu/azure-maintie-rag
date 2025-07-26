@@ -161,9 +161,16 @@ data-prep-full: ## Complete two-step data preparation (upload + extraction)
 	@echo ""
 	@echo "🎉 Complete data preparation finished!"
 
-data-prep-enterprise: ## Legacy: Complete data preparation (use data-prep-full instead)
-	@echo "⚠️  DEPRECATED: Use 'make data-prep-full' for new two-step workflow"
-	@$(MAKE) data-prep-full
+data-prep-enterprise: ## Enhanced data preparation with real-time progress tracking
+	@echo "🚀 Starting enhanced Azure RAG data preparation with real-time progress..."
+	@$(call start_backend_session)
+	@echo "🔄 STEP 1: Azure Data Upload & Chunking - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,data_upload_and_chunking,scripts/data_preparation_workflow.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 STEP 1: Data upload and chunking completed"
+	@cat $(SESSION_SUMMARY)
 
 query-demo-enterprise: ## Query processing with Azure performance tracking
 	@$(call start_backend_session)
@@ -192,6 +199,16 @@ data-clean: ## Complete data lifecycle reset
 	@echo "🔄 Enterprise data lifecycle reset..."
 	make clean
 	make azure-clean-data
+
+full-dataset-extract: ## Full dataset knowledge extraction with real-time progress
+	@$(call start_backend_session)
+	@echo "🌐 Full Dataset Knowledge Extraction - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,full_dataset_extraction,scripts/full_dataset_extraction.py,--batch-size 20 --no-details)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Full dataset extraction completed"
+	@cat $(SESSION_SUMMARY)
 
 backend-summary: ## Display current backend session summary
 	@if [ -f "$(SESSION_SUMMARY)" ]; then \

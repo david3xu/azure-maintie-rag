@@ -15,6 +15,7 @@ from typing import List, Dict, Any
 sys.path.append(str(Path(__file__).parent.parent))
 
 from core.azure_openai.improved_extraction_client import ImprovedKnowledgeExtractor
+from core.workflow.progress_tracker import create_progress_tracker, track_async_operation, track_sync_operation
 
 
 def load_all_texts(file_path: str) -> List[str]:
@@ -43,6 +44,10 @@ async def extract_full_dataset_knowledge(texts: List[str], domain: str = "mainte
     Extract knowledge from the FULL dataset in batches
     """
 
+    # Initialize real-time progress tracker
+    progress_tracker = create_progress_tracker("Full Dataset Knowledge Extraction")
+    progress_tracker.start_workflow()
+
     print(f"\n🔍 Starting FULL dataset knowledge extraction...")
     print(f"   • Domain: {domain}")
     print(f"   • Total texts to process: {len(texts)}")
@@ -56,12 +61,28 @@ async def extract_full_dataset_knowledge(texts: List[str], domain: str = "mainte
     all_relationships = []
     processed_count = 0
 
+    # Start knowledge extraction step
+    progress_tracker.start_step("Knowledge Extraction", {
+        "total_texts": len(texts),
+        "batch_size": batch_size,
+        "total_batches": (len(texts) + batch_size - 1) // batch_size
+    })
+
     # Process in batches to avoid memory issues
     for batch_start in range(0, len(texts), batch_size):
         batch_end = min(batch_start + batch_size, len(texts))
         batch_texts = texts[batch_start:batch_end]
         batch_num = batch_start // batch_size + 1
         total_batches = (len(texts) + batch_size - 1) // batch_size
+
+        progress_tracker.update_step_progress("Knowledge Extraction", {
+            "current_batch": batch_num,
+            "total_batches": total_batches,
+            "batch_texts": len(batch_texts),
+            "processed_count": processed_count,
+            "entities_found": len(all_entities),
+            "relations_found": len(all_relationships)
+        })
 
         print(f"\n   📦 Processing batch {batch_num}/{total_batches} (texts {batch_start+1}-{batch_end})")
 
@@ -92,6 +113,18 @@ async def extract_full_dataset_knowledge(texts: List[str], domain: str = "mainte
                 batch_relationships.extend(relationships)
                 processed_count += 1
 
+                # Update progress for individual text processing
+                progress_tracker.update_step_progress("Knowledge Extraction", {
+                    "current_batch": batch_num,
+                    "total_batches": total_batches,
+                    "batch_texts": len(batch_texts),
+                    "processed_count": processed_count,
+                    "entities_found": len(all_entities) + len(batch_entities),
+                    "relations_found": len(all_relationships) + len(batch_relationships),
+                    "current_text": i,
+                    "total_texts_in_batch": len(batch_texts)
+                })
+
             except Exception as e:
                 print(f"      ⚠️  Error processing text {batch_start + i}: {e}")
                 continue
@@ -100,6 +133,8 @@ async def extract_full_dataset_knowledge(texts: List[str], domain: str = "mainte
         all_relationships.extend(batch_relationships)
 
         print(f"      ✅ Batch {batch_num} complete: {len(batch_entities)} entities, {len(batch_relationships)} relationships")
+
+    progress_tracker.complete_step("Knowledge Extraction", success=True)
 
     # Transform to comprehensive format
     full_results = {
@@ -124,6 +159,8 @@ async def extract_full_dataset_knowledge(texts: List[str], domain: str = "mainte
     print(f"   • Total relationships: {len(full_results['relationships'])}")
     print(f"   • Average entities per text: {full_results['summary']['avg_entities_per_text']}")
     print(f"   • Average relationships per text: {full_results['summary']['avg_relationships_per_text']}")
+
+    progress_tracker.finish_workflow(success=True)
 
     return full_results
 
@@ -209,34 +246,39 @@ async def main():
 
     args = parser.parse_args()
 
-    # Load ALL texts
-    texts = load_all_texts(args.input)
+    try:
+        # Load ALL texts
+        texts = load_all_texts(args.input)
 
-    if not texts:
-        print("❌ No texts to process!")
-        return
+        if not texts:
+            print("❌ No texts to process!")
+            return
 
-    # Extract knowledge from full dataset
-    results = await extract_full_dataset_knowledge(texts, args.domain, args.batch_size)
+        # Extract knowledge from full dataset
+        results = await extract_full_dataset_knowledge(texts, args.domain, args.batch_size)
 
-    # Display results
-    display_full_results(results, not args.no_details)
+        # Display results
+        display_full_results(results, not args.no_details)
 
-    # Save results
-    output_path = save_full_results(results, args.output)
+        # Save results
+        output_path = save_full_results(results, args.output)
 
-    print(f"\n{'='*80}")
-    print("🎯 FULL DATASET EXTRACTION COMPLETE")
-    print(f"{'='*80}")
-    print(f"\n📁 Results saved to: {output_path}")
-    print(f"📊 Entities: {len(results['entities'])}")
-    print(f"🔗 Relationships: {len(results['relationships'])}")
-    print(f"\n💡 Full Dataset Features:")
-    print(f"   ✅ Processes ALL {len(texts)} texts (not just a sample)")
-    print(f"   ✅ Uses batch processing ({args.batch_size} texts per batch)")
-    print(f"   ✅ Memory efficient processing")
-    print(f"   ✅ Complete knowledge extraction")
-    print(f"\n🚀 Ready for comprehensive knowledge graph construction!")
+        print(f"\n{'='*80}")
+        print("🎯 FULL DATASET EXTRACTION COMPLETE")
+        print(f"{'='*80}")
+        print(f"\n📁 Results saved to: {output_path}")
+        print(f"📊 Entities: {len(results['entities'])}")
+        print(f"🔗 Relationships: {len(results['relationships'])}")
+        print(f"\n💡 Full Dataset Features:")
+        print(f"   ✅ Processes ALL {len(texts)} texts (not just a sample)")
+        print(f"   ✅ Uses batch processing ({args.batch_size} texts per batch)")
+        print(f"   ✅ Memory efficient processing")
+        print(f"   ✅ Complete knowledge extraction")
+        print(f"\n🚀 Ready for comprehensive knowledge graph construction!")
+
+    except Exception as e:
+        print(f"❌ Full dataset extraction failed: {e}")
+        return 1
 
 
 if __name__ == "__main__":

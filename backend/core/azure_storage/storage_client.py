@@ -222,3 +222,39 @@ class AzureStorageClient:
                 "error": str(e),
                 "account_name": self.account_name
             }
+
+    async def delete_blob(self, container_name: str, blob_name: str) -> bool:
+        """Delete a blob from Azure Blob Storage"""
+        try:
+            blob_client = self.blob_service_client.get_blob_client(
+                container=container_name,
+                blob=blob_name
+            )
+            blob_client.delete_blob()
+            logger.info(f"Deleted blob: {blob_name} from container: {container_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Blob deletion failed: {e}")
+            return False
+
+    async def delete_all_blobs(self, container_name: str) -> int:
+        """Delete all blobs in a container, returns number of deleted blobs"""
+        try:
+            container_client = self.blob_service_client.get_container_client(container_name)
+            deleted_count = 0
+
+            # List all blobs and delete them
+            blobs = container_client.list_blobs()
+            for blob in blobs:
+                try:
+                    container_client.delete_blob(blob.name)
+                    deleted_count += 1
+                    logger.info(f"Deleted blob: {blob.name}")
+                except Exception as e:
+                    logger.error(f"Failed to delete blob {blob.name}: {e}")
+
+            logger.info(f"Deleted {deleted_count} blobs from container: {container_name}")
+            return deleted_count
+        except Exception as e:
+            logger.error(f"Bulk blob deletion failed: {e}")
+            return 0
