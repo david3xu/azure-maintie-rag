@@ -1,0 +1,415 @@
+{
+  "extraction_timestamp": "2025-07-26T09:02:03.749978",
+  "domain": "maintenance",
+  "sample_size": 5,
+  "total_available": 5,
+  "comparisons": [
+    {
+      "text_id": 0,
+      "raw_text": "air conditioner thermostat not working",
+      "extracted_entities": [
+        {
+          "entity_id": "entity_0",
+          "text": "air conditioner",
+          "entity_type": "cooling_equipment",
+          "confidence": 0.95,
+          "context": "air conditioner thermostat not working",
+          "source_record": 1,
+          "semantic_role": "primary_system",
+          "maintenance_relevance": "equipment requiring service"
+        },
+        {
+          "entity_id": "entity_1",
+          "text": "thermostat",
+          "entity_type": "temperature_control_component",
+          "confidence": 0.92,
+          "context": "air conditioner thermostat not working",
+          "source_record": 1,
+          "semantic_role": "component",
+          "maintenance_relevance": "component with problem"
+        },
+        {
+          "entity_id": "entity_2",
+          "text": "not working",
+          "entity_type": "operational_problem",
+          "confidence": 0.98,
+          "context": "air conditioner thermostat not working",
+          "source_record": 1,
+          "semantic_role": "problem",
+          "maintenance_relevance": "reported failure mode"
+        }
+      ],
+      "extracted_relations": [
+        {
+          "relation_id": "relation_0",
+          "source_entity": "air conditioner",
+          "target_entity": "thermostat",
+          "relation_type": "has_component",
+          "confidence": 0.95,
+          "context": "air conditioner thermostat not working",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "structural relationship for problem diagnosis",
+          "source_entity_id": "entity_0",
+          "target_entity_id": "entity_1"
+        },
+        {
+          "relation_id": "relation_1",
+          "source_entity": "thermostat",
+          "target_entity": "not working",
+          "relation_type": "has_problem",
+          "confidence": 0.9,
+          "context": "air conditioner thermostat not working",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "problem identification for repair action",
+          "source_entity_id": "entity_1",
+          "target_entity_id": "entity_2"
+        },
+        {
+          "relation_id": "relation_2",
+          "source_entity": "air conditioner",
+          "target_entity": "not working",
+          "relation_type": "has_problem",
+          "confidence": 0.7,
+          "context": "air conditioner thermostat not working",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "system-level problem identification; may be inferred if thermostat failure impacts overall operation",
+          "source_entity_id": "entity_0",
+          "target_entity_id": "entity_2"
+        },
+        {
+          "relation_id": "relation_3",
+          "source_entity": "thermostat",
+          "target_entity": "air conditioner",
+          "relation_type": "controls",
+          "confidence": 0.8,
+          "context": "air conditioner thermostat not working",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "operational relationship; thermostat function affects air conditioner operation",
+          "source_entity_id": "entity_1",
+          "target_entity_id": "entity_0"
+        }
+      ],
+      "extraction_quality": {
+        "entities_extracted": 3,
+        "relations_extracted": 4,
+        "context_preservation_score": 1.0,
+        "entity_coverage_score": 0.947,
+        "connectivity_score": 1.0,
+        "overall_quality": 0.982
+      },
+      "issues_identified": []
+    },
+    {
+      "text_id": 1,
+      "raw_text": "air conditioner thermostat unserviceable",
+      "extracted_entities": [
+        {
+          "entity_id": "entity_0",
+          "text": "air conditioner",
+          "entity_type": "cooling_equipment",
+          "confidence": 0.95,
+          "context": "air conditioner thermostat unserviceable",
+          "source_record": 1,
+          "semantic_role": "primary_system",
+          "maintenance_relevance": "equipment requiring service"
+        },
+        {
+          "entity_id": "entity_1",
+          "text": "thermostat",
+          "entity_type": "temperature_control_component",
+          "confidence": 0.92,
+          "context": "air conditioner thermostat unserviceable",
+          "source_record": 1,
+          "semantic_role": "component",
+          "maintenance_relevance": "component with problem"
+        },
+        {
+          "entity_id": "entity_2",
+          "text": "unserviceable",
+          "entity_type": "operational_problem",
+          "confidence": 0.98,
+          "context": "air conditioner thermostat unserviceable",
+          "source_record": 1,
+          "semantic_role": "problem",
+          "maintenance_relevance": "problem requiring corrective action"
+        }
+      ],
+      "extracted_relations": [
+        {
+          "relation_id": "relation_0",
+          "source_entity": "air conditioner",
+          "target_entity": "thermostat",
+          "relation_type": "has_component",
+          "confidence": 0.98,
+          "context": "air conditioner thermostat unserviceable",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "structural relationship for identifying affected components",
+          "source_entity_id": "entity_0",
+          "target_entity_id": "entity_1"
+        },
+        {
+          "relation_id": "relation_1",
+          "source_entity": "thermostat",
+          "target_entity": "unserviceable",
+          "relation_type": "has_problem",
+          "confidence": 0.95,
+          "context": "air conditioner thermostat unserviceable",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "problem identification for repair or replacement action",
+          "source_entity_id": "entity_1",
+          "target_entity_id": "entity_2"
+        },
+        {
+          "relation_id": "relation_2",
+          "source_entity": "air conditioner",
+          "target_entity": "unserviceable",
+          "relation_type": "affected_by",
+          "confidence": 0.8,
+          "context": "air conditioner thermostat unserviceable",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "system-level impact awareness for troubleshooting",
+          "source_entity_id": "entity_0",
+          "target_entity_id": "entity_2"
+        }
+      ],
+      "extraction_quality": {
+        "entities_extracted": 3,
+        "relations_extracted": 3,
+        "context_preservation_score": 1.0,
+        "entity_coverage_score": 0.95,
+        "connectivity_score": 1.0,
+        "overall_quality": 0.983
+      },
+      "issues_identified": []
+    },
+    {
+      "text_id": 2,
+      "raw_text": "air conditioner unserviceable",
+      "extracted_entities": [
+        {
+          "entity_id": "entity_0",
+          "text": "air conditioner",
+          "entity_type": "cooling_equipment",
+          "confidence": 0.98,
+          "context": "air conditioner unserviceable",
+          "source_record": 1,
+          "semantic_role": "primary_system",
+          "maintenance_relevance": "equipment requiring attention"
+        },
+        {
+          "entity_id": "entity_1",
+          "text": "unserviceable",
+          "entity_type": "equipment_problem",
+          "confidence": 0.97,
+          "context": "air conditioner unserviceable",
+          "source_record": 1,
+          "semantic_role": "problem",
+          "maintenance_relevance": "status indicating equipment is not operational"
+        }
+      ],
+      "extracted_relations": [
+        {
+          "relation_id": "relation_0",
+          "source_entity": "air conditioner",
+          "target_entity": "unserviceable",
+          "relation_type": "has_problem",
+          "confidence": 0.95,
+          "context": "air conditioner unserviceable",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "problem identification at equipment level; triggers troubleshooting and repair actions",
+          "source_entity_id": "entity_0",
+          "target_entity_id": "entity_1"
+        }
+      ],
+      "extraction_quality": {
+        "entities_extracted": 2,
+        "relations_extracted": 1,
+        "context_preservation_score": 1.0,
+        "entity_coverage_score": 0.966,
+        "connectivity_score": 1.0,
+        "overall_quality": 0.989
+      },
+      "issues_identified": []
+    },
+    {
+      "text_id": 3,
+      "raw_text": "air conditioner unserviceable when stationary",
+      "extracted_entities": [
+        {
+          "entity_id": "entity_0",
+          "text": "air conditioner",
+          "entity_type": "cooling_equipment",
+          "confidence": 0.98,
+          "context": "air conditioner unserviceable when stationary",
+          "source_record": 1,
+          "semantic_role": "primary_system",
+          "maintenance_relevance": "equipment requiring attention"
+        },
+        {
+          "entity_id": "entity_1",
+          "text": "unserviceable",
+          "entity_type": "problem_status",
+          "confidence": 0.97,
+          "context": "air conditioner unserviceable when stationary",
+          "source_record": 1,
+          "semantic_role": "problem",
+          "maintenance_relevance": "equipment not functioning as required"
+        },
+        {
+          "entity_id": "entity_2",
+          "text": "stationary",
+          "entity_type": "operating_condition",
+          "confidence": 0.92,
+          "context": "air conditioner unserviceable when stationary",
+          "source_record": 1,
+          "semantic_role": "condition",
+          "maintenance_relevance": "problem occurs only when equipment is not moving"
+        }
+      ],
+      "extracted_relations": [
+        {
+          "relation_id": "relation_0",
+          "source_entity": "air conditioner",
+          "target_entity": "unserviceable",
+          "relation_type": "has_problem",
+          "confidence": 0.95,
+          "context": "air conditioner unserviceable when stationary",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "identifies the main equipment affected by the problem",
+          "source_entity_id": "entity_0",
+          "target_entity_id": "entity_1"
+        },
+        {
+          "relation_id": "relation_1",
+          "source_entity": "unserviceable",
+          "target_entity": "stationary",
+          "relation_type": "causes",
+          "confidence": 0.85,
+          "context": "air conditioner unserviceable when stationary",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "links operational condition (stationary) as a cause for the equipment problem",
+          "source_entity_id": "entity_1",
+          "target_entity_id": "entity_2"
+        },
+        {
+          "relation_id": "relation_2",
+          "source_entity": "stationary",
+          "target_entity": "air conditioner",
+          "relation_type": "affects",
+          "confidence": 0.85,
+          "context": "air conditioner unserviceable when stationary",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "shows operational state impacting equipment functionality",
+          "source_entity_id": "entity_2",
+          "target_entity_id": "entity_0"
+        }
+      ],
+      "extraction_quality": {
+        "entities_extracted": 3,
+        "relations_extracted": 3,
+        "context_preservation_score": 1.0,
+        "entity_coverage_score": 0.844,
+        "connectivity_score": 1.0,
+        "overall_quality": 0.948
+      },
+      "issues_identified": []
+    },
+    {
+      "text_id": 4,
+      "raw_text": "air freight bogger dogbones TBC",
+      "extracted_entities": [
+        {
+          "entity_id": "entity_0",
+          "text": "air freight bogger",
+          "entity_type": "mobile_equipment",
+          "confidence": 0.85,
+          "context": "air freight bogger dogbones TBC",
+          "source_record": 1,
+          "semantic_role": "primary_system",
+          "maintenance_relevance": "equipment requiring inspection or service"
+        },
+        {
+          "entity_id": "entity_1",
+          "text": "dogbones",
+          "entity_type": "suspension_component",
+          "confidence": 0.9,
+          "context": "air freight bogger dogbones TBC",
+          "source_record": 1,
+          "semantic_role": "component",
+          "maintenance_relevance": "component potentially requiring attention"
+        },
+        {
+          "entity_id": "entity_2",
+          "text": "TBC",
+          "entity_type": "maintenance_action_status",
+          "confidence": 0.95,
+          "context": "air freight bogger dogbones TBC",
+          "source_record": 1,
+          "semantic_role": "action_status",
+          "maintenance_relevance": "action to be confirmed; further investigation or clarification needed"
+        }
+      ],
+      "extracted_relations": [
+        {
+          "relation_id": "relation_0",
+          "source_entity": "air freight bogger",
+          "target_entity": "dogbones",
+          "relation_type": "has_component",
+          "confidence": 0.9,
+          "context": "air freight bogger dogbones TBC",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "structural relationship; understanding that dogbones are a component or subassembly of the air freight bogger helps technicians locate and service them",
+          "source_entity_id": "entity_0",
+          "target_entity_id": "entity_1"
+        },
+        {
+          "relation_id": "relation_1",
+          "source_entity": "dogbones",
+          "target_entity": "TBC",
+          "relation_type": "part_of",
+          "confidence": 0.7,
+          "context": "air freight bogger dogbones TBC",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "possible hierarchical relationship; TBC may refer to a subsystem or assembly, indicating dogbones are part of TBC",
+          "source_entity_id": "entity_1",
+          "target_entity_id": "entity_2"
+        },
+        {
+          "relation_id": "relation_2",
+          "source_entity": "TBC",
+          "target_entity": "air freight bogger",
+          "relation_type": "part_of",
+          "confidence": 0.7,
+          "context": "air freight bogger dogbones TBC",
+          "source_record": 1,
+          "direction": "directed",
+          "maintenance_relevance": "possible hierarchical relationship; TBC may be a subassembly within the air freight bogger",
+          "source_entity_id": "entity_2",
+          "target_entity_id": "entity_0"
+        }
+      ],
+      "extraction_quality": {
+        "entities_extracted": 3,
+        "relations_extracted": 3,
+        "context_preservation_score": 1.0,
+        "entity_coverage_score": 0.935,
+        "connectivity_score": 1.0,
+        "overall_quality": 0.978
+      },
+      "issues_identified": []
+    }
+  ]
+}
