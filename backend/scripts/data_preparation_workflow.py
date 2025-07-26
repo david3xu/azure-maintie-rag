@@ -40,6 +40,7 @@ from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 from core.workflow.data_workflow_evidence import AzureDataWorkflowEvidenceCollector
 from core.workflow.cost_tracker import AzureServiceCostTracker
+from core.workflow.progress_tracker import create_progress_tracker, track_async_operation, track_sync_operation
 azure_settings = AzureSettings()
 print('DEBUG: AZURE_SEARCH_SERVICE:', azure_settings.azure_search_service)
 print('DEBUG: AZURE_SEARCH_ADMIN_KEY:', azure_settings.azure_search_admin_key)
@@ -131,22 +132,21 @@ def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
 async def main():
     """Execute data preparation workflow with Azure services"""
 
-    print("🔄 WORKFLOW 1: Raw Text Data Handling with Azure Services")
-    print("=" * 60)
-    print("📊 Purpose: Convert raw text files into searchable knowledge base using Azure")
-    print("☁️  Azure Services: Blob Storage, Cognitive Search, OpenAI, Cosmos DB")
-    print("⏱️  Frequency: Once per data update (initialization/startup)")
+    # Initialize real-time progress tracker
+    progress_tracker = create_progress_tracker("Azure Data Preparation")
+    progress_tracker.start_workflow()
 
     domain = "general"
     start_time = time.time()
 
     try:
         # Step 0: Azure Data State Validation (NEW)
-        print(f"\n🔍 Step 0: Azure Data State Analysis...")
+        progress_tracker.start_step("Initialization", {"domain": domain})
         # Initialize Azure services (existing pattern)
         azure_services = AzureServicesManager()
         validation = azure_services.validate_configuration()
         if not validation['all_configured']:
+            progress_tracker.complete_step("Initialization", success=False, error_message=f"Azure services not properly configured: {validation}")
             raise RuntimeError(f"Azure services not properly configured: {validation}")
         # Validate Azure data state
         data_state = await azure_services.validate_domain_data_state(domain)
@@ -196,13 +196,16 @@ async def main():
         print(f"✅ Proceeding with Azure data preparation workflow...")
 
         # Load raw data from data/raw directory
-        print(f"\n📂 Loading raw data from data/raw directory...")
+        progress_tracker.start_step("Data Loading", {"directory": "data/raw"})
         raw_documents = load_raw_data_from_directory()
 
         if not raw_documents:
+            progress_tracker.complete_step("Data Loading", success=False, error_message="No raw documents found")
             print("❌ No raw documents found. Please add markdown files to data/raw/")
             return 1
 
+        progress_tracker.update_step_progress("Data Loading", {"documents_loaded": len(raw_documents)})
+        progress_tracker.complete_step("Data Loading", success=True)
         print(f"✅ Loaded {len(raw_documents)} documents from data/raw/")
 
         # Initialize Azure services
@@ -225,16 +228,21 @@ async def main():
         cosmos_client = azure_services.get_service('cosmos')
 
         # Step 1: Store documents in Azure Blob Storage using RAG storage
-        print(f"\n☁️  Step 1: Storing documents in Azure Blob Storage (RAG)...")
+        progress_tracker.start_step("Blob Storage", {"container": f"rag-data-{domain}", "documents": len(raw_documents)})
         container_name = f"rag-data-{domain}"
         await rag_storage.create_container(container_name)
 
+        uploaded_count = 0
         for doc in raw_documents:
             blob_name = f"{doc['filename']}"
             await rag_storage.upload_text(container_name, blob_name, doc['content'])
+            uploaded_count += 1
+            progress_tracker.update_step_progress("Blob Storage", {"uploaded": uploaded_count, "total": len(raw_documents)})
+
+        progress_tracker.complete_step("Blob Storage", success=True)
 
         # Step 2: Extract knowledge using Azure OpenAI Enterprise Service
-        print(f"\n🤖 Step 2: Extracting knowledge with Azure OpenAI Enterprise Service...")
+        progress_tracker.start_step("Knowledge Extraction", {"documents": len(raw_documents)})
 
         # Import enterprise knowledge extraction service
         from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
@@ -244,52 +252,88 @@ async def main():
 
         # Use intelligent document processor to chunk documents
         from core.utilities.intelligent_document_processor import UniversalDocumentProcessor
-        
+
         doc_processor = UniversalDocumentProcessor(
             azure_openai_client=openai_integration,
             max_chunk_size=2000,  # Optimal size for knowledge extraction
             overlap_size=200
         )
-        
+
         # Process all documents into intelligent chunks
-        print(f"   🧠 Processing documents with intelligent chunking...")
+        progress_tracker.update_step_progress("Knowledge Extraction", {"status": "Processing documents with intelligent chunking"})
         all_chunks = []
         for doc in raw_documents:
             chunks = await doc_processor.process_document(doc)
             all_chunks.extend(chunks)
-            print(f"   📄 {doc['filename']}: {len(chunks)} intelligent chunks")
-        
-        print(f"   ✅ Total chunks for knowledge extraction: {len(all_chunks)}")
-        
+            progress_tracker.update_step_progress("Knowledge Extraction", {
+                "documents_processed": len(all_chunks),
+                "total_documents": len(raw_documents),
+                "chunks_created": len(all_chunks)
+            })
+
+        progress_tracker.update_step_progress("Knowledge Extraction", {
+            "total_chunks": len(all_chunks),
+            "status": "Extracting knowledge from chunks"
+        })
+
         # Extract knowledge from intelligent chunks
         chunk_texts = [chunk.content for chunk in all_chunks]
         extraction_results = await knowledge_extractor.extract_knowledge_from_texts(chunk_texts)
 
         # Store extracted knowledge in Azure Cosmos DB
-        print(f"   🔍 Extracted entities: {len(extraction_results.get('entities', []))}")
-        print(f"   🔗 Extracted relations: {len(extraction_results.get('relations', []))}")
+        entities_count = len(extraction_results.get('entities', []))
+        relations_count = len(extraction_results.get('relations', []))
+
+        progress_tracker.update_step_progress("Knowledge Extraction", {
+            "entities_extracted": entities_count,
+            "relations_extracted": relations_count,
+            "status": "Storing entities and relations"
+        })
 
         # Store entities in Cosmos DB
+        stored_entities = 0
         for entity in extraction_results.get('entities', []):
             try:
-                await cosmos_client.add_entity(entity.to_dict(), domain)
-                print(f"   ✅ Stored entity: {entity.name} ({entity.entity_type})")
+                # Handle both entity objects and dictionaries
+                entity_data = entity.to_dict() if hasattr(entity, 'to_dict') else entity
+                await cosmos_client.add_entity(entity_data, domain)
+                stored_entities += 1
+                progress_tracker.update_step_progress("Knowledge Extraction", {
+                    "entities_stored": stored_entities,
+                    "entities_extracted": entities_count,
+                    "relations_extracted": relations_count
+                })
             except Exception as e:
-                print(f"   ⚠️ Failed to store entity {entity.name}: {e}")
+                entity_name = getattr(entity, 'name', str(entity))
+                print(f"   ⚠️ Failed to store entity {entity_name}: {e}")
 
         # Store relations in Cosmos DB
+        stored_relations = 0
         for relation in extraction_results.get('relations', []):
             try:
-                await cosmos_client.add_relation(relation.to_dict(), domain)
-                print(f"   ✅ Stored relation: {relation.relation_type} ({relation.source_entity} -> {relation.target_entity})")
+                # Handle both relation objects and dictionaries
+                relation_data = relation.to_dict() if hasattr(relation, 'to_dict') else relation
+                await cosmos_client.add_relation(relation_data, domain)
+                stored_relations += 1
+                progress_tracker.update_step_progress("Knowledge Extraction", {
+                    "entities_stored": stored_entities,
+                    "relations_stored": stored_relations,
+                    "entities_extracted": entities_count,
+                    "relations_extracted": relations_count
+                })
             except Exception as e:
-                print(f"   ⚠️ Failed to store relation {relation.relation_type}: {e}")
+                relation_type = getattr(relation, 'relation_type', str(relation))
+                print(f"   ⚠️ Failed to store relation {relation_type}: {e}")
+
+        progress_tracker.complete_step("Knowledge Extraction", success=True)
+        print(f"   🔍 Extracted entities: {entities_count}")
+        print(f"   🔗 Extracted relations: {relations_count}")
 
         # Use extraction results for processed documents
         processed_docs = extraction_results
 
         # Step 3: Build search index with Azure Cognitive Search
-        print(f"\n🔍 Step 3: Building search index with Azure Cognitive Search...")
+        progress_tracker.start_step("Search Indexing", {"chunks": len(all_chunks), "index": f"rag-index-{domain}"})
         index_name = f"rag-index-{domain}"
         await search_client.create_index(index_name)
 
@@ -303,10 +347,10 @@ async def main():
             processed_docs = {"documents": [{"content": doc["content"]} for doc in raw_documents]}
 
         success_count = 0
-        
+
         # Index all intelligent chunks for better search
-        print(f"   📚 Indexing {len(all_chunks)} intelligent chunks...")
-        
+        progress_tracker.update_step_progress("Search Indexing", {"status": f"Indexing {len(all_chunks)} intelligent chunks"})
+
         for i, chunk in enumerate(all_chunks):
             # Create search document from chunk
             document = {
@@ -339,14 +383,27 @@ async def main():
                     print(f"❌ Failed to index chunk {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
                     logger.error(f"Failed to index chunk {document['id']}: {index_result.get('error', 'Unknown indexing error')}")
                 else:
-                    if i % 50 == 0:  # Log every 50th chunk to avoid spam
-                        print(f"✅ Indexed chunk {i+1}/{len(all_chunks)}: {chunk.chunk_type}")
                     success_count += 1
+                    progress_tracker.update_step_progress("Search Indexing", {
+                        "indexed": success_count,
+                        "total": len(all_chunks),
+                        "progress": f"{success_count}/{len(all_chunks)}"
+                    })
             except Exception as e:
                 print(f"❌ Chunk processing error for {document['id']}: {str(e)}")
                 logger.error(f"Chunk processing error for {document['id']}: {str(e)}", exc_info=True)
 
+        progress_tracker.complete_step("Search Indexing", success=True)
+
         # Enterprise service integration telemetry
+        progress_tracker.start_step("Validation", {
+            "documents": len(raw_documents),
+            "chunks": len(all_chunks),
+            "indexed": success_count,
+            "entities": len(extraction_results.get('entities', [])),
+            "relations": len(extraction_results.get('relations', []))
+        })
+
         print(f"\n📊 Azure Service Integration Summary:")
         print(f"   🔍 Search Index: {index_name}")
         print(f"   📄 Original documents: {len(raw_documents)}")
@@ -357,12 +414,15 @@ async def main():
         print(f"   ⚡ Indexing efficiency: {(success_count/len(all_chunks)*100):.1f}%")
 
         if success_count == 0:
+            progress_tracker.complete_step("Validation", success=False, error_message="Zero documents indexed")
             print(f"\n❌ Critical: Zero documents indexed in Azure Search")
             print(f"🔧 Enterprise troubleshooting required:")
             print(f"   1. Validate Azure Search service configuration")
             print(f"   2. Check document schema compatibility")
             print(f"   3. Verify Azure OpenAI processing output format")
             return 1
+
+        progress_tracker.complete_step("Validation", success=True)
 
         print(f"\n🔍 Step 3.5: Validating search index population ({success_count}/{len(raw_documents)} documents indexed)...")
         # Validate indexed documents are searchable (handle chunked documents)
@@ -439,6 +499,8 @@ async def main():
 
         processing_time = time.time() - start_time
 
+        progress_tracker.finish_workflow(success=True)
+
         print(f"\n✅ Data preparation completed successfully!")
         print(f"⏱️  Processing time: {processing_time:.2f}s")
         print(f"📊 Documents processed: {len(raw_documents)}")
@@ -459,6 +521,8 @@ async def main():
         print(f"\n🚀 System Status: Ready for user queries!")
 
     except Exception as e:
+        if 'progress_tracker' in locals():
+            progress_tracker.finish_workflow(success=False)
         print(f"❌ Data preparation workflow failed: {e}")
         logger.error(f"Data preparation failed: {e}", exc_info=True)
         return 1

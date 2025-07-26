@@ -37,6 +37,7 @@ from integrations.azure_openai import AzureOpenAIClient
 from config.settings import AzureSettings
 from core.workflow.data_workflow_evidence import AzureDataWorkflowEvidenceCollector
 from core.workflow.cost_tracker import AzureServiceCostTracker
+from core.workflow.progress_tracker import create_progress_tracker, track_async_operation, track_sync_operation
 from core.utilities.intelligent_document_processor import UniversalDocumentProcessor
 
 azure_settings = AzureSettings()
@@ -82,7 +83,7 @@ def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-                
+
             documents.append({
                 'filename': file_path.name,
                 'content': content,
@@ -92,7 +93,7 @@ def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
             })
             file_type = _detect_content_type(file_path.name)
             print(f"📄 Loaded: {file_path.name} ({len(content)} characters, {file_type})")
-                
+
         except Exception as e:
             print(f"❌ Error loading {file_path.name}: {e}")
 
@@ -100,27 +101,27 @@ def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
 
 async def main():
     """Execute data upload and chunking workflow with Azure services"""
-    
+
+    # Initialize real-time progress tracker
+    progress_tracker = create_progress_tracker("Azure Data Upload & Chunking")
+    progress_tracker.start_workflow()
+
     # Initialize workflow tracking
     start_time = time.time()
     domain = sys.argv[1] if len(sys.argv) > 1 else "general"
-    
-    print(f"🔄 STEP 1: Data Upload & Intelligent Chunking")
-    print(f"============================================================")
-    print(f"📊 Purpose: Upload documents and create intelligent chunks using Azure")
-    print(f"☁️  Azure Services: Blob Storage, OpenAI, Cognitive Search")
-    print(f"⏱️  Workflow: Document upload → Intelligent chunking → Search indexing")
-    print()
 
     try:
         # Load raw data from data/raw directory
-        print(f"📂 Loading raw documents from data/raw directory...")
+        progress_tracker.start_step("Data Loading", {"directory": "data/raw"})
         raw_documents = load_raw_data_from_directory()
 
         if not raw_documents:
+            progress_tracker.complete_step("Data Loading", success=False, error_message="No raw documents found")
             print("❌ No raw documents found. Please add markdown files to data/raw/")
             return 1
 
+        progress_tracker.update_step_progress("Data Loading", {"documents_loaded": len(raw_documents)})
+        progress_tracker.complete_step("Data Loading", success=True)
         print(f"✅ Loaded {len(raw_documents)} documents from data/raw/")
 
         # Initialize Azure services
@@ -140,51 +141,63 @@ async def main():
         search_client = azure_services.get_service('search')
 
         # Step 1: Store original documents in Azure Blob Storage
-        print(f"\n☁️  Step 1.1: Storing original documents in Azure Blob Storage...")
+        progress_tracker.start_step("Blob Storage", {"container": f"raw-documents-{domain}", "documents": len(raw_documents)})
         original_container = f"raw-documents-{domain}"
         await rag_storage.create_container(original_container)
 
+        uploaded_count = 0
         for doc in raw_documents:
             blob_name = f"original/{doc['filename']}"
             await rag_storage.upload_text(original_container, blob_name, doc['content'])
+            uploaded_count += 1
+            progress_tracker.update_step_progress("Blob Storage", {"uploaded": uploaded_count, "total": len(raw_documents)})
             print(f"   📄 Uploaded: {doc['filename']}")
 
+        progress_tracker.complete_step("Blob Storage", success=True)
+
         # Step 2: Intelligent document chunking
-        print(f"\n🧠 Step 1.2: Intelligent document chunking with Azure OpenAI...")
-        
+        progress_tracker.start_step("Knowledge Extraction", {"documents": len(raw_documents)})
+
         doc_processor = UniversalDocumentProcessor(
             azure_openai_client=openai_integration,
             max_chunk_size=2000,  # Optimal size for knowledge extraction
             overlap_size=200
         )
-        
+
         # Process all documents into intelligent chunks
+        progress_tracker.update_step_progress("Knowledge Extraction", {"status": "Processing documents with intelligent chunking"})
         all_chunks = []
         total_chunks_created = 0
-        
+
         for doc in raw_documents:
             print(f"   🔍 Processing: {doc['filename']}")
             chunks = await doc_processor.process_document(doc)
             all_chunks.extend(chunks)
             total_chunks_created += len(chunks)
+            progress_tracker.update_step_progress("Knowledge Extraction", {
+                "documents_processed": len(all_chunks),
+                "total_documents": len(raw_documents),
+                "chunks_created": total_chunks_created
+            })
             print(f"   ✅ Created {len(chunks)} intelligent chunks from {doc['filename']}")
-        
+
         print(f"\n📊 Chunking Summary:")
         print(f"   📄 Original documents: {len(raw_documents)}")
         print(f"   🧩 Total chunks created: {total_chunks_created}")
         print(f"   📈 Average chunks per document: {total_chunks_created/len(raw_documents):.1f}")
 
         # Step 3: Store chunks in Azure Blob Storage
-        print(f"\n☁️  Step 1.3: Storing chunks in Azure Blob Storage...")
+        progress_tracker.start_step("Cosmos Storage", {"chunks": len(all_chunks), "container": f"processed-chunks-{domain}"})
         chunks_container = f"processed-chunks-{domain}"
         await rag_storage.create_container(chunks_container)
 
         chunks_metadata = []
+        stored_count = 0
         for i, chunk in enumerate(all_chunks):
             # Store chunk content
             chunk_blob_name = f"chunk_{i:04d}_{chunk.source_info['filename']}_{chunk.chunk_index}.txt"
             await rag_storage.upload_text(chunks_container, chunk_blob_name, chunk.content)
-            
+
             # Store chunk metadata
             chunk_metadata = {
                 "chunk_id": f"chunk_{i:04d}",
@@ -197,7 +210,14 @@ async def main():
                 "processing_timestamp": datetime.now().isoformat()
             }
             chunks_metadata.append(chunk_metadata)
-            
+            stored_count += 1
+
+            progress_tracker.update_step_progress("Cosmos Storage", {
+                "stored": stored_count,
+                "total": len(all_chunks),
+                "progress": f"{stored_count}/{len(all_chunks)}"
+            })
+
             if i % 20 == 0:
                 print(f"   📦 Stored chunk {i+1}/{len(all_chunks)}")
 
@@ -209,13 +229,15 @@ async def main():
             "created_at": datetime.now().isoformat(),
             "chunks": chunks_metadata
         }
-        
+
         index_blob_name = f"chunks_index_{domain}.json"
         await rag_storage.upload_text(chunks_container, index_blob_name, json.dumps(chunks_index, indent=2))
         print(f"   📋 Stored chunks index: {index_blob_name}")
 
+        progress_tracker.complete_step("Cosmos Storage", success=True)
+
         # Step 4: Create search index for chunks (without chunk_type field to avoid schema issues)
-        print(f"\n🔍 Step 1.4: Creating search index for chunks...")
+        progress_tracker.start_step("Search Indexing", {"chunks": len(all_chunks), "index": f"chunks-index-{domain}"})
         index_name = f"chunks-index-{domain}"
         await search_client.create_index(index_name)
 
@@ -246,14 +268,20 @@ async def main():
                 index_result = await search_client.index_document(index_name, document)
                 if index_result['success']:
                     success_count += 1
-                    if i % 50 == 0:
-                        print(f"   ✅ Indexed chunk {i+1}/{len(all_chunks)}")
+                    progress_tracker.update_step_progress("Search Indexing", {
+                        "indexed": success_count,
+                        "total": len(all_chunks),
+                        "progress": f"{success_count}/{len(all_chunks)}"
+                    })
                 else:
                     logger.error(f"Failed to index chunk {document['id']}: {index_result.get('error', 'Unknown error')}")
             except Exception as e:
                 logger.error(f"Error indexing chunk {document['id']}: {str(e)}")
 
+        progress_tracker.complete_step("Search Indexing", success=True)
+
         # Final summary
+        progress_tracker.finish_workflow(success=True)
         duration = time.time() - start_time
         print(f"\n📊 STEP 1 Completion Summary:")
         print(f"   📄 Documents processed: {len(raw_documents)}")
@@ -273,6 +301,8 @@ async def main():
         return 0
 
     except Exception as e:
+        if 'progress_tracker' in locals():
+            progress_tracker.finish_workflow(success=False)
         print(f"\n❌ Critical error in data upload workflow: {str(e)}")
         logger.error(f"Data upload workflow failed: {str(e)}", exc_info=True)
         return 1
