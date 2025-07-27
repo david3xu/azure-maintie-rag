@@ -30,13 +30,13 @@ async def store_knowledge_graph(
 ) -> Dict[str, Any]:
     """
     Store universal knowledge graph in Azure services
-    
+
     Args:
         entities: List of extracted entity dictionaries
         relations: List of extracted relation dictionaries
         summary: Quality assessment and metrics
         domain_name: Domain context (remains universal)
-        
+
     Returns:
         Storage results and statistics
     """
@@ -48,44 +48,44 @@ async def store_knowledge_graph(
         "success": False,
         "timestamp": datetime.now().isoformat()
     }
-    
+
     try:
         # Initialize Azure clients
         cosmos_client = AzureCosmosGremlinClient()
         search_client = AzureSearchClient()
-        
+
         # Store entities in Cosmos DB (knowledge graph)
         entity_storage_tasks = []
         for entity in entities:
             try:
-                await cosmos_client.add_entity(entity, domain_name)
+                cosmos_client.add_entity(entity, domain_name)
                 storage_results["entities_stored"] += 1
-                
+
                 if storage_results["entities_stored"] % 10 == 0:
                     logger.info(f"Stored {storage_results['entities_stored']}/{len(entities)} entities")
-                    
+
             except Exception as e:
                 error_msg = f"Failed to store entity {entity.get('entity_id', 'unknown')}: {e}"
                 storage_results["storage_errors"].append(error_msg)
                 logger.warning(error_msg)
-        
-        # Store relations in Cosmos DB  
+
+        # Store relations in Cosmos DB
         for relation in relations:
             try:
-                await cosmos_client.add_relation(relation, domain_name)
+                cosmos_client.add_relationship(relation, domain_name)
                 storage_results["relations_stored"] += 1
-                
+
                 if storage_results["relations_stored"] % 10 == 0:
                     logger.info(f"Stored {storage_results['relations_stored']}/{len(relations)} relations")
-                    
+
             except Exception as e:
                 error_msg = f"Failed to store relation {relation.get('relation_id', 'unknown')}: {e}"
                 storage_results["storage_errors"].append(error_msg)
                 logger.warning(error_msg)
-        
+
         # Create search documents for Azure Cognitive Search
         search_documents = []
-        
+
         # Index entities for search
         for entity in entities:
             search_doc = {
@@ -99,7 +99,7 @@ async def store_knowledge_graph(
                 "timestamp": datetime.now().isoformat()
             }
             search_documents.append(search_doc)
-        
+
         # Index relations for search
         for relation in relations:
             search_doc = {
@@ -108,12 +108,12 @@ async def store_knowledge_graph(
                 "relation_type": relation.get("relation_type", ""),
                 "confidence": relation.get("confidence", 0.0),
                 "domain": domain_name,
-                "item_type": "relation", 
+                "item_type": "relation",
                 "metadata": json.dumps(relation.get("metadata", {})),
                 "timestamp": datetime.now().isoformat()
             }
             search_documents.append(search_doc)
-        
+
         # Upload to Azure Cognitive Search
         if search_documents:
             try:
@@ -124,7 +124,7 @@ async def store_knowledge_graph(
                 error_msg = f"Failed to index search documents: {e}"
                 storage_results["storage_errors"].append(error_msg)
                 logger.error(error_msg)
-        
+
         # Store extraction metadata
         extraction_metadata = {
             "extraction_id": f"extraction_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -134,7 +134,7 @@ async def store_knowledge_graph(
             "prompt_flow_version": "1.0.0",
             "extraction_method": "azure_prompt_flow_universal"
         }
-        
+
         # Store metadata in Cosmos DB
         try:
             metadata_doc = {
@@ -146,19 +146,19 @@ async def store_knowledge_graph(
             logger.info(f"Extraction metadata prepared: {extraction_metadata['extraction_id']}")
         except Exception as e:
             logger.warning(f"Failed to store extraction metadata: {e}")
-        
+
         # Determine overall success
         total_items = len(entities) + len(relations)
         stored_items = storage_results["entities_stored"] + storage_results["relations_stored"]
         success_rate = stored_items / total_items if total_items > 0 else 0
-        
+
         storage_results["success"] = success_rate > 0.8
         storage_results["success_rate"] = round(success_rate, 3)
-        
+
         logger.info(f"Storage completed: {stored_items}/{total_items} items stored ({success_rate:.1%} success)")
-        
+
         return storage_results
-        
+
     except Exception as e:
         logger.error(f"Storage operation failed: {e}", exc_info=True)
         storage_results["storage_errors"].append(f"Critical storage failure: {e}")
@@ -166,8 +166,8 @@ async def store_knowledge_graph(
 
 
 def main(
-    entities: List[Dict[str, Any]], 
-    relations: List[Dict[str, Any]], 
+    entities: List[Dict[str, Any]],
+    relations: List[Dict[str, Any]],
     summary: Dict[str, Any],
     domain_name: str = "general"
 ) -> Dict[str, Any]:
@@ -179,14 +179,14 @@ def main(
         # Run async storage operation
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        
+
         result = loop.run_until_complete(
             store_knowledge_graph(entities, relations, summary, domain_name)
         )
-        
+
         loop.close()
         return result
-        
+
     except Exception as e:
         logger.error(f"Storage wrapper failed: {e}", exc_info=True)
         return {
@@ -209,6 +209,6 @@ if __name__ == "__main__":
         {"relation_id": "r1", "relation_type": "connected_to", "confidence": 0.8}
     ]
     sample_summary = {"overall_score": 0.85, "quality_tier": "good"}
-    
+
     result = main(sample_entities, sample_relations, sample_summary, "test")
     print(json.dumps(result, indent=2))

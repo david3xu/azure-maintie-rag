@@ -296,7 +296,7 @@ async def main():
             try:
                 # Handle both entity objects and dictionaries
                 entity_data = entity.to_dict() if hasattr(entity, 'to_dict') else entity
-                await cosmos_client.add_entity(entity_data, domain)
+                cosmos_client.add_entity(entity_data, domain)
                 stored_entities += 1
                 progress_tracker.update_step_progress("Knowledge Extraction", {
                     "entities_stored": stored_entities,
@@ -313,7 +313,7 @@ async def main():
             try:
                 # Handle both relation objects and dictionaries
                 relation_data = relation.to_dict() if hasattr(relation, 'to_dict') else relation
-                await cosmos_client.add_relation(relation_data, domain)
+                cosmos_client.add_relationship(relation_data, domain)
                 stored_relations += 1
                 progress_tracker.update_step_progress("Knowledge Extraction", {
                     "entities_stored": stored_entities,
@@ -352,15 +352,13 @@ async def main():
         progress_tracker.update_step_progress("Search Indexing", {"status": f"Indexing {len(all_chunks)} intelligent chunks"})
 
         for i, chunk in enumerate(all_chunks):
-            # Create search document from chunk
+            # Create search document from chunk (only include fields that exist in schema)
             document = {
                 "id": f"chunk_{i}_{chunk.source_info['filename'].replace('.md', '').replace('.txt', '')}_{chunk.chunk_index}",
                 "content": chunk.content,
                 "title": f"{chunk.source_info['filename']} - Part {chunk.chunk_index + 1}",
                 "domain": domain,
                 "source": f"data/raw/{chunk.source_info['filename']}",
-                "chunk_type": chunk.chunk_type,
-                "chunk_index": chunk.chunk_index,
                 "metadata": json.dumps({
                     "original_filename": chunk.source_info['filename'],
                     "chunk_index": chunk.chunk_index,
@@ -374,6 +372,9 @@ async def main():
                     "intelligent_chunking": True
                 })
             }
+
+            # DEBUG: Print the document structure before indexing
+            print(f"\n[DEBUG] Document to be indexed (id={document['id']}):\n{json.dumps(document, indent=2)}\n")
 
             # Index document directly (validation handled by Azure Search service)
             try:

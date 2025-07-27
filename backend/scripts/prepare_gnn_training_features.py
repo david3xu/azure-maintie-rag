@@ -62,6 +62,21 @@ class GNNFeaturePreparator:
         """Load from finalized extraction results"""
         
         extraction_dir = Path(__file__).parent.parent / "data" / "extraction_outputs"
+        
+        # First try the quality dataset (preferred)
+        quality_file = extraction_dir / "full_dataset_extraction_9100_entities_5848_relationships.json"
+        if quality_file.exists():
+            print(f"📄 Using quality dataset: {quality_file.name}")
+            with open(quality_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            entities = data.get("entities", [])
+            relationships = data.get("relationships", [])
+            
+            print(f"📄 Loaded quality data: {len(entities)} entities, {len(relationships)} relationships")
+            return entities, relationships
+        
+        # Fallback to original pattern
         extraction_files = list(extraction_dir.glob("final_context_aware_extraction_*.json"))
         
         if not extraction_files:
