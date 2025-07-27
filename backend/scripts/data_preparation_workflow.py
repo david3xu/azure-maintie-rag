@@ -16,12 +16,14 @@ Azure Services Used:
 import sys
 import asyncio
 import time
-from pathlib import Path
-from datetime import datetime
+import re
 import json
 import glob
 import logging
 import os
+from pathlib import Path
+from datetime import datetime
+from typing import List, Dict, Any
 
 # Configure logging for better error visibility
 logging.basicConfig(
@@ -41,6 +43,7 @@ from config.settings import AzureSettings
 from core.workflow.data_workflow_evidence import AzureDataWorkflowEvidenceCollector
 from core.workflow.cost_tracker import AzureServiceCostTracker
 from core.workflow.progress_tracker import create_progress_tracker, track_async_operation, track_sync_operation
+
 azure_settings = AzureSettings()
 print('DEBUG: AZURE_SEARCH_SERVICE:', azure_settings.azure_search_service)
 print('DEBUG: AZURE_SEARCH_ADMIN_KEY:', azure_settings.azure_search_admin_key)
@@ -114,6 +117,8 @@ def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
+
+            if content:  # Only add non-empty files
                 documents.append({
                     'filename': file_path.name,
                     'content': content,
@@ -127,6 +132,47 @@ def load_raw_data_from_directory(data_dir: str = "data/raw") -> list:
             print(f"❌ Error loading {file_path.name}: {e}")
 
     return documents
+
+
+def normalize_maintenance_text(text: str) -> str:
+    """
+    Normalize maintenance text for deduplication by removing IDs, numbers, dates
+    to find semantic duplicates
+    """
+    # Remove common placeholders and IDs
+    normalized = re.sub(r'<id>|<num>|<date>', '', text.lower())
+    # Remove specific position numbers
+    normalized = re.sub(r'position \d+', 'position', normalized)
+    # Remove specific quantities
+    normalized = re.sub(r'\d+ x', '', normalized)
+    # Remove specific measurements
+    normalized = re.sub(r'\d+ PSI|\d+ V|\d+ amp', '', normalized)
+    # Clean up extra whitespace
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    return normalized
+
+
+def deduplicate_maintenance_texts(texts: List[str]) -> List[str]:
+    """
+    Remove duplicate maintenance texts before processing
+    Returns unique texts while preserving original order
+    """
+    seen = set()
+    unique_texts = []
+    duplicates_removed = 0
+
+    for text in texts:
+        normalized = normalize_maintenance_text(text)
+        if normalized not in seen:
+            seen.add(normalized)
+            unique_texts.append(text)
+        else:
+            duplicates_removed += 1
+
+    logger.info(f"Deduplication: Removed {duplicates_removed} duplicate texts from {len(texts)} total")
+    logger.info(f"Deduplication: Kept {len(unique_texts)} unique texts")
+
+    return unique_texts
 
 
 async def main():
@@ -208,9 +254,35 @@ async def main():
         progress_tracker.complete_step("Data Loading", success=True)
         print(f"✅ Loaded {len(raw_documents)} documents from data/raw/")
 
+        # Step 1: Deduplicate documents
+        progress_tracker.start_step("Deduplication", {"documents": len(raw_documents)})
+        document_texts = [doc['content'] for doc in raw_documents]
+        unique_texts = deduplicate_maintenance_texts(document_texts)
+
+        # Create deduplicated documents list
+        unique_documents = []
+        seen_texts = set()
+
+        for doc in raw_documents:
+            normalized = normalize_maintenance_text(doc['content'])
+            if normalized not in seen_texts:
+                seen_texts.add(normalized)
+                unique_documents.append(doc)
+
+        progress_tracker.update_step_progress("Deduplication", {
+            "original_documents": len(raw_documents),
+            "unique_documents": len(unique_documents),
+            "duplicates_removed": len(raw_documents) - len(unique_documents)
+        })
+        progress_tracker.complete_step("Deduplication", success=True)
+
+        print(f"📊 Deduplication results:")
+        print(f"   📄 Original documents: {len(raw_documents)}")
+        print(f"   ✅ Unique documents: {len(unique_documents)}")
+        print(f"   🗑️  Duplicates removed: {len(raw_documents) - len(unique_documents)}")
+
         # Initialize Azure services
         print(f"\n📝 Initializing Azure services...")
-        azure_services = AzureServicesManager()
         # Remove the await azure_services.initialize() call
 
         # Validate services instead
@@ -227,22 +299,22 @@ async def main():
         search_client = azure_services.get_service('search')
         cosmos_client = azure_services.get_service('cosmos')
 
-        # Step 1: Store documents in Azure Blob Storage using RAG storage
-        progress_tracker.start_step("Blob Storage", {"container": f"rag-data-{domain}", "documents": len(raw_documents)})
+        # Step 2: Store documents in Azure Blob Storage using RAG storage
+        progress_tracker.start_step("Blob Storage", {"container": f"rag-data-{domain}", "documents": len(unique_documents)})
         container_name = f"rag-data-{domain}"
         await rag_storage.create_container(container_name)
 
         uploaded_count = 0
-        for doc in raw_documents:
+        for doc in unique_documents:
             blob_name = f"{doc['filename']}"
             await rag_storage.upload_text(container_name, blob_name, doc['content'])
             uploaded_count += 1
-            progress_tracker.update_step_progress("Blob Storage", {"uploaded": uploaded_count, "total": len(raw_documents)})
+            progress_tracker.update_step_progress("Blob Storage", {"uploaded": uploaded_count, "total": len(unique_documents)})
 
         progress_tracker.complete_step("Blob Storage", success=True)
 
-        # Step 2: Extract knowledge using Azure OpenAI Enterprise Service
-        progress_tracker.start_step("Knowledge Extraction", {"documents": len(raw_documents)})
+        # Step 3: Extract knowledge using Azure OpenAI Enterprise Service
+        progress_tracker.start_step("Knowledge Extraction", {"documents": len(unique_documents)})
 
         # Import enterprise knowledge extraction service
         from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
@@ -259,15 +331,15 @@ async def main():
             overlap_size=200
         )
 
-        # Process all documents into intelligent chunks
+        # Process all unique documents into intelligent chunks
         progress_tracker.update_step_progress("Knowledge Extraction", {"status": "Processing documents with intelligent chunking"})
         all_chunks = []
-        for doc in raw_documents:
+        for doc in unique_documents:
             chunks = await doc_processor.process_document(doc)
             all_chunks.extend(chunks)
             progress_tracker.update_step_progress("Knowledge Extraction", {
                 "documents_processed": len(all_chunks),
-                "total_documents": len(raw_documents),
+                "total_documents": len(unique_documents),
                 "chunks_created": len(all_chunks)
             })
 
@@ -332,7 +404,7 @@ async def main():
         # Use extraction results for processed documents
         processed_docs = extraction_results
 
-        # Step 3: Build search index with Azure Cognitive Search
+        # Step 4: Build search index with Azure Cognitive Search
         progress_tracker.start_step("Search Indexing", {"chunks": len(all_chunks), "index": f"rag-index-{domain}"})
         index_name = f"rag-index-{domain}"
         await search_client.create_index(index_name)
@@ -476,7 +548,7 @@ async def main():
         else:
             print("⚠️ Some documents not found in search index.")
 
-        # Step 4: Store metadata in Azure Cosmos DB
+        # Step 5: Store metadata in Azure Cosmos DB
         print(f"\n💾 Step 4: Storing metadata in Azure Cosmos DB...")
         database_name = f"rag-metadata-{domain}"
         container_name = "documents"
@@ -493,7 +565,11 @@ async def main():
             "storage_container": container_name,
             "timestamp": datetime.now().isoformat(),
             "source_directory": "data/raw",
-            "file_types": list(set([doc['filename'].split('.')[-1] for doc in raw_documents]))
+            "file_types": list(set([doc['filename'].split('.')[-1] for doc in raw_documents])),
+            "deduplication_applied": True,
+            "original_documents": len(raw_documents),
+            "unique_documents": len(unique_documents),
+            "duplicates_removed": len(raw_documents) - len(unique_documents)
         }
 
         cosmos_client.add_entity(metadata_doc, domain)
@@ -520,6 +596,8 @@ async def main():
             print(f"   📄 {doc['filename']} ({doc['size']} characters)")
 
         print(f"\n🚀 System Status: Ready for user queries!")
+
+        return 0
 
     except Exception as e:
         if 'progress_tracker' in locals():

@@ -106,6 +106,18 @@ app.include_router(azure_query_endpoint.router)
 from api.workflow_stream import router as workflow_stream_router
 app.include_router(workflow_stream_router)
 
+# Import and include knowledge graph demo router for supervisor demo
+from api.endpoints.knowledge_graph_demo import router as kg_demo_router
+app.include_router(kg_demo_router)
+
+# Import and include simple demo router for supervisor demo (no async issues)
+from api.endpoints.demo_simple import router as demo_simple_router
+app.include_router(demo_simple_router)
+
+# Import and include Gremlin demo router for real-time queries
+from api.endpoints.gremlin_demo_api import router as gremlin_demo_router
+app.include_router(gremlin_demo_router)
+
 # Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
