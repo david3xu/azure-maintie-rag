@@ -104,18 +104,72 @@ class AzureOpenAIClient:
             })
         return processed_docs
 
-    async def extract_knowledge(self, texts: list, domain: str) -> list:
+    async def extract_knowledge(self, text_input, domain: str) -> dict:
         """Extract knowledge using generate_completion pattern"""
+        # Handle both single string and list of strings
+        if isinstance(text_input, str):
+            texts = [text_input]
+        else:
+            texts = text_input
+            
         knowledge_results = []
         for text in texts:
-            prompt = f"Extract entities and relationships from this {domain} text: {text}"
-            result = await self.generate_completion(prompt)
+            # Create a proper extraction prompt
+            prompt = f"""Extract entities and relationships from this {domain} maintenance text: "{text}"
+
+Return a JSON object with:
+- entities: list of objects with "text", "entity_type", and "confidence" fields
+- relationships: list of objects with "source_entity", "target_entity", "relation_type", and "confidence" fields
+
+Example format:
+{{
+  "entities": [
+    {{"text": "air_conditioner", "entity_type": "equipment", "confidence": 0.9}},
+    {{"text": "thermostat", "entity_type": "component", "confidence": 0.8}}
+  ],
+  "relationships": [
+    {{"source_entity": "air_conditioner", "target_entity": "thermostat", "relation_type": "has_component", "confidence": 0.85}}
+  ]
+}}"""
+
+            result = await self.generate_completion(prompt, max_tokens=2000, temperature=0.1)
+            
+            # Parse JSON response
+            entities = []
+            relationships = []
+            
+            if result['success']:
+                try:
+                    import json
+                    response_text = result['text'].strip()
+                    
+                    # Clean up JSON markers
+                    if '```json' in response_text:
+                        response_text = response_text.split('```json')[1]
+                    if '```' in response_text:
+                        response_text = response_text.split('```')[0]
+                        
+                    parsed = json.loads(response_text)
+                    entities = parsed.get('entities', [])
+                    relationships = parsed.get('relationships', [])
+                    
+                except json.JSONDecodeError as e:
+                    print(f"JSON parsing failed: {e}")
+                    print(f"Response text: {result['text'][:200]}...")
+                except Exception as e:
+                    print(f"Extraction parsing error: {e}")
+            
             knowledge_results.append({
-                "entities": [],  # Parse from result if needed
-                "relationships": [],  # Parse from result if needed
+                "entities": entities,
+                "relationships": relationships,
                 "source_text": text
             })
-        return knowledge_results
+        
+        # Return single result if single input, list if multiple
+        if isinstance(text_input, str):
+            return knowledge_results[0]
+        else:
+            return knowledge_results
 
     def extract_entities_and_relations(
         self,

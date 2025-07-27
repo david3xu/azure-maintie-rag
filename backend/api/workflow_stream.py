@@ -67,32 +67,10 @@ async def stream_azure_rag_workflow(
     except Exception as e:
         logger.error(f"Azure workflow streaming failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-            'user_friendly_name': '[OPENAI] Azure OpenAI Processing',
-            'status': 'in_progress',
-            'technology': 'Azure OpenAI',
-            'details': 'Generating response with Azure OpenAI...',
-            'progress_percentage': 88
-        }
-        yield f"data: {json.dumps(data)}\n\n"
 
-        # Generate response using Azure OpenAI
-        response = await openai_integration.generate_response(
-            query, retrieved_docs, domain
-        )
 
-        data = {
-            'event_type': 'progress',
-            'step_number': 5,
-            'step_name': 'azure_openai_processing',
-            'user_friendly_name': '[OPENAI] Azure OpenAI Processing',
-            'status': 'completed',
-            'technology': 'Azure OpenAI',
-            'details': 'Response generated successfully',
-            'progress_percentage': 96
-        }
-        yield f"data: {json.dumps(data)}\n\n"
-
-        # Step 6: Azure Cosmos DB Gremlin Graph Storage
+async def stream_azure_workflow(query_id: str, query: str, domain: str = "general"):
+    try:
         data = {
             'event_type': 'progress',
             'step_number': 6,
