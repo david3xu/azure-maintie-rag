@@ -1,0 +1,1090 @@
+{
+  "success": true,
+  "domain": "general",
+  "entities": [
+    {
+      "entity_id": "entity_0",
+      "text": "component",
+      "entity_type": "component",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775334",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_1",
+      "text": "electrical_system",
+      "entity_type": "electrical_system",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775394",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_2",
+      "text": "proximity_sensor",
+      "entity_type": "proximity_sensor",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775412",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_3",
+      "text": "lighting_component",
+      "entity_type": "lighting_component",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775425",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_4",
+      "text": "wear_plate",
+      "entity_type": "wear_plate",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775436",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_5",
+      "text": "machine_part",
+      "entity_type": "machine_part",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775449",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_6",
+      "text": "sensor",
+      "entity_type": "sensor",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775462",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_7",
+      "text": "hose",
+      "entity_type": "hose",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775490",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_8",
+      "text": "feature",
+      "entity_type": "feature",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775516",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_9",
+      "text": "radiator",
+      "entity_type": "radiator",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775531",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_10",
+      "text": "air_receiver",
+      "entity_type": "air_receiver",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775544",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_11",
+      "text": "handle",
+      "entity_type": "handle",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775557",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_12",
+      "text": "assembly",
+      "entity_type": "assembly",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775568",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_13",
+      "text": "position",
+      "entity_type": "position",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775578",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_14",
+      "text": "oil_cooler",
+      "entity_type": "oil_cooler",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775587",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_15",
+      "text": "hinge",
+      "entity_type": "hinge",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775596",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_16",
+      "text": "cylinder",
+      "entity_type": "cylinder",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775605",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_17",
+      "text": "hydraulic_hose",
+      "entity_type": "hydraulic_hose",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775615",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_18",
+      "text": "door",
+      "entity_type": "door",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775625",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_19",
+      "text": "tyre",
+      "entity_type": "tyre",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775639",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_20",
+      "text": "protective_cover",
+      "entity_type": "protective_cover",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775649",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_21",
+      "text": "boarding_gate",
+      "entity_type": "boarding_gate",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775660",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_22",
+      "text": "battery",
+      "entity_type": "battery",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775672",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_23",
+      "text": "air_conditioner",
+      "entity_type": "air_conditioner",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775681",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_24",
+      "text": "dogbone",
+      "entity_type": "dogbone",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775690",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_25",
+      "text": "alarm",
+      "entity_type": "alarm",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775698",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_26",
+      "text": "driveline_component",
+      "entity_type": "driveline_component",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775706",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_27",
+      "text": "engine",
+      "entity_type": "engine",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775715",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_28",
+      "text": "air_leak",
+      "entity_type": "air_leak",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775723",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_29",
+      "text": "generator",
+      "entity_type": "generator",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775732",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_30",
+      "text": "fault",
+      "entity_type": "fault",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775740",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_31",
+      "text": "cover",
+      "entity_type": "cover",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775748",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_32",
+      "text": "air_horn",
+      "entity_type": "air_horn",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775756",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_33",
+      "text": "service",
+      "entity_type": "service",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775764",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_34",
+      "text": "vehicle_component",
+      "entity_type": "vehicle_component",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775773",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_35",
+      "text": "control_unit",
+      "entity_type": "control_unit",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775782",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_36",
+      "text": "safety_valve",
+      "entity_type": "safety_valve",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775790",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_37",
+      "text": "compressor",
+      "entity_type": "compressor",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775799",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_38",
+      "text": "thermostat",
+      "entity_type": "thermostat",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775807",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_39",
+      "text": "lube_system",
+      "entity_type": "lube_system",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775816",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_40",
+      "text": "side",
+      "entity_type": "side",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775825",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_41",
+      "text": "equipment_component",
+      "entity_type": "equipment_component",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775833",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_42",
+      "text": "freight_bogger",
+      "entity_type": "freight_bogger",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775842",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_43",
+      "text": "line",
+      "entity_type": "line",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775854",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_44",
+      "text": "latch",
+      "entity_type": "latch",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775863",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_45",
+      "text": "cooling_system",
+      "entity_type": "cooling_system",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775871",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_46",
+      "text": "fluid_hose",
+      "entity_type": "fluid_hose",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775879",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_47",
+      "text": "repair_action",
+      "entity_type": "repair_action",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775887",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_48",
+      "text": "hydraulic_cylinder",
+      "entity_type": "hydraulic_cylinder",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775896",
+        "item_type": "entity"
+      }
+    },
+    {
+      "entity_id": "entity_49",
+      "text": "ladder",
+      "entity_type": "ladder",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775904",
+        "item_type": "entity"
+      }
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "relation_0",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "part_of",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775918",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_1",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "indicates",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775939",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_2",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "repaired_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775951",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_3",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "controlled_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775960",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_4",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "affected_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775969",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_5",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "monitors",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775980",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_6",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "serviced_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.775990",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_7",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "has_fault",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776013",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_8",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "protects",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776028",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_9",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "located_in",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776039",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_10",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "status_of",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776048",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_11",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "operated_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776057",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_12",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "covers",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776066",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_13",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "causes",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776074",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_14",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "located_at",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776083",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_15",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "monitored_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776091",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_16",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "requires_replacement",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776099",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_17",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "features",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776108",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_18",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "located_on",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776116",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_19",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "connected_to",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776125",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_20",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "requires",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776133",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_21",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "unserviceable_due_to",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776141",
+        "item_type": "relation"
+      }
+    },
+    {
+      "relation_id": "relation_22",
+      "source_entity_id": "",
+      "target_entity_id": "",
+      "relation_type": "replaced_by",
+      "confidence": 0.8,
+      "context": "",
+      "metadata": {
+        "extraction_method": "enterprise_llm",
+        "domain": "general",
+        "extracted_at": "2025-07-27T22:32:06.776149",
+        "item_type": "relation"
+      }
+    }
+  ],
+  "extraction_stats": {
+    "total_texts_processed": 50,
+    "total_entities_extracted": 50,
+    "total_relations_extracted": 23,
+    "unique_entity_types": 50,
+    "unique_relation_types": 23,
+    "processing_time": 60.086064
+  },
+  "discovered_types": {
+    "entity_types": [
+      "component",
+      "electrical_system",
+      "proximity_sensor",
+      "lighting_component",
+      "wear_plate",
+      "sensor",
+      "machine_part",
+      "feature",
+      "hose",
+      "radiator",
+      "air_receiver",
+      "handle",
+      "assembly",
+      "position",
+      "oil_cooler",
+      "hinge",
+      "cylinder",
+      "hydraulic_hose",
+      "door",
+      "tyre",
+      "protective_cover",
+      "boarding_gate",
+      "battery",
+      "air_conditioner",
+      "dogbone",
+      "alarm",
+      "driveline_component",
+      "engine",
+      "air_leak",
+      "generator",
+      "fault",
+      "cover",
+      "air_horn",
+      "service",
+      "vehicle_component",
+      "control_unit",
+      "safety_valve",
+      "compressor",
+      "thermostat",
+      "lube_system",
+      "side",
+      "equipment_component",
+      "freight_bogger",
+      "line",
+      "latch",
+      "cooling_system",
+      "fluid_hose",
+      "repair_action",
+      "hydraulic_cylinder",
+      "ladder"
+    ],
+    "relation_types": [
+      "part_of",
+      "indicates",
+      "repaired_by",
+      "controlled_by",
+      "monitors",
+      "affected_by",
+      "serviced_by",
+      "has_fault",
+      "protects",
+      "located_in",
+      "status_of",
+      "operated_by",
+      "covers",
+      "causes",
+      "located_at",
+      "monitored_by",
+      "requires_replacement",
+      "features",
+      "located_on",
+      "connected_to",
+      "requires",
+      "unserviceable_due_to",
+      "replaced_by"
+    ]
+  },
+  "knowledge_summary": {
+    "total_entities": 50,
+    "total_relations": 23,
+    "total_documents": 50,
+    "graph_nodes": 50,
+    "graph_edges": 0
+  },
+  "validation_results": {
+    "enterprise_quality_score": 0.8,
+    "quality_tier": "basic",
+    "assessment_method": "lightweight",
+    "azure_ml_available": false,
+    "entity_validation": {
+      "status": "not_validated",
+      "details": "Basic validation only"
+    },
+    "relation_validation": {
+      "status": "not_validated",
+      "details": "Basic validation only"
+    }
+  },
+  "processing_time": 60.086064,
+  "timestamp": "2025-07-27T22:32:06.777044"
+}

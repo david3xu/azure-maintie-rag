@@ -1,0 +1,26 @@
+{
+  "session_id": "lifecycle_20250727_231151",
+  "start_time": "2025-07-27T23:11:51.400726",
+  "steps": {
+    "step_0": {
+      "name": "Azure Data Cleanup",
+      "script": "workflows/azure_data_cleanup_workflow.py",
+      "start_time": "2025-07-27T23:11:51.400740",
+      "status": "failed",
+      "end_time": "2025-07-27T23:11:51.408667",
+      "duration_seconds": 0.007919788360595703,
+      "data_state": {
+        "error": "No module named 'integrations'",
+        "timestamp": "2025-07-27T23:11:51.408652"
+      },
+      "notes": "Cleanup failed: /usr/local/bin/python: can't open file '/workspace/azure-maintie-rag/backend/scripts/scripts/organiz"
+    }
+  },
+  "data_states": {},
+  "execution_plan_version": "2025-07-27_production",
+  "end_time": "2025-07-27T23:11:51.408670",
+  "total_duration_seconds": 0.007934808731079102,
+  "success_rate": 0.0,
+  "successful_steps": 0,
+  "total_steps": 1
+}

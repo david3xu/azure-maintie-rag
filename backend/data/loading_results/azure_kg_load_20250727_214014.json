@@ -1,0 +1,26 @@
+{
+  "timestamp": "20250727_214014",
+  "loading_stats": {
+    "entities_loaded": 2000,
+    "relationships_loaded": 5836,
+    "entities_failed": 0,
+    "relationships_failed": 0,
+    "start_time": 1753618508.4358466,
+    "batches_completed": 40
+  },
+  "validation_results": {
+    "vertices": 2981,
+    "edges": 5350331,
+    "connectivity_ratio": 1794.810801744381,
+    "entity_types": 23,
+    "total_duration": 33906.21879005432,
+    "entities_loaded": 2000,
+    "relationships_loaded": 5836,
+    "success_rate_entities": 100.0,
+    "success_rate_relationships": 100.0
+  },
+  "configuration": {
+    "batch_size": 50,
+    "max_entities": 2000
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "demo_dataset_loaded": true,
+  "timestamp": "2025-07-27 13:17:06",
+  "vertices": 2981,
+  "edges": 480348,
+  "connectivity_ratio": 161.13653136531366,
+  "entities_loaded": 25,
+  "relationships_loaded": 30
+}
