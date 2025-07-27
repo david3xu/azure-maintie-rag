@@ -1,0 +1,151 @@
+{
+  "timestamp": 1753608941.8461657,
+  "graph_state": {
+    "vertices": 2000,
+    "edges": 60368,
+    "connectivity_ratio": 30.184,
+    "entity_types": {
+      "equipment": 175,
+      "component": 650,
+      "issue": 317,
+      "state/condition": 23,
+      "state": 70,
+      "action/state": 1,
+      "location": 211,
+      "action": 530,
+      "specification": 1,
+      "role": 1,
+      "personnel": 3,
+      "component/location": 2,
+      "action/procedure": 1,
+      "material/procedure": 1,
+      "location/time": 1,
+      "quantity": 4,
+      "identifier": 2,
+      "location/position": 1,
+      "reference": 3,
+      "system": 1,
+      "equipment/component": 1,
+      "condition": 1
+    },
+    "is_connected": true,
+    "has_multi_hop_potential": true
+  },
+  "traversal_examples": [
+    {
+      "example": "Equipment-Component Relationships",
+      "query_type": "Direct traversal",
+      "results_count": 98,
+      "sample_results": [
+        {
+          "equipment": "air conditioner",
+          "component": "thermostat"
+        },
+        {
+          "equipment": "air conditioner",
+          "component": "thermostat"
+        },
+        {
+          "equipment": "air conditioner",
+          "component": "thermostat"
+        }
+      ]
+    },
+    {
+      "example": "Multi-hop Equipment to Action Paths",
+      "query_type": "Multi-hop traversal",
+      "results_count": 0,
+      "sample_paths": []
+    },
+    {
+      "example": "Entity Neighborhood",
+      "query_type": "Bidirectional traversal",
+      "center_entity": "air conditioner",
+      "neighbors_count": 2
+    }
+  ],
+  "analytics_results": {
+    "relationship_types": {
+      "has_issue": 25014,
+      "has_status": 1350,
+      "part_of": 6758,
+      "condition": 673,
+      "requires_action": 1346,
+      "is_type_of": 673,
+      "describes_condition_of": 673,
+      "type_of": 673,
+      "targets": 2019,
+      "acts_on": 2019,
+      "has_part": 3385,
+      "related_to": 677,
+      "requires": 1354,
+      "located_at": 2708,
+      "is_leaking": 677,
+      "action_on": 677,
+      "requires_service": 677,
+      "connected_to": 677,
+      "has_dimension": 677,
+      "has_location": 677,
+      "performs": 2031,
+      "performs_action": 2031,
+      "status": 487,
+      "contains": 487,
+      "location": 487,
+      "has_issue_with": 487,
+      "located_over": 487,
+      "quantifies": 487
+    }
+  },
+  "semantic_search": {
+    "query": "air conditioner",
+    "matching_entities": [
+      {
+        "text": "air conditioner",
+        "type": "equipment",
+        "id": "entity_0"
+      },
+      {
+        "text": "air conditioner",
+        "type": "equipment",
+        "id": "entity_0"
+      },
+      {
+        "text": "air conditioner",
+        "type": "equipment",
+        "id": "entity_0"
+      },
+      {
+        "text": "air conditioner",
+        "type": "equipment",
+        "id": "entity_0"
+      },
+      {
+        "text": "air conditioner compressor",
+        "type": "equipment",
+        "id": "entity_1"
+      }
+    ],
+    "search_method": "Graph-based semantic search",
+    "entities_found": 5
+  },
+  "maintenance_scenarios": [
+    {
+      "scenario": "Troubleshooting Workflows",
+      "type": "Issue-Action mapping",
+      "workflows_found": 1
+    },
+    {
+      "scenario": "Preventive Maintenance",
+      "type": "Multi-hop maintenance planning",
+      "chains_found": 2499
+    }
+  ],
+  "capabilities_demonstrated": [
+    "Real graph traversal",
+    "Multi-hop path finding",
+    "Graph analytics",
+    "Semantic search",
+    "Maintenance workflows",
+    "Azure Cosmos DB Gremlin operations"
+  ]
+}

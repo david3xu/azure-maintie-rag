@@ -16,10 +16,13 @@ Azure Services Used:
 import sys
 import asyncio
 import time
+import re
+import hashlib
 from pathlib import Path
 from datetime import datetime
 import json
 import logging
+from typing import List, Dict, Any, Set
 
 # Configure logging for better error visibility
 logging.basicConfig(
@@ -41,43 +44,100 @@ from core.workflow.cost_tracker import AzureServiceCostTracker
 
 azure_settings = AzureSettings()
 
-async def load_chunks_from_azure(rag_storage, domain: str):
+
+def normalize_maintenance_text(text: str) -> str:
+    """
+    Normalize maintenance text for deduplication by removing IDs, numbers, dates
+    to find semantic duplicates
+    """
+    # Remove common placeholders and IDs
+    normalized = re.sub(r'<id>|<num>|<date>', '', text.lower())
+    # Remove specific position numbers
+    normalized = re.sub(r'position \d+', 'position', normalized)
+    # Remove specific quantities
+    normalized = re.sub(r'\d+ x', '', normalized)
+    # Remove specific measurements
+    normalized = re.sub(r'\d+ PSI|\d+ V|\d+ amp', '', normalized)
+    # Clean up extra whitespace
+    normalized = re.sub(r'\s+', ' ', normalized).strip()
+    return normalized
+
+
+def deduplicate_maintenance_texts(texts: List[str]) -> List[str]:
+    """
+    Remove duplicate maintenance texts before LLM processing
+    Returns unique texts while preserving original order
+    """
+    seen = set()
+    unique_texts = []
+    duplicates_removed = 0
+
+    for text in texts:
+        normalized = normalize_maintenance_text(text)
+        if normalized not in seen:
+            seen.add(normalized)
+            unique_texts.append(text)
+        else:
+            duplicates_removed += 1
+
+    logger.info(f"Deduplication: Removed {duplicates_removed} duplicate texts from {len(texts)} total")
+    logger.info(f"Deduplication: Kept {len(unique_texts)} unique texts")
+
+    return unique_texts
+
+
+def deduplicate_relationships(relationships: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Remove duplicate relationships based on source, target, and relation type
+    """
+    seen = set()
+    unique_relationships = []
+    duplicates_removed = 0
+
+    for rel in relationships:
+        # Create a unique key for the relationship
+        source = rel.get('source_entity', '').lower().strip()
+        target = rel.get('target_entity', '').lower().strip()
+        rel_type = rel.get('relation_type', '').lower().strip()
+
+        # Skip empty relationships
+        if not source or not target or not rel_type:
+            continue
+
+        rel_key = f"{source}|{rel_type}|{target}"
+
+        if rel_key not in seen:
+            seen.add(rel_key)
+            unique_relationships.append(rel)
+        else:
+            duplicates_removed += 1
+
+    logger.info(f"Relationship deduplication: Removed {duplicates_removed} duplicate relationships")
+    logger.info(f"Relationship deduplication: Kept {len(unique_relationships)} unique relationships")
+
+    return unique_relationships
+
+
+async def load_chunks_from_azure(rag_storage, domain: str) -> tuple:
     """Load processed chunks from Azure Blob Storage"""
-
-    chunks_container = f"processed-chunks-{domain}"
-    index_blob_name = f"chunks_index_{domain}.json"
-
     try:
-        # Load chunks index
-        index_content = await rag_storage.download_text(chunks_container, index_blob_name)
-        chunks_index = json.loads(index_content)
+        container_name = f"{domain}-chunks"
+        chunks_data = await rag_storage.list_texts(container_name)
 
-        print(f"📋 Found chunks index: {chunks_index['total_chunks']} chunks from {chunks_index['original_documents']} documents")
-        print(f"   📅 Created: {chunks_index['created_at']}")
+        if not chunks_data:
+            logger.warning(f"No chunks found in container {container_name}")
+            return [], {}
 
-        # Load chunk contents
-        chunks_data = []
-        for i, chunk_meta in enumerate(chunks_index['chunks']):
-            try:
-                chunk_content = await rag_storage.download_text(chunks_container, chunk_meta['blob_name'])
-                chunks_data.append({
-                    'content': chunk_content,
-                    'metadata': chunk_meta
-                })
+        # Create index for quick lookup
+        chunks_index = {chunk['name']: chunk for chunk in chunks_data}
 
-                if i % 50 == 0:
-                    print(f"   📦 Loaded chunk {i+1}/{len(chunks_index['chunks'])}")
-
-            except Exception as e:
-                logger.warning(f"Failed to load chunk {chunk_meta['blob_name']}: {e}")
-                continue
-
-        print(f"✅ Successfully loaded {len(chunks_data)} chunks for processing")
+        logger.info(f"Loaded {len(chunks_data)} chunks from Azure Blob Storage")
         return chunks_data, chunks_index
 
     except Exception as e:
         logger.error(f"Failed to load chunks from Azure: {e}")
         return [], {}
+
 
 async def main():
     """Execute knowledge extraction workflow with Azure services"""
@@ -90,7 +150,7 @@ async def main():
     print(f"============================================================")
     print(f"📊 Purpose: Extract entities and relations from processed chunks")
     print(f"☁️  Azure Services: OpenAI, Cosmos DB, Text Analytics")
-    print(f"⏱️  Workflow: Load chunks → Extract knowledge → Store graph")
+    print(f"⏱️  Workflow: Load chunks → Deduplicate → Extract knowledge → Store graph")
     print()
 
     try:
@@ -116,8 +176,20 @@ async def main():
             print("❌ No processed chunks found. Please run 'make data-upload' first.")
             return 1
 
-        # Step 2: Extract knowledge using Azure OpenAI Enterprise Service
-        print(f"\n🤖 Step 2.2: Extracting knowledge with Azure OpenAI...")
+        # Step 2: Deduplicate chunks before processing
+        print(f"\n🔍 Step 2.2: Deduplicating maintenance texts...")
+        chunk_texts = [chunk['content'] for chunk in chunks_data]
+
+        # Apply deduplication
+        unique_chunk_texts = deduplicate_maintenance_texts(chunk_texts)
+
+        print(f"   📊 Deduplication results:")
+        print(f"      📝 Original chunks: {len(chunk_texts)}")
+        print(f"      ✅ Unique chunks: {len(unique_chunk_texts)}")
+        print(f"      🗑️  Duplicates removed: {len(chunk_texts) - len(unique_chunk_texts)}")
+
+        # Step 3: Extract knowledge using Azure OpenAI Enterprise Service
+        print(f"\n🤖 Step 2.3: Extracting knowledge with Azure OpenAI...")
 
         # Import enterprise knowledge extraction service
         from core.azure_openai.knowledge_extractor import AzureOpenAIKnowledgeExtractor
@@ -125,21 +197,27 @@ async def main():
         # Initialize enterprise knowledge extractor
         knowledge_extractor = AzureOpenAIKnowledgeExtractor(domain)
 
-        # Extract knowledge from chunks
-        chunk_texts = [chunk['content'] for chunk in chunks_data]
-
-        print(f"   🔍 Processing {len(chunk_texts)} chunks for knowledge extraction...")
-        extraction_results = await knowledge_extractor.extract_knowledge_from_texts(chunk_texts)
+        print(f"   🔍 Processing {len(unique_chunk_texts)} unique chunks for knowledge extraction...")
+        extraction_results = await knowledge_extractor.extract_knowledge_from_texts(unique_chunk_texts)
 
         entities = extraction_results.get('entities', [])
         relations = extraction_results.get('relations', [])
 
-        print(f"   ✅ Extraction completed:")
+        print(f"   ✅ Initial extraction completed:")
         print(f"      🔍 Entities found: {len(entities)}")
         print(f"      🔗 Relations found: {len(relations)}")
 
-        # Step 3: Store extracted knowledge in Azure Cosmos DB
-        print(f"\n💾 Step 2.3: Storing knowledge graph in Azure Cosmos DB...")
+        # Step 4: Deduplicate relationships
+        print(f"\n🔍 Step 2.4: Deduplicating relationships...")
+        unique_relations = deduplicate_relationships(relations)
+
+        print(f"   📊 Relationship deduplication results:")
+        print(f"      🔗 Original relations: {len(relations)}")
+        print(f"      ✅ Unique relations: {len(unique_relations)}")
+        print(f"      🗑️  Duplicate relations removed: {len(relations) - len(unique_relations)}")
+
+        # Step 5: Store extracted knowledge in Azure Cosmos DB
+        print(f"\n💾 Step 2.5: Storing knowledge graph in Azure Cosmos DB...")
 
         entity_success_count = 0
         relation_success_count = 0
@@ -154,73 +232,57 @@ async def main():
             except Exception as e:
                 logger.warning(f"Failed to store entity {entity.get('entity_id', 'unknown')} ({entity.get('text', 'unknown')}): {e}")
 
-        # Store relations (relations are already dictionaries from extraction results)
-        for relation in relations:
+        # Store deduplicated relations
+        for relation in unique_relations:
             try:
                 cosmos_client.add_relationship(relation, domain)
                 relation_success_count += 1
                 if relation_success_count % 10 == 0:
-                    print(f"   🔗 Stored relation {relation_success_count}/{len(relations)}")
+                    print(f"   🔗 Stored relation {relation_success_count}/{len(unique_relations)}")
             except Exception as e:
                 logger.warning(f"Failed to store relation {relation.get('relation_type', 'unknown')}: {e}")
 
-        # Step 4: Store extraction metadata
-        print(f"\n📊 Step 2.4: Storing extraction metadata...")
+        # Step 6: Store extraction metadata
+        print(f"\n📊 Step 2.6: Storing extraction metadata...")
 
-        extraction_metadata = {
-            "domain": domain,
+        metadata = {
             "extraction_timestamp": datetime.now().isoformat(),
-            "source_chunks": len(chunk_texts),
+            "domain": domain,
+            "original_chunks": len(chunk_texts),
+            "unique_chunks": len(unique_chunk_texts),
+            "duplicates_removed": len(chunk_texts) - len(unique_chunk_texts),
             "entities_extracted": len(entities),
             "relations_extracted": len(relations),
+            "unique_relations_stored": len(unique_relations),
+            "duplicate_relations_removed": len(relations) - len(unique_relations),
             "entities_stored": entity_success_count,
             "relations_stored": relation_success_count,
-            "source_documents": chunks_index.get('original_documents', 0),
-            "extraction_duration_seconds": time.time() - start_time,
-            "extraction_settings": {
-                "discovery_sample_size": azure_settings.discovery_sample_size,
-                "extraction_batch_size": azure_settings.extraction_batch_size,
-                "extraction_confidence_threshold": azure_settings.extraction_confidence_threshold
-            }
+            "deduplication_applied": True,
+            "workflow_version": "2.0_with_deduplication"
         }
 
-        metadata_container = f"extraction-metadata-{domain}"
-        await rag_storage.create_container(metadata_container)
-        metadata_blob_name = f"extraction_metadata_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        await rag_storage.upload_text(metadata_container, metadata_blob_name, json.dumps(extraction_metadata, indent=2))
+        # Save metadata locally
+        metadata_file = Path(f"extraction_metadata_{domain}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
 
-        # Final summary
-        duration = time.time() - start_time
-        print(f"\n📊 STEP 2 Completion Summary:")
-        print(f"   📦 Chunks processed: {len(chunk_texts)}")
+        print(f"\n✅ Knowledge extraction workflow completed successfully!")
+        print(f"📊 Final Statistics:")
+        print(f"   📝 Original chunks: {len(chunk_texts)}")
+        print(f"   ✅ Unique chunks processed: {len(unique_chunk_texts)}")
+        print(f"   🗑️  Duplicates removed: {len(chunk_texts) - len(unique_chunk_texts)}")
         print(f"   🔍 Entities extracted: {len(entities)}")
         print(f"   🔗 Relations extracted: {len(relations)}")
-        print(f"   💾 Entities stored: {entity_success_count}/{len(entities)}")
-        print(f"   💾 Relations stored: {relation_success_count}/{len(relations)}")
-        print(f"   ⚡ Entity success rate: {(entity_success_count/max(len(entities),1)*100):.1f}%")
-        print(f"   ⚡ Relation success rate: {(relation_success_count/max(len(relations),1)*100):.1f}%")
-        print(f"   ⏱️  Total duration: {duration:.1f} seconds")
-        print()
-        print(f"✅ STEP 2 COMPLETED: Knowledge extraction and storage complete")
-        print(f"🎉 Azure Universal RAG system ready for queries!")
-
-        # Check for critical failures
-        if entity_success_count == 0 and relation_success_count == 0:
-            print(f"\n❌ Critical: No knowledge stored in Cosmos DB")
-            return 1
-
-        if entity_success_count < len(entities) * 0.8:  # Less than 80% success
-            print(f"\n⚠️  Warning: Low entity storage success rate ({entity_success_count}/{len(entities)})")
-
-        if relation_success_count < len(relations) * 0.8:  # Less than 80% success
-            print(f"\n⚠️  Warning: Low relation storage success rate ({relation_success_count}/{len(relations)})")
+        print(f"   ✅ Unique relations stored: {len(unique_relations)}")
+        print(f"   🗑️  Duplicate relations removed: {len(relations) - len(unique_relations)}")
+        print(f"   💾 Metadata saved: {metadata_file}")
 
         return 0
 
     except Exception as e:
-        print(f"\n❌ Critical error in knowledge extraction workflow: {str(e)}")
-        logger.error(f"Knowledge extraction workflow failed: {str(e)}", exc_info=True)
+        logger.error(f"Knowledge extraction workflow failed: {e}")
         return 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

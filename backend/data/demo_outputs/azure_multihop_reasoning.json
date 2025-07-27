@@ -1,0 +1,122 @@
+{
+  "timestamp": 1753604158.6337929,
+  "graph_stats": {
+    "vertices": 372,
+    "edges": 2,
+    "connectivity_ratio": 0.005376344086021506,
+    "entity_types": {
+      "component": 28,
+      "differential": 2,
+      "fuel_filter": 1,
+      "injector_assembly": 1,
+      "air_filter\",": 1,
+      "pump": 6,
+      "air_conditioner_system\",": 1,
+      "pressure_switch\",": 1,
+      "compressor": 1,
+      "solenoid": 1,
+      "platform\",": 1,
+      "gearbox": 6,
+      "system_component": 10,
+      "reflector\",": 1,
+      "rope_clamp\",": 1,
+      "sheave\",": 1,
+      "lever": 7,
+      "mechanical_assembly": 1,
+      "window": 1,
+      "tank": 7,
+      "fault_type": 1,
+      "process": 1,
+      "strut": 1,
+      "pulley": 1,
+      "latch": 1,
+      "blade_protector\",": 1,
+      "headlight_assembly": 1,
+      "filter": 9,
+      "axle": 9,
+      "circuit": 9,
+      "equipment": 25,
+      "radio": 5,
+      "seat": 4,
+      "system": 6,
+      "engine_component": 5,
+      "cable": 5,
+      "identifier": 6,
+      "glass": 6,
+      "contactor": 5,
+      "conveyor": 5,
+      "inspection": 5,
+      "sensor": 8,
+      "mechanical_component": 5,
+      "light": 5,
+      "inspection_type": 5,
+      "fluid": 6,
+      "report": 7,
+      "coolant": 4,
+      "winch": 6,
+      "door": 7,
+      "problem": 1,
+      "oil_leak": 5,
+      "hose": 7,
+      "alternator": 5,
+      "brake": 6,
+      "steering_system": 6,
+      "location": 7,
+      "wiring": 4,
+      "tyre": 5,
+      "battery_clamp": 5,
+      "fault": 6,
+      "bearing": 5,
+      "remote": 5,
+      "bumper": 4,
+      "electrical_component": 4,
+      "light_switch": 4,
+      "roller": 3,
+      "lighting": 4,
+      "motor": 4,
+      "hydraulic_component": 3,
+      "gate": 3,
+      "protective_device": 3,
+      "document": 4,
+      "material/procedure": 1,
+      "action": 5,
+      "issue": 17,
+      "state": 2,
+      "specification": 1
+    },
+    "domains": {
+      "test": 2,
+      "general": 300,
+      "maintenance": 70
+    },
+    "graph_density": 1.4491493493319421e-05
+  },
+  "reasoning_examples": [
+    {
+      "query": "Component Neighborhood",
+      "center_pattern": "thermostat",
+      "neighbors_found": 0,
+      "patterns": [
+        {
+          "center_entity": "thermostat",
+          "neighbor_types": {},
+          "total_neighbors": 0
+        }
+      ]
+    },
+    {
+      "query": "Pattern Discovery",
+      "equipment_found": 8,
+      "issue_found": 6,
+      "patterns": {
+        "equipment_types": [
+          "equipment"
+        ],
+        "issue_types": [
+          "issue",
+          "oil_leak"
+        ]
+      }
+    }
+  ]
+}
