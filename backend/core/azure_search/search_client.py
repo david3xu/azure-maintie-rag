@@ -460,7 +460,11 @@ class AzureCognitiveSearchClient:
             credential=self.credential
         )
 
-        result = search_client.upload_documents([document])
+        # Filter out unsupported fields to avoid schema conflicts
+        filtered_document = {k: v for k, v in document.items()
+                           if k not in ['chunk_type', 'chunk_index']}
+
+        result = search_client.upload_documents([filtered_document])
         success_count = len([r for r in result if r.succeeded])
 
         return {
@@ -492,6 +496,12 @@ class AzureCognitiveSearchClient:
             chunk_content = content[i:i + chunk_size]
             chunk_index = i // (chunk_size - overlap_size)
 
+            # Filter out unsupported fields from metadata to avoid schema conflicts
+            original_metadata = json.loads(document.get('metadata', '{}'))
+            # Remove chunk_type and chunk_index from original metadata to avoid schema conflicts
+            filtered_metadata = {k: v for k, v in original_metadata.items()
+                               if k not in ['chunk_type', 'chunk_index']}
+
             chunk_doc = {
                 "id": f"{document['id']}_chunk_{chunk_index}",
                 "content": chunk_content,
@@ -499,7 +509,7 @@ class AzureCognitiveSearchClient:
                 "domain": document.get('domain'),
                 "source": document.get('source'),
                 "metadata": json.dumps({
-                    **json.loads(document.get('metadata', '{}')),
+                    **filtered_metadata,
                     "chunk_index": chunk_index,
                     "is_chunk": True,
                     "parent_document_id": document['id'],
