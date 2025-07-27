@@ -1,0 +1,63 @@
+{
+  "session_id": "lifecycle_10pct_20250727_223103",
+  "start_time": "2025-07-27T22:31:03.811148",
+  "stages": {
+    "data_upload": {
+      "status": "success",
+      "duration_seconds": 1.347153902053833,
+      "blob_name": "samples/lifecycle_10pct_20250727_223103/maintenance_sample_10pct.md",
+      "content_size_bytes": 15916,
+      "azure_url": ""
+    },
+    "knowledge_extraction": {
+      "status": "success",
+      "duration_seconds": 61.63322377204895,
+      "texts_processed": 50,
+      "entities_count": 50,
+      "relationships_count": 0,
+      "output_file": "/workspace/azure-maintie-rag/backend/data/extraction_outputs/lifecycle_10pct_lifecycle_10pct_20250727_223103.json"
+    },
+    "vector_indexing": {
+      "status": "partial",
+      "error": "SearchClient.__init__() missing 3 required positional arguments: 'endpoint', 'index_name', and 'credential'",
+      "duration_seconds": 1.33514404296875e-05,
+      "note": "Vector indexing attempted but may need Azure Search configuration"
+    },
+    "graph_construction": {
+      "status": "success",
+      "duration_seconds": 33.42519450187683,
+      "entities_added": 50,
+      "relationships_added": 0
+    },
+    "query_testing": {
+      "status": "failed",
+      "duration_seconds": 1.9550323486328125e-05,
+      "queries_tested": 3,
+      "successful_queries": 0,
+      "results": [
+        {
+          "query": "What are common thermostat problems?",
+          "error": "AzureRAGOrchestrationService.process_query() got an unexpected keyword argument 'domain'",
+          "status": "failed"
+        },
+        {
+          "query": "How to fix air conditioner issues?",
+          "error": "AzureRAGOrchestrationService.process_query() got an unexpected keyword argument 'domain'",
+          "status": "failed"
+        },
+        {
+          "query": "What maintenance is needed for auto-greaser?",
+          "error": "AzureRAGOrchestrationService.process_query() got an unexpected keyword argument 'domain'",
+          "status": "failed"
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "success_rate": 0.8,
+    "total_stages": 5,
+    "successful_stages": 4
+  },
+  "end_time": "2025-07-27T22:32:40.218280",
+  "total_duration_seconds": 96.40711212158203
+}

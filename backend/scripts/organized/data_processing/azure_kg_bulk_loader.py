@@ -13,7 +13,8 @@ from pathlib import Path
 from typing import Dict, List, Any, Tuple
 from datetime import datetime
 
-sys.path.append(str(Path(__file__).parent.parent))
+# Add backend to path - for running from backend directory
+sys.path.insert(0, '.')
 
 from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
 
@@ -330,7 +331,7 @@ def main():
     print()
     
     # Load quality dataset
-    data_file = Path(__file__).parent.parent / "data/extraction_outputs/full_dataset_extraction_9100_entities_5848_relationships.json"
+    data_file = Path("data/extraction_outputs/full_dataset_extraction_9100_entities_5848_relationships.json")
     
     if not data_file.exists():
         print(f"❌ Data file not found: {data_file}")
