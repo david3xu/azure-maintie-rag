@@ -15,7 +15,8 @@ from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 import time
 
-sys.path.append(str(Path(__file__).parent.parent))
+# Add backend to path - for running from backend directory
+sys.path.insert(0, '.')
 
 try:
     import torch_geometric
