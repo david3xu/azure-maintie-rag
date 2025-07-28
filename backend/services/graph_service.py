@@ -9,7 +9,8 @@ from typing import Dict, List, Any, Optional, Tuple
 import asyncio
 from datetime import datetime
 
-from core.azure_unified import UnifiedCosmosClient, UnifiedStorageClient
+from core.azure_cosmos import UnifiedCosmosClient
+from core.azure_storage import UnifiedStorageClient
 
 logger = logging.getLogger(__name__)
 

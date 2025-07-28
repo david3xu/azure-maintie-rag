@@ -11,7 +11,7 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 
-from core.azure_unified import UnifiedStorageClient
+from core.azure_storage import UnifiedStorageClient
 
 logger = logging.getLogger(__name__)
 

@@ -1,260 +1,303 @@
-"""Azure Blob Storage client for Universal RAG system."""
+"""
+Unified Azure Blob Storage Client
+Consolidates all storage functionality: blob operations, file management, data persistence
+Replaces: storage_client.py, storage_factory.py, real_azure_services.py
+"""
 
 import logging
-import time
-from typing import Dict, List, Any, Optional, IO
+from typing import Dict, List, Any, Optional, BinaryIO
+import json
+from datetime import datetime
 from pathlib import Path
-from azure.storage.blob import BlobServiceClient, BlobClient
-from azure.core.exceptions import AzureError
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
+from ..azure_auth.base_client import BaseAzureClient
 from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)
 
 
-class AzureStorageClient:
-    """Universal Azure Blob Storage client - follows azure_openai.py pattern"""
-
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """Initialize Azure Storage client - follows existing pattern"""
-        self.config = config or {}
-
-        # Load from environment if not in config (matches azure_openai.py pattern)
-        self.account_name = self.config.get('account_name') or azure_settings.azure_storage_account
-        self.account_key = self.config.get('account_key') or azure_settings.azure_storage_key
-        self.container_name = self.config.get('container_name') or azure_settings.azure_blob_container
-
-        if not self.account_name:
-            raise ValueError("Azure Storage account name is required")
-
-        # Initialize client (follows azure_openai.py error handling pattern)
+class UnifiedStorageClient(BaseAzureClient):
+    """Unified client for all Azure Blob Storage operations"""
+    
+    def _get_default_endpoint(self) -> str:
+        return azure_settings.azure_storage_connection_string.split(';')[0].replace('DefaultEndpointsProtocol=https;AccountName=', 'https://') + '.blob.core.windows.net'
+        
+    def _get_default_key(self) -> str:
+        # Extract account key from connection string
+        parts = azure_settings.azure_storage_connection_string.split(';')
+        for part in parts:
+            if part.startswith('AccountKey='):
+                return part.replace('AccountKey=', '')
+        return ""
+        
+    def _initialize_client(self):
+        """Initialize blob service client"""
+        self._blob_service = BlobServiceClient.from_connection_string(
+            azure_settings.azure_storage_connection_string
+        )
+        
+        # Default containers
+        self.default_container = azure_settings.azure_blob_container
+        
+    # === BLOB OPERATIONS ===
+    
+    async def upload_file(self, file_path: str, blob_name: str = None, container: str = None) -> Dict[str, Any]:
+        """Upload file to blob storage"""
+        self.ensure_initialized()
+        
         try:
-            self.credential = self._get_azure_credential()
-            self.blob_service_client = BlobServiceClient(
-                account_url=f"https://{self.account_name}.blob.core.windows.net",
-                credential=self.credential
+            container_name = container or self.default_container
+            blob_name = blob_name or Path(file_path).name
+            
+            # Ensure container exists
+            await self._ensure_container_exists(container_name)
+            
+            # Upload file
+            blob_client = self._blob_service.get_blob_client(
+                container=container_name, 
+                blob=blob_name
             )
-            self._ensure_container_exists()
+            
+            with open(file_path, 'rb') as data:
+                blob_client.upload_blob(data, overwrite=True)
+            
+            return self.create_success_response('upload_file', {
+                'file_path': file_path,
+                'blob_name': blob_name,
+                'container': container_name,
+                'blob_url': blob_client.url
+            })
+            
         except Exception as e:
-            logger.error(f"Failed to initialize Azure Storage client: {e}")
-            raise
-
-        logger.info(f"AzureStorageClient initialized for container: {self.container_name}")
-
-    def _get_azure_credential(self):
-        """Enterprise credential management - data-driven from config"""
-        if azure_settings.azure_use_managed_identity and azure_settings.azure_managed_identity_client_id:
-            from azure.identity import ManagedIdentityCredential
-            return ManagedIdentityCredential(client_id=azure_settings.azure_managed_identity_client_id)
-
-        # Fallback to account key if available
-        if self.account_key:
-            return self.account_key
-
-        # Final fallback to DefaultAzureCredential
-        from azure.identity import DefaultAzureCredential
-        return DefaultAzureCredential()
-
-    def _ensure_container_exists(self):
-        """Ensure container exists - create if needed"""
+            return self.handle_azure_error('upload_file', e)
+    
+    async def upload_data(self, data: str, blob_name: str, container: str = None) -> Dict[str, Any]:
+        """Upload text data to blob storage"""
+        self.ensure_initialized()
+        
         try:
-            container_client = self.blob_service_client.get_container_client(self.container_name)
-            if not container_client.exists():
-                container_client.create_container()
-                logger.info(f"Created container: {self.container_name}")
-        except AzureError as e:
-            logger.error(f"Container operation failed: {e}")
-            raise
-
-    async def create_container(self, container_name: str) -> bool:
-        """Create a new container in Azure Blob Storage, returns True if created or already exists"""
-        try:
-            container_client = self.blob_service_client.get_container_client(container_name)
-            if not container_client.exists():
-                container_client.create_container()
-                logger.info(f"Created container: {container_name}")
-            else:
-                logger.info(f"Container already exists: {container_name}")
-            return True
-        except Exception as e:
-            logger.error(f"Container creation failed: {e}")
-            return False
-
-    async def upload_text(self, container_name: str, blob_name: str, text: str) -> str:
-        """Upload text content to Azure Blob Storage, returns blob name on success"""
-        try:
-            blob_client = self.blob_service_client.get_blob_client(
+            container_name = container or self.default_container
+            
+            # Ensure container exists
+            await self._ensure_container_exists(container_name)
+            
+            # Upload data
+            blob_client = self._blob_service.get_blob_client(
                 container=container_name,
                 blob=blob_name
             )
-            text_bytes = text.encode('utf-8')
-            blob_client.upload_blob(text_bytes, overwrite=True)
-            logger.info(f"Uploaded text to blob: {blob_name} in container: {container_name}")
-            return blob_name
+            
+            blob_client.upload_blob(data.encode('utf-8'), overwrite=True)
+            
+            return self.create_success_response('upload_data', {
+                'blob_name': blob_name,
+                'container': container_name,
+                'data_size': len(data),
+                'blob_url': blob_client.url
+            })
+            
         except Exception as e:
-            logger.error(f"Text upload failed: {e}")
-            return ""
-
-    async def download_text(self, container_name: str, blob_name: str) -> str:
-        """Download text content from Azure Blob Storage - enterprise text operations pattern"""
+            return self.handle_azure_error('upload_data', e)
+    
+    async def download_file(self, blob_name: str, download_path: str = None, container: str = None) -> Dict[str, Any]:
+        """Download blob to file"""
+        self.ensure_initialized()
+        
         try:
-            blob_client = self.blob_service_client.get_blob_client(
+            container_name = container or self.default_container
+            download_path = download_path or blob_name
+            
+            blob_client = self._blob_service.get_blob_client(
                 container=container_name,
                 blob=blob_name
             )
-            # Download as text with UTF-8 encoding
+            
+            with open(download_path, 'wb') as download_file:
+                download_stream = blob_client.download_blob()
+                download_file.write(download_stream.readall())
+            
+            return self.create_success_response('download_file', {
+                'blob_name': blob_name,
+                'download_path': download_path,
+                'container': container_name
+            })
+            
+        except Exception as e:
+            return self.handle_azure_error('download_file', e)
+    
+    async def download_data(self, blob_name: str, container: str = None) -> Dict[str, Any]:
+        """Download blob data as string"""
+        self.ensure_initialized()
+        
+        try:
+            container_name = container or self.default_container
+            
+            blob_client = self._blob_service.get_blob_client(
+                container=container_name,
+                blob=blob_name
+            )
+            
             download_stream = blob_client.download_blob()
-            text_content = download_stream.readall().decode('utf-8')
-            logger.info(f"Downloaded text from blob: {blob_name} in container: {container_name}")
-            return text_content
+            data = download_stream.readall().decode('utf-8')
+            
+            return self.create_success_response('download_data', {
+                'blob_name': blob_name,
+                'container': container_name,
+                'data': data,
+                'data_size': len(data)
+            })
+            
         except Exception as e:
-            logger.error(f"Text download failed for {blob_name}: {e}")
-            return ""
-
-    def upload_file(self, local_path: Path, blob_name: str, overwrite: bool = True) -> Dict[str, Any]:
-        """Upload file to Azure Blob Storage with telemetry - data-driven monitoring"""
-        start_time = time.time()
-
+            return self.handle_azure_error('download_data', e)
+    
+    # === CONTAINER OPERATIONS ===
+    
+    async def list_blobs(self, container: str = None, prefix: str = None) -> Dict[str, Any]:
+        """List blobs in container"""
+        self.ensure_initialized()
+        
         try:
-            blob_client = self.blob_service_client.get_blob_client(
-                container=self.container_name,
-                blob=blob_name
-            )
-
-            with open(local_path, "rb") as data:
-                blob_client.upload_blob(data, overwrite=overwrite)
-
-            # Add telemetry data
-            operation_time = time.time() - start_time
-
-            return {
-                "success": True,
-                "blob_name": blob_name,
-                "container": self.container_name,
-                "size_bytes": local_path.stat().st_size,
-                "operation_duration_ms": operation_time * 1000,  # Data-driven metrics
-                "telemetry": {
-                    "service": "azure_storage",
-                    "operation": "upload_file",
-                    "timestamp": time.time()
-                }
-            }
-
-        except Exception as e:
-            # Add error telemetry
-            operation_time = time.time() - start_time
-            logger.error(f"File upload failed for {blob_name}: {e}")
-
-            return {
-                "success": False,
-                "error": str(e),
-                "blob_name": blob_name,
-                "operation_duration_ms": operation_time * 1000,
-                "telemetry": {
-                    "service": "azure_storage",
-                    "operation": "upload_file_failed",
-                    "error_type": type(e).__name__
-                }
-            }
-
-    def download_file(self, blob_name: str, local_path: Path) -> Dict[str, Any]:
-        """Download file from Azure Blob Storage"""
-        try:
-            blob_client = self.blob_service_client.get_blob_client(
-                container=self.container_name,
-                blob=blob_name
-            )
-
-            local_path.parent.mkdir(parents=True, exist_ok=True)
-
-            with open(local_path, "wb") as download_file:
-                download_file.write(blob_client.download_blob().readall())
-
-            return {
-                "success": True,
-                "blob_name": blob_name,
-                "local_path": str(local_path),
-                "size_bytes": local_path.stat().st_size
-            }
-
-        except Exception as e:
-            logger.error(f"File download failed for {blob_name}: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "blob_name": blob_name
-            }
-
-    def list_blobs(self, container_name: str = None, prefix: str = "") -> List[Dict[str, Any]]:
-        """List blobs in specified container with optional prefix"""
-        try:
-            # Data-driven container selection
-            target_container = container_name or self.container_name
-            container_client = self.blob_service_client.get_container_client(target_container)
-            blob_list = []
+            container_name = container or self.default_container
+            
+            container_client = self._blob_service.get_container_client(container_name)
+            
+            blobs = []
             for blob in container_client.list_blobs(name_starts_with=prefix):
-                blob_list.append({
-                    "name": blob.name,
-                    "size": blob.size,
-                    "last_modified": blob.last_modified,
-                    "content_type": getattr(blob, 'content_settings', None) and getattr(blob.content_settings, 'content_type', 'unknown') or 'unknown'
-                })
-            return blob_list
+                blob_info = {
+                    'name': blob.name,
+                    'size': blob.size,
+                    'last_modified': blob.last_modified.isoformat() if blob.last_modified else None,
+                    'content_type': blob.content_settings.content_type if blob.content_settings else None
+                }
+                blobs.append(blob_info)
+            
+            return self.create_success_response('list_blobs', {
+                'container': container_name,
+                'blobs': blobs,
+                'blob_count': len(blobs)
+            })
+            
         except Exception as e:
-            logger.error(f"Blob listing failed for container {target_container}: {e}")
-            return []
-
-    def get_connection_status(self) -> Dict[str, Any]:
-        """Get storage connection status - follows azure_openai.py pattern"""
+            return self.handle_azure_error('list_blobs', e)
+    
+    async def delete_blob(self, blob_name: str, container: str = None) -> Dict[str, Any]:
+        """Delete blob"""
+        self.ensure_initialized()
+        
         try:
-            # Test connection by getting account info
-            account_info = self.blob_service_client.get_account_information()
-
-            return {
-                "status": "healthy",
-                "account_name": self.account_name,
-                "container_name": self.container_name,
-                "account_kind": account_info.get('account_kind', 'unknown')
-            }
-        except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "account_name": self.account_name
-            }
-
-    async def delete_blob(self, container_name: str, blob_name: str) -> bool:
-        """Delete a blob from Azure Blob Storage"""
-        try:
-            blob_client = self.blob_service_client.get_blob_client(
+            container_name = container or self.default_container
+            
+            blob_client = self._blob_service.get_blob_client(
                 container=container_name,
                 blob=blob_name
             )
+            
             blob_client.delete_blob()
-            logger.info(f"Deleted blob: {blob_name} from container: {container_name}")
-            return True
+            
+            return self.create_success_response('delete_blob', {
+                'blob_name': blob_name,
+                'container': container_name,
+                'message': 'Blob deleted successfully'
+            })
+            
         except Exception as e:
-            logger.error(f"Blob deletion failed: {e}")
-            return False
-
-    async def delete_all_blobs(self, container_name: str) -> int:
-        """Delete all blobs in a container, returns number of deleted blobs"""
+            return self.handle_azure_error('delete_blob', e)
+    
+    # === DATA PERSISTENCE ===
+    
+    async def save_json(self, data: Dict, blob_name: str, container: str = None) -> Dict[str, Any]:
+        """Save JSON data to blob storage"""
         try:
-            container_client = self.blob_service_client.get_container_client(container_name)
-            deleted_count = 0
-
-            # List all blobs and delete them
-            blobs = container_client.list_blobs()
-            for blob in blobs:
-                try:
-                    container_client.delete_blob(blob.name)
-                    deleted_count += 1
-                    logger.info(f"Deleted blob: {blob.name}")
-                except Exception as e:
-                    logger.error(f"Failed to delete blob {blob.name}: {e}")
-
-            logger.info(f"Deleted {deleted_count} blobs from container: {container_name}")
-            return deleted_count
+            json_data = json.dumps(data, indent=2, default=str)
+            return await self.upload_data(json_data, blob_name, container)
+            
         except Exception as e:
-            logger.error(f"Bulk blob deletion failed: {e}")
-            return 0
+            return self.handle_azure_error('save_json', e)
+    
+    async def load_json(self, blob_name: str, container: str = None) -> Dict[str, Any]:
+        """Load JSON data from blob storage"""
+        try:
+            result = await self.download_data(blob_name, container)
+            
+            if result['success']:
+                data = json.loads(result['data'])
+                return self.create_success_response('load_json', {
+                    'blob_name': blob_name,
+                    'data': data
+                })
+            else:
+                return result
+                
+        except Exception as e:
+            return self.handle_azure_error('load_json', e)
+    
+    # === BATCH OPERATIONS ===
+    
+    async def upload_multiple_files(self, file_paths: List[str], container: str = None) -> Dict[str, Any]:
+        """Upload multiple files"""
+        self.ensure_initialized()
+        
+        try:
+            results = []
+            for file_path in file_paths:
+                result = await self.upload_file(file_path, container=container)
+                results.append(result)
+            
+            success_count = sum(1 for r in results if r['success'])
+            
+            return self.create_success_response('upload_multiple_files', {
+                'files_uploaded': success_count,
+                'files_failed': len(file_paths) - success_count,
+                'total_files': len(file_paths),
+                'results': results
+            })
+            
+        except Exception as e:
+            return self.handle_azure_error('upload_multiple_files', e)
+    
+    async def cleanup_container(self, container: str = None, prefix: str = None) -> Dict[str, Any]:
+        """Clean up blobs in container"""
+        self.ensure_initialized()
+        
+        try:
+            container_name = container or self.default_container
+            
+            # List blobs to delete
+            blob_list = await self.list_blobs(container_name, prefix)
+            
+            if not blob_list['success']:
+                return blob_list
+            
+            deleted_count = 0
+            for blob in blob_list['data']['blobs']:
+                result = await self.delete_blob(blob['name'], container_name)
+                if result['success']:
+                    deleted_count += 1
+            
+            return self.create_success_response('cleanup_container', {
+                'container': container_name,
+                'blobs_deleted': deleted_count,
+                'prefix': prefix
+            })
+            
+        except Exception as e:
+            return self.handle_azure_error('cleanup_container', e)
+    
+    # === UTILITY METHODS ===
+    
+    async def _ensure_container_exists(self, container_name: str):
+        """Ensure container exists, create if not"""
+        try:
+            container_client = self._blob_service.get_container_client(container_name)
+            container_client.create_container()
+        except Exception:
+            # Container might already exist
+            pass
+    
+    def generate_blob_name(self, prefix: str, extension: str = None) -> str:
+        """Generate unique blob name"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        if extension:
+            return f"{prefix}_{timestamp}.{extension}"
+        return f"{prefix}_{timestamp}"

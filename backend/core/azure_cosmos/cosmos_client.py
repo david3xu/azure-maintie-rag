@@ -12,7 +12,7 @@ from gremlin_python.driver import client, serializer
 from gremlin_python.process.graph_traversal import __
 from gremlin_python.process.traversal import T, P
 
-from .base_client import BaseAzureClient
+from ..azure_auth.base_client import BaseAzureClient
 from config.settings import azure_settings
 
 logger = logging.getLogger(__name__)

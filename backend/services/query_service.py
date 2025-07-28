@@ -9,7 +9,9 @@ from typing import Dict, List, Any, Optional
 import asyncio
 from datetime import datetime
 
-from core.azure_unified import UnifiedAzureOpenAIClient, UnifiedSearchClient, UnifiedCosmosClient
+from core.azure_openai import UnifiedAzureOpenAIClient
+from core.azure_search import UnifiedSearchClient
+from core.azure_cosmos import UnifiedCosmosClient
 from .graph_service import GraphService
 
 logger = logging.getLogger(__name__)
