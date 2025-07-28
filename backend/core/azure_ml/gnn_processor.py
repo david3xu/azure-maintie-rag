@@ -20,7 +20,7 @@ except ImportError:
     torch = None
     Data = None
 
-from ..azure_openai.text_processor import AzureOpenAITextProcessor
+from ..azure_openai import AzureOpenAITextProcessor
 from ..models.universal_rag_models import UniversalEntity, UniversalRelation
 import sys
 from pathlib import Path
@@ -541,7 +541,7 @@ def create_universal_gnn_processor(text_processor: AzureOpenAITextProcessor,
 
 if __name__ == "__main__":
     # Example usage
-    from ..azure_openai.text_processor import AzureOpenAITextProcessor
+    from ..azure_openai import AzureOpenAITextProcessor
 
     processor = AzureOpenAITextProcessor("maintenance")
     gnn_processor = AzureMLGNNProcessor(processor, "maintenance")

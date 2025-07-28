@@ -1,0 +1,76 @@
+# Azure Developer CLI (azd) configuration for Universal RAG System
+name: azure-maintie-rag
+metadata:
+  template: azure-search-openai-demo@main
+  description: "Azure Universal RAG system with knowledge graphs, vector search, and GNN training"
+
+# Services to deploy (commented out due to Docker-in-Docker limitations)
+# services:
+#   backend:
+#     project: ./backend
+#     language: py
+#     host: containerapp
+
+# Infrastructure configuration
+infra:
+  provider: bicep
+  path: ./infra
+
+# Environment variables that will be set by azd
+env:
+  # Azure Resource Configuration
+  AZURE_LOCATION: westus2
+  AZURE_RESOURCE_GROUP_PREFIX: rg-maintie-rag
+  
+  # Application Configuration
+  OPENAI_MODEL_DEPLOYMENT: gpt-4
+  EMBEDDING_MODEL_DEPLOYMENT: text-embedding-ada-002
+  SEARCH_INDEX_NAME: maintie-index
+  COSMOS_DATABASE_NAME: maintie-rag-db
+  COSMOS_GRAPH_NAME: knowledge-graph
+  
+  # Container Configuration
+  BACKEND_IMAGE_NAME: azure-maintie-rag-backend
+  BACKEND_PORT: 8000
+
+# Deployment hooks
+hooks:
+  preprovision:
+    shell: sh
+    run: |
+      echo "🏗️ Preparing Azure Universal RAG infrastructure..."
+      echo "Environment: ${AZURE_ENV_NAME}"
+      echo "Location: ${AZURE_LOCATION}"
+      
+  postprovision:
+    shell: sh
+    run: |
+      echo "🔧 Configuring deployed services..."
+      # Update backend configuration with deployed endpoints
+      if [ -f "./scripts/update-env-from-deployment.sh" ]; then
+        ./scripts/update-env-from-deployment.sh
+      fi
+      
+  prepackage:
+    shell: sh
+    run: |
+      echo "📦 Building backend container..."
+      cd backend
+      # Ensure requirements are up to date
+      if [ -f "requirements.txt" ]; then
+        echo "Building Python backend for container deployment..."
+      fi
+      
+  postdeploy:
+    shell: sh
+    run: |
+      echo "✅ Deployment complete!"
+      echo "Backend URL: ${SERVICE_BACKEND_URI}"
+      echo "Frontend URL: ${SERVICE_FRONTEND_URI}"
+      echo ""
+      echo "🔗 Quick verification commands:"
+      echo "  Health check: curl \${SERVICE_BACKEND_URI}/health"
+      echo "  Admin panel: open \${SERVICE_FRONTEND_URI}"
+      echo ""
+      echo "📊 Resource group: ${AZURE_RESOURCE_GROUP}"
+      echo "🌍 Environment: ${AZURE_ENV_NAME}"

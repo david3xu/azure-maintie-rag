@@ -24,8 +24,13 @@ class BaseAzureClient(ABC):
         self.endpoint = self.config.get('endpoint') or self._get_default_endpoint()
         self.key = self.config.get('key') or self._get_default_key()
         
-        if not self.endpoint or not self.key:
-            raise ValueError(f"{self.__class__.__name__} requires endpoint and key")
+        # For azd managed identity deployments, key can be empty
+        if not self.endpoint:
+            raise ValueError(f"{self.__class__.__name__} requires endpoint")
+        
+        # Check if this is an azd managed identity deployment
+        from config.settings import azure_settings
+        self.use_managed_identity = getattr(azure_settings, 'use_managed_identity', False) or not self.key
             
         logger.info(f"{self.__class__.__name__} initialized")
     

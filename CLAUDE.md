@@ -8,7 +8,7 @@ This file provides guidance to Claude Code when working with this **Azure Univer
 
 - **Backend**: FastAPI service with Azure integrations (`backend/`)
 - **Frontend**: React + TypeScript UI (`frontend/`)
-- **Infrastructure**: Azure Bicep templates (`infrastructure/`)
+- **Infrastructure**: Azure Bicep templates (`infra/`)
 - **Azure Services**: OpenAI, Cognitive Search, Cosmos DB, Blob Storage, ML Workspace
 
 ### Data Flow

@@ -9,22 +9,19 @@ from contextlib import asynccontextmanager
 from typing import Dict, Any
 
 from fastapi import FastAPI, HTTPException, Depends, Request, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
 # Azure service components
-from integrations.azure_services import AzureServicesManager
-from integrations.azure_openai import AzureOpenAIClient
+from services.infrastructure_service import InfrastructureService
+from services.data_service import DataService
+# Removed integrations import - using focused services
 from config.settings import AzureSettings
 from config.settings import settings
-from api.endpoints import health
+from api.endpoints import health_endpoint
+from api.endpoints import query_endpoint
 from api.dependencies import set_azure_services, set_openai_integration, set_azure_settings
-import importlib
-
-# Fix import for azure-query-endpoint (hyphen in filename)
-azure_query_endpoint = importlib.import_module("api.endpoints.azure-query-endpoint")
+from api.middleware import setup_middleware, log_requests
 
 # Configure logging
 logging.basicConfig(
@@ -41,13 +38,13 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Azure Universal RAG API...")
 
     try:
-        # Initialize Azure services using existing pattern
+        # Initialize Azure services using focused services
         logger.info("Initializing Azure services...")
-        azure_services = AzureServicesManager()
-        # Remove: await azure_services.initialize()
+        infrastructure = InfrastructureService()
+        data_service = DataService(infrastructure)
 
         # Validate services instead
-        validation = azure_services.validate_configuration()
+        validation = infrastructure.validate_configuration()
         if not validation['all_configured']:
             raise RuntimeError(f"Azure services validation failed: {validation}")
 
@@ -82,41 +79,28 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5174", "http://localhost:5175"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Add trusted host middleware for security (if configured)
-if hasattr(settings, 'trusted_hosts_list') and settings.trusted_hosts_list:
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=settings.trusted_hosts_list
-    )
+# Setup middleware from middleware.py
+setup_middleware(app)
 
 # Include routers
-app.include_router(health.router)
-app.include_router(azure_query_endpoint.router)
+app.include_router(health_endpoint.router)
+app.include_router(query_endpoint.router)
 
 # Import and include workflow stream router
-from api.workflow_stream import router as workflow_stream_router
+from api.streaming.workflow_stream import router as workflow_stream_router
 app.include_router(workflow_stream_router)
 
 # Import and include knowledge graph demo router for supervisor demo
-from api.endpoints.knowledge_graph_demo import router as kg_demo_router
-app.include_router(kg_demo_router)
+from api.endpoints.graph_endpoint import router as graph_router
+app.include_router(graph_router)
 
 # Import and include simple demo router for supervisor demo (no async issues)
-from api.endpoints.demo_simple import router as demo_simple_router
-app.include_router(demo_simple_router)
+from api.endpoints.demo_endpoint import router as demo_router
+app.include_router(demo_router)
 
 # Import and include Gremlin demo router for real-time queries
-from api.endpoints.gremlin_demo_api import router as gremlin_demo_router
-app.include_router(gremlin_demo_router)
+from api.endpoints.gremlin_endpoint import router as gremlin_router
+app.include_router(gremlin_router)
 
 # Error handlers
 @app.exception_handler(HTTPException)
@@ -137,28 +121,6 @@ async def general_exception_handler(request: Request, exc: Exception):
         content={"error": "Internal server error", "status_code": 500}
     )
 
-# Middleware for request logging
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """Log all requests"""
-    start_time = time.time()
-
-    # Skip logging for health checks and static files
-    if request.url.path in ["/api/v1/health", "/favicon.ico"]:
-        response = await call_next(request)
-        return response
-
-    logger.info(f"Request: {request.method} {request.url.path}")
-
-    try:
-        response = await call_next(request)
-        process_time = time.time() - start_time
-        logger.info(f"Response: {response.status_code} - {process_time:.3f}s")
-        return response
-    except Exception as e:
-        process_time = time.time() - start_time
-        logger.error(f"Request failed: {e} - {process_time:.3f}s")
-        raise
 
 # Root endpoint
 @app.get("/")
