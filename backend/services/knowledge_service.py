@@ -9,7 +9,8 @@ from typing import Dict, List, Any, Optional
 import asyncio
 from pathlib import Path
 
-from core.azure_unified import UnifiedAzureOpenAIClient, UnifiedStorageClient
+from core.azure_openai import UnifiedAzureOpenAIClient
+from core.azure_storage import UnifiedStorageClient
 
 logger = logging.getLogger(__name__)
 

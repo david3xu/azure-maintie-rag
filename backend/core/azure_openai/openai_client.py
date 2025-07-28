@@ -11,7 +11,7 @@ from datetime import datetime
 import hashlib
 from openai import AzureOpenAI
 
-from .base_client import BaseAzureClient
+from ..azure_auth.base_client import BaseAzureClient
 from config.settings import settings, azure_settings
 from ..models.universal_rag_models import UniversalEntity, UniversalRelation
 

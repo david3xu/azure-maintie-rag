@@ -17,13 +17,11 @@ async def test_unified_clients():
     print("=" * 50)
     
     try:
-        # Test imports
-        from core.azure_unified import (
-            UnifiedAzureOpenAIClient, 
-            UnifiedCosmosClient,
-            UnifiedSearchClient,
-            UnifiedStorageClient
-        )
+        # Test imports from reorganized structure
+        from core.azure_openai import UnifiedAzureOpenAIClient
+        from core.azure_cosmos import UnifiedCosmosClient
+        from core.azure_search import UnifiedSearchClient
+        from core.azure_storage import UnifiedStorageClient
         print("✅ All unified clients imported successfully")
         
         # Test client initialization (without actual Azure calls)
@@ -119,7 +117,10 @@ def test_code_structure():
     try:
         # Check key directories exist
         directories = [
-            "core/azure_unified",
+            "core/azure_openai",
+            "core/azure_search", 
+            "core/azure_storage",
+            "core/azure_cosmos",
             "services", 
             "scripts/organized",
             "integrations"

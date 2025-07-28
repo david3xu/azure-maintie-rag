@@ -1,12 +1,23 @@
-"""Azure OpenAI service integrations for Universal RAG"""
-from .completion_service import AzureOpenAICompletionService as AzureOpenAICompletionService
-from .text_processor import AzureOpenAITextProcessor as AzureOpenAITextProcessor
-from .knowledge_extractor import AzureOpenAIKnowledgeExtractor as AzureOpenAIKnowledgeExtractor
-from .extraction_client import OptimizedLLMExtractor as AzureOpenAIExtractionClient
+"""
+Azure OpenAI Integration - Consolidated Client
+All Azure OpenAI functionality consolidated in this module
+"""
+
+# Main unified client implementation
+from .openai_client import UnifiedAzureOpenAIClient
+
+# Maintain backwards compatibility with old class names
+AzureOpenAIKnowledgeExtractor = UnifiedAzureOpenAIClient
+AzureOpenAITextProcessor = UnifiedAzureOpenAIClient
+AzureOpenAICompletionService = UnifiedAzureOpenAIClient
+AzureOpenAIExtractionClient = UnifiedAzureOpenAIClient
+OptimizedLLMExtractor = UnifiedAzureOpenAIClient
 
 __all__ = [
-    'AzureOpenAICompletionService',
+    'UnifiedAzureOpenAIClient',
+    'AzureOpenAIKnowledgeExtractor', 
     'AzureOpenAITextProcessor',
-    'AzureOpenAIKnowledgeExtractor',
-    'AzureOpenAIExtractionClient'
+    'AzureOpenAICompletionService',
+    'AzureOpenAIExtractionClient',
+    'OptimizedLLMExtractor'
 ]
