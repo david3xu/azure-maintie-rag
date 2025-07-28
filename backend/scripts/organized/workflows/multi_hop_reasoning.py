@@ -10,7 +10,8 @@ import time
 from pathlib import Path
 from typing import Dict, List, Any, Tuple
 
-sys.path.append(str(Path(__file__).parent.parent))
+# Add backend to path - for running from backend directory
+sys.path.insert(0, '.')
 
 from integrations.azure_openai import AzureOpenAIClient
 
@@ -26,7 +27,7 @@ class WorkingMultiHopDemo:
         
         print(f"📊 Loading quality data (limit: {limit} entities)...")
         
-        data_file = Path(__file__).parent.parent / "data/extraction_outputs/full_dataset_extraction_9100_entities_5848_relationships.json"
+        data_file = Path("data/extraction_outputs/full_dataset_extraction_9100_entities_5848_relationships.json")
         
         with open(data_file, 'r') as f:
             data = json.load(f)
