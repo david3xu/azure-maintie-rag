@@ -18,10 +18,10 @@ async def test_unified_clients():
     
     try:
         # Test imports from reorganized structure
-        from core.azure_openai import UnifiedAzureOpenAIClient
-        from core.azure_cosmos import UnifiedCosmosClient
-        from core.azure_search import UnifiedSearchClient
-        from core.azure_storage import UnifiedStorageClient
+        from core.azure_openai.openai_client import UnifiedAzureOpenAIClient
+        from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
+        from core.azure_search.search_client import UnifiedSearchClient
+        from core.azure_storage.storage_factory import get_storage_factory
         print("✅ All unified clients imported successfully")
         
         # Test client initialization (without actual Azure calls)
@@ -67,38 +67,41 @@ async def test_unified_services():
     
     try:
         # Test service imports
-        from services import (
-            KnowledgeService,
-            GraphService,
-            MLService,
-            QueryService
-        )
+        from services.infrastructure_service import InfrastructureService
+        from services.data_service import DataService
+        from services.workflow_service import WorkflowService
+        from services.query_service import QueryService
         print("✅ All services imported successfully")
         
         # Test service initialization
         print("\\n📋 Testing Service Initialization:")
         
+        # Test infrastructure service
+        infrastructure = InfrastructureService()
+        print("  ✅ InfrastructureService initialized")
+        
+        # Test services that depend on infrastructure
+        data_service = DataService(infrastructure)
+        workflow_service = WorkflowService(infrastructure)
+        query_service = QueryService(infrastructure)
+        
         services = [
-            ("KnowledgeService", KnowledgeService),
-            ("GraphService", GraphService),
-            ("MLService", MLService),
-            ("QueryService", QueryService)
+            ("DataService", data_service),
+            ("WorkflowService", workflow_service),
+            ("QueryService", query_service)
         ]
         
-        for name, service_class in services:
+        for name, service_instance in services:
             try:
-                service = service_class()
-                print(f"✅ {name}: Initialized")
+                print(f"  ✅ {name}: Initialized")
                 
-                # Test basic methods exist
-                if hasattr(service, 'extract_from_texts') and name == "KnowledgeService":
-                    print(f"   📝 Has extract_from_texts method")
-                if hasattr(service, 'load_knowledge_to_graph') and name == "GraphService":
-                    print(f"   🗄️  Has load_knowledge_to_graph method")
-                if hasattr(service, 'train_gnn_model') and name == "MLService":
-                    print(f"   🧠 Has train_gnn_model method")
-                if hasattr(service, 'process_universal_query') and name == "QueryService":
-                    print(f"   🔍 Has process_universal_query method")
+                # Test basic methods exist  
+                if hasattr(service_instance, 'migrate_data_to_azure') and name == "DataService":
+                    print(f"   📝 Has migrate_data_to_azure method")
+                if hasattr(service_instance, 'initialize_rag_orchestration') and name == "WorkflowService":
+                    print(f"   🗄️  Has initialize_rag_orchestration method")
+                if hasattr(service_instance, 'process_query') and name == "QueryService":
+                    print(f"   🔍 Has process_query method")
                     
             except Exception as e:
                 print(f"⚠️  {name}: {e}")

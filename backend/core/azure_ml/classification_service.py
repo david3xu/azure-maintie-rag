@@ -7,7 +7,7 @@ Eliminates hardcoded patterns through data-driven Azure integration
 import logging
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-from core.azure_openai.azure_text_analytics_service import AzureTextAnalyticsService
+from core.azure_openai import UnifiedAzureOpenAIClient as AzureTextAnalyticsService
 from config.settings import settings
 
 logger = logging.getLogger(__name__)

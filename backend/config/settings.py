@@ -59,75 +59,95 @@ class Settings(BaseSettings):
     app_version: str = "2.0.0"
     environment: str = Field(default="development", env="ENVIRONMENT")
     debug: bool = Field(default=True, env="DEBUG")
+    
+    # Azure Identity & Security (azd-compatible)
+    azure_client_id: str = Field(default="", env="AZURE_CLIENT_ID")  # azd output
+    use_managed_identity: bool = Field(default=True, env="USE_MANAGED_IDENTITY")
+    azure_key_vault_name: str = Field(default="", env="AZURE_KEY_VAULT_NAME")  # azd output
+    
+    # Monitoring (azd-compatible)
+    applicationinsights_connection_string: str = Field(default="", env="APPLICATIONINSIGHTS_CONNECTION_STRING")  # azd output
 
     # API Settings
     api_host: str = Field(default="0.0.0.0", env="API_HOST")
     api_port: int = Field(default=8000, env="API_PORT")
     api_prefix: str = "/api/v1"
 
-    # Azure OpenAI Settings
-    openai_api_type: str = Field(default="azure", env="OPENAI_API_TYPE")
-    openai_api_key: str = Field(env="OPENAI_API_KEY")
-    openai_api_base: str = Field(env="OPENAI_API_BASE")
-    openai_api_version: str = Field(default="2025-03-01-preview", env="OPENAI_API_VERSION")
-    openai_deployment_name: str = Field(default="gpt-4.1", env="OPENAI_DEPLOYMENT_NAME")
-    openai_model: str = Field(default="gpt-4.1", env="OPENAI_MODEL")
+    # Azure OpenAI Settings (azd-managed, no keys needed)
+    openai_api_type: str = "azure"
+    azure_openai_endpoint: str = Field(default="", env="AZURE_OPENAI_ENDPOINT")  # azd output
+    openai_api_version: str = Field(default="2024-02-01", env="OPENAI_API_VERSION")
+    openai_deployment_name: str = Field(default="", env="OPENAI_MODEL_DEPLOYMENT")  # azd output
+    openai_model: str = Field(default="gpt-4", env="OPENAI_MODEL")
+    
+    # Backward compatibility properties
+    @property
+    def openai_api_base(self) -> str:
+        return self.azure_openai_endpoint
+        
+    @property
+    def openai_api_key(self) -> str:
+        # For managed identity, return empty - will be handled by Azure SDK
+        return ""
 
-    # Azure Embedding Settings
+    # Azure Embedding Settings (azd-managed, same endpoint as OpenAI)
     embedding_model: str = Field(default="text-embedding-ada-002", env="EMBEDDING_MODEL")
-    embedding_deployment_name: str = Field(default="text-embedding-ada-002", env="EMBEDDING_DEPLOYMENT_NAME")
-    embedding_api_base: str = Field(default="https://clu-project-foundry-instance.openai.azure.com/", env="EMBEDDING_API_BASE")
-    embedding_api_version: str = Field(default="2025-03-01-preview", env="EMBEDDING_API_VERSION")
+    embedding_deployment_name: str = Field(default="", env="EMBEDDING_MODEL_DEPLOYMENT")  # azd output
+    embedding_api_version: str = Field(default="2024-02-01", env="EMBEDDING_API_VERSION")
     embedding_dimension: int = Field(default=1536, env="EMBEDDING_DIMENSION")
 
-    # Azure Storage Settings - RAG Data Storage
-    azure_storage_account: str = Field(default="", env="AZURE_STORAGE_ACCOUNT")
-    azure_storage_key: str = Field(default="", env="AZURE_STORAGE_KEY")
-    azure_blob_container: str = Field(env="AZURE_BLOB_CONTAINER")
-    azure_storage_connection_string: str = Field(default="", env="AZURE_STORAGE_CONNECTION_STRING")
+    # Azure Storage Settings (azd-managed with managed identity)
+    azure_storage_account: str = Field(default="", env="AZURE_STORAGE_ACCOUNT")  # azd output
+    azure_blob_container: str = Field(default="", env="AZURE_STORAGE_CONTAINER")  # azd output
 
-    # Azure ML Storage Settings - ML Models and Artifacts
-    azure_ml_storage_account: str = Field(default="", env="AZURE_ML_STORAGE_ACCOUNT")
-    azure_ml_storage_key: str = Field(default="", env="AZURE_ML_STORAGE_KEY")
-    azure_ml_blob_container: str = Field(env="AZURE_ML_BLOB_CONTAINER")
-    azure_ml_storage_connection_string: str = Field(default="", env="AZURE_ML_STORAGE_CONNECTION_STRING")
+    # Backward compatibility properties
+    @property
+    def azure_storage_connection_string(self) -> str:
+        # For managed identity, return empty - will be handled by Azure SDK
+        return ""
 
-    # Azure Application Storage Settings - App Data and Logs
-    azure_app_storage_account: str = Field(default="", env="AZURE_APP_STORAGE_ACCOUNT")
-    azure_app_storage_key: str = Field(default="", env="AZURE_APP_STORAGE_KEY")
-    azure_app_blob_container: str = Field(env="AZURE_APP_BLOB_CONTAINER")
-    azure_app_storage_connection_string: str = Field(default="", env="AZURE_APP_STORAGE_CONNECTION_STRING")
-
-    # Azure Cognitive Search Settings
-    azure_search_service: str = Field(default="", env="AZURE_SEARCH_SERVICE")
-    azure_search_admin_key: str = Field(default="", env="AZURE_SEARCH_ADMIN_KEY")
-    azure_search_query_key: str = Field(default="", env="AZURE_SEARCH_QUERY_KEY")
+    # Azure Cognitive Search Settings (azd-managed with managed identity)
+    azure_search_endpoint: str = Field(default="", env="AZURE_SEARCH_ENDPOINT")  # azd output
     azure_search_api_version: str = Field(default="2023-11-01", env="AZURE_SEARCH_API_VERSION")
-    azure_search_service_name: str = Field(default="", env="AZURE_SEARCH_SERVICE_NAME")
+    azure_search_index: str = Field(default="", env="AZURE_SEARCH_INDEX")  # azd output
+    
+    # Backward compatibility properties
+    @property
+    def azure_search_key(self) -> str:
+        # For managed identity, return empty - will be handled by Azure SDK
+        return ""
 
-    # Azure Cosmos DB Settings (Gremlin API)
-    azure_cosmos_endpoint: str = Field(default="", env="AZURE_COSMOS_ENDPOINT")
-    azure_cosmos_key: str = Field(default="", env="AZURE_COSMOS_KEY")
-    azure_cosmos_database: str = Field(default="universal-rag-db", env="AZURE_COSMOS_DATABASE")
-    azure_cosmos_container: str = Field(default="knowledge-graph", env="AZURE_COSMOS_CONTAINER")
+    # Azure Cosmos DB Settings (azd-managed with managed identity)
+    azure_cosmos_endpoint: str = Field(default="", env="AZURE_COSMOS_ENDPOINT")  # azd output
+    cosmos_database_name: str = Field(default="", env="COSMOS_DATABASE_NAME")  # azd output
+    cosmos_graph_name: str = Field(default="", env="COSMOS_GRAPH_NAME")  # azd output
     azure_cosmos_api_version: str = Field(default="2023-03-01-preview", env="AZURE_COSMOS_API_VERSION")
-    azure_cosmos_db_connection_string: str = Field(default="", env="AZURE_COSMOS_DB_CONNECTION_STRING")
+    
+    # Backward compatibility properties
+    @property
+    def azure_cosmos_key(self) -> str:
+        # For managed identity, return empty - will be handled by Azure SDK
+        return ""
+        
+    @property
+    def azure_cosmos_database(self) -> str:
+        return self.cosmos_database_name
 
-    # Azure ML Settings
-    azure_subscription_id: str = Field(default="", env="AZURE_SUBSCRIPTION_ID")
-    azure_resource_group: str = Field(default="maintie-rag-rg", env="AZURE_RESOURCE_GROUP")
-    azure_ml_workspace: str = Field(default="", env="AZURE_ML_WORKSPACE")
-    azure_ml_workspace_name: str = Field(default="", env="AZURE_ML_WORKSPACE_NAME")
+    # Azure ML Settings (azd-managed with managed identity)
+    azure_subscription_id: str = Field(default="", env="AZURE_SUBSCRIPTION_ID")  # azd output
+    azure_resource_group: str = Field(default="", env="AZURE_RESOURCE_GROUP")  # azd output
+    azure_ml_workspace_name: str = Field(default="", env="AZURE_ML_WORKSPACE_NAME")  # azd output
     azure_ml_api_version: str = Field(default="2023-04-01", env="AZURE_ML_API_VERSION")
-    azure_tenant_id: str = Field(default="", env="AZURE_TENANT_ID")
+    azure_tenant_id: str = Field(default="", env="AZURE_TENANT_ID")  # azd output
+    
+    # Backward compatibility properties
+    @property
+    def azure_ml_workspace(self) -> str:
+        return self.azure_ml_workspace_name
 
-    # Azure ML Quality Assessment Settings
+    # Optional ML endpoints (can be empty for graceful degradation)
     azure_ml_confidence_endpoint: str = Field(default="", env="AZURE_ML_CONFIDENCE_ENDPOINT")
     azure_ml_completeness_endpoint: str = Field(default="", env="AZURE_ML_COMPLETENESS_ENDPOINT")
-
-    # Azure Text Analytics Settings
-    azure_text_analytics_endpoint: str = Field(default="", env="AZURE_TEXT_ANALYTICS_ENDPOINT")
-    azure_text_analytics_key: str = Field(default="", env="AZURE_TEXT_ANALYTICS_KEY")
 
     # Knowledge Extraction Configuration
     extraction_quality_tier: str = Field(default="standard", env="EXTRACTION_QUALITY_TIER")
@@ -157,9 +177,9 @@ class Settings(BaseSettings):
     azure_enable_telemetry: bool = Field(default=True, env="AZURE_ENABLE_TELEMETRY")
 
     # Azure Resource Naming Convention
-    azure_resource_prefix: str = Field(env="AZURE_RESOURCE_PREFIX")
-    azure_environment: str = Field(env="AZURE_ENVIRONMENT")
-    azure_region: str = Field(env="AZURE_REGION")
+    azure_resource_prefix: str = Field(default="maintie", env="AZURE_RESOURCE_PREFIX")
+    azure_environment: str = Field(default="dev", env="AZURE_ENVIRONMENT")
+    azure_region: str = Field(default="eastus", env="AZURE_REGION")
 
     # Data Paths (for local development)
     BASE_DIR: ClassVar[Path] = Path(__file__).parent.parent
@@ -359,13 +379,14 @@ class Settings(BaseSettings):
             return "-".join(parts)
 
     def validate_azure_config(self) -> Dict[str, Any]:
-        """Validate Azure configuration completeness"""
+        """Validate azd-managed Azure configuration completeness"""
         return {
-            "storage_configured": bool(self.azure_storage_account and self.azure_storage_key),
-            "search_configured": bool(self.azure_search_service and self.azure_search_admin_key),
-            "cosmos_configured": bool(self.azure_cosmos_endpoint and self.azure_cosmos_key),
+            "storage_configured": bool(self.azure_storage_account),
+            "search_configured": bool(self.azure_search_endpoint),
+            "cosmos_configured": bool(self.azure_cosmos_endpoint),
             "ml_configured": bool(self.azure_subscription_id and self.azure_resource_group),
-            "openai_configured": bool(self.openai_api_key and self.openai_api_base),
+            "openai_configured": bool(self.azure_openai_endpoint),
+            "managed_identity_enabled": self.use_managed_identity,
         }
 
     # Raw data processing configuration
@@ -394,36 +415,48 @@ class Settings(BaseSettings):
     max_relation_types_discovery: int = Field(default=60, env="MAX_RELATION_TYPES_DISCOVERY")
     max_triplet_extraction_batches: int = Field(default=500, env="MAX_TRIPLET_EXTRACTION_BATCHES")
 
+    # === AZD-Compatibility Helper Methods ===
+    @property
+    def effective_openai_endpoint(self) -> str:
+        """Get the effective OpenAI endpoint (azd-style or legacy)"""
+        return self.azure_openai_endpoint or self.openai_api_base
+    
+    @property
+    def effective_embedding_endpoint(self) -> str:
+        """Get the effective embedding endpoint (same as OpenAI for Azure)"""
+        return self.azure_openai_endpoint or self.embedding_api_base or self.openai_api_base
+    
+    @property
+    def effective_search_endpoint(self) -> str:
+        """Get the effective search endpoint"""
+        return self.azure_search_endpoint or f"https://{self.azure_search_service_name}.search.windows.net/"
+    
+    @property
+    def is_azd_deployment(self) -> bool:
+        """Check if this is an azd-managed deployment"""
+        return bool(self.azure_client_id and self.azure_openai_endpoint and self.use_managed_identity)
+    
+    @property
+    def effective_deployment_name(self) -> str:
+        """Get the effective OpenAI deployment name"""
+        return self.openai_deployment_name
+    
+    @property
+    def effective_embedding_deployment_name(self) -> str:
+        """Get the effective embedding deployment name"""
+        return self.embedding_deployment_name
+
     class Config:
-        env_file = ".env"
         case_sensitive = False
         extra = "ignore"  # Allow extra fields from environment
 
-    def get_storage_config(self, storage_type: str) -> Dict[str, str]:
-        """Get storage configuration with consistent priority order"""
-        config_map = {
-            'rag_data': {
-                'connection_string': self.azure_storage_connection_string,
-                'account_name': self.azure_storage_account,
-                'account_key': self.azure_storage_key,
-                'container_name': self.azure_blob_container
-            },
-            'ml_models': {
-                'connection_string': self.azure_ml_storage_connection_string,
-                'account_name': self.azure_ml_storage_account,
-                'account_key': self.azure_ml_storage_key,
-                'container_name': self.azure_ml_blob_container
-            },
-            'app_data': {
-                'connection_string': self.azure_app_storage_connection_string,
-                'account_name': self.azure_app_storage_account,
-                'account_key': self.azure_app_storage_key,
-                'container_name': self.azure_app_blob_container
-            }
+    def get_storage_config(self, container_name: str = None) -> Dict[str, str]:
+        """Get azd-managed storage configuration with managed identity"""
+        return {
+            'account_name': self.azure_storage_account,
+            'container_name': container_name or self.azure_blob_container,
+            'use_managed_identity': True
         }
-        if storage_type not in config_map:
-            raise ValueError(f"Unknown storage type: {storage_type}")
-        return config_map[storage_type]
 
 
 class AzureRegionalSettings(BaseSettings):

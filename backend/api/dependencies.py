@@ -7,14 +7,15 @@ import logging
 from typing import Optional
 from fastapi import HTTPException
 
-from integrations.azure_services import AzureServicesManager
-from integrations.azure_openai import AzureOpenAIClient
+from services.infrastructure_service import InfrastructureService
+from services.data_service import DataService
 from config.settings import AzureSettings
 
 logger = logging.getLogger(__name__)
 
 # Global references to be set by main.py
-_azure_services: Optional[AzureServicesManager] = None
+_infrastructure_service: Optional[InfrastructureService] = None
+_data_service: Optional[DataService] = None
 _openai_integration: Optional[AzureOpenAIClient] = None
 _azure_settings: Optional[AzureSettings] = None
 

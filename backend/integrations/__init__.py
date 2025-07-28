@@ -4,10 +4,9 @@ This package contains integrations with external services like
 Azure OpenAI, vector databases, graph databases, and monitoring.
 """
 
-from .azure_openai import AzureOpenAIClient
-from .azure_services import AzureServicesManager
+from .azure_openai_wrapper import AzureOpenAIClient
+# azure_manager removed to avoid circular imports - services are now independent
 
 __all__ = [
-    'AzureOpenAIClient',
-    'AzureServicesManager'
+    'AzureOpenAIClient'
 ]
