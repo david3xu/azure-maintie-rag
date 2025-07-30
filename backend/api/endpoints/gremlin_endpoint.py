@@ -14,8 +14,8 @@ from pydantic import BaseModel, Field
 
 # Azure service components
 from services.graph_service import GraphService  
-from api.dependencies import get_azure_services
-from integrations.azure_services import AzureServicesManager
+from api.dependencies import get_infrastructure_service
+from services.infrastructure_service import InfrastructureService
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class GraphStatsResponse(BaseModel):
 
 @router.get("/graph/stats", response_model=GraphStatsResponse)
 def get_graph_statistics(
-    azure_services: AzureServicesManager = Depends(get_azure_services)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     Get real-time graph statistics using Gremlin queries
@@ -70,19 +70,22 @@ def get_graph_statistics(
         if not cosmos_client:
             raise HTTPException(status_code=500, detail="Cosmos DB service not available")
         
-        # Execute basic count queries
-        vertex_count = cosmos_client.gremlin_client.submit('g.V().count()').all().result()[0]
-        edge_count = cosmos_client.gremlin_client.submit('g.E().count()').all().result()[0]
+        # Execute basic count queries using safe methods
+        vertex_result = cosmos_client._execute_gremlin_query_safe('g.V().count()')
+        vertex_count = vertex_result[0] if vertex_result and len(vertex_result) > 0 else 0
         
-        # Get entity type distribution
+        edge_result = cosmos_client._execute_gremlin_query_safe('g.E().count()')
+        edge_count = edge_result[0] if edge_result and len(edge_result) > 0 else 0
+        
+        # Get entity type distribution using safe method
         entity_type_query = "g.V().groupCount().by('entity_type')"
-        entity_type_result = cosmos_client.gremlin_client.submit(entity_type_query).all().result()
-        entity_types = entity_type_result[0] if entity_type_result else {}
+        entity_type_result = cosmos_client._execute_gremlin_query_safe(entity_type_query)
+        entity_types = entity_type_result[0] if entity_type_result and len(entity_type_result) > 0 else {}
         
-        # Get relationship type distribution  
+        # Get relationship type distribution using safe method
         relationship_query = "g.E().groupCount().by(label())"
-        relationship_result = cosmos_client.gremlin_client.submit(relationship_query).all().result()
-        relationship_types = relationship_result[0] if relationship_result else {}
+        relationship_result = cosmos_client._execute_gremlin_query_safe(relationship_query)
+        relationship_types = relationship_result[0] if relationship_result and len(relationship_result) > 0 else {}
         
         # Calculate connectivity
         connectivity_ratio = edge_count / vertex_count if vertex_count > 0 else 0
@@ -107,7 +110,7 @@ def get_graph_statistics(
 @router.post("/query/execute", response_model=GremlinQueryResponse)
 def execute_gremlin_query(
     request: GremlinQueryRequest,
-    azure_services: AzureServicesManager = Depends(get_azure_services)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     Execute a custom Gremlin query for demonstration
@@ -147,7 +150,7 @@ def execute_gremlin_query(
 @router.get("/traversal/equipment-to-actions")
 def get_equipment_to_actions_traversal(
     limit: int = Query(default=10, description="Limit number of results"),
-    azure_services: AzureServicesManager = Depends(get_azure_services)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     Demonstrate equipment to actions traversal using real Gremlin queries
@@ -212,7 +215,7 @@ def get_equipment_to_actions_traversal(
 @router.get("/analysis/top-connected-entities") 
 def get_top_connected_entities(
     limit: int = Query(default=10, description="Number of top entities to return"),
-    azure_services: AzureServicesManager = Depends(get_azure_services)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     Find most connected entities using Gremlin degree centrality
@@ -276,7 +279,7 @@ def get_top_connected_entities(
 def search_entity_neighborhood(
     entity_text: str = Query(..., description="Entity text to search for"),
     hops: int = Query(default=2, description="Number of hops for neighborhood"),
-    azure_services: AzureServicesManager = Depends(get_azure_services)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     Search entity neighborhood using Gremlin traversal

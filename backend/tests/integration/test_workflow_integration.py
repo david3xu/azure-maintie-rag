@@ -70,7 +70,7 @@ class TestEndToEndWorkflows:
         """Test complete query processing workflow"""
         from services.infrastructure_service import InfrastructureService
         from services.query_service import QueryService
-        from integrations.azure_openai_wrapper import AzureOpenAIClient
+        from core.azure_openai.openai_client import UnifiedAzureOpenAIClient as AzureOpenAIClient
         
         infrastructure = InfrastructureService()
         query_service = QueryService(infrastructure)

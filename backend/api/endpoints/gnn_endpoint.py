@@ -11,48 +11,41 @@ import json
 import time
 from datetime import datetime
 
-# Import GNN integration
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent.parent))
-
-from scripts.integrate_gnn_with_api import GNNEnhancedAPI
+# Import GNN services from our architecture
+from services.gnn_service import GNNService
 
 router = APIRouter()
 
 # Global GNN service instance
-gnn_api = None
+gnn_service = None
 
 class GNNQueryRequest(BaseModel):
     query: str = Field(..., description="Query to process")
-    use_gnn: bool = Field(True, description="Whether to use GNN enhancement")
+    entities: List[str] = Field(default=[], description="Entities to analyze")
+    domain: str = Field(default="maintenance", description="Domain for analysis")
     max_hops: int = Field(3, description="Maximum hops for reasoning")
     include_embeddings: bool = Field(False, description="Include semantic embeddings in response")
 
 class GNNQueryResponse(BaseModel):
     query: str
-    enhanced: bool
-    gnn_confidence: float
-    processing_time: float
+    domain: str
+    entities_analyzed: int
     entities_found: int
-    reasoning_paths: int
-    enhanced_query: Optional[Dict[str, Any]] = None
-    reasoning_results: Optional[List[Dict[str, Any]]] = None
+    processing_time: float
+    entity_coverage: float
+    related_entities_count: int
+    embeddings: Optional[Dict[str, Any]] = None
+    related_entities: Optional[Dict[str, List[str]]] = None
     error: Optional[str] = None
 
-def get_gnn_service() -> GNNEnhancedAPI:
+def get_gnn_service() -> GNNService:
     """Get or initialize GNN service"""
-    global gnn_api
+    global gnn_service
 
-    if gnn_api is None:
-        gnn_api = GNNEnhancedAPI()
-        try:
-            gnn_api.initialize_gnn()
-        except Exception as e:
-            print(f"❌ GNN initialization failed: {e}")
-            gnn_api = None
+    if gnn_service is None:
+        gnn_service = GNNService()
 
-    return gnn_api
+    return gnn_service
 
 @router.post("/api/v1/query/gnn-enhanced", response_model=GNNQueryResponse)
 async def gnn_enhanced_query(request: GNNQueryRequest):
@@ -60,8 +53,8 @@ async def gnn_enhanced_query(request: GNNQueryRequest):
     Enhanced query processing with GNN integration
 
     This endpoint provides:
-    - Entity classification using trained GNN model
-    - Enhanced multi-hop reasoning with confidence scores
+    - Entity analysis using trained GNN model
+    - Multi-hop entity relationship discovery
     - Semantic embedding generation
     - Graph-aware query processing
     """
@@ -70,113 +63,117 @@ async def gnn_enhanced_query(request: GNNQueryRequest):
 
     try:
         # Get GNN service
-        gnn_service = get_gnn_service()
+        service = get_gnn_service()
 
-        if not gnn_service or not gnn_service.initialized:
-            return GNNQueryResponse(
-                query=request.query,
-                enhanced=False,
-                gnn_confidence=0.0,
-                processing_time=time.time() - start_time,
-                entities_found=0,
-                reasoning_paths=0,
-                error="GNN service not available"
-            )
+        # Use entities from request, or try to extract from query if empty
+        entities_to_analyze = request.entities
+        if not entities_to_analyze and request.query:
+            # Simple entity extraction - in real implementation, use NLP
+            entities_to_analyze = [word for word in request.query.split() if len(word) > 2]
 
-        # Process query with GNN enhancement
-        result = gnn_service.enhanced_query_processing(
-            request.query,
-            use_gnn=request.use_gnn
-        )
-
-        # Count entities and reasoning paths
-        entities_found = len(result.get('enhanced_query', {}).get('extracted_entities', []))
-        reasoning_paths = sum(
-            len(reasoning.get('paths', []))
-            for reasoning in result.get('reasoning_results', [])
-        )
+        # Perform GNN analysis
+        result = await service.analyze_query_entities(entities_to_analyze, request.domain)
 
         return GNNQueryResponse(
             query=request.query,
-            enhanced=result.get('enhanced', False),
-            gnn_confidence=result.get('gnn_confidence', 0.0),
+            domain=request.domain,
+            entities_analyzed=result.get('entities_analyzed', 0),
+            entities_found=result.get('entities_found', 0),
             processing_time=time.time() - start_time,
-            entities_found=entities_found,
-            reasoning_paths=reasoning_paths,
-            enhanced_query=result.get('enhanced_query'),
-            reasoning_results=result.get('reasoning_results')
+            entity_coverage=result.get('entity_coverage', 0.0),
+            related_entities_count=result.get('total_related_entities', 0),
+            embeddings=result.get('embeddings') if request.include_embeddings else None,
+            related_entities=result.get('related_entities'),
+            error=result.get('error')
         )
 
     except Exception as e:
         return GNNQueryResponse(
             query=request.query,
-            enhanced=False,
-            gnn_confidence=0.0,
-            processing_time=time.time() - start_time,
+            domain=request.domain,
+            entities_analyzed=0,
             entities_found=0,
-            reasoning_paths=0,
+            processing_time=time.time() - start_time,
+            entity_coverage=0.0,
+            related_entities_count=0,
             error=str(e)
         )
 
 @router.get("/api/v1/gnn/status")
 async def gnn_status():
     """Get GNN service status"""
-    gnn_service = get_gnn_service()
-
-    return {
-        "gnn_available": gnn_service is not None and gnn_service.initialized,
-        "model_loaded": gnn_service.model is not None if gnn_service else False,
-        "entities_loaded": len(gnn_service.entity_embeddings) if gnn_service else 0,
-        "classes_available": len(gnn_service.class_names) if gnn_service else 0,
-        "device": str(gnn_service.device) if gnn_service else "unknown"
-    }
-
-@router.post("/api/v1/gnn/classify")
-async def classify_entity(entity: str, context: str = ""):
-    """Classify a single entity using GNN"""
-    gnn_service = get_gnn_service()
-
-    if not gnn_service or not gnn_service.initialized:
-        raise HTTPException(status_code=503, detail="GNN service not available")
+    service = get_gnn_service()
 
     try:
-        classification = gnn_service.gnn_service.classify_entity(entity, context)
-        return classification
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Classification failed: {str(e)}")
-
-@router.post("/api/v1/gnn/reasoning")
-async def gnn_reasoning(start_entity: str, end_entity: str, max_hops: int = 3):
-    """Perform GNN-enhanced reasoning between two entities"""
-    gnn_service = get_gnn_service()
-
-    if not gnn_service or not gnn_service.initialized:
-        raise HTTPException(status_code=503, detail="GNN service not available")
-
-    try:
-        paths = gnn_service.gnn_service.gnn_enhanced_multi_hop_reasoning(
-            start_entity, end_entity, max_hops
-        )
-
+        # Try to get a model to check availability
+        model = await service.get_model("maintenance")
+        model_available = model is not None
+        
         return {
-            "start_entity": start_entity,
-            "end_entity": end_entity,
-            "max_hops": max_hops,
-            "paths_found": len(paths),
-            "paths": paths
+            "gnn_available": service is not None,
+            "model_loaded": model_available,
+            "service_initialized": True,
+            "default_domain": "maintenance",
+            "status": "operational" if model_available else "model_not_loaded"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Reasoning failed: {str(e)}")
+        return {
+            "gnn_available": False,
+            "model_loaded": False,
+            "service_initialized": False,
+            "error": str(e),
+            "status": "error"
+        }
 
-@router.get("/api/v1/gnn/classes")
-async def get_gnn_classes():
-    """Get available GNN classification classes"""
-    gnn_service = get_gnn_service()
+@router.post("/api/v1/gnn/analyze")
+async def analyze_entities(entities: List[str], domain: str = "maintenance", include_embeddings: bool = False):
+    """Analyze entities using GNN"""
+    service = get_gnn_service()
 
-    if not gnn_service or not gnn_service.initialized:
-        raise HTTPException(status_code=503, detail="GNN service not available")
+    try:
+        result = await service.analyze_query_entities(entities, domain)
+        
+        response = {
+            "entities_analyzed": result.get('entities_analyzed', 0),
+            "entities_found": result.get('entities_found', 0),
+            "entity_coverage": result.get('entity_coverage', 0.0),
+            "related_entities": result.get('related_entities', {}),
+            "total_related": result.get('total_related_entities', 0),
+            "domain": domain
+        }
+        
+        if include_embeddings:
+            response["embeddings"] = result.get('embeddings', {})
+            
+        return response
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Entity analysis failed: {str(e)}")
 
+@router.post("/api/v1/gnn/related")
+async def find_related_entities(entities: List[str], domain: str = "maintenance", hops: int = 2):
+    """Find entities related to the given entities through graph traversal"""
+    service = get_gnn_service()
+
+    try:
+        related = await service.inference_service.find_related_entities(entities, domain, hops)
+        
+        return {
+            "input_entities": entities,
+            "domain": domain,
+            "hops": hops,
+            "related_entities": related,
+            "total_related": sum(len(rels) for rels in related.values())
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Related entity search failed: {str(e)}")
+
+@router.get("/api/v1/gnn/domains")
+async def get_available_domains():
+    """Get available GNN domains"""
     return {
-        "classes": gnn_service.gnn_service.class_names,
-        "num_classes": len(gnn_service.gnn_service.class_names)
+        "domains": ["maintenance"],  # Can be expanded based on available models
+        "default_domain": "maintenance",
+        "description": "Available domains for GNN analysis"
     }

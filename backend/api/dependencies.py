@@ -9,30 +9,42 @@ from fastapi import HTTPException
 
 from services.infrastructure_service import InfrastructureService
 from services.data_service import DataService
+from services.query_service import QueryService
+from services.workflow_service import WorkflowService
 from config.settings import AzureSettings
-from core.azure_openai.openai_client import UnifiedAzureOpenAIClient
-from integrations.azure_services import AzureServicesManager
 
 logger = logging.getLogger(__name__)
 
 # Global references to be set by main.py
 _infrastructure_service: Optional[InfrastructureService] = None
 _data_service: Optional[DataService] = None
-_azure_services: Optional[AzureServicesManager] = None
-_openai_integration: Optional[UnifiedAzureOpenAIClient] = None
+_workflow_service: Optional[WorkflowService] = None
+_query_service: Optional[QueryService] = None
 _azure_settings: Optional[AzureSettings] = None
 
 
-def set_azure_services(azure_services: AzureServicesManager):
-    """Set the global Azure services instance"""
-    global _azure_services
-    _azure_services = azure_services
+def set_infrastructure_service(infrastructure_service: InfrastructureService):
+    """Set the global infrastructure service instance"""
+    global _infrastructure_service
+    _infrastructure_service = infrastructure_service
 
 
-def set_openai_integration(openai_integration: UnifiedAzureOpenAIClient):
-    """Set the global OpenAI integration instance"""
-    global _openai_integration
-    _openai_integration = openai_integration
+def set_data_service(data_service: DataService):
+    """Set the global data service instance"""
+    global _data_service
+    _data_service = data_service
+
+
+def set_workflow_service(workflow_service: WorkflowService):
+    """Set the global workflow service instance"""
+    global _workflow_service
+    _workflow_service = workflow_service
+
+
+def set_query_service(query_service: QueryService):
+    """Set the global query service instance"""
+    global _query_service
+    _query_service = query_service
 
 
 def set_azure_settings(azure_settings: AzureSettings):
@@ -41,18 +53,33 @@ def set_azure_settings(azure_settings: AzureSettings):
     _azure_settings = azure_settings
 
 
-async def get_azure_services() -> AzureServicesManager:
-    """Get Azure services instance"""
-    if not _azure_services:
-        raise HTTPException(status_code=503, detail="Azure services not initialized")
-    return _azure_services
+async def get_infrastructure_service() -> InfrastructureService:
+    """Get infrastructure service instance"""
+    if not _infrastructure_service:
+        raise HTTPException(status_code=503, detail="Infrastructure service not initialized")
+    return _infrastructure_service
 
 
-async def get_openai_integration() -> UnifiedAzureOpenAIClient:
-    """Get Azure OpenAI integration instance"""
-    if not _openai_integration:
-        raise HTTPException(status_code=503, detail="Azure OpenAI integration not initialized")
-    return _openai_integration
+async def get_data_service() -> DataService:
+    """Get data service instance"""
+    if not _data_service:
+        raise HTTPException(status_code=503, detail="Data service not initialized")
+    return _data_service
+
+
+async def get_workflow_service() -> WorkflowService:
+    """Get workflow service instance"""
+    if not _workflow_service:
+        raise HTTPException(status_code=503, detail="Workflow service not initialized")
+    return _workflow_service
+
+
+async def get_query_service() -> QueryService:
+    """Get query service instance with proper dependency injection"""
+    if not _query_service:
+        # Fallback: create new instance if not initialized
+        return QueryService()
+    return _query_service
 
 
 async def get_azure_settings() -> AzureSettings:

@@ -16,7 +16,7 @@ import json
 import numpy as np
 from pathlib import Path
 
-from ...config.domain_patterns import DomainPatternManager
+from config.domain_patterns import DomainPatternManager
 
 
 @dataclass

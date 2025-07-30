@@ -19,7 +19,7 @@ class TestAzureIntegration:
     @pytest.mark.asyncio
     async def test_openai_integration(self):
         """Test Azure OpenAI integration"""
-        from integrations.azure_openai_wrapper import AzureOpenAIClient
+        from core.azure_openai.openai_client import UnifiedAzureOpenAIClient as AzureOpenAIClient
         
         client = AzureOpenAIClient()
         

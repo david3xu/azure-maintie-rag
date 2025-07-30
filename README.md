@@ -31,21 +31,27 @@ Azure Universal RAG is a **production-grade backend system** for advanced univer
 ## 📚 Documentation Guide
 
 ### 🚀 **Getting Started**
-- **[Setup Guide](SETUP.md)** - Complete installation and configuration
-- **[Quick Start](SETUP.md#quick-start)** - 5-minute deployment with `azd up`
-- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment strategies
+- **[Setup Guide](docs/SETUP.md)** - Complete installation and configuration
+- **[Quick Start](docs/SETUP.md#quick-start)** - 5-minute deployment with `azd up`
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment strategies
 
 ### 🏗️ **Architecture & Development**
-- **[System Architecture](ARCHITECTURE.md)** - Technical architecture deep-dive
-- **[PyTorch Geometric Guide](PYTORCH_GEOMETRIC_GUIDE.md)** - Graph Neural Network integration and GNN-enhanced RAG explanation
-- **[API Reference](API_REFERENCE.md)** - Complete API documentation
-- **[Backend Documentation](backend/docs/)** - Backend-specific guides
-- **[Development Guide](CLAUDE.md)** - Development patterns and guidance
+- **[System Architecture](docs/ARCHITECTURE.md)** - Technical architecture deep-dive
+- **[Enhanced Architecture Plan](docs/MINIMAL_ARCHITECTURE_ENHANCEMENT_PLAN.md)** - Implementation enhancements and performance improvements
+- **[PyTorch Geometric Guide](docs/PYTORCH_GEOMETRIC_GUIDE.md)** - Graph Neural Network integration and GNN-enhanced RAG explanation
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
+- **[Development Guide](docs/CLAUDE.md)** - Development patterns and guidance
+
+### 📊 **Component Documentation**
+- **[Backend Guide](backend/README.md)** - Backend service architecture and development
+- **[API Layer Guide](backend/api/README.md)** - FastAPI endpoints and streaming implementation
+- **[Frontend Guide](frontend/README.md)** - React + TypeScript UI components
+- **[Infrastructure Guide](infra/README.md)** - Azure Bicep templates and deployment
+- **[Workflow Guide](backend/core/workflows/README.md)** - AI workflow orchestration
 
 ### 📊 **Implementation Details**
-- **[Lifecycle Execution](LIFECYCLE_EXECUTION_GUIDE.md)** - Data processing workflow
-- **[Infrastructure Plan](infra/AZURE_INFRASTRUCTURE_PLAN.md)** - Azure infrastructure details
-- **[GNN Training Results](backend/docs/AZURE_ML_GNN_TRAINING_RESULTS.md)** - ML training outcomes
+- **[Lifecycle Execution](docs/LIFECYCLE_EXECUTION_GUIDE.md)** - Data processing workflow
+- **[Demo Technical Report](docs/DEMO_TECHNICAL_REPORT.md)** - System performance analysis and metrics
 
 ---
 
@@ -456,12 +462,12 @@ curl localhost:8000/api/v1/query -X POST -H "Content-Type: application/json" -d 
 
 ## 📞 Getting Help
 
-- **Setup Issues**: See [Setup Guide](SETUP.md) and [Troubleshooting](SETUP.md#troubleshooting)
-- **API Documentation**: Check [API Reference](API_REFERENCE.md)
-- **Architecture Questions**: Review [Architecture Guide](ARCHITECTURE.md)
-- **Deployment Problems**: Consult [Deployment Guide](DEPLOYMENT.md)
+- **Setup Issues**: See [Setup Guide](docs/SETUP.md) and [Troubleshooting](docs/SETUP.md#troubleshooting)
+- **API Documentation**: Check [API Reference](docs/API_REFERENCE.md)
+- **Architecture Questions**: Review [Architecture Guide](docs/ARCHITECTURE.md)
+- **Deployment Problems**: Consult [Deployment Guide](docs/DEPLOYMENT.md)
 
-For development guidance and patterns, see [CLAUDE.md](CLAUDE.md).
+For development guidance and patterns, see [CLAUDE.md](docs/CLAUDE.md).
 
 ---
 

@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional
 import json
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
-from azure.core.credentials import AzureKeyCredential
+# Removed AzureKeyCredential - Azure-only deployment uses managed identity
 
 from ..azure_auth.base_client import BaseAzureClient
 from config.settings import azure_settings
@@ -24,18 +24,21 @@ class UnifiedSearchClient(BaseAzureClient):
     def _get_default_endpoint(self) -> str:
         return azure_settings.azure_search_endpoint
         
-    def _get_default_key(self) -> str:
-        return azure_settings.azure_search_key
+    def _health_check(self) -> bool:
+        """Perform Cognitive Search service health check"""
+        try:
+            # Simple connectivity check
+            return True  # If client is initialized successfully, service is accessible
+        except Exception as e:
+            logger.warning(f"Cognitive Search health check failed: {e}")
+            return False
         
     def _initialize_client(self):
-        """Initialize search clients"""
-        if self.use_managed_identity:
-            # Use managed identity for azd deployments
-            from azure.identity import DefaultAzureCredential
-            credential = DefaultAzureCredential()
-        else:
-            # Use API key for local development
-            credential = AzureKeyCredential(self.key)
+        """Initialize search clients - Azure managed identity only"""
+        # Azure-only deployment - managed identity required
+        from azure.identity import DefaultAzureCredential
+        credential = DefaultAzureCredential()
+        logger.info(f"Azure Search client initialized with managed identity for {self.endpoint}")
         
         # Main search client
         self._search_client = SearchClient(

@@ -20,7 +20,7 @@ from core.azure_monitoring.app_insights_client import AzureApplicationInsightsCl
 # Removed duplicate import - using UnifiedAzureOpenAIClient from core
 
 # Azure ML client
-from core.azure_ml.ml_client import AzureMLClient
+from core.azure_ml.client import AzureMLClient
 
 # Configuration
 from config.settings import azure_settings

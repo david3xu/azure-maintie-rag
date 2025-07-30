@@ -15,8 +15,8 @@ from pydantic import BaseModel, Field
 
 # Azure service components
 # Using focused services instead of integrations
-from api.dependencies import get_azure_services
-from integrations.azure_services import AzureServicesManager
+from api.dependencies import get_infrastructure_service
+from services.infrastructure_service import InfrastructureService
 from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
 
 # Import our knowledge graph operations
@@ -60,7 +60,7 @@ class GraphTraversalResponse(BaseModel):
 
 @router.get("/knowledge-graph/stats", response_model=KnowledgeGraphStatsResponse)
 def get_knowledge_graph_stats(
-    azure_services: AzureServicesManager = Depends(get_azure_services)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     Get comprehensive knowledge graph statistics for supervisor demo
@@ -72,38 +72,35 @@ def get_knowledge_graph_stats(
     try:
         start_time = time.time()
         
-        # Initialize Gremlin client
-        cosmos_client = AzureCosmosGremlinClient()
-        cosmos_client._initialize_client()
+        # Get Cosmos client from services manager
+        cosmos_client = azure_services.get_service('cosmos')
+        if not cosmos_client:
+            raise HTTPException(status_code=500, detail="Cosmos DB service not available")
         
-        # Get basic graph statistics
-        vertex_count = cosmos_client.gremlin_client.submit('g.V().count()').all().result()[0]
-        edge_count = cosmos_client.gremlin_client.submit('g.E().count()').all().result()[0]
+        # Get basic graph statistics using safe methods
+        vertex_result = cosmos_client._execute_gremlin_query_safe('g.V().count()')
+        vertex_count = vertex_result[0] if vertex_result and len(vertex_result) > 0 else 0
         
-        # Get entity type distribution
+        edge_result = cosmos_client._execute_gremlin_query_safe('g.E().count()')
+        edge_count = edge_result[0] if edge_result and len(edge_result) > 0 else 0
+        
+        # Get entity type distribution using safe method
         entity_type_query = "g.V().groupCount().by('entity_type')"
-        entity_type_result = cosmos_client.gremlin_client.submit(entity_type_query).all().result()
-        entity_types = entity_type_result[0] if entity_type_result else {}
+        entity_type_result = cosmos_client._execute_gremlin_query_safe(entity_type_query)
+        entity_types = entity_type_result[0] if entity_type_result and len(entity_type_result) > 0 else {}
         
-        # Get relationship type distribution
+        # Get relationship type distribution using safe method
         relationship_query = "g.E().groupCount().by(label())"
-        relationship_result = cosmos_client.gremlin_client.submit(relationship_query).all().result()
-        relationship_distribution = relationship_result[0] if relationship_result else {}
+        relationship_result = cosmos_client._execute_gremlin_query_safe(relationship_query)
+        relationship_distribution = relationship_result[0] if relationship_result and len(relationship_result) > 0 else {}
         
-        # Get sample relationships for demo
-        sample_rel_query = '''
-        g.E().limit(5)
-            .project('source', 'target', 'type', 'properties')
-            .by(outV().values('text'))
-            .by(inV().values('text'))
-            .by(label())
-            .by(valueMap())
-        '''
-        sample_relationships = cosmos_client.gremlin_client.submit(sample_rel_query).all().result()
+        # Get sample relationships for demo using safe method
+        sample_rel_query = 'g.E().limit(5).project("source", "target", "type").by(outV().values("text")).by(inV().values("text")).by(label())'
+        sample_relationships = cosmos_client._execute_gremlin_query_safe(sample_rel_query)
         
         # Calculate connectivity metrics
-        connectivity_ratio = edge_count / vertex_count if vertex_count > 0 else 0
-        avg_degree = (edge_count * 2) / vertex_count if vertex_count > 0 else 0
+        connectivity_ratio = edge_count / vertex_count if vertex_count > 0 else 0.0
+        avg_degree = (edge_count * 2) / vertex_count if vertex_count > 0 else 0.0
         
         processing_time = time.time() - start_time
         
@@ -156,7 +153,7 @@ def get_knowledge_graph_stats(
 @router.post("/knowledge-graph/traverse", response_model=GraphTraversalResponse)
 def demonstrate_graph_traversal(
     request: GraphTraversalRequest,
-    azure_services: AzureServicesManager = Depends(get_azure_services)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     Demonstrate multi-hop graph traversal for supervisor demo
@@ -219,7 +216,7 @@ def demonstrate_graph_traversal(
 @router.get("/knowledge-graph/maintenance-workflows")
 def get_maintenance_workflows(
     limit: int = 10,
-    azure_services: AzureServicesManager = Depends(get_azure_services)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     Demonstrate maintenance workflow discovery for supervisor demo

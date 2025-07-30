@@ -21,14 +21,13 @@ import uuid
 # Azure service components
 from services.infrastructure_service import InfrastructureService
 from services.data_service import DataService
+from services.query_service import QueryService
 # Using focused services instead of direct integrations
 from config.settings import AzureSettings
-from config.settings import settings
+from config.settings import settings, azure_settings
 
 # Import dependency functions from dependencies module
-from api.dependencies import get_azure_services, get_openai_integration
-from integrations.azure_services import AzureServicesManager
-from core.azure_openai.openai_client import UnifiedAzureOpenAIClient
+from api.dependencies import get_infrastructure_service, get_query_service
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +96,8 @@ class BatchQueryRequest(BaseModel):
 @router.post("/query/universal", response_model=AzureQueryResponse)
 async def process_azure_query(
     request: AzureQueryRequest,
-    azure_services: AzureServicesManager = Depends(get_azure_services),
-    openai_integration: UnifiedAzureOpenAIClient = Depends(get_openai_integration)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service),
+    query_service: QueryService = Depends(get_query_service)
 ) -> Dict[str, Any]:
     """
     Process an Azure-powered query that works with any domain
@@ -182,7 +181,7 @@ async def process_azure_query(
             "generated_response": {
                 "content": response,
                 "length": len(response),
-                "model_used": "gpt-4-turbo"
+                "model_used": azure_settings.openai_deployment_name or "gpt-4o"
             },
             "search_results": [
                 {
@@ -463,15 +462,16 @@ async def list_available_domains() -> Dict[str, Any]:
         containers = await storage_client.list_containers()
         domains = []
         
-        for container_info in containers:
-            if container_info.get('name'):
-                domain_name = container_info['name'].replace('-', '_')
+        for container_name in containers:
+            # list_containers returns a list of strings (container names)
+            if container_name:
+                domain_name = container_name.replace('-', '_')
                 domains.append({
                     "name": domain_name,
                     "azure_services": ["blob_storage", "cognitive_search", "cosmos_db"],
                     "status": "active",
-                    "container": container_info['name'],
-                    "last_modified": container_info.get('last_modified', '')
+                    "container": container_name,
+                    "last_modified": ""  # Would need separate call to get metadata
                 })
         
         # Ensure we have at least general domain

@@ -63,48 +63,50 @@ endef
 
 .PHONY: help setup run azure-health-check data-upload knowledge-extract data-prep-full data-prep-enterprise query-demo-enterprise backend-summary clean clean-data
 
-help: ## Azure Universal RAG Backend Operations (Two-Step Intelligent Processing)
-	@echo "🔧 Azure Universal RAG Backend - Intelligent Document Processing"
-	@echo "================================================================"
+help: ## Azure Universal RAG Backend - Dataflow Architecture
+	@echo "🔧 Azure Universal RAG Backend - Living Dataflow Architecture"
+	@echo "=============================================================="
 	@echo ""
 	@echo "🚀 Backend Operations:"
 	@echo "  make setup                  - Setup with Azure service validation"
 	@echo "  make run                    - Start FastAPI with session tracking"
 	@echo ""
-	@echo "🧠 Two-Step Intelligent Data Processing:"
-	@echo "  make data-upload           - STEP 1: Upload docs & create intelligent chunks"
-	@echo "  make knowledge-extract     - STEP 2: Extract entities & relations from chunks"
-	@echo "  make data-prep-full        - Complete workflow (STEP 1 + STEP 2)"
+	@echo "🧠 Complete Pipeline Commands (New Dataflow Architecture):"
+	@echo "  make data-prep-full         - Complete data pipeline (00_full_pipeline.py)"
+	@echo "  make query-pipeline         - Complete query pipeline (10_query_pipeline.py)"
+	@echo "  make full-workflow-demo     - End-to-end demonstration"
 	@echo ""
-	@echo "🎯 Azure Prompt Flow (Centralized Prompts):"
-	@echo "  make prompt-flow-extract   - Extract knowledge using centralized prompts"
-	@echo "  make prompt-flow-setup     - Setup Prompt Flow environment"
-	@echo "  make prompt-templates      - View centralized prompt templates"
+	@echo "📊 Individual Processing Stages:"
+	@echo "  make data-ingestion         - Data ingestion (01_data_ingestion.py)"
+	@echo "  make knowledge-extract      - Knowledge extraction (02_knowledge_extraction.py)"
+	@echo "  make vector-indexing        - Vector embeddings (01c_vector_embeddings.py)"
+	@echo "  make graph-construction     - Graph construction (04_graph_construction.py)"
+	@echo "  make gnn-training           - GNN training (05_gnn_training.py)"
+	@echo ""
+	@echo "🔍 Query Processing Stages:"
+	@echo "  make query-analysis         - Query analysis (06_query_analysis.py)"
+	@echo "  make unified-search         - Unified search demo (07_unified_search.py)"
 	@echo ""
 	@echo "☁️  Azure Service Operations:"
 	@echo "  make azure-health-check     - Validate Azure service integration"
-	@echo "  make query-demo-enterprise  - Query processing with Azure tracking"
 	@echo ""
 	@echo "📊 Session Management:"
 	@echo "  make backend-summary        - Display current backend session"
 	@echo "  make clean                  - Clean session with log replacement"
-	@echo ""
-	@echo "🧹 Data Management:"
-	@echo "  make clean-data             - Clean processed data (preserve raw & back_data)"
-	@echo ""
-	@echo "📖 Legacy Commands:"
-	@echo "  make data-prep-enterprise   - DEPRECATED: Use data-prep-full instead"
+	@echo "  make clean-data             - Clean processed data (preserve raw)"
 	@echo ""
 	@echo "💡 Recommended Workflows:"
 	@echo ""
-	@echo "🔄 Data Processing:"
-	@echo "  1. make data-upload         (Upload & chunk documents intelligently)"
-	@echo "  2. make knowledge-extract   (Extract knowledge graph from chunks)"
-	@echo "  OR: make data-prep-full     (Run both steps automatically)"
-	@echo "  OR: make prompt-flow-extract (Use centralized prompt management)"
+	@echo "🔄 Full Pipeline (Automated):"
+	@echo "  make data-prep-full         - Complete processing pipeline"
+	@echo "  make query-pipeline         - Demonstrate query capabilities"
 	@echo ""
-	@echo "🧹 Data Management:"
-	@echo "  make clean-data             (Clean processed data - preserve raw)"
+	@echo "🔬 Stage-by-Stage (Manual Control):"
+	@echo "  make data-ingestion → knowledge-extract → graph-construction → gnn-training"
+	@echo "  make query-analysis → unified-search"
+	@echo ""
+	@echo "🎯 Unified Search Demo (Crown Jewel):"
+	@echo "  make unified-search         - Vector + Graph + GNN search demonstration"
 	@echo ""
 	@echo "Current Backend Session: $(shell cat $(CURRENT_BACKEND_SESSION) 2>/dev/null || echo 'No active session')"
 
@@ -139,35 +141,114 @@ azure-health-check: ## Comprehensive Azure service validation
 	@echo "📊 Azure service health check completed"
 	@cat $(SESSION_SUMMARY)
 
-data-upload: ## STEP 1: Upload documents and create intelligent chunks
+# === New Dataflow Architecture Commands ===
+
+# Full Pipeline Commands
+data-prep-full: ## Complete data processing pipeline (00_full_pipeline.py)
 	@$(call start_backend_session)
-	@echo "🔄 STEP 1: Azure Data Upload & Chunking - Session: $(BACKEND_SESSION)"
+	@echo "🚀 Complete Azure RAG Data Pipeline - Session: $(BACKEND_SESSION)"
 	@$(call validate_azure_services)
-	@$(call execute_azure_workflow,data_upload_and_chunking,scripts/data_upload_workflow.py,general)
+	@$(call execute_azure_workflow,complete_data_pipeline,scripts/dataflow/00_full_pipeline.py,)
 	@$(call capture_backend_metrics)
 	@$(call finalize_backend_session)
-	@echo "📋 STEP 1: Data upload and chunking completed"
+	@echo "📋 Complete data pipeline finished"
 	@cat $(SESSION_SUMMARY)
 
-knowledge-extract: ## STEP 2: Extract entities and relations from chunks
+query-pipeline: ## Complete query processing pipeline (10_query_pipeline.py)
 	@$(call start_backend_session)
-	@echo "🔄 STEP 2: Azure Knowledge Extraction - Session: $(BACKEND_SESSION)"
+	@echo "🔍 Complete Query Pipeline - Session: $(BACKEND_SESSION)"
 	@$(call validate_azure_services)
-	@$(call execute_azure_workflow,knowledge_extraction,scripts/knowledge_extraction_workflow.py,general)
+	@$(call execute_azure_workflow,query_pipeline,scripts/dataflow/10_query_pipeline.py,)
 	@$(call capture_backend_metrics)
 	@$(call finalize_backend_session)
-	@echo "📋 STEP 2: Knowledge extraction completed"
+	@echo "📋 Query pipeline completed"
 	@cat $(SESSION_SUMMARY)
 
-data-prep-full: ## Complete two-step data preparation (upload + extraction)
-	@echo "🚀 Starting complete Azure RAG data preparation..."
-	@$(MAKE) data-upload
-	@echo ""
-	@echo "✅ STEP 1 complete, starting STEP 2..."
-	@echo ""
-	@$(MAKE) knowledge-extract
-	@echo ""
-	@echo "🎉 Complete data preparation finished!"
+# Individual Stage Commands
+data-ingestion: ## Data ingestion stage (01_data_ingestion.py)
+	@$(call start_backend_session)
+	@echo "📤 Data Ingestion - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,data_ingestion,scripts/dataflow/01_data_ingestion.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Data ingestion completed"
+	@cat $(SESSION_SUMMARY)
+
+knowledge-extract: ## Knowledge extraction stage (02_knowledge_extraction.py)
+	@$(call start_backend_session)
+	@echo "🧠 Knowledge Extraction - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,knowledge_extraction,scripts/dataflow/02_knowledge_extraction.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Knowledge extraction completed"
+	@cat $(SESSION_SUMMARY)
+
+vector-indexing: ## Vector embeddings and indexing (01c_vector_embeddings.py)
+	@$(call start_backend_session)
+	@echo "🔍 Vector Indexing - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,vector_indexing,scripts/dataflow/01c_vector_embeddings.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Vector indexing completed"
+	@cat $(SESSION_SUMMARY)
+
+graph-construction: ## Graph construction stage (04_graph_construction.py)
+	@$(call start_backend_session)
+	@echo "🕸️  Graph Construction - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,graph_construction,scripts/dataflow/04_graph_construction.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Graph construction completed"
+	@cat $(SESSION_SUMMARY)
+
+gnn-training: ## GNN training stage (05_gnn_training.py)
+	@$(call start_backend_session)
+	@echo "🤖 GNN Training - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,gnn_training,scripts/dataflow/05_gnn_training.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 GNN training completed"
+	@cat $(SESSION_SUMMARY)
+
+# Query Stage Commands
+query-analysis: ## Query analysis stage (06_query_analysis.py)
+	@$(call start_backend_session)
+	@echo "🔍 Query Analysis - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,query_analysis,scripts/dataflow/06_query_analysis.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Query analysis completed"
+	@cat $(SESSION_SUMMARY)
+
+unified-search: ## Unified search demo (07_unified_search.py)
+	@$(call start_backend_session)
+	@echo "🎯 Unified Search (Vector + Graph + GNN) - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,unified_search,scripts/dataflow/07_unified_search.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Unified search completed"
+	@cat $(SESSION_SUMMARY)
+
+# Demo Commands
+full-workflow-demo: ## End-to-end workflow demonstration
+	@$(call start_backend_session)
+	@echo "🚀 Full Workflow Demo - Session: $(BACKEND_SESSION)"
+	@$(call validate_azure_services)
+	@$(call execute_azure_workflow,full_workflow_demo,scripts/dataflow/demo_full_workflow.py,)
+	@$(call capture_backend_metrics)
+	@$(call finalize_backend_session)
+	@echo "📋 Full workflow demo completed"
+	@cat $(SESSION_SUMMARY)
+
+# Legacy compatibility aliases
+data-upload: data-ingestion
 
 data-prep-enterprise: ## Enhanced data preparation with real-time progress tracking
 	@echo "🚀 Starting enhanced Azure RAG data preparation with real-time progress..."

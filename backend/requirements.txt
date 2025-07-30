@@ -8,6 +8,7 @@ python-dotenv>=1.0.0
 
 # AI/ML Libraries
 openai>=1.13.3
+tiktoken>=0.5.0
 
 # GNN Libraries (Optional - for weeks 9-12)
 torch>=2.0.0
@@ -50,7 +51,7 @@ azure-core>=1.29.0
 
 # Use versions compatible with Cosmos DB Gremlin API and aiohttp
 gremlinpython>=3.6.6
-aiohttp==3.8.1
+aiohttp>=3.9.0
 
 # Testing
 pytest>=7.4.0

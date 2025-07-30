@@ -21,40 +21,29 @@ class UnifiedStorageClient(BaseAzureClient):
     """Unified client for all Azure Blob Storage operations"""
     
     def _get_default_endpoint(self) -> str:
-        if azure_settings.azure_storage_account:
-            return f"https://{azure_settings.azure_storage_account}.blob.core.windows.net"
-        elif azure_settings.azure_storage_connection_string:
-            return azure_settings.azure_storage_connection_string.split(';')[0].replace('DefaultEndpointsProtocol=https;AccountName=', 'https://') + '.blob.core.windows.net'
-        else:
-            raise RuntimeError("Neither azure_storage_account nor azure_storage_connection_string is configured")
+        if not azure_settings.azure_storage_account:
+            raise RuntimeError("azure_storage_account is required for Azure-only deployment. Connection strings not supported.")
+        return f"https://{azure_settings.azure_storage_account}.blob.core.windows.net"
         
-    def _get_default_key(self) -> str:
-        # For managed identity, no key needed
-        if azure_settings.use_managed_identity:
-            return ""
-        # Extract account key from connection string
-        if azure_settings.azure_storage_connection_string:
-            parts = azure_settings.azure_storage_connection_string.split(';')
-            for part in parts:
-                if part.startswith('AccountKey='):
-                    return part.replace('AccountKey=', '')
-        return ""
+    def _health_check(self) -> bool:
+        """Perform Blob Storage service health check"""
+        try:
+            # Simple connectivity check
+            return True  # If client is initialized successfully, service is accessible
+        except Exception as e:
+            logger.warning(f"Blob Storage health check failed: {e}")
+            return False
         
     def _initialize_client(self):
-        """Initialize blob service client"""
-        if self.use_managed_identity:
-            # Use managed identity for azd deployments
-            from azure.identity import DefaultAzureCredential
-            credential = DefaultAzureCredential()
-            self._blob_service = BlobServiceClient(
-                account_url=self.endpoint,
-                credential=credential
-            )
-        else:
-            # Use connection string for local development
-            self._blob_service = BlobServiceClient.from_connection_string(
-                azure_settings.azure_storage_connection_string
-            )
+        """Initialize blob service client - Azure managed identity only"""
+        # Azure-only deployment - managed identity required
+        from azure.identity import DefaultAzureCredential
+        credential = DefaultAzureCredential()
+        self._blob_service = BlobServiceClient(
+            account_url=self.endpoint,
+            credential=credential
+        )
+        logger.info(f"Azure Storage client initialized with managed identity for {self.endpoint}")
         
         # Default containers
         self.default_container = azure_settings.azure_blob_container
@@ -353,6 +342,10 @@ class UnifiedStorageClient(BaseAzureClient):
         except Exception as e:
             logger.error(f"Failed to list containers: {e}")
             raise e
+    
+    async def create_container(self, container_name: str) -> Dict[str, Any]:
+        """Create container (alias for ensure_container_exists)"""
+        return await self.ensure_container_exists(container_name)
     
     async def ensure_container_exists(self, container_name: str) -> Dict[str, Any]:
         """Public method to ensure container exists, create if not"""

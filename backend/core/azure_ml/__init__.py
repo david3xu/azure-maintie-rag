@@ -1,8 +1,8 @@
 """Azure ML service integrations for Universal RAG"""
-from .gnn_processor import AzureMLGNNProcessor as AzureMLGNNProcessor
-from .classification_service import AzureClassificationPipeline as AzureMLClassificationService
+from .classification_client import AzureClassificationPipeline as AzureMLClassificationService
+from .gnn.training.orchestrator import UnifiedGNNTrainingOrchestrator as AzureMLGNNProcessor
 
 __all__ = [
-    'AzureMLGNNProcessor',
+    'AzureMLGNNProcessor', 
     'AzureMLClassificationService'
 ]
