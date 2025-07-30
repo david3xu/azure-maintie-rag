@@ -50,7 +50,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 
 // Azure Container Registry
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: 'cr${resourcePrefix}${environmentName}${uniqueString(resourceGroup().id)}'
+  name: 'cr${take(replace(replace('${resourcePrefix}${environmentName}', '-', ''), '_', ''), 10)}${take(uniqueString(resourceGroup().id), 10)}'
   location: location
   sku: {
     name: config.registrySku

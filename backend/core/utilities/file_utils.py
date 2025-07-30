@@ -7,6 +7,7 @@ import yaml
 import pickle
 from datetime import datetime
 import hashlib
+import re
 
 
 class FileUtils:
@@ -18,6 +19,49 @@ class FileUtils:
         path = Path(directory)
         path.mkdir(parents=True, exist_ok=True)
         return path
+
+    @staticmethod
+    def sanitize_unicode(text: str) -> str:
+        """Sanitize text to remove invalid Unicode characters that cause JSON errors."""
+        try:
+            # Remove or replace invalid surrogate characters
+            text = text.encode('utf-8', errors='ignore').decode('utf-8')
+            # Remove any remaining high/low surrogates that cause JSON parsing errors
+            text = re.sub(r'[\ud800-\udfff]', '', text)
+            return text
+        except Exception:
+            return text
+
+    @staticmethod
+    def safe_json_dumps(data: Any, **kwargs) -> str:
+        """JSON dumps with Unicode sanitization to prevent invalid high surrogate errors."""
+        try:
+            # First try normal JSON dumps
+            return json.dumps(data, **kwargs)
+        except (UnicodeDecodeError, UnicodeEncodeError, ValueError) as e:
+            if "invalid" in str(e).lower() and "surrogate" in str(e).lower():
+                # Recursively sanitize the data structure
+                sanitized_data = FileUtils._sanitize_data_structure(data)
+                return json.dumps(sanitized_data, ensure_ascii=False, **kwargs)
+            else:
+                raise
+
+    @staticmethod
+    def _sanitize_data_structure(data: Any) -> Any:
+        """Recursively sanitize a data structure for Unicode issues."""
+        if isinstance(data, str):
+            return FileUtils.sanitize_unicode(data)
+        elif isinstance(data, dict):
+            return {
+                FileUtils.sanitize_unicode(str(k)): FileUtils._sanitize_data_structure(v)
+                for k, v in data.items()
+            }
+        elif isinstance(data, list):
+            return [FileUtils._sanitize_data_structure(item) for item in data]
+        elif isinstance(data, tuple):
+            return tuple(FileUtils._sanitize_data_structure(item) for item in data)
+        else:
+            return data
 
     @staticmethod
     def read_text_file(file_path: str, encoding: str = 'utf-8') -> str:

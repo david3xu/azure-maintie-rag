@@ -27,6 +27,8 @@ from config.settings import settings
 
 # Import dependency functions from dependencies module
 from api.dependencies import get_azure_services, get_openai_integration
+from integrations.azure_services import AzureServicesManager
+from core.azure_openai.openai_client import UnifiedAzureOpenAIClient
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +98,7 @@ class BatchQueryRequest(BaseModel):
 async def process_azure_query(
     request: AzureQueryRequest,
     azure_services: AzureServicesManager = Depends(get_azure_services),
-    openai_integration: AzureOpenAIClient = Depends(get_openai_integration)
+    openai_integration: UnifiedAzureOpenAIClient = Depends(get_openai_integration)
 ) -> Dict[str, Any]:
     """
     Process an Azure-powered query that works with any domain
@@ -114,9 +116,10 @@ async def process_azure_query(
         logger.info("Searching Azure Cognitive Search...")
         index_name = f"rag-index-{request.domain}"
         search_client = azure_services.get_service('search')
-        search_results = await search_client.search_documents(
-            index_name, request.query, top_k=request.max_results
+        search_response = await search_client.search_documents(
+            request.query, top=request.max_results
         )
+        search_results = search_response.get('documents', []) if search_response.get('success') else []
         azure_services_used.append("Azure Cognitive Search")
 
         # Step 2: Retrieve document content from Azure Blob Storage
@@ -138,8 +141,14 @@ async def process_azure_query(
 
         # Step 3: Generate response using Azure OpenAI
         logger.info("Generating response with Azure OpenAI...")
-        response = await openai_integration.generate_response(
-            request.query, retrieved_docs, request.domain
+        # Create a prompt with query and retrieved documents
+        prompt = f"Query: {request.query}\n\nContext:\n"
+        for i, doc in enumerate(retrieved_docs):
+            prompt += f"Document {i+1}: {doc[:500]}...\n"
+        prompt += f"\nPlease provide a comprehensive answer based on the context above."
+        
+        response = await openai_integration.get_completion(
+            prompt, request.domain
         )
         azure_services_used.append("Azure OpenAI")
 
@@ -179,9 +188,9 @@ async def process_azure_query(
                 {
                     "id": f"doc_{i}",
                     "content": doc[:200] + "..." if len(doc) > 200 else doc,
-                    "score": 0.9 - (i * 0.1)  # Mock scores
+                    "score": search_result.get('score', 0.0) if isinstance(doc, dict) else 0.9 - (i * 0.1)
                 }
-                for i, doc in enumerate(retrieved_docs)
+                for i, (doc, search_result) in enumerate(zip(retrieved_docs, search_results or [{}] * len(retrieved_docs)))
             ],
             "processing_time": processing_time,
             "azure_services_used": azure_services_used,
@@ -355,7 +364,7 @@ async def process_batch_queries(request: BatchQueryRequest) -> Dict[str, Any]:
         azure_services = AzureServicesManager()
         await azure_services.initialize()
 
-        openai_integration = AzureOpenAIClient()
+        openai_integration = UnifiedAzureOpenAIClient()
 
         results = []
         for i, query in enumerate(request.queries):
@@ -363,11 +372,13 @@ async def process_batch_queries(request: BatchQueryRequest) -> Dict[str, Any]:
                 # Process each query using Azure services
                 search_client = azure_services.get_service('search')
                 search_results = await search_client.search_documents(
-                    f"rag-index-{request.domain}", query, top_k=request.max_results
+                    query, top=request.max_results
                 )
 
-                response = await openai_integration.generate_response(
-                    query, search_results, request.domain
+                # Create simple prompt for batch processing
+                simple_prompt = f"Answer this query: {query}"
+                response = await openai_integration.get_completion(
+                    simple_prompt, request.domain
                 )
 
                 results.append({
@@ -444,20 +455,32 @@ async def list_available_domains() -> Dict[str, Any]:
     List all available domains with Azure services
     """
     try:
-        # This would typically query Azure services for available domains
-        # For now, return a mock list
-        domains = [
-            {
+        # Query Azure services for available domains from actual data
+        infrastructure = InfrastructureService()
+        storage_client = infrastructure.storage_client
+        
+        # Get available domains from storage containers
+        containers = await storage_client.list_containers()
+        domains = []
+        
+        for container_info in containers:
+            if container_info.get('name'):
+                domain_name = container_info['name'].replace('-', '_')
+                domains.append({
+                    "name": domain_name,
+                    "azure_services": ["blob_storage", "cognitive_search", "cosmos_db"],
+                    "status": "active",
+                    "container": container_info['name'],
+                    "last_modified": container_info.get('last_modified', '')
+                })
+        
+        # Ensure we have at least general domain
+        if not any(d['name'] == 'general' for d in domains):
+            domains.insert(0, {
                 "name": "general",
                 "azure_services": ["blob_storage", "cognitive_search", "cosmos_db"],
                 "status": "active"
-            },
-            {
-                "name": "maintenance",
-                "azure_services": ["blob_storage", "cognitive_search", "cosmos_db"],
-                "status": "active"
-            }
-        ]
+            })
 
         return {
             "success": True,
@@ -481,16 +504,18 @@ async def _process_streaming_query_with_azure(
         azure_services = AzureServicesManager()
         await azure_services.initialize()
 
-        openai_integration = AzureOpenAIClient()
+        openai_integration = UnifiedAzureOpenAIClient()
 
         # Process the query using Azure services
         search_client = azure_services.get_service('search')
         search_results = await search_client.search_documents(
-            f"rag-index-{request.domain}", request.query, top_k=request.max_results
+            request.query, top=request.max_results
         )
 
-        response = await openai_integration.generate_response(
-            request.query, search_results, request.domain
+        # Create simple prompt for streaming processing
+        simple_prompt = f"Answer this query: {request.query}"
+        response = await openai_integration.get_completion(
+            simple_prompt, request.domain
         )
 
         logger.info(f"Streaming query {query_id} completed successfully")

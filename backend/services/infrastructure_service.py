@@ -15,6 +15,7 @@ from core.azure_storage import UnifiedStorageClient
 from core.azure_search import UnifiedSearchClient
 from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
 from core.azure_openai import UnifiedAzureOpenAIClient
+from core.azure_openai.embedding import AzureEmbeddingService
 from core.azure_monitoring.app_insights_client import AzureApplicationInsightsClient
 # Removed duplicate import - using UnifiedAzureOpenAIClient from core
 
@@ -36,6 +37,7 @@ class InfrastructureService:
         
         # Real Azure service instances
         self.openai_client = None
+        self.vector_service = None
         self.search_service = None
         self.cosmos_client = None
         self.ml_client = None
@@ -48,6 +50,11 @@ class InfrastructureService:
         
         # Initialize real Azure services
         self._initialize_azure_services()
+    
+    @property
+    def search_client(self):
+        """Alias for search_service for backward compatibility"""
+        return self.search_service
     
     def _initialize_azure_services(self) -> None:
         """Initialize real Azure services with azd compatibility"""
@@ -117,6 +124,15 @@ class InfrastructureService:
             except Exception as e:
                 logger.error(f"❌ Application Insights initialization failed: {e}")
                 self.app_insights = None
+            
+            # Real Vector service (integrated with this infrastructure)
+            try:
+                from services.vector_service import VectorService
+                self.vector_service = VectorService(infrastructure_service=self)
+                logger.info("✅ Azure OpenAI Vector service initialized")
+            except Exception as e:
+                logger.error(f"❌ Vector service initialization failed: {e}")
+                self.vector_service = None
                 
         except Exception as e:
             logger.error(f"Critical error during Azure services initialization: {e}")
@@ -169,7 +185,8 @@ class InfrastructureService:
             "storage": self.storage_client,
             "cosmos": self.cosmos_client,
             "ml": self.ml_client,
-            "app_insights": self.app_insights
+            "app_insights": self.app_insights,
+            "vector": self.vector_service
         }
         
         for service_name, service_instance in services_to_check.items():
@@ -272,7 +289,8 @@ class InfrastructureService:
             "storage": self.storage_client,
             "cosmos": self.cosmos_client,
             "ml": self.ml_client,
-            "app_insights": self.app_insights
+            "app_insights": self.app_insights,
+            "vector": self.vector_service
         }
         return service_mapping.get(service_name)
     
@@ -325,7 +343,7 @@ class InfrastructureService:
                 validation_results["valid"] = False
         
         # Validate service connectivity with real Azure services
-        for service_name in ["openai", "search", "storage", "cosmos", "ml"]:
+        for service_name in ["openai", "search", "storage", "cosmos", "ml", "vector"]:
             try:
                 service = self.get_service(service_name)
                 if service:

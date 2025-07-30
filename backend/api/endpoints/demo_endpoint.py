@@ -41,8 +41,15 @@ def get_supervisor_demo_overview() -> Dict[str, Any]:
         # Try to load knowledge graph demo results
         kg_stats = {}
         try:
-            kg_demo_file = base_path / "data/kg_operations/azure_real_kg_demo.json"
-            if kg_demo_file.exists():
+            # Find the most recent knowledge graph operations file dynamically
+            kg_operations_dir = base_path / "data/kg_operations"
+            kg_demo_file = None
+            if kg_operations_dir.exists():
+                kg_files = list(kg_operations_dir.glob("*.json"))
+                if kg_files:
+                    # Get the most recent KG operations file
+                    kg_demo_file = max(kg_files, key=lambda x: x.stat().st_mtime)
+            if kg_demo_file and kg_demo_file.exists():
                 with open(kg_demo_file, 'r') as f:
                     kg_data = json.load(f)
                     kg_stats = {
@@ -66,8 +73,15 @@ def get_supervisor_demo_overview() -> Dict[str, Any]:
         # Load extraction stats
         extraction_stats = {}
         try:
-            extraction_file = base_path / "data/extraction_outputs/full_dataset_extraction_9100_entities_5848_relationships.json"
-            if extraction_file.exists():
+            # Find the most recent extraction file dynamically
+            extraction_outputs_dir = base_path / "data/extraction_outputs"
+            extraction_file = None
+            if extraction_outputs_dir.exists():
+                extraction_files = list(extraction_outputs_dir.glob("*.json"))
+                if extraction_files:
+                    # Get the most recent extraction file
+                    extraction_file = max(extraction_files, key=lambda x: x.stat().st_mtime)
+            if extraction_file and extraction_file.exists():
                 with open(extraction_file, 'r') as f:
                     extraction_data = json.load(f)
                     extraction_stats = {
@@ -205,7 +219,7 @@ def get_relationship_multiplication_explanation() -> Dict[str, Any]:
         "root_cause_explanation": {
             "entity_context_diversity": {
                 "description": "Same entities appear in different maintenance contexts",
-                "example": "air conditioner entity appears 24 times in different maintenance scenarios",
+                "example": "Equipment entities appear multiple times in different maintenance contexts",
                 "why_different": "Each represents different equipment instance in different locations/situations"
             },
             "relationship_enrichment": {
@@ -265,7 +279,7 @@ def get_api_endpoints_demo() -> Dict[str, Any]:
                 "description": "Universal query processing with Azure services integration",
                 "azure_services_used": ["Cognitive Search", "Blob Storage", "OpenAI", "Cosmos DB"],
                 "response_time": "<3s",
-                "example_curl": 'curl -X POST "http://localhost:8000/api/v1/query/universal" -H "Content-Type: application/json" -d \'{"query": "air conditioner thermostat maintenance", "domain": "maintenance"}\''
+                "example_curl": 'curl -X POST "http://localhost:8000/api/v1/query/universal" -H "Content-Type: application/json" -d \'{"query": "equipment maintenance query", "domain": "maintenance"}\''
             },
             "system_info": {
                 "endpoint": "/api/v1/info",

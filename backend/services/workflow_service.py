@@ -269,6 +269,70 @@ class WorkflowService:
         logger.info(f"Created workflow: {workflow_id}")
         return workflow_id
     
+    async def execute_full_pipeline(self, source_data_path: str, domain: str) -> Dict[str, Any]:
+        """Execute complete intelligent RAG pipeline: extraction → graph → GNN → query"""
+        try:
+            workflow_id = self.create_workflow(f"full_pipeline_{domain}")
+            start_time = datetime.now()
+            
+            # Import services for pipeline execution
+            from services.data_service import DataService
+            from services.knowledge_service import KnowledgeService
+            from services.ml_service import MLService
+            from services.infrastructure_service import InfrastructureService
+            
+            infrastructure = InfrastructureService()
+            data_service = DataService(infrastructure)
+            knowledge_service = KnowledgeService()
+            ml_service = MLService()
+            
+            pipeline_results = {
+                "workflow_id": workflow_id,
+                "domain": domain,
+                "source_path": source_data_path,
+                "start_time": start_time.isoformat(),
+                "stages": {},
+                "success": False
+            }
+            
+            # Stage 1: Knowledge Extraction
+            self.update_workflow_progress(workflow_id, WorkflowStep.KNOWLEDGE_EXTRACTION, "Starting LLM knowledge extraction")
+            extraction_result = await knowledge_service.extract_from_file(source_data_path, domain)
+            pipeline_results["stages"]["knowledge_extraction"] = extraction_result
+            
+            if not extraction_result.get('success', False):
+                pipeline_results["error"] = "Knowledge extraction failed"
+                return pipeline_results
+            
+            # Stage 2: Data Migration (using extracted knowledge)
+            self.update_workflow_progress(workflow_id, WorkflowStep.DATA_LOADING, "Migrating data to Azure services")
+            migration_result = await data_service.migrate_data_to_azure(source_data_path, domain)
+            pipeline_results["stages"]["data_migration"] = migration_result
+            
+            # Stage 3: GNN Training (if graph data available)
+            if migration_result.get("migrations", {}).get("cosmos", {}).get("success", False):
+                self.update_workflow_progress(workflow_id, WorkflowStep.COMPLETION, "Training GNN model")
+                gnn_result = await ml_service.train_gnn_model(domain)
+                pipeline_results["stages"]["gnn_training"] = gnn_result
+            
+            # Determine overall success
+            extraction_success = extraction_result.get('success', False)
+            migration_success = migration_result.get('status') in ['completed', 'functional_degraded']
+            
+            pipeline_results["success"] = extraction_success and migration_success
+            pipeline_results["end_time"] = datetime.now().isoformat()
+            pipeline_results["duration"] = str(datetime.now() - start_time)
+            
+            return pipeline_results
+            
+        except Exception as e:
+            logger.error(f"Full pipeline execution failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "workflow_id": workflow_id if 'workflow_id' in locals() else None
+            }
+    
     def update_workflow_progress(
         self, 
         workflow_id: str, 

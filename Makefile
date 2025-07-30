@@ -5,8 +5,8 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 SESSION_ID := $(shell date +"%Y%m%d_%H%M%S")
 
-# Azure Configuration
-AZURE_ENVIRONMENT := $(or $(AZURE_ENVIRONMENT), dev)
+# Azure Configuration - Auto-sync with azd environment
+AZURE_ENVIRONMENT := $(or $(AZURE_ENVIRONMENT), development)
 AZURE_RESOURCE_GROUP := $(or $(AZURE_RESOURCE_GROUP), maintie-rag-rg)
 
 # Clean Session Management - Replace Previous Sessions
@@ -57,7 +57,7 @@ define finalize_session_report
 	@echo "📋 Session report: $(SESSION_REPORT)"
 endef
 
-.PHONY: help setup dev azure-deploy azure-status health clean session-report
+.PHONY: help setup dev azure-deploy azure-status health clean session-report sync-env
 
 help: ## Azure Universal RAG Enterprise Commands (Clean Session Management)
 	@echo "🏗️  Azure Universal RAG - Enterprise Infrastructure Orchestration"
@@ -67,6 +67,7 @@ help: ## Azure Universal RAG Enterprise Commands (Clean Session Management)
 	@echo "  make azure-deploy     - Deploy Azure services with session tracking"
 	@echo "  make azure-status     - Check Azure infrastructure status"
 	@echo "  make azure-teardown   - Clean Azure resources with session logging"
+	@echo "  make sync-env         - Sync backend with current azd environment"
 	@echo ""
 	@echo "🔄 Service Orchestration:"
 	@echo "  make setup           - Setup both services with session management"
@@ -126,7 +127,37 @@ azure-teardown: ## Clean Azure resources with session audit
 	@echo "Cleanup initiated at $(shell date)" >> $(SESSION_REPORT)
 	@./scripts/teardown.sh 2>&1 | tail -10 >> $(SESSION_REPORT) || echo "Teardown script not available" >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
+
+# Data Processing Pipeline Commands - Unified CLI Interface
+data-prep-full: ## Complete data processing pipeline (extraction → graph → GNN)
+	@$(call start_clean_session)
+	@echo "🧠 Azure Universal RAG - Complete Data Pipeline"
+	@echo "Data processing pipeline initiated at $(shell date)" >> $(SESSION_REPORT)
+	@cd backend && python scripts/rag_cli.py data --mode full 2>&1 | tail -15 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Complete pipeline finished - Check: $(SESSION_REPORT)"
+
+data-upload: ## Upload documents & create chunks
+	@$(call start_clean_session)
+	@echo "📤 Azure Universal RAG - Data Upload"
+	@echo "Data upload initiated at $(shell date)" >> $(SESSION_REPORT)
+	@cd backend && python scripts/rag_cli.py data --mode upload 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Data upload finished - Check: $(SESSION_REPORT)"
+
+knowledge-extract: ## Extract entities & relations using LLM
+	@$(call start_clean_session)
+	@echo "🧠 Azure Universal RAG - Knowledge Extraction"
+	@echo "Knowledge extraction initiated at $(shell date)" >> $(SESSION_REPORT)
+	@cd backend && python scripts/rag_cli.py data --mode extract 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Knowledge extraction finished - Check: $(SESSION_REPORT)"
 	@echo "✅ Azure cleanup completed with audit trail"
+
+sync-env: ## Sync backend configuration with current azd environment
+	@echo "🔄 Syncing backend with azd environment..."
+	@./scripts/sync-env.sh
+	@echo "✅ Backend configuration synchronized"
 
 health: ## Comprehensive service health with session management
 	@$(call start_clean_session)

@@ -29,7 +29,7 @@ class AzureServicesManager:
         # Initialize focused services
         self.infrastructure = InfrastructureService(config)
         self.data_service = DataService(self.infrastructure)
-        self.workflow_service = WorkflowService(self.infrastructure)
+        self.workflow_service = WorkflowService()
         
         # Compatibility attributes
         self.initialized = False

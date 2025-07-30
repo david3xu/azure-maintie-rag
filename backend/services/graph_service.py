@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional, Tuple
 import asyncio
 from datetime import datetime
 
-from core.azure_cosmos import UnifiedCosmosClient
+from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
 from core.azure_storage import UnifiedStorageClient
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class GraphService:
     """High-level service for knowledge graph operations"""
     
     def __init__(self):
-        self.cosmos_client = UnifiedCosmosClient()
+        self.cosmos_client = AzureCosmosGremlinClient()
         self.storage_client = UnifiedStorageClient()
         
     # === GRAPH LOADING ===

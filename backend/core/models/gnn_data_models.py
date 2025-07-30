@@ -16,6 +16,8 @@ import json
 import numpy as np
 from pathlib import Path
 
+from ...config.domain_patterns import DomainPatternManager
+
 
 @dataclass
 class StandardizedEntity:
@@ -177,16 +179,20 @@ class GraphQualityMetrics:
     has_isolated_entities: bool = False
     has_missing_relations: bool = False
     
-    def is_training_ready(self) -> bool:
+    def is_training_ready(self, domain: str = "general") -> bool:
         """
         Determine if graph quality is sufficient for GNN training.
+        
+        Args:
+            domain: Domain for retrieving validation thresholds
         
         Returns:
             True if graph meets minimum quality thresholds
         """
-        min_entities = 10
-        min_relations = 5
-        min_avg_confidence = 0.5
+        training_patterns = DomainPatternManager.get_training(domain)
+        min_entities = training_patterns.min_entities_threshold
+        min_relations = training_patterns.min_relations_threshold
+        min_avg_confidence = training_patterns.min_avg_confidence
         
         return (
             self.total_entities >= min_entities and
@@ -338,20 +344,55 @@ class StandardizedGraphData:
 @dataclass
 class GNNTrainingConfig:
     """Configuration for GNN training pipeline."""
-    model_type: str = "gcn"
-    hidden_dim: int = 128
-    num_layers: int = 2
-    dropout: float = 0.5
-    learning_rate: float = 0.001
-    weight_decay: float = 1e-5
-    batch_size: int = 32
-    epochs: int = 100
-    patience: int = 20
+    domain: str = "general"
     
     # Feature engineering options
     use_semantic_embeddings: bool = True
-    embedding_dim: int = 768  # Azure OpenAI embedding dimension
     normalize_features: bool = True
+    
+    def __post_init__(self):
+        """Initialize training patterns from domain configuration."""
+        self.training_patterns = DomainPatternManager.get_training(self.domain)
+    
+    @property
+    def model_type(self) -> str:
+        return self.training_patterns.model_type
+    
+    @property
+    def hidden_dim(self) -> int:
+        return self.training_patterns.hidden_dim
+    
+    @property
+    def num_layers(self) -> int:
+        return self.training_patterns.num_layers
+    
+    @property
+    def dropout(self) -> float:
+        return self.training_patterns.dropout
+    
+    @property
+    def learning_rate(self) -> float:
+        return self.training_patterns.learning_rate
+    
+    @property
+    def weight_decay(self) -> float:
+        return self.training_patterns.weight_decay
+    
+    @property
+    def batch_size(self) -> int:
+        return self.training_patterns.batch_size
+    
+    @property
+    def epochs(self) -> int:
+        return self.training_patterns.epochs
+    
+    @property
+    def patience(self) -> int:
+        return self.training_patterns.patience
+    
+    @property
+    def embedding_dim(self) -> int:
+        return self.training_patterns.embedding_dim
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert config to dictionary."""

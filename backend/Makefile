@@ -6,7 +6,7 @@ SHELL := /bin/bash
 BACKEND_SESSION := $(shell date +"%Y%m%d_%H%M%S")
 
 # Azure Service Configuration
-AZURE_ENVIRONMENT := $(or $(AZURE_ENVIRONMENT), dev)
+AZURE_ENVIRONMENT := $(or $(AZURE_ENVIRONMENT), staging)
 
 # Clean Session Files - Replace Previous Output
 CURRENT_BACKEND_SESSION := logs/backend_session.current
@@ -61,7 +61,7 @@ define finalize_backend_session
 	@echo "📋 Backend session summary: $(SESSION_SUMMARY)"
 endef
 
-.PHONY: help setup run azure-health-check data-upload knowledge-extract data-prep-full data-prep-enterprise query-demo-enterprise backend-summary clean
+.PHONY: help setup run azure-health-check data-upload knowledge-extract data-prep-full data-prep-enterprise query-demo-enterprise backend-summary clean clean-data
 
 help: ## Azure Universal RAG Backend Operations (Two-Step Intelligent Processing)
 	@echo "🔧 Azure Universal RAG Backend - Intelligent Document Processing"
@@ -89,14 +89,22 @@ help: ## Azure Universal RAG Backend Operations (Two-Step Intelligent Processing
 	@echo "  make backend-summary        - Display current backend session"
 	@echo "  make clean                  - Clean session with log replacement"
 	@echo ""
+	@echo "🧹 Data Management:"
+	@echo "  make clean-data             - Clean processed data (preserve raw & back_data)"
+	@echo ""
 	@echo "📖 Legacy Commands:"
 	@echo "  make data-prep-enterprise   - DEPRECATED: Use data-prep-full instead"
 	@echo ""
-	@echo "💡 Recommended Workflow:"
+	@echo "💡 Recommended Workflows:"
+	@echo ""
+	@echo "🔄 Data Processing:"
 	@echo "  1. make data-upload         (Upload & chunk documents intelligently)"
 	@echo "  2. make knowledge-extract   (Extract knowledge graph from chunks)"
 	@echo "  OR: make data-prep-full     (Run both steps automatically)"
 	@echo "  OR: make prompt-flow-extract (Use centralized prompt management)"
+	@echo ""
+	@echo "🧹 Data Management:"
+	@echo "  make clean-data             (Clean processed data - preserve raw)"
 	@echo ""
 	@echo "Current Backend Session: $(shell cat $(CURRENT_BACKEND_SESSION) 2>/dev/null || echo 'No active session')"
 
@@ -277,3 +285,16 @@ prompt-templates: ## View and manage centralized prompt templates
 data-prep: data-prep-enterprise
 query-demo: query-demo-enterprise
 test: azure-health-check
+
+# === Data Management ===
+
+clean-data: ## Clean processed data (preserve raw and back_data)
+	@echo "🧹 Cleaning processed data..."
+	@for dir in demo demo_outputs extraction_comparisons extraction_outputs extraction_progress gnn_models gnn_training indices kg_operations loading_results; do \
+		if [ -d "data/$$dir" ]; then \
+			rm -rf "data/$$dir"; \
+		fi; \
+	done
+	@if [ -d "data/outputs" ]; then rm -rf data/outputs/*; fi
+	@if [ -d "logs" ]; then rm -rf logs/*; fi
+	@echo "✅ Processed data cleaned (raw and back_data preserved)"

@@ -51,6 +51,7 @@ module ai 'modules/ai-services.bicep' = {
     location: location
     principalId: principalId
     resourcePrefix: resourcePrefix
+    managedIdentityPrincipalId: coreServices.outputs.managedIdentityPrincipalId
   }
 }
 
@@ -62,6 +63,7 @@ module data 'modules/data-services.bicep' = {
     location: location
     principalId: principalId
     resourcePrefix: resourcePrefix
+    managedIdentityPrincipalId: coreServices.outputs.managedIdentityPrincipalId
   }
 }
 

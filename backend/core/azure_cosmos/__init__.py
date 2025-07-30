@@ -1,21 +1,19 @@
 """
-Azure Cosmos DB Integration - Consolidated Client
-All Azure Cosmos DB functionality consolidated in this module
+Azure Cosmos DB Integration - Gremlin Graph Database
+All Azure Cosmos DB functionality using the complete AzureCosmosGremlinClient
 """
 
-# Main unified client implementation
-from .cosmos_client import UnifiedCosmosClient
-
-# Keep the original implementation available
+# Main production client - complete implementation
 from .cosmos_gremlin_client import AzureCosmosGremlinClient
 
-# Maintain backwards compatibility with old class names
-GremlinClient = UnifiedCosmosClient
-CosmosDbClient = UnifiedCosmosClient
+# Aliases for backwards compatibility
+UnifiedCosmosClient = AzureCosmosGremlinClient
+GremlinClient = AzureCosmosGremlinClient
+CosmosDbClient = AzureCosmosGremlinClient
 
 __all__ = [
-    'UnifiedCosmosClient',
     'AzureCosmosGremlinClient',
+    'UnifiedCosmosClient',
     'GremlinClient',
     'CosmosDbClient'
 ]

@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field
 # Azure service components
 # Using focused services instead of integrations
 from api.dependencies import get_azure_services
+from integrations.azure_services import AzureServicesManager
+from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
 
 # Import our knowledge graph operations
 import sys
@@ -320,96 +322,132 @@ async def get_data_flow_summary() -> Dict[str, Any]:
     logger.info("Getting complete data flow summary for supervisor demo")
     
     try:
-        # Read our results files
-        extraction_file = Path(__file__).parent.parent.parent / "data/extraction_outputs/full_dataset_extraction_9100_entities_5848_relationships.json"
-        kg_demo_file = Path(__file__).parent.parent.parent / "data/kg_operations/azure_real_kg_demo.json"
-        gnn_metadata_file = Path(__file__).parent.parent.parent / "data/gnn_training/gnn_metadata_full_20250727_044607.json"
+        # Dynamically find the most recent data files
+        base_path = Path(__file__).parent.parent.parent
+        
+        # Find most recent extraction file
+        extraction_outputs_dir = base_path / "data/extraction_outputs"
+        extraction_file = None
+        if extraction_outputs_dir.exists():
+            extraction_files = list(extraction_outputs_dir.glob("*.json"))
+            if extraction_files:
+                extraction_file = max(extraction_files, key=lambda x: x.stat().st_mtime)
+        
+        # Find most recent KG operations file
+        kg_operations_dir = base_path / "data/kg_operations"
+        kg_demo_file = None
+        if kg_operations_dir.exists():
+            kg_files = list(kg_operations_dir.glob("*.json"))
+            if kg_files:
+                kg_demo_file = max(kg_files, key=lambda x: x.stat().st_mtime)
+        
+        # Find most recent GNN metadata file
+        gnn_training_dir = base_path / "data/gnn_training"
+        gnn_metadata_file = None
+        if gnn_training_dir.exists():
+            gnn_files = list(gnn_training_dir.glob("gnn_metadata_*.json"))
+            if gnn_files:
+                gnn_metadata_file = max(gnn_files, key=lambda x: x.stat().st_mtime)
+        
+        # Get actual data counts from files
+        pipeline_stages = {}
+        
+        # Stage 1: Raw text data
+        raw_data_dir = base_path / "data/raw"
+        raw_files_count = len(list(raw_data_dir.glob("*.md"))) if raw_data_dir.exists() else 0
+        pipeline_stages["1_raw_text_data"] = {
+            "description": "Raw data from source files",
+            "source_files": raw_files_count,
+            "data_type": "Raw text documents"
+        }
+        
+        # Stage 2: LLM extraction (from actual extraction file)
+        if extraction_file and extraction_file.exists():
+            try:
+                with open(extraction_file, 'r') as f:
+                    extraction_data = json.load(f)
+                    pipeline_stages["2_llm_extraction"] = {
+                        "description": "Azure OpenAI knowledge extraction",
+                        "service": "Azure OpenAI",
+                        "entities_extracted": len(extraction_data.get("entities", [])),
+                        "relationships_identified": len(extraction_data.get("relationships", [])),
+                        "extraction_file": extraction_file.name
+                    }
+            except Exception:
+                pipeline_stages["2_llm_extraction"] = {
+                    "description": "Azure OpenAI knowledge extraction",
+                    "status": "No extraction data available"
+                }
+        else:
+            pipeline_stages["2_llm_extraction"] = {
+                "description": "Azure OpenAI knowledge extraction",
+                "status": "No extraction data available"
+            }
+        
+        # Stage 3: Knowledge graph (from actual KG data)
+        if kg_demo_file and kg_demo_file.exists():
+            try:
+                with open(kg_demo_file, 'r') as f:
+                    kg_data = json.load(f)
+                    graph_state = kg_data.get("graph_state", {})
+                    pipeline_stages["3_knowledge_structure"] = {
+                        "description": "Azure Cosmos DB knowledge graph",
+                        "service": "Azure Cosmos DB Gremlin API",
+                        "vertices_loaded": graph_state.get("vertices", 0),
+                        "edges_loaded": graph_state.get("edges", 0),
+                        "kg_file": kg_demo_file.name
+                    }
+            except Exception:
+                pipeline_stages["3_knowledge_structure"] = {
+                    "description": "Azure Cosmos DB knowledge graph",
+                    "status": "No knowledge graph data available"
+                }
+        else:
+            pipeline_stages["3_knowledge_structure"] = {
+                "description": "Azure Cosmos DB knowledge graph",
+                "status": "No knowledge graph data available"
+            }
+        
+        # Stage 4: GNN training (from actual metadata)
+        if gnn_metadata_file and gnn_metadata_file.exists():
+            try:
+                with open(gnn_metadata_file, 'r') as f:
+                    gnn_data = json.load(f)
+                    pipeline_stages["4_gnn_training"] = {
+                        "description": "Graph Neural Network training",
+                        "framework": "PyTorch Geometric",
+                        "model_accuracy": gnn_data.get("test_accuracy", "Not available"),
+                        "training_environment": "Azure ML",
+                        "metadata_file": gnn_metadata_file.name
+                    }
+            except Exception:
+                pipeline_stages["4_gnn_training"] = {
+                    "description": "Graph Neural Network training",
+                    "status": "No GNN training data available"
+                }
+        else:
+            pipeline_stages["4_gnn_training"] = {
+                "description": "Graph Neural Network training",
+                "status": "No GNN training data available"
+            }
         
         data_flow_summary = {
             "success": True,
-            "pipeline_stages": {
-                "1_raw_text_data": {
-                    "description": "Unstructured maintenance texts",
-                    "source_files": 5254,
-                    "total_documents": "maintenance_all_texts.md",
-                    "data_type": "Raw text documents"
-                },
-                "2_llm_extraction": {
-                    "description": "Azure OpenAI GPT-4 knowledge extraction",
-                    "service": "Azure OpenAI",
-                    "entities_extracted": 9100,
-                    "relationships_identified": 5848,
-                    "extraction_quality": "Context-aware, domain-agnostic"
-                },
-                "3_knowledge_structure": {
-                    "description": "Azure Cosmos DB knowledge graph",
-                    "service": "Azure Cosmos DB Gremlin API", 
-                    "vertices_loaded": 2000,
-                    "edges_loaded": 60368,
-                    "connectivity_ratio": 30.18,
-                    "relationship_multiplication": "10.3x (contextual enrichment)"
-                },
-                "4_gnn_training": {
-                    "description": "Graph Neural Network training",
-                    "framework": "PyTorch Geometric",
-                    "model_type": "Graph Attention Network (GAT)",
-                    "parameters": "7.4M",
-                    "test_accuracy": "34.2%",
-                    "training_environment": "Azure ML"
-                },
-                "5_enhanced_intelligence": {
-                    "description": "Multi-hop reasoning and workflow discovery",
-                    "maintenance_workflows_discovered": 2499,
-                    "graph_intelligence": "Equipment-Component-Action chains",
-                    "semantic_search": "Context-aware entity discovery",
-                    "performance": "<1s graph traversal"
-                },
-                "6_api_endpoints": {
-                    "description": "Production-ready universal query API",
-                    "primary_endpoint": "/api/v1/query/universal",
-                    "response_time": "<3s",
-                    "azure_services_integrated": 4,
-                    "features": ["Real-time processing", "Multi-service integration", "Enterprise monitoring"]
+            "pipeline_stages": pipeline_stages,
+            "data_sources": {
+                "raw_data_files": raw_files_count,
+                "extraction_available": extraction_file is not None,
+                "kg_data_available": kg_demo_file is not None,
+                "gnn_metadata_available": gnn_metadata_file is not None
                 }
-            },
-            "technical_achievements": {
-                "scale_improvement": "60K+ relationships vs 5.8K source",
-                "connectivity_enhancement": "30.18 connectivity ratio",
-                "intelligence_gain": "2,499 workflows discovered automatically",
-                "performance_optimization": "Sub-3s query processing",
-                "azure_integration": "6 Azure services orchestrated"
-            },
-            "business_value": {
-                "accuracy_improvement": "85%+ vs 60-70% traditional RAG", 
-                "knowledge_discovery": "Automated workflow identification",
-                "scalability": "Enterprise Azure architecture",
-                "maintenance_intelligence": "Equipment-to-action reasoning chains"
             }
-        }
-        
-        # Try to load actual data from files if available
-        try:
-            if extraction_file.exists():
-                with open(extraction_file, 'r') as f:
-                    extraction_data = json.load(f)
-                    data_flow_summary["pipeline_stages"]["2_llm_extraction"]["entities_extracted"] = len(extraction_data["entities"])
-                    data_flow_summary["pipeline_stages"]["2_llm_extraction"]["relationships_identified"] = len(extraction_data["relationships"])
-        except Exception as e:
-            logger.warning(f"Could not load extraction data: {e}")
-            
-        try:
-            if kg_demo_file.exists():
-                with open(kg_demo_file, 'r') as f:
-                    kg_data = json.load(f)
-                    graph_state = kg_data["graph_state"]
-                    data_flow_summary["pipeline_stages"]["3_knowledge_structure"]["vertices_loaded"] = graph_state["vertices"]
-                    data_flow_summary["pipeline_stages"]["3_knowledge_structure"]["edges_loaded"] = graph_state["edges"]
-                    data_flow_summary["pipeline_stages"]["3_knowledge_structure"]["connectivity_ratio"] = graph_state["connectivity_ratio"]
-        except Exception as e:
-            logger.warning(f"Could not load KG demo data: {e}")
         
         return data_flow_summary
         
     except Exception as e:
-        logger.error(f"Failed to get data flow summary: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error getting data flow summary: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Unable to generate data flow summary from available data"
+        }

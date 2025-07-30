@@ -3,6 +3,7 @@ param environmentName string
 param location string
 param principalId string
 param resourcePrefix string
+param managedIdentityPrincipalId string
 
 // Environment-specific configuration
 var environmentConfig = {
@@ -48,14 +49,15 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
         isZoneRedundant: environmentName == 'production'
       }
     ]
-    capabilities: [
+    capabilities: concat([
       {
         name: 'EnableGremlin'
       }
+    ], config.cosmosCapacityMode == 'Serverless' ? [
       {
         name: 'EnableServerless'
       }
-    ]
+    ] : [])
     enableAutomaticFailover: environmentName == 'production'
     enableMultipleWriteLocations: false
     isVirtualNetworkFilterEnabled: false
@@ -77,16 +79,9 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
 resource gremlinDatabase 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases@2023-04-15' = {
   parent: cosmosAccount
   name: 'maintie-rag-${environmentName}'
-  properties: config.cosmosCapacityMode == 'Serverless' ? {
+  properties: {
     resource: {
       id: 'maintie-rag-${environmentName}'
-    }
-  } : {
-    resource: {
-      id: 'maintie-rag-${environmentName}'
-    }
-    options: {
-      throughput: config.cosmosRU
     }
   }
 }
@@ -143,9 +138,9 @@ resource knowledgeGraphContainer 'Microsoft.DocumentDB/databaseAccounts/gremlinD
   }
 }
 
-// Azure ML Workspace for GNN Training
+// Azure ML Workspace for GNN Training  
 resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' = {
-  name: 'ml-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id), 6)}'
+  name: 'ml-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 10)}-${take(uniqueString(resourceGroup().id, deployment().name), 8)}'
   location: 'centralus'
   identity: {
     type: 'SystemAssigned'
@@ -157,8 +152,8 @@ resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' =
   properties: {
     description: 'Azure ML Workspace for GNN training and model management'
     friendlyName: 'Universal RAG ML Workspace (${environmentName})'
-    keyVault: resourceId('Microsoft.KeyVault/vaults', 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id), 8)}')
-    storageAccount: resourceId('Microsoft.Storage/storageAccounts', 'st${take(replace(replace('${resourcePrefix}${environmentName}', '-', ''), '_', ''), 8)}${take(uniqueString(resourceGroup().id), 10)}')
+    keyVault: resourceId('Microsoft.KeyVault/vaults', 'kv-maintieragst-bfyhcuxj')
+    storageAccount: resourceId('Microsoft.Storage/storageAccounts', 'stmaintieroeeopj3ksg')
     applicationInsights: resourceId('Microsoft.Insights/components', 'appi-${resourcePrefix}-${environmentName}')
     publicNetworkAccess: 'Enabled'
     v1LegacyMode: false
@@ -213,7 +208,28 @@ resource mlComputeCluster 'Microsoft.MachineLearningServices/workspaces/computes
   }
 }
 
-// RBAC assignments for current user
+// RBAC assignments for managed identity
+resource managedIdentityCosmosContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: cosmosAccount
+  name: guid(cosmosAccount.id, managedIdentityPrincipalId, 'Cosmos DB Built-in Data Contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
+    principalId: managedIdentityPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource managedIdentityMlContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: mlWorkspace
+  name: guid(mlWorkspace.id, managedIdentityPrincipalId, 'AzureML Data Scientist')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')
+    principalId: managedIdentityPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// RBAC assignments for current user (development)
 resource cosmosContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
   scope: cosmosAccount
   name: guid(cosmosAccount.id, principalId, 'Cosmos DB Built-in Data Contributor')

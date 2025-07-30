@@ -13,8 +13,9 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, Field
 
 # Azure service components
-from services.graph_service import GraphService
+from services.graph_service import GraphService  
 from api.dependencies import get_azure_services
+from integrations.azure_services import AzureServicesManager
 
 logger = logging.getLogger(__name__)
 

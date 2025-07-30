@@ -19,6 +19,7 @@ from ..azure_cosmos.enhanced_gremlin_client import EnterpriseGremlinGraphManager
 from .gnn.trainer import UniversalGNNTrainer
 from .gnn.data_loader import load_graph_data_from_cosmos
 from config.settings import settings
+from config.domain_patterns import DomainPatternManager
 
 logger = logging.getLogger(__name__)
 
@@ -26,19 +27,15 @@ logger = logging.getLogger(__name__)
 class AzureGNNTrainingOrchestrator:
     """Enterprise GNN training orchestration with Azure ML"""
 
-    def __init__(self, ml_client: MLClient, cosmos_client: EnterpriseGremlinGraphManager):
+    def __init__(self, ml_client: MLClient, cosmos_client: EnterpriseGremlinGraphManager, domain: str = "general"):
         self.ml_client = ml_client
         self.cosmos_client = cosmos_client
+        self.domain = domain
         self.training_schedule = self._load_training_schedule()
 
     def _load_training_schedule(self) -> Dict[str, Any]:
-        """Load training schedule configuration"""
-        return {
-            "trigger_threshold": 100,  # New entities/relations
-            "training_frequency": "daily",
-            "model_retention_days": 30,
-            "deployment_tier": "standard"
-        }
+        """Load training schedule configuration from domain patterns"""
+        return DomainPatternManager.get_training_schedule(self.domain)
 
     async def orchestrate_incremental_training(
         self,

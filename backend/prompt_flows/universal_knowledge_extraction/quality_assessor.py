@@ -170,7 +170,7 @@ if __name__ == "__main__":
     sample_relations = [
         {"relation_id": "r1", "relation_type": "connected_to", "confidence": 0.8}
     ]
-    sample_texts = ["The valve is connected to the bearing through a hydraulic system."]
-    
-    result = main(sample_entities, sample_relations, sample_texts)
-    print(json.dumps(result, indent=2))
+    # This module should only be called from the prompt flow - no standalone execution
+    print("Error: This module is designed to be called from Azure Prompt Flow, not executed standalone.")
+    print("Use: make prompt-flow-extract to run quality assessment on real data")
+    exit(1)

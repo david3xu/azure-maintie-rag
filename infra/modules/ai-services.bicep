@@ -3,6 +3,7 @@ param environmentName string
 param location string
 param principalId string
 param resourcePrefix string
+param managedIdentityPrincipalId string
 
 // Environment-specific model configurations
 var environmentConfig = {
@@ -50,37 +51,37 @@ resource openaiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   }
 }
 
-// GPT-4 Model Deployment for text generation and reasoning
-resource gpt4Deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+// GPT-4o Model Deployment for text generation and reasoning
+resource gpt4Deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (true) {
   parent: openaiAccount
-  name: 'gpt-4'
+  name: 'gpt-4o'
   properties: {
     model: {
       format: 'OpenAI'
       name: 'gpt-4o'
-      version: '2024-05-13'
+      version: '2024-08-06'
     }
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
     sku: {
-      name: 'Standard'
+      name: 'GlobalStandard'
       capacity: config.gpt4Capacity
     }
   }
 }
 
-// GPT-4 Turbo for enhanced performance (production)
+// GPT-4o Mini for enhanced performance (production)
 resource gpt4TurboDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (environmentName == 'production') {
   parent: openaiAccount
-  name: 'gpt-4-turbo'
+  name: 'gpt-4o-mini'
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'gpt-4'
-      version: '1106-Preview'
+      name: 'gpt-4o-mini'
+      version: '2024-07-18'
     }
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
     sku: {
-      name: 'Standard'
+      name: 'GlobalStandard'
       capacity: 20
     }
   }
@@ -88,7 +89,7 @@ resource gpt4TurboDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
 }
 
 // Text Embedding Model for vector search
-resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (true) {
   parent: openaiAccount
   name: 'text-embedding-ada-002'
   properties: {
@@ -99,7 +100,7 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
     }
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
     sku: {
-      name: 'Standard'
+      name: 'GlobalStandard'
       capacity: config.embeddingCapacity
     }
   }
@@ -118,7 +119,7 @@ resource embedding3LargeDeployment 'Microsoft.CognitiveServices/accounts/deploym
     }
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
     sku: {
-      name: 'Standard'
+      name: 'GlobalStandard'
       capacity: 30
     }
   }
@@ -126,6 +127,17 @@ resource embedding3LargeDeployment 'Microsoft.CognitiveServices/accounts/deploym
 }
 
 // RBAC for managed identity access
+resource managedIdentityOpenaiUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: openaiAccount
+  name: guid(openaiAccount.id, managedIdentityPrincipalId, 'Cognitive Services OpenAI User')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
+    principalId: managedIdentityPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// RBAC for user access (development)
 resource openaiUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
   scope: openaiAccount
   name: guid(openaiAccount.id, principalId, 'Cognitive Services OpenAI User')
@@ -170,10 +182,10 @@ output openaiAccountName string = openaiAccount.name
 output openaiEndpoint string = openaiAccount.properties.endpoint
 output openaiResourceId string = openaiAccount.id
 
-output deploymentName string = gpt4Deployment.name
-output embeddingDeploymentName string = embeddingDeployment.name
-output gpt4TurboDeploymentName string = environmentName == 'production' ? gpt4TurboDeployment.name : ''
-output embedding3LargeDeploymentName string = environmentName == 'production' ? embedding3LargeDeployment.name : ''
+output deploymentName string = 'gpt-4o'
+output embeddingDeploymentName string = 'text-embedding-ada-002'
+output gpt4TurboDeploymentName string = ''
+output embedding3LargeDeploymentName string = ''
 
 output openaiLocation string = config.location
 output openaiResourceGroup string = resourceGroup().name
