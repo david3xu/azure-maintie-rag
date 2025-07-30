@@ -111,66 +111,21 @@ async def process_azure_query(
         start_time = time.time()
         azure_services_used = []
 
-        # Step 1: Search for relevant documents using Azure Cognitive Search
-        logger.info("Searching Azure Cognitive Search...")
-        index_name = f"rag-index-{request.domain}"
-        search_client = azure_services.get_service('search')
-        search_response = await search_client.search_documents(
-            request.query, top=request.max_results
+        # Step 1: Process query using the query service
+        logger.info("Processing query using QueryService...")
+        query_response = await query_service.process_universal_query(
+            request.query, 
+            domain=request.domain, 
+            max_results=request.max_results
         )
-        search_results = search_response.get('documents', []) if search_response.get('success') else []
+        
+        search_results = query_response.get('data', {}).get('search_results', [])
         azure_services_used.append("Azure Cognitive Search")
 
-        # Step 2: Retrieve document content from Azure Blob Storage
-        logger.info("Retrieving documents from Azure Blob Storage...")
-        container_name = f"rag-data-{request.domain}"
-        retrieved_docs = []
-
-        for i, result in enumerate(search_results[:3]):  # Get top 3 documents
-            blob_name = f"document_{i}.txt"
-            try:
-                # Use RAG storage client for document retrieval
-                rag_storage = azure_services.get_rag_storage_client()
-                content = await rag_storage.download_text(container_name, blob_name)
-                retrieved_docs.append(content)
-            except Exception as e:
-                logger.warning(f"Could not retrieve document {i}: {e}")
-
-        azure_services_used.append("Azure Blob Storage (RAG)")
-
-        # Step 3: Generate response using Azure OpenAI
-        logger.info("Generating response with Azure OpenAI...")
-        # Create a prompt with query and retrieved documents
-        prompt = f"Query: {request.query}\n\nContext:\n"
-        for i, doc in enumerate(retrieved_docs):
-            prompt += f"Document {i+1}: {doc[:500]}...\n"
-        prompt += f"\nPlease provide a comprehensive answer based on the context above."
+        # Extract response data from query service
+        generated_response = query_response.get('data', {}).get('response', 'No response generated')
+        azure_services_used.extend(["Azure Blob Storage", "Azure OpenAI", "Azure Cosmos DB"])
         
-        response = await openai_integration.get_completion(
-            prompt, request.domain
-        )
-        azure_services_used.append("Azure OpenAI")
-
-        # Step 4: Store query metadata in Azure Cosmos DB Gremlin
-        logger.info("Storing query metadata in Azure Cosmos DB Gremlin...")
-
-        query_metadata = {
-            "id": f"query-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
-            "query": request.query,
-            "domain": request.domain,
-            "search_results_count": len(search_results),
-            "retrieved_docs_count": len(retrieved_docs),
-            "response_length": len(response),
-            "timestamp": datetime.now().isoformat()
-        }
-
-        try:
-            cosmos_client = azure_services.get_service('cosmos')
-            cosmos_client.add_entity(query_metadata, request.domain)
-            azure_services_used.append("Azure Cosmos DB Gremlin")
-        except Exception as e:
-            logger.warning(f"Could not store metadata in graph: {e}")
-
         processing_time = time.time() - start_time
 
         # Return structured response
@@ -179,18 +134,11 @@ async def process_azure_query(
             "query": request.query,
             "domain": request.domain,
             "generated_response": {
-                "content": response,
-                "length": len(response),
+                "content": generated_response,
+                "length": len(generated_response) if isinstance(generated_response, str) else 0,
                 "model_used": azure_settings.openai_deployment_name or "gpt-4o"
             },
-            "search_results": [
-                {
-                    "id": f"doc_{i}",
-                    "content": doc[:200] + "..." if len(doc) > 200 else doc,
-                    "score": search_result.get('score', 0.0) if isinstance(doc, dict) else 0.9 - (i * 0.1)
-                }
-                for i, (doc, search_result) in enumerate(zip(retrieved_docs, search_results or [{}] * len(retrieved_docs)))
-            ],
+            "search_results": search_results[:request.max_results] if search_results else [],
             "processing_time": processing_time,
             "azure_services_used": azure_services_used,
             "timestamp": datetime.now().isoformat()
