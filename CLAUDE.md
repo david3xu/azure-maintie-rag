@@ -16,11 +16,10 @@ This file provides guidance to Claude Code when working with this **Azure Univer
 ```mermaid
 flowchart TD
     A[Raw Text Data] --> B["Azure Blob Storage RAG"]
-    B --> C[Knowledge Extraction Azure OpenAI]
-    C --> D[Azure Cognitive Search Vectors]
-    C --> E[Entity/Relation Graph]
-    D --> F[Vector Index 1536D]
-    E --> G[Azure Cosmos DB Gremlin Graph]
+    B --> C1[Document Indexing + Vector Embeddings]
+    B --> C2[Knowledge Extraction Azure OpenAI]
+    C1 --> F[Vector Index 1536D]
+    C2 --> G[Azure Cosmos DB Gremlin Graph]
     G --> H[GNN Training Azure ML]
     H --> I[Trained GNN Model]
     J[User Query] --> K[Query Analysis Azure OpenAI]
@@ -41,9 +40,9 @@ flowchart TD
 
 **Processing Phase**:
 
-1. Raw text → Azure Blob Storage → Knowledge extraction (Azure OpenAI)
-2. Parallel processing: Vector embeddings (1536D) + Entity/relation graph → Cosmos DB
-3. GNN training on graph data → Trained model storage
+1. Raw text → Azure Blob Storage
+2. Parallel processing: Document indexing + vector embeddings (1536D) + Knowledge extraction (entities/relations)
+3. Knowledge graph construction → GNN training → Trained model storage
 
 **Query Phase**:
 User query → Query analysis → Unified search (Vector + Graph + GNN) → Context retrieval → Response generation
@@ -176,3 +175,9 @@ For detailed implementation guidance, see:
 - Context-aware relationship weighting
 - Real-time workflow visualization
 - Enterprise-grade error handling and monitoring
+
+## Agents
+
+- Agent framework includes multimodal reasoning capabilities
+- Support for autonomous task decomposition and execution
+- Stateful agent interactions with memory and context tracking

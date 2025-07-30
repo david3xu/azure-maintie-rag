@@ -1,0 +1,112 @@
+{
+  "demo_id": "demo-49b1b275",
+  "demo_start": "2025-07-29T15:26:40.575685",
+  "configuration": {
+    "demo_data_path": "/workspace/azure-maintie-rag/backend/data/back_data/demo_sample_10percent.md",
+    "domain": "maintenance",
+    "demo_queries": [],
+    "enable_streaming": false,
+    "skip_gnn_training": true,
+    "validation_result": {
+      "success": true,
+      "data_path": "/workspace/azure-maintie-rag/backend/data/back_data/demo_sample_10percent.md",
+      "path_type": "single_file",
+      "file_count": 1,
+      "total_size": 15916,
+      "file_details": [
+        {
+          "name": "demo_sample_10percent.md",
+          "size": 15916,
+          "extension": ".md"
+        }
+      ],
+      "content_analysis": {
+        "total_lines": 761,
+        "maintenance_entries": 335,
+        "estimated_entities": 167,
+        "data_type": "maintenance_reports"
+      }
+    }
+  },
+  "phases": {
+    "infrastructure_validation": {
+      "duration": 7.7,
+      "status": "completed",
+      "results": {
+        "validation_timestamp": "2025-07-29T15:26:40.575702",
+        "domain": "maintenance",
+        "services": {
+          "azure_openai": {
+            "service_name": "Azure OpenAI",
+            "status": "failed",
+            "capabilities": {},
+            "issues": [
+              "Connection failed: 'Settings' object has no attribute 'openai_model_name'"
+            ]
+          },
+          "azure_search": {
+            "service_name": "Azure Cognitive Search",
+            "status": "failed",
+            "capabilities": {},
+            "indices": {},
+            "issues": [
+              "Connection failed: 'dict' object has no attribute 'document_count'"
+            ]
+          },
+          "azure_cosmos": {
+            "service_name": "Azure Cosmos DB (Gremlin)",
+            "status": "failed",
+            "capabilities": {},
+            "database_info": {},
+            "issues": [
+              "Connection failed: Cannot run the event loop while another loop is running"
+            ]
+          },
+          "azure_storage": {
+            "service_name": "Azure Blob Storage",
+            "status": "failed",
+            "error": "'UnifiedStorageClient' object has no attribute 'ensure_container_exists'",
+            "issues": [
+              "Validation exception: 'UnifiedStorageClient' object has no attribute 'ensure_container_exists'"
+            ]
+          },
+          "azure_ml": {
+            "service_name": "Azure ML Workspace",
+            "status": "failed",
+            "error": "'MLService' object has no attribute 'check_compute_resources'",
+            "issues": [
+              "Validation exception: 'MLService' object has no attribute 'check_compute_resources'"
+            ]
+          }
+        },
+        "overall_status": "degraded",
+        "issues": [
+          "azure_openai: Connection failed: 'Settings' object has no attribute 'openai_model_name'",
+          "azure_search: Connection failed: 'dict' object has no attribute 'document_count'",
+          "azure_cosmos: Connection failed: Cannot run the event loop while another loop is running",
+          "azure_storage: Validation exception: 'UnifiedStorageClient' object has no attribute 'ensure_container_exists'",
+          "azure_ml: Validation exception: 'MLService' object has no attribute 'check_compute_resources'"
+        ],
+        "recommendations": [
+          "Fix failed services before proceeding with data processing"
+        ],
+        "service_summary": {
+          "healthy": 0,
+          "degraded": 0,
+          "failed": 5,
+          "total": 5
+        }
+      }
+    }
+  },
+  "performance_metrics": {
+    "total_demo_duration": 1338.07,
+    "processing_phase_duration": 1330.37,
+    "query_phase_duration": 0,
+    "queries_processed": 0,
+    "average_query_time": 0
+  },
+  "success": false,
+  "demo_end": "2025-07-29T15:48:58.646405",
+  "error": "Processing phase failed: Stage 04 failed: No Azure data available and no local Step 02 backup found"
+}

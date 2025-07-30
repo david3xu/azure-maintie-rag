@@ -127,7 +127,7 @@ class UnifiedGNNTrainingPipeline:
             
             # Setup output directory
             if output_dir is None:
-                output_dir = "backend/models/gnn"
+                output_dir = "data/outputs/models/gnn"
             output_path = Path(output_dir)
             output_path.mkdir(parents=True, exist_ok=True)
             

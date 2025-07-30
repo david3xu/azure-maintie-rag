@@ -5,10 +5,25 @@ Centralizes all application settings and environment variables for Azure service
 
 import os
 import json
+import subprocess
 from pathlib import Path
 from typing import Optional, List, ClassVar, Dict, Any
 from pydantic_settings import BaseSettings
 from pydantic import Field
+
+
+def get_azd_environment() -> str:
+    """Auto-detect current azd environment"""
+    try:
+        result = subprocess.run(['azd', 'env', 'get-values'], 
+                              capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            for line in result.stdout.split('\n'):
+                if line.startswith('AZURE_ENV_NAME='):
+                    return line.split('=')[1].strip('"')
+    except:
+        pass
+    return "development"  # fallback
 
 
 class Settings(BaseSettings):
@@ -57,12 +72,13 @@ class Settings(BaseSettings):
     # Application Settings
     app_name: str = "Azure Universal RAG"
     app_version: str = "2.0.0"
-    environment: str = Field(default="development", env="ENVIRONMENT")
+    environment: str = Field(default_factory=get_azd_environment, env="ENVIRONMENT")
     debug: bool = Field(default=True, env="DEBUG")
     
     # Azure Identity & Security (azd-compatible)
     azure_client_id: str = Field(default="", env="AZURE_CLIENT_ID")  # azd output
     use_managed_identity: bool = Field(default=True, env="USE_MANAGED_IDENTITY")
+    cosmos_use_managed_identity: bool = Field(default=True, env="COSMOS_USE_MANAGED_IDENTITY")
     azure_key_vault_name: str = Field(default="", env="AZURE_KEY_VAULT_NAME")  # azd output
     
     # Monitoring (azd-compatible)
@@ -99,6 +115,7 @@ class Settings(BaseSettings):
     # Azure Storage Settings (azd-managed with managed identity)
     azure_storage_account: str = Field(default="", env="AZURE_STORAGE_ACCOUNT")  # azd output
     azure_blob_container: str = Field(default="", env="AZURE_STORAGE_CONTAINER")  # azd output
+    azure_storage_container: str = Field(default="rag-data", env="AZURE_STORAGE_CONTAINER")  # alias
 
     # Backward compatibility properties
     @property
@@ -121,13 +138,12 @@ class Settings(BaseSettings):
     azure_cosmos_endpoint: str = Field(default="", env="AZURE_COSMOS_ENDPOINT")  # azd output
     cosmos_database_name: str = Field(default="", env="COSMOS_DATABASE_NAME")  # azd output
     cosmos_graph_name: str = Field(default="", env="COSMOS_GRAPH_NAME")  # azd output
+    azure_cosmos_container: str = Field(default="", env="COSMOS_CONTAINER_NAME")  # azd output
     azure_cosmos_api_version: str = Field(default="2023-03-01-preview", env="AZURE_COSMOS_API_VERSION")
     
     # Backward compatibility properties
-    @property
-    def azure_cosmos_key(self) -> str:
-        # For managed identity, return empty - will be handled by Azure SDK
-        return ""
+    # Cosmos DB Authentication - hybrid approach
+    azure_cosmos_key: str = Field(default="", env="AZURE_COSMOS_KEY")
         
     @property
     def azure_cosmos_database(self) -> str:
@@ -449,6 +465,8 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = False
         extra = "ignore"  # Allow extra fields from environment
+        env_file = ".env"
+        env_file_encoding = "utf-8"
 
     def get_storage_config(self, container_name: str = None) -> Dict[str, str]:
         """Get azd-managed storage configuration with managed identity"""

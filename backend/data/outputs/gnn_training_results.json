@@ -1,0 +1,33 @@
+{
+  "stage": "05_gnn_training",
+  "source_path": "data/outputs/step04/pytorch_geometric_maintenance.pt",
+  "domain": "maintenance",
+  "training_parameters": {
+    "epochs": 20,
+    "learning_rate": 0.01,
+    "model_type": "gat"
+  },
+  "training_metrics": {
+    "best_val_accuracy": 0.5,
+    "final_test_accuracy": 0.5370370149612427,
+    "epochs_trained": 20,
+    "model_type": "gat"
+  },
+  "model_info": {
+    "model_file": "data/outputs/step05/gnn_model_maintenance.pt",
+    "model_type": "gat",
+    "input_dim": 64,
+    "hidden_dim": 64,
+    "output_dim": 10,
+    "model_saved": true
+  },
+  "success": true,
+  "graph_info": {
+    "num_nodes": 540,
+    "num_edges": 1178,
+    "node_feature_dim": 64,
+    "edge_feature_dim": 32,
+    "num_classes": 10
+  },
+  "duration_seconds": 0.35
+}

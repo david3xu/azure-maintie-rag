@@ -186,7 +186,7 @@ resource modelsContainer 'Microsoft.Storage/storageAccounts/blobServices/contain
 
 // Key Vault for secrets management
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id), 8)}'
+  name: 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id, deployment().name), 8)}'
   location: location
   properties: {
     tenantId: subscription().tenantId
@@ -211,6 +211,16 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 }
 
 // RBAC assignments for managed identity
+resource searchIndexDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: searchService
+  name: guid(searchService.id, managedIdentity.id, 'Search Index Data Contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 resource searchServiceContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: searchService
   name: guid(searchService.id, managedIdentity.id, 'Search Service Contributor')

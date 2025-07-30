@@ -10,13 +10,16 @@ from fastapi import HTTPException
 from services.infrastructure_service import InfrastructureService
 from services.data_service import DataService
 from config.settings import AzureSettings
+from core.azure_openai.openai_client import UnifiedAzureOpenAIClient
+from integrations.azure_services import AzureServicesManager
 
 logger = logging.getLogger(__name__)
 
 # Global references to be set by main.py
 _infrastructure_service: Optional[InfrastructureService] = None
 _data_service: Optional[DataService] = None
-_openai_integration: Optional[AzureOpenAIClient] = None
+_azure_services: Optional[AzureServicesManager] = None
+_openai_integration: Optional[UnifiedAzureOpenAIClient] = None
 _azure_settings: Optional[AzureSettings] = None
 
 
@@ -26,7 +29,7 @@ def set_azure_services(azure_services: AzureServicesManager):
     _azure_services = azure_services
 
 
-def set_openai_integration(openai_integration: AzureOpenAIClient):
+def set_openai_integration(openai_integration: UnifiedAzureOpenAIClient):
     """Set the global OpenAI integration instance"""
     global _openai_integration
     _openai_integration = openai_integration
@@ -45,7 +48,7 @@ async def get_azure_services() -> AzureServicesManager:
     return _azure_services
 
 
-async def get_openai_integration() -> AzureOpenAIClient:
+async def get_openai_integration() -> UnifiedAzureOpenAIClient:
     """Get Azure OpenAI integration instance"""
     if not _openai_integration:
         raise HTTPException(status_code=503, detail="Azure OpenAI integration not initialized")

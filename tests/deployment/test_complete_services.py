@@ -106,8 +106,8 @@ async def test_complete_azure_services():
     
     # Test ML Workspace (NEW!)
     try:
-        from azure.mgmt.machinelearningservices import MachineLearningServicesMgmtClient
-        ml_client = MachineLearningServicesMgmtClient(credential, SUBSCRIPTION_ID)
+        from azure.mgmt.machinelearningservices import AzureMachineLearningWorkspaces
+        ml_client = AzureMachineLearningWorkspaces(credential, SUBSCRIPTION_ID)
         ml_workspace = ml_client.workspaces.get(RESOURCE_GROUP, ML_WORKSPACE)
         print(f"✅ ML Workspace: {ml_workspace.name} in {ml_workspace.location}")
         print(f"    • SKU: {ml_workspace.sku.name}")

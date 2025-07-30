@@ -10,6 +10,7 @@ import json
 
 from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
 from core.models.universal_rag_models import UniversalEntity, UniversalRelation
+from config.domain_patterns import DomainPatternManager
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +38,9 @@ def load_graph_data_from_cosmos(domain: str = "general") -> Tuple[List[Data], Li
         # Convert to PyTorch Geometric format
         graph_data = convert_to_pytorch_geometric(entities, relations)
 
-        # Split into train/val
-        train_data, val_data = split_graph_data(graph_data, train_ratio=0.8)
+        # Split into train/val using domain-specific ratio
+        train_ratio = DomainPatternManager.get_train_ratio(domain)
+        train_data, val_data = split_graph_data(graph_data, train_ratio=train_ratio)
 
         return train_data, val_data
 

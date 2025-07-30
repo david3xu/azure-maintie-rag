@@ -21,24 +21,66 @@ class UnifiedStorageClient(BaseAzureClient):
     """Unified client for all Azure Blob Storage operations"""
     
     def _get_default_endpoint(self) -> str:
-        return azure_settings.azure_storage_connection_string.split(';')[0].replace('DefaultEndpointsProtocol=https;AccountName=', 'https://') + '.blob.core.windows.net'
+        if azure_settings.azure_storage_account:
+            return f"https://{azure_settings.azure_storage_account}.blob.core.windows.net"
+        elif azure_settings.azure_storage_connection_string:
+            return azure_settings.azure_storage_connection_string.split(';')[0].replace('DefaultEndpointsProtocol=https;AccountName=', 'https://') + '.blob.core.windows.net'
+        else:
+            raise RuntimeError("Neither azure_storage_account nor azure_storage_connection_string is configured")
         
     def _get_default_key(self) -> str:
+        # For managed identity, no key needed
+        if azure_settings.use_managed_identity:
+            return ""
         # Extract account key from connection string
-        parts = azure_settings.azure_storage_connection_string.split(';')
-        for part in parts:
-            if part.startswith('AccountKey='):
-                return part.replace('AccountKey=', '')
+        if azure_settings.azure_storage_connection_string:
+            parts = azure_settings.azure_storage_connection_string.split(';')
+            for part in parts:
+                if part.startswith('AccountKey='):
+                    return part.replace('AccountKey=', '')
         return ""
         
     def _initialize_client(self):
         """Initialize blob service client"""
-        self._blob_service = BlobServiceClient.from_connection_string(
-            azure_settings.azure_storage_connection_string
-        )
+        if self.use_managed_identity:
+            # Use managed identity for azd deployments
+            from azure.identity import DefaultAzureCredential
+            credential = DefaultAzureCredential()
+            self._blob_service = BlobServiceClient(
+                account_url=self.endpoint,
+                credential=credential
+            )
+        else:
+            # Use connection string for local development
+            self._blob_service = BlobServiceClient.from_connection_string(
+                azure_settings.azure_storage_connection_string
+            )
         
         # Default containers
         self.default_container = azure_settings.azure_blob_container
+
+    async def test_connection(self) -> Dict[str, Any]:
+        """Test Azure Blob Storage connection"""
+        try:
+            self.ensure_initialized()
+            
+            # Test by listing containers
+            containers = list(self._blob_service.list_containers())
+            
+            return {
+                "success": True,
+                "endpoint": self.endpoint,
+                "account": azure_settings.azure_storage_account,
+                "container_count": len(containers)
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "endpoint": getattr(self, 'endpoint', 'unknown'),
+                "account": azure_settings.azure_storage_account
+            }
         
     # === BLOB OPERATIONS ===
     
@@ -99,6 +141,10 @@ class UnifiedStorageClient(BaseAzureClient):
             
         except Exception as e:
             return self.handle_azure_error('upload_data', e)
+    
+    async def upload_blob(self, blob_name: str, data: str, container: str = None) -> Dict[str, Any]:
+        """Upload blob with data - alias for upload_data with different parameter order"""
+        return await self.upload_data(data, blob_name, container)
     
     async def download_file(self, blob_name: str, download_path: str = None, container: str = None) -> Dict[str, Any]:
         """Download blob to file"""
@@ -209,7 +255,8 @@ class UnifiedStorageClient(BaseAzureClient):
     async def save_json(self, data: Dict, blob_name: str, container: str = None) -> Dict[str, Any]:
         """Save JSON data to blob storage"""
         try:
-            json_data = json.dumps(data, indent=2, default=str)
+            from ..utilities.file_utils import FileUtils
+            json_data = FileUtils.safe_json_dumps(data, indent=2, default=str)
             return await self.upload_data(json_data, blob_name, container)
             
         except Exception as e:
@@ -221,7 +268,16 @@ class UnifiedStorageClient(BaseAzureClient):
             result = await self.download_data(blob_name, container)
             
             if result['success']:
-                data = json.loads(result['data'])
+                raw_data = result['data']
+                
+                # Handle case where data might already be parsed
+                if isinstance(raw_data, (dict, list)):
+                    data = raw_data
+                elif isinstance(raw_data, (str, bytes, bytearray)):
+                    data = json.loads(raw_data)
+                else:
+                    raise ValueError(f"Unexpected data type for JSON parsing: {type(raw_data)}")
+                
                 return self.create_success_response('load_json', {
                     'blob_name': blob_name,
                     'data': data
@@ -286,14 +342,45 @@ class UnifiedStorageClient(BaseAzureClient):
     
     # === UTILITY METHODS ===
     
-    async def _ensure_container_exists(self, container_name: str):
-        """Ensure container exists, create if not"""
+    async def list_containers(self) -> List[str]:
+        """List all containers - used for connectivity testing"""
+        self.ensure_initialized()
         try:
+            containers = []
+            for container in self._blob_service.list_containers():
+                containers.append(container.name)
+            return containers
+        except Exception as e:
+            logger.error(f"Failed to list containers: {e}")
+            raise e
+    
+    async def ensure_container_exists(self, container_name: str) -> Dict[str, Any]:
+        """Public method to ensure container exists, create if not"""
+        try:
+            await self._ensure_container_exists(container_name)
+            return self.create_success_response('ensure_container_exists', {
+                'container': container_name,
+                'message': 'Container ensured successfully'
+            })
+        except Exception as e:
+            return self.handle_azure_error('ensure_container_exists', e)
+    
+    async def _ensure_container_exists(self, container_name: str):
+        """Private method to ensure container exists, create if not"""
+        try:
+            # Ensure client is initialized before accessing _blob_service
+            self.ensure_initialized()
+            
             container_client = self._blob_service.get_container_client(container_name)
-            container_client.create_container()
-        except Exception:
-            # Container might already exist
-            pass
+            # Check if container exists first
+            if not container_client.exists():
+                container_client.create_container()
+                logger.info(f"✅ Created container: {container_name}")
+            else:
+                logger.info(f"✅ Container already exists: {container_name}")
+        except Exception as e:
+            logger.error(f"❌ Failed to ensure container {container_name}: {e}")
+            raise e
     
     def generate_blob_name(self, prefix: str, extension: str = None) -> str:
         """Generate unique blob name"""

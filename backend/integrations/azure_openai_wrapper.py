@@ -124,11 +124,11 @@ Return a JSON object with:
 Example format:
 {{
   "entities": [
-    {{"text": "air_conditioner", "entity_type": "equipment", "confidence": 0.9}},
-    {{"text": "thermostat", "entity_type": "component", "confidence": 0.8}}
+    {{"text": "equipment_name", "entity_type": "equipment", "confidence": 0.9}},
+    {{"text": "component_name", "entity_type": "component", "confidence": 0.8}}
   ],
   "relationships": [
-    {{"source_entity": "air_conditioner", "target_entity": "thermostat", "relation_type": "has_component", "confidence": 0.85}}
+    {{"source_entity": "equipment_name", "target_entity": "component_name", "relation_type": "has_component", "confidence": 0.85}}
   ]
 }}"""
 

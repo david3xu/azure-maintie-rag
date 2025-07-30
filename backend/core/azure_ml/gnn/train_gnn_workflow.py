@@ -19,7 +19,7 @@ def main():
     parser = argparse.ArgumentParser(description="Azure ML GNN Training Workflow")
     parser.add_argument("--domain", required=True, help="Domain for training")
     parser.add_argument("--graph_data", required=True, help="Graph data blob path")
-    parser.add_argument("--output_path", default="./outputs", help="Output path for trained model")
+    parser.add_argument("--output_path", default="./data/outputs", help="Output path for trained model")
     args = parser.parse_args()
 
     # Azure ML environment integration

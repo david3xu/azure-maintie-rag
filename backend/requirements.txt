@@ -28,6 +28,7 @@ requests>=2.31.0
 structlog>=23.2.0
 pyyaml>=6.0
 pydantic-settings>=2.0.0
+jinja2>=3.1.2
 
 # Azure SDK Libraries
 azure-storage-blob>=12.19.0

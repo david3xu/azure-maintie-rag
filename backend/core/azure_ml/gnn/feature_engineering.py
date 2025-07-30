@@ -175,15 +175,10 @@ class SemanticFeatureEngine:
                 
             except Exception as e:
                 logger.error(f"Failed to generate OpenAI embeddings: {e}")
-                # Fallback to simple embeddings
-                for entity_id in entity_ids:
-                    embeddings[entity_id] = self._create_fallback_embedding()
+                raise RuntimeError(f"Azure OpenAI embedding generation failed: {e}. This system requires real Azure services.")
         
         elif entity_texts:
-            logger.warning("OpenAI service not available, using fallback embeddings")
-            # Generate fallback embeddings
-            for entity_id in entity_ids:
-                embeddings[entity_id] = self._create_fallback_embedding()
+            raise RuntimeError("Azure OpenAI service not available. This system requires real Azure services - no fallbacks permitted.")
         
         logger.info(f"Generated embeddings for {len(embeddings)} entities")
         return embeddings
@@ -247,13 +242,10 @@ class SemanticFeatureEngine:
                 
             except Exception as e:
                 logger.error(f"Failed to generate relation embeddings: {e}")
-                for relation_id in relation_ids:
-                    embeddings[relation_id] = self._create_fallback_embedding()
+                raise RuntimeError(f"Azure OpenAI relation embedding generation failed: {e}. This system requires real Azure services.")
         
         elif relation_texts:
-            logger.warning("Using fallback relation embeddings")
-            for relation_id in relation_ids:
-                embeddings[relation_id] = self._create_fallback_embedding()
+            raise RuntimeError("Azure OpenAI service not available for relation embeddings. This system requires real Azure services.")
         
         return embeddings
     
@@ -327,20 +319,8 @@ class SemanticFeatureEngine:
             
         except Exception as e:
             logger.error(f"Azure OpenAI embedding failed: {e}")
-            # Return fallback embeddings
-            return [self._create_fallback_embedding() for _ in texts]
+            raise RuntimeError(f"Azure OpenAI embedding generation failed: {e}. This system requires real Azure services.")
     
-    def _create_fallback_embedding(self) -> np.ndarray:
-        """
-        Create fallback embedding when OpenAI is unavailable.
-        
-        Returns:
-            Random normalized embedding vector
-        """
-        # Create random but normalized embedding
-        embedding = np.random.normal(0, 1, self.embedding_dim)
-        embedding = embedding / np.linalg.norm(embedding)
-        return embedding
     
     def create_dynamic_node_features(
         self, 
@@ -426,21 +406,17 @@ class SemanticFeatureEngine:
         text_length = len(entity.text)
         features.append(min(text_length / 100.0, 1.0))  # Capped at 1.0
         
-        # Domain-specific patterns
-        if domain == "maintenance":
-            # Maintenance-specific features
-            maintenance_keywords = ["repair", "fix", "maintenance", "service", "replace"]
-            keyword_match = sum(1 for keyword in maintenance_keywords if keyword in entity.text.lower())
-            features.append(keyword_match / len(maintenance_keywords))
-        
-        elif domain == "medical":
-            # Medical-specific features  
-            medical_keywords = ["treatment", "diagnosis", "patient", "symptom", "disease"]
-            keyword_match = sum(1 for keyword in medical_keywords if keyword in entity.text.lower())
-            features.append(keyword_match / len(medical_keywords))
-        
-        else:
-            # General domain
+        # Domain-specific patterns using centralized configuration
+        try:
+            from config.domain_patterns import DomainPatternManager
+            patterns = DomainPatternManager.get_patterns(domain)
+            
+            # Use domain-specific action terms as feature keywords
+            domain_keywords = patterns.action_terms
+            keyword_match = sum(1 for keyword in domain_keywords if keyword in entity.text.lower())
+            features.append(keyword_match / len(domain_keywords) if domain_keywords else 0.0)
+        except:
+            # Fallback for unknown domains
             features.append(0.0)
         
         # Ensure consistent feature count
@@ -595,7 +571,9 @@ class FeaturePipeline:
         for i, entity in enumerate(graph_data.entities):
             entity_id_to_index[entity.entity_id] = i
             
-            embedding = entity_embeddings.get(entity.entity_id, self.semantic_engine._create_fallback_embedding())
+            embedding = entity_embeddings.get(entity.entity_id)
+            if embedding is None:
+                raise RuntimeError(f"No embedding found for entity {entity.entity_id}. Azure OpenAI embeddings required.")
             features = self.semantic_engine.create_dynamic_node_features(
                 entity, embedding, graph_data.domain
             )
@@ -615,7 +593,9 @@ class FeaturePipeline:
                 
                 edge_indices.append([source_idx, target_idx])
                 
-                embedding = relation_embeddings.get(relation.relation_id, self.semantic_engine._create_fallback_embedding())
+                embedding = relation_embeddings.get(relation.relation_id)
+                if embedding is None:
+                    raise RuntimeError(f"No embedding found for relation {relation.relation_id}. Azure OpenAI embeddings required.")
                 features = self.semantic_engine.create_dynamic_edge_features(
                     relation, embedding, graph_data.domain
                 )

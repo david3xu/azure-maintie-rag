@@ -10,13 +10,17 @@ logger = logging.getLogger(__name__)
 
 class AzureApplicationInsightsClient:
     _configured = False
+    _warning_shown = False
     """Production Application Insights client using Azure Monitor OpenTelemetry."""
     def __init__(self, connection_string: Optional[str] = None, sampling_rate: float = 1.0):
         self.connection_string = connection_string or azure_settings.azure_application_insights_connection_string
         self.sampling_rate = sampling_rate
         self.enabled = bool(self.connection_string)
         if not self.enabled:
-            logger.warning("Application Insights disabled - no connection string")
+            # Only show warning once to avoid spam
+            if not AzureApplicationInsightsClient._warning_shown:
+                logger.info("Application Insights disabled - no connection string configured")
+                AzureApplicationInsightsClient._warning_shown = True
             self.tracer = None
             self.meter = None
             return

@@ -1,0 +1,6842 @@
+{
+  "stage": "02_knowledge_extraction",
+  "azure_container": "maintie-staging-data-maintenance",
+  "domain": "maintenance",
+  "files_processed": 1,
+  "entities_extracted": 540,
+  "relationships_extracted": 597,
+  "knowledge_data": {
+    "entities": [
+      {
+        "text": "air conditioner",
+        "type": "equipment",
+        "context": "air conditioner thermostat not working",
+        "entity_id": "entity_0"
+      },
+      {
+        "text": "thermostat",
+        "type": "component",
+        "context": "air conditioner thermostat not working",
+        "entity_id": "entity_1"
+      },
+      {
+        "text": "not working",
+        "type": "issue",
+        "context": "air conditioner thermostat not working",
+        "entity_id": "entity_2"
+      },
+      {
+        "text": "unserviceable",
+        "type": "issue",
+        "context": "air conditioner thermostat unserviceable",
+        "entity_id": "entity_3"
+      },
+      {
+        "text": "stationary",
+        "type": "condition",
+        "context": "when stationary",
+        "entity_id": "entity_4"
+      },
+      {
+        "text": "air horn",
+        "type": "equipment",
+        "context": "air horn not working",
+        "entity_id": "entity_5"
+      },
+      {
+        "text": "compressor",
+        "type": "component",
+        "context": "compressor awaiting",
+        "entity_id": "entity_6"
+      },
+      {
+        "text": "working intermittently",
+        "type": "symptom",
+        "context": "air horn working intermittently",
+        "entity_id": "entity_7"
+      },
+      {
+        "text": "air leak",
+        "type": "issue",
+        "context": "air leak near side of door",
+        "entity_id": "entity_8"
+      },
+      {
+        "text": "side of door",
+        "type": "location",
+        "context": "air leak near side of door",
+        "entity_id": "entity_9"
+      },
+      {
+        "text": "air",
+        "type": "issue",
+        "context": "air leaking",
+        "entity_id": "entity_10"
+      },
+      {
+        "text": "line",
+        "type": "component",
+        "context": "line outside",
+        "entity_id": "entity_11"
+      },
+      {
+        "text": "outside",
+        "type": "location",
+        "context": "line outside",
+        "entity_id": "entity_12"
+      },
+      {
+        "text": "air receiver",
+        "type": "equipment",
+        "context": "air receiver safety valves to be replaced",
+        "entity_id": "entity_13"
+      },
+      {
+        "text": "safety valves",
+        "type": "components",
+        "context": "air receiver safety valves to be replaced",
+        "entity_id": "entity_14"
+      },
+      {
+        "text": "replaced",
+        "type": "action",
+        "context": "air receiver safety valves to be replaced",
+        "entity_id": "entity_15"
+      },
+      {
+        "text": "alarm",
+        "type": "component",
+        "context": "alarm on VIMS",
+        "entity_id": "entity_16"
+      },
+      {
+        "text": "VIMS",
+        "type": "equipment",
+        "context": "alarm on VIMS",
+        "entity_id": "entity_17"
+      },
+      {
+        "text": "doesnt work",
+        "type": "issue",
+        "context": "alarm on VIMS doesnt work",
+        "entity_id": "entity_18"
+      },
+      {
+        "text": "alternator",
+        "type": "equipment",
+        "context": "alternator overcharge fault",
+        "entity_id": "entity_19"
+      },
+      {
+        "text": "overcharge",
+        "type": "issue",
+        "context": "alternator overcharge fault",
+        "entity_id": "entity_20"
+      },
+      {
+        "text": "fault",
+        "type": "symptom",
+        "context": "alternator overcharge fault",
+        "entity_id": "entity_21"
+      },
+      {
+        "text": "driveline component",
+        "type": "component",
+        "context": "failed driveline component",
+        "entity_id": "entity_22"
+      },
+      {
+        "text": "analyse",
+        "type": "action",
+        "context": "analyse failed driveline component",
+        "entity_id": "entity_23"
+      },
+      {
+        "text": "failed",
+        "type": "issue",
+        "context": "failed driveline component",
+        "entity_id": "entity_24"
+      },
+      {
+        "text": "lube system",
+        "type": "equipment",
+        "context": "lube system faults",
+        "entity_id": "entity_25"
+      },
+      {
+        "text": "faults",
+        "type": "issues",
+        "context": "lube system faults",
+        "entity_id": "entity_26"
+      },
+      {
+        "text": "auto-greaser",
+        "type": "equipment",
+        "context": "auto-greaser control unit",
+        "entity_id": "entity_27"
+      },
+      {
+        "text": "control unit",
+        "type": "component",
+        "context": "auto-greaser control unit",
+        "entity_id": "entity_28"
+      },
+      {
+        "text": "auto-spray feature",
+        "type": "component",
+        "context": "auto-spray feature not working",
+        "entity_id": "entity_29"
+      },
+      {
+        "text": "auxiliary Cat engine",
+        "type": "equipment",
+        "context": "auxiliary Cat engine lube service",
+        "entity_id": "entity_30"
+      },
+      {
+        "text": "lube service",
+        "type": "procedure",
+        "context": "auxiliary Cat engine lube service",
+        "entity_id": "entity_31"
+      },
+      {
+        "text": "axle",
+        "type": "equipment",
+        "context": "axle temperature sensor fault",
+        "entity_id": "entity_32"
+      },
+      {
+        "text": "temperature sensor",
+        "type": "component",
+        "context": "axle temperature sensor fault",
+        "entity_id": "entity_33"
+      },
+      {
+        "text": "fault",
+        "type": "issue",
+        "context": "axle temperature sensor fault",
+        "entity_id": "entity_34"
+      },
+      {
+        "text": "back rest",
+        "type": "component",
+        "context": "back rest unserviceable",
+        "entity_id": "entity_35"
+      },
+      {
+        "text": "handle",
+        "type": "component",
+        "context": "handle broken",
+        "entity_id": "entity_36"
+      },
+      {
+        "text": "broken",
+        "type": "issue",
+        "context": "handle broken",
+        "entity_id": "entity_37"
+      },
+      {
+        "text": "backhoe",
+        "type": "equipment",
+        "context": "backhoe windscreen to be fixed",
+        "entity_id": "entity_38"
+      },
+      {
+        "text": "windscreen",
+        "type": "component",
+        "context": "backhoe windscreen to be fixed",
+        "entity_id": "entity_39"
+      },
+      {
+        "text": "fixed",
+        "type": "action",
+        "context": "backhoe windscreen to be fixed",
+        "entity_id": "entity_40"
+      },
+      {
+        "text": "backlight",
+        "type": "component",
+        "context": "backlight on dash",
+        "entity_id": "entity_41"
+      },
+      {
+        "text": "dash",
+        "type": "equipment",
+        "context": "backlight on dash",
+        "entity_id": "entity_42"
+      },
+      {
+        "text": "battery cover",
+        "type": "component",
+        "context": "battery cover hinges seized",
+        "entity_id": "entity_43"
+      },
+      {
+        "text": "hinges",
+        "type": "component",
+        "context": "battery cover hinges seized",
+        "entity_id": "entity_44"
+      },
+      {
+        "text": "seized",
+        "type": "issue",
+        "context": "battery cover hinges seized",
+        "entity_id": "entity_45"
+      },
+      {
+        "text": "bearing",
+        "type": "component",
+        "context": "bearing on air conditioner compressor",
+        "entity_id": "entity_46"
+      },
+      {
+        "text": "air conditioner compressor",
+        "type": "equipment",
+        "context": "bearing on air conditioner compressor",
+        "entity_id": "entity_47"
+      },
+      {
+        "text": "blade light",
+        "type": "equipment",
+        "context": "blade light blown needs replacing",
+        "entity_id": "entity_48"
+      },
+      {
+        "text": "blown",
+        "type": "issue",
+        "context": "blade light blown needs replacing",
+        "entity_id": "entity_49"
+      },
+      {
+        "text": "replacing",
+        "type": "action",
+        "context": "blade light blown needs replacing",
+        "entity_id": "entity_50"
+      },
+      {
+        "text": "blade wear plates",
+        "type": "component",
+        "context": "blade wear plates cracked and worn",
+        "entity_id": "entity_51"
+      },
+      {
+        "text": "cracked",
+        "type": "issue",
+        "context": "blade wear plates cracked and worn",
+        "entity_id": "entity_52"
+      },
+      {
+        "text": "worn",
+        "type": "issue",
+        "context": "blade wear plates cracked and worn",
+        "entity_id": "entity_53"
+      },
+      {
+        "text": "generators",
+        "type": "equipment",
+        "context": "blow out generators electrical",
+        "entity_id": "entity_54"
+      },
+      {
+        "text": "electrical",
+        "type": "component",
+        "context": "blow out generators electrical",
+        "entity_id": "entity_55"
+      },
+      {
+        "text": "hose",
+        "type": "component",
+        "context": "blown air conditioner hose",
+        "entity_id": "entity_56"
+      },
+      {
+        "text": "air conditioner hose",
+        "type": "component",
+        "context": "blown air conditioner hose",
+        "entity_id": "entity_57"
+      },
+      {
+        "text": "radiator",
+        "type": "component",
+        "context": "to radiator",
+        "entity_id": "entity_58"
+      },
+      {
+        "text": "crowd cylinder",
+        "type": "component",
+        "context": "blown crowd cylinder hose",
+        "entity_id": "entity_59"
+      },
+      {
+        "text": "extension line",
+        "type": "component",
+        "context": "blown extension line",
+        "entity_id": "entity_60"
+      },
+      {
+        "text": "position num",
+        "type": "location",
+        "context": "from position num",
+        "entity_id": "entity_61"
+      },
+      {
+        "text": "lift cylinder",
+        "type": "component",
+        "context": "blown lift cylinder o-ring",
+        "entity_id": "entity_62"
+      },
+      {
+        "text": "o-ring",
+        "type": "component",
+        "context": "blown lift cylinder o-ring",
+        "entity_id": "entity_63"
+      },
+      {
+        "text": "steering hose",
+        "type": "component",
+        "context": "off steering hose",
+        "entity_id": "entity_64"
+      },
+      {
+        "text": "left hand lift cylinder",
+        "type": "equipment",
+        "context": "on left hand lift cylinder",
+        "entity_id": "entity_65"
+      },
+      {
+        "text": "steering hose",
+        "type": "equipment",
+        "context": "on steering hose",
+        "entity_id": "entity_66"
+      },
+      {
+        "text": "oil cooler hose",
+        "type": "component",
+        "context": "blown oil cooler hose",
+        "entity_id": "entity_67"
+      },
+      {
+        "text": "tyre",
+        "type": "component",
+        "context": "blown position num tyre",
+        "entity_id": "entity_68"
+      },
+      {
+        "text": "right hand bucket",
+        "type": "location",
+        "context": "blown right hand bucket cylinder hose",
+        "entity_id": "entity_69"
+      },
+      {
+        "text": "cylinder hose",
+        "type": "component",
+        "context": "blown right hand bucket cylinder hose",
+        "entity_id": "entity_70"
+      },
+      {
+        "text": "boarding gate",
+        "type": "equipment",
+        "context": "boarding gate hinge broken",
+        "entity_id": "entity_71"
+      },
+      {
+        "text": "hinge",
+        "type": "component",
+        "context": "boarding gate hinge broken",
+        "entity_id": "entity_72"
+      },
+      {
+        "text": "boarding gate",
+        "type": "location",
+        "context": "boarding gate latch not working",
+        "entity_id": "entity_73"
+      },
+      {
+        "text": "latch",
+        "type": "component",
+        "context": "boarding gate latch not working",
+        "entity_id": "entity_74"
+      },
+      {
+        "text": "boarding ladder",
+        "type": "equipment",
+        "context": "boarding ladder not working",
+        "entity_id": "entity_75"
+      },
+      {
+        "text": "boilermaker",
+        "type": "equipment",
+        "context": "boilermaker repairs",
+        "entity_id": "entity_76"
+      },
+      {
+        "text": "repairs",
+        "type": "action",
+        "context": "boilermaker repairs",
+        "entity_id": "entity_77"
+      },
+      {
+        "text": "bucket assembly",
+        "type": "component",
+        "context": "repairs to bucket assembly",
+        "entity_id": "entity_78"
+      },
+      {
+        "text": "boilermaker",
+        "type": "procedure",
+        "context": "boilermaker repairs",
+        "entity_id": "entity_79"
+      },
+      {
+        "text": "engine cover",
+        "type": "component",
+        "context": "repairs to engine cover",
+        "entity_id": "entity_80"
+      },
+      {
+        "text": "repairs",
+        "type": "actions",
+        "context": "boilermaker repairs",
+        "entity_id": "entity_81"
+      },
+      {
+        "text": "exhaust area",
+        "type": "location",
+        "context": "repairs to exhaust area",
+        "entity_id": "entity_82"
+      },
+      {
+        "text": "boilermakers",
+        "type": "personnel",
+        "context": "boilermakers to repair bucket",
+        "entity_id": "entity_83"
+      },
+      {
+        "text": "bucket",
+        "type": "equipment",
+        "context": "boilermakers to repair bucket",
+        "entity_id": "entity_84"
+      },
+      {
+        "text": "repair",
+        "type": "action",
+        "context": "boilermakers to repair bucket",
+        "entity_id": "entity_85"
+      },
+      {
+        "text": "cooler frame",
+        "type": "equipment",
+        "context": "repair cooler frame",
+        "entity_id": "entity_86"
+      },
+      {
+        "text": "plate",
+        "type": "component",
+        "context": "repair plate",
+        "entity_id": "entity_87"
+      },
+      {
+        "text": "proximity switch",
+        "type": "component",
+        "context": "over proximity switch",
+        "entity_id": "entity_88"
+      },
+      {
+        "text": "stick cylinders",
+        "type": "component",
+        "context": "both stick cylinders",
+        "entity_id": "entity_89"
+      },
+      {
+        "text": "leaking",
+        "type": "issue",
+        "context": "cylinders leaking",
+        "entity_id": "entity_90"
+      },
+      {
+        "text": "brake cooling hose",
+        "type": "component",
+        "context": "brake cooling hose leaking",
+        "entity_id": "entity_91"
+      },
+      {
+        "text": "rear",
+        "type": "location",
+        "context": "brake cooling hose leaking rear",
+        "entity_id": "entity_92"
+      },
+      {
+        "text": "brake cooling return hose",
+        "type": "component",
+        "context": "brake cooling return hose leaking",
+        "entity_id": "entity_93"
+      },
+      {
+        "text": "guard",
+        "type": "component",
+        "context": "broken air conditioner guard",
+        "entity_id": "entity_94"
+      },
+      {
+        "text": "clamp",
+        "type": "component",
+        "context": "broken clamp",
+        "entity_id": "entity_95"
+      },
+      {
+        "text": "crowd cylinder hose",
+        "type": "component",
+        "context": "on crowd cylinder hose",
+        "entity_id": "entity_96"
+      },
+      {
+        "text": "fuel cooler",
+        "type": "component",
+        "context": "broken fuel cooler mounts",
+        "entity_id": "entity_97"
+      },
+      {
+        "text": "mounts",
+        "type": "component",
+        "context": "broken fuel cooler mounts",
+        "entity_id": "entity_98"
+      },
+      {
+        "text": "left hand side mirror",
+        "type": "component",
+        "context": "broken",
+        "entity_id": "entity_99"
+      },
+      {
+        "text": "right hand side door window",
+        "type": "component",
+        "context": "broken right hand side door window",
+        "entity_id": "entity_100"
+      },
+      {
+        "text": "arch",
+        "type": "location",
+        "context": "arch near cancelled",
+        "entity_id": "entity_101"
+      },
+      {
+        "text": "cabin door",
+        "type": "component",
+        "context": "cabin door window cracked",
+        "entity_id": "entity_102"
+      },
+      {
+        "text": "window",
+        "type": "component",
+        "context": "cabin door window cracked",
+        "entity_id": "entity_103"
+      },
+      {
+        "text": "cabin seals",
+        "type": "component",
+        "context": "cabin seals leaking dust",
+        "entity_id": "entity_104"
+      },
+      {
+        "text": "dust",
+        "type": "symptom",
+        "context": "cabin seals leaking dust",
+        "entity_id": "entity_105"
+      },
+      {
+        "text": "cabin seat",
+        "type": "component",
+        "context": "cabin seat needs replacing",
+        "entity_id": "entity_106"
+      },
+      {
+        "text": "cabin window",
+        "type": "component",
+        "context": "cabin window needs resealing",
+        "entity_id": "entity_107"
+      },
+      {
+        "text": "resealing",
+        "type": "action",
+        "context": "cabin window needs resealing",
+        "entity_id": "entity_108"
+      },
+      {
+        "text": "carousel",
+        "type": "equipment",
+        "context": "carousel popped bolt needs Loctite",
+        "entity_id": "entity_109"
+      },
+      {
+        "text": "bolt",
+        "type": "component",
+        "context": "carousel popped bolt needs Loctite",
+        "entity_id": "entity_110"
+      },
+      {
+        "text": "Loctite",
+        "type": "solution",
+        "context": "carousel popped bolt needs Loctite",
+        "entity_id": "entity_111"
+      },
+      {
+        "text": "centrifugal oil filter",
+        "type": "equipment",
+        "context": "centrifugal oil filter fault",
+        "entity_id": "entity_112"
+      },
+      {
+        "text": "cutting edges",
+        "type": "component",
+        "context": "change cutting edges",
+        "entity_id": "entity_113"
+      },
+      {
+        "text": "outsides",
+        "type": "location",
+        "context": "outsides GET",
+        "entity_id": "entity_114"
+      },
+      {
+        "text": "differential",
+        "type": "component",
+        "context": "change differential and final drive oils",
+        "entity_id": "entity_115"
+      },
+      {
+        "text": "final drive",
+        "type": "component",
+        "context": "change differential and final drive oils",
+        "entity_id": "entity_116"
+      },
+      {
+        "text": "oils",
+        "type": "equipment",
+        "context": "change differential and final drive oils",
+        "entity_id": "entity_117"
+      },
+      {
+        "text": "change",
+        "type": "action",
+        "context": "change differential and final drive oils",
+        "entity_id": "entity_118"
+      },
+      {
+        "text": "hub",
+        "type": "component",
+        "context": "change differential and hub oils",
+        "entity_id": "entity_119"
+      },
+      {
+        "text": "engine oil",
+        "type": "component",
+        "context": "change engine oil",
+        "entity_id": "entity_120"
+      },
+      {
+        "text": "cooling system",
+        "type": "component",
+        "context": "inspect cooling system",
+        "entity_id": "entity_121"
+      },
+      {
+        "text": "inspect",
+        "type": "action",
+        "context": "inspect cooling system",
+        "entity_id": "entity_122"
+      },
+      {
+        "text": "thrust bearing",
+        "type": "component",
+        "context": "thrust bearing oil",
+        "entity_id": "entity_123"
+      },
+      {
+        "text": "oil",
+        "type": "equipment",
+        "context": "thrust bearing oil",
+        "entity_id": "entity_124"
+      },
+      {
+        "text": "tyres",
+        "type": "component",
+        "context": "new tyres",
+        "entity_id": "entity_125"
+      },
+      {
+        "text": "change out",
+        "type": "action",
+        "context": "change out num x new tyres",
+        "entity_id": "entity_126"
+      },
+      {
+        "text": "off hire",
+        "type": "procedure",
+        "context": "for off hire",
+        "entity_id": "entity_127"
+      },
+      {
+        "text": "auxiliary water pump",
+        "type": "equipment",
+        "context": "change out auxiliary water pump",
+        "entity_id": "entity_128"
+      },
+      {
+        "text": "steering pump",
+        "type": "equipment",
+        "context": "on steering pump",
+        "entity_id": "entity_129"
+      },
+      {
+        "text": "position num tyre",
+        "type": "component",
+        "context": "blown position num tyre",
+        "entity_id": "entity_130"
+      },
+      {
+        "text": "brake pump",
+        "type": "equipment",
+        "context": "on brake pump",
+        "entity_id": "entity_131"
+      },
+      {
+        "text": "prelube bracket",
+        "type": "component",
+        "context": "broken prelube bracket",
+        "entity_id": "entity_132"
+      },
+      {
+        "text": "stabilizer bar",
+        "type": "component",
+        "context": "broken stabilizer bar",
+        "entity_id": "entity_133"
+      },
+      {
+        "text": "pipe",
+        "type": "component",
+        "context": "cracked pipe",
+        "entity_id": "entity_134"
+      },
+      {
+        "text": "valve bank",
+        "type": "equipment",
+        "context": "on valve bank",
+        "entity_id": "entity_135"
+      },
+      {
+        "text": "change out",
+        "type": "procedure",
+        "context": "change out cracked pipe",
+        "entity_id": "entity_136"
+      },
+      {
+        "text": "position num adaptor",
+        "type": "component",
+        "context": "cracked position num adaptor",
+        "entity_id": "entity_137"
+      },
+      {
+        "text": "tooth",
+        "type": "component",
+        "context": "and tooth",
+        "entity_id": "entity_138"
+      },
+      {
+        "text": "engine",
+        "type": "equipment",
+        "context": "change out engine",
+        "entity_id": "entity_139"
+      },
+      {
+        "text": "WOs",
+        "type": "issues",
+        "context": "more WOs",
+        "entity_id": "entity_140"
+      },
+      {
+        "text": "engine",
+        "type": "component",
+        "context": "change out engine",
+        "entity_id": "entity_141"
+      },
+      {
+        "text": "costs",
+        "type": "issue",
+        "context": "costs",
+        "entity_id": "entity_142"
+      },
+      {
+        "text": "air cleaners",
+        "type": "components",
+        "context": "engine air cleaners",
+        "entity_id": "entity_143"
+      },
+      {
+        "text": "change out",
+        "type": "actions",
+        "context": "change out engine air cleaners",
+        "entity_id": "entity_144"
+      },
+      {
+        "text": "exhaust clamp",
+        "type": "component",
+        "context": "change out exhaust clamp",
+        "entity_id": "entity_145"
+      },
+      {
+        "text": "left hand side",
+        "type": "location",
+        "context": "on left hand side",
+        "entity_id": "entity_146"
+      },
+      {
+        "text": "front upper window",
+        "type": "component",
+        "context": "change out front upper window cracked",
+        "entity_id": "entity_147"
+      },
+      {
+        "text": "jacket water pump",
+        "type": "equipment",
+        "context": "change out jacket water pump",
+        "entity_id": "entity_148"
+      },
+      {
+        "text": "slew motor hose",
+        "type": "component",
+        "context": "leak slew motor hose",
+        "entity_id": "entity_149"
+      },
+      {
+        "text": "leak",
+        "type": "issue",
+        "context": "leak slew motor hose",
+        "entity_id": "entity_150"
+      },
+      {
+        "text": "HMU",
+        "type": "equipment",
+        "context": "leaking HMU",
+        "entity_id": "entity_151"
+      },
+      {
+        "text": "fan hoses",
+        "type": "component",
+        "context": "leaking fan hoses",
+        "entity_id": "entity_152"
+      },
+      {
+        "text": "heater taps",
+        "type": "component",
+        "context": "leaking heater taps",
+        "entity_id": "entity_153"
+      },
+      {
+        "text": "hydraulic hose",
+        "type": "component",
+        "context": "leaking hydraulic hose",
+        "entity_id": "entity_154"
+      },
+      {
+        "text": "implement pump",
+        "type": "equipment",
+        "context": "leaking implement pump",
+        "entity_id": "entity_155"
+      },
+      {
+        "text": "leaking",
+        "type": "symptom",
+        "context": "leaking implement pump",
+        "entity_id": "entity_156"
+      },
+      {
+        "text": "relay valve",
+        "type": "component",
+        "context": "leaking relay valve",
+        "entity_id": "entity_157"
+      },
+      {
+        "text": "left hand engine",
+        "type": "equipment",
+        "context": "change out left hand engine servo pumps num x",
+        "entity_id": "entity_158"
+      },
+      {
+        "text": "servo pumps",
+        "type": "component",
+        "context": "change out left hand engine servo pumps num x",
+        "entity_id": "entity_159"
+      },
+      {
+        "text": "left hand hoist cylinder",
+        "type": "component",
+        "context": "change out left hand hoist cylinder with",
+        "entity_id": "entity_160"
+      },
+      {
+        "text": "left hand lift cylinder",
+        "type": "component",
+        "context": "change out left hand lift cylinder",
+        "entity_id": "entity_161"
+      },
+      {
+        "text": "left hand steering cylinder",
+        "type": "component",
+        "context": "change out left hand steering cylinder",
+        "entity_id": "entity_162"
+      },
+      {
+        "text": "left hand stick cylinder",
+        "type": "component",
+        "context": "change out left hand stick cylinder o-ring",
+        "entity_id": "entity_163"
+      },
+      {
+        "text": "position num num num",
+        "type": "location",
+        "context": "change out position num num num and num tyres",
+        "entity_id": "entity_164"
+      },
+      {
+        "text": "num tyres",
+        "type": "component",
+        "context": "change out position num num num and num tyres",
+        "entity_id": "entity_165"
+      },
+      {
+        "text": "position",
+        "type": "location",
+        "context": "change out position num num and num tyres",
+        "entity_id": "entity_166"
+      },
+      {
+        "text": "tyres",
+        "type": "components",
+        "context": "change out position num num and num tyres",
+        "entity_id": "entity_167"
+      },
+      {
+        "text": "num tyre",
+        "type": "component",
+        "context": "change out position num and num tyre worn out",
+        "entity_id": "entity_168"
+      },
+      {
+        "text": "worn out",
+        "type": "issue",
+        "context": "change out position num and num tyre worn out",
+        "entity_id": "entity_169"
+      },
+      {
+        "text": "position num",
+        "type": "component",
+        "context": "change out position num and num tyres",
+        "entity_id": "entity_170"
+      },
+      {
+        "text": "rims",
+        "type": "component",
+        "context": "change out position num and num tyres and rims",
+        "entity_id": "entity_171"
+      },
+      {
+        "text": "swing motor",
+        "type": "equipment",
+        "context": "change out position num swing motor",
+        "entity_id": "entity_172"
+      },
+      {
+        "text": "sensor",
+        "type": "component",
+        "context": "sensor not reading",
+        "entity_id": "entity_173"
+      },
+      {
+        "text": "not reading",
+        "type": "symptom",
+        "context": "sensor not reading",
+        "entity_id": "entity_174"
+      },
+      {
+        "text": "damage",
+        "type": "issue",
+        "context": "tyre damage",
+        "entity_id": "entity_175"
+      },
+      {
+        "text": "rear steering accumulator bladder",
+        "type": "component",
+        "context": "change out rear steering accumulator bladder",
+        "entity_id": "entity_176"
+      },
+      {
+        "text": "right hand steering cylinder",
+        "type": "component",
+        "context": "change out right hand steering cylinder",
+        "entity_id": "entity_177"
+      },
+      {
+        "text": "rotation shaft seal",
+        "type": "component",
+        "context": "change out rotation shaft seal",
+        "entity_id": "entity_178"
+      },
+      {
+        "text": "steering hoses",
+        "type": "component",
+        "context": "change out steering hoses",
+        "entity_id": "entity_179"
+      },
+      {
+        "text": "jacket water pump",
+        "type": "component",
+        "context": "unserviceable jacket water pump",
+        "entity_id": "entity_180"
+      },
+      {
+        "text": "left hand bucket cylinder hose",
+        "type": "component",
+        "context": "unserviceable",
+        "entity_id": "entity_181"
+      },
+      {
+        "text": "right hand clam cylinder hose",
+        "type": "component",
+        "context": "change out unserviceable right hand clam cylinder hose",
+        "entity_id": "entity_182"
+      },
+      {
+        "text": "right hand tilt cylinder",
+        "type": "component",
+        "context": "unserviceable right hand tilt cylinder",
+        "entity_id": "entity_183"
+      },
+      {
+        "text": "swing brake cylinder",
+        "type": "component",
+        "context": "unserviceable swing brake cylinder",
+        "entity_id": "entity_184"
+      },
+      {
+        "text": "weeping",
+        "type": "issue",
+        "context": "weeping boom cylinder hose",
+        "entity_id": "entity_185"
+      },
+      {
+        "text": "boom cylinder hose",
+        "type": "component",
+        "context": "weeping boom cylinder hose",
+        "entity_id": "entity_186"
+      },
+      {
+        "text": "rim",
+        "type": "component",
+        "context": "position num rim",
+        "entity_id": "entity_187"
+      },
+      {
+        "text": "position",
+        "type": "component",
+        "context": "change position num and num tyres",
+        "entity_id": "entity_188"
+      },
+      {
+        "text": "flat tyre",
+        "type": "issue",
+        "context": "num flat tyre",
+        "entity_id": "entity_189"
+      },
+      {
+        "text": "num",
+        "type": "component",
+        "context": "change position num tyre",
+        "entity_id": "entity_190"
+      },
+      {
+        "text": "tyre",
+        "type": "equipment",
+        "context": "change position num tyre",
+        "entity_id": "entity_191"
+      },
+      {
+        "text": "run outs",
+        "type": "issue",
+        "context": "for run outs",
+        "entity_id": "entity_192"
+      },
+      {
+        "text": "oil leak",
+        "type": "issue",
+        "context": "repair engine oil leak",
+        "entity_id": "entity_193"
+      },
+      {
+        "text": "auto-greaser unit",
+        "type": "equipment",
+        "context": "check and repair auto-greaser unit",
+        "entity_id": "entity_194"
+      },
+      {
+        "text": "check",
+        "type": "action",
+        "context": "check and repair auto-greaser unit",
+        "entity_id": "entity_195"
+      },
+      {
+        "text": "rear wiper motor",
+        "type": "component",
+        "context": "check and repair",
+        "entity_id": "entity_196"
+      },
+      {
+        "text": "chord",
+        "type": "component",
+        "context": "chord leaking air found",
+        "entity_id": "entity_197"
+      },
+      {
+        "text": "leaking air",
+        "type": "issue",
+        "context": "chord leaking air found",
+        "entity_id": "entity_198"
+      },
+      {
+        "text": "compressor",
+        "type": "equipment",
+        "context": "compressor oil pressure switch unserviceable",
+        "entity_id": "entity_199"
+      },
+      {
+        "text": "oil pressure switch",
+        "type": "component",
+        "context": "compressor oil pressure switch unserviceable",
+        "entity_id": "entity_200"
+      },
+      {
+        "text": "control valve",
+        "type": "equipment",
+        "context": "control valve unserviceable",
+        "entity_id": "entity_201"
+      },
+      {
+        "text": "conveyor",
+        "type": "equipment",
+        "context": "conveyor head pulley shaft modifications",
+        "entity_id": "entity_202"
+      },
+      {
+        "text": "head pulley shaft",
+        "type": "component",
+        "context": "conveyor head pulley shaft modifications",
+        "entity_id": "entity_203"
+      },
+      {
+        "text": "modifications",
+        "type": "action",
+        "context": "conveyor head pulley shaft modifications",
+        "entity_id": "entity_204"
+      },
+      {
+        "text": "coolant hose",
+        "type": "component",
+        "context": "coolant hose leaking",
+        "entity_id": "entity_205"
+      },
+      {
+        "text": "right hand bottom",
+        "type": "location",
+        "context": "at right hand bottom",
+        "entity_id": "entity_206"
+      },
+      {
+        "text": "coolant leak",
+        "type": "issue",
+        "context": "coolant leak at engine oil cooler",
+        "entity_id": "entity_207"
+      },
+      {
+        "text": "engine oil cooler",
+        "type": "component",
+        "context": "coolant leak at engine oil cooler",
+        "entity_id": "entity_208"
+      },
+      {
+        "text": "coolant",
+        "type": "substance",
+        "context": "coolant leak",
+        "entity_id": "entity_209"
+      },
+      {
+        "text": "coolant pipe clamps",
+        "type": "component",
+        "context": "coolant pipe clamps needs fitting",
+        "entity_id": "entity_210"
+      },
+      {
+        "text": "fitting",
+        "type": "action",
+        "context": "coolant pipe clamps needs fitting",
+        "entity_id": "entity_211"
+      },
+      {
+        "text": "cooler",
+        "type": "equipment",
+        "context": "cooler return pipe coupling leak",
+        "entity_id": "entity_212"
+      },
+      {
+        "text": "return pipe",
+        "type": "component",
+        "context": "cooler return pipe coupling leak",
+        "entity_id": "entity_213"
+      },
+      {
+        "text": "coupling",
+        "type": "component",
+        "context": "cooler return pipe coupling leak",
+        "entity_id": "entity_214"
+      },
+      {
+        "text": "cords",
+        "type": "components",
+        "context": "cords cracked at",
+        "entity_id": "entity_215"
+      },
+      {
+        "text": "cracked",
+        "type": "issues",
+        "context": "cords cracked at",
+        "entity_id": "entity_216"
+      },
+      {
+        "text": "crack",
+        "type": "issue",
+        "context": "crack in blade liner left hand side",
+        "entity_id": "entity_217"
+      },
+      {
+        "text": "blade liner",
+        "type": "component",
+        "context": "crack in blade liner left hand side",
+        "entity_id": "entity_218"
+      },
+      {
+        "text": "lower centre",
+        "type": "location",
+        "context": "crack in lower centre of windscreen",
+        "entity_id": "entity_219"
+      },
+      {
+        "text": "rock deflector",
+        "type": "component",
+        "context": "crack onside rock deflector",
+        "entity_id": "entity_220"
+      },
+      {
+        "text": "steering tank",
+        "type": "equipment",
+        "context": "cracked steering tank suction tube",
+        "entity_id": "entity_221"
+      },
+      {
+        "text": "suction tube",
+        "type": "component",
+        "context": "cracked steering tank suction tube",
+        "entity_id": "entity_222"
+      },
+      {
+        "text": "walkway",
+        "type": "component",
+        "context": "cracked walkway",
+        "entity_id": "entity_223"
+      },
+      {
+        "text": "handrails",
+        "type": "component",
+        "context": "cracked handrails",
+        "entity_id": "entity_224"
+      },
+      {
+        "text": "cracks",
+        "type": "issue",
+        "context": "cracks in back right hand side handrail",
+        "entity_id": "entity_225"
+      },
+      {
+        "text": "back right hand side handrail",
+        "type": "component",
+        "context": "cracks in back right hand side handrail",
+        "entity_id": "entity_226"
+      },
+      {
+        "text": "diagonal braces",
+        "type": "component",
+        "context": "cracks in diagonal braces in front",
+        "entity_id": "entity_227"
+      },
+      {
+        "text": "front",
+        "type": "location",
+        "context": "cracks in diagonal braces in front",
+        "entity_id": "entity_228"
+      },
+      {
+        "text": "fire suppression mounts",
+        "type": "component",
+        "context": "cracks in fire suppression mounts",
+        "entity_id": "entity_229"
+      },
+      {
+        "text": "cylinder",
+        "type": "component",
+        "context": "crowd cylinder creeping replace",
+        "entity_id": "entity_230"
+      },
+      {
+        "text": "creeping",
+        "type": "issue",
+        "context": "crowd cylinder creeping replace",
+        "entity_id": "entity_231"
+      },
+      {
+        "text": "replace",
+        "type": "action",
+        "context": "crowd cylinder creeping replace",
+        "entity_id": "entity_232"
+      },
+      {
+        "text": "electrical inspections",
+        "type": "procedure",
+        "context": "daily",
+        "entity_id": "entity_233"
+      },
+      {
+        "text": "damaged",
+        "type": "issue",
+        "context": "damaged position num tyre",
+        "entity_id": "entity_234"
+      },
+      {
+        "text": "fuel fault",
+        "type": "issue",
+        "context": "repair fuel fault",
+        "entity_id": "entity_235"
+      },
+      {
+        "text": "diagnose",
+        "type": "action",
+        "context": "diagnose repair fuel fault",
+        "entity_id": "entity_236"
+      },
+      {
+        "text": "steering",
+        "type": "component",
+        "context": "slow steering",
+        "entity_id": "entity_237"
+      },
+      {
+        "text": "slow",
+        "type": "symptom",
+        "context": "slow steering",
+        "entity_id": "entity_238"
+      },
+      {
+        "text": "spray",
+        "type": "equipment",
+        "context": "diagnose and repair spray faults",
+        "entity_id": "entity_239"
+      },
+      {
+        "text": "torque converter",
+        "type": "component",
+        "context": "diagnose and repair torque converter temperature error",
+        "entity_id": "entity_240"
+      },
+      {
+        "text": "temperature error",
+        "type": "issue",
+        "context": "diagnose and repair torque converter temperature error",
+        "entity_id": "entity_241"
+      },
+      {
+        "text": "transmission",
+        "type": "equipment",
+        "context": "transmission overheat fault",
+        "entity_id": "entity_242"
+      },
+      {
+        "text": "overheat",
+        "type": "symptom",
+        "context": "transmission overheat fault",
+        "entity_id": "entity_243"
+      },
+      {
+        "text": "transmission",
+        "type": "component",
+        "context": "diagnose transmission slipping fault",
+        "entity_id": "entity_244"
+      },
+      {
+        "text": "slipping",
+        "type": "symptom",
+        "context": "diagnose transmission slipping fault",
+        "entity_id": "entity_245"
+      },
+      {
+        "text": "differential",
+        "type": "equipment",
+        "context": "differential cooler fan hose leaking",
+        "entity_id": "entity_246"
+      },
+      {
+        "text": "cooler fan hose",
+        "type": "component",
+        "context": "differential cooler fan hose leaking",
+        "entity_id": "entity_247"
+      },
+      {
+        "text": "cooler hose",
+        "type": "component",
+        "context": "differential cooler hose leaking",
+        "entity_id": "entity_248"
+      },
+      {
+        "text": "differential cooler pump",
+        "type": "equipment",
+        "context": "differential cooler pump leaking",
+        "entity_id": "entity_249"
+      },
+      {
+        "text": "lube pump",
+        "type": "component",
+        "context": "differential lube pump leaking",
+        "entity_id": "entity_250"
+      },
+      {
+        "text": "pump motor",
+        "type": "component",
+        "context": "differential pump motor hose leaking",
+        "entity_id": "entity_251"
+      },
+      {
+        "text": "num input shaft",
+        "type": "component",
+        "context": "drag number num input shaft front change out",
+        "entity_id": "entity_252"
+      },
+      {
+        "text": "mechanical",
+        "type": "equipment",
+        "context": "drag number num input shaft front change out - mechanical",
+        "entity_id": "entity_253"
+      },
+      {
+        "text": "intermediate shaft",
+        "type": "component",
+        "context": "drag number num intermediate shaft change out",
+        "entity_id": "entity_254"
+      },
+      {
+        "text": "mechanical",
+        "type": "procedure",
+        "context": "drag number num intermediate shaft change out - mechanical",
+        "entity_id": "entity_255"
+      },
+      {
+        "text": "dragline",
+        "type": "equipment",
+        "context": "dragline air conditioner units",
+        "entity_id": "entity_256"
+      },
+      {
+        "text": "air conditioner units",
+        "type": "components",
+        "context": "dragline air conditioner units",
+        "entity_id": "entity_257"
+      },
+      {
+        "text": "cleaning",
+        "type": "action",
+        "context": "need cleaning",
+        "entity_id": "entity_258"
+      },
+      {
+        "text": "drain",
+        "type": "action",
+        "context": "drain and sample engine oil",
+        "entity_id": "entity_259"
+      },
+      {
+        "text": "sample",
+        "type": "action",
+        "context": "drain and sample engine oil",
+        "entity_id": "entity_260"
+      },
+      {
+        "text": "drill",
+        "type": "action",
+        "context": "drill out",
+        "entity_id": "entity_261"
+      },
+      {
+        "text": "driver's door",
+        "type": "component",
+        "context": "drivers door top hinge broken",
+        "entity_id": "entity_262"
+      },
+      {
+        "text": "top hinge",
+        "type": "component",
+        "context": "drivers door top hinge broken",
+        "entity_id": "entity_263"
+      },
+      {
+        "text": "duo-cone seals",
+        "type": "component",
+        "context": "duo-cone seals leaking",
+        "entity_id": "entity_264"
+      },
+      {
+        "text": "swing",
+        "type": "equipment",
+        "context": "number num swing",
+        "entity_id": "entity_265"
+      },
+      {
+        "text": "dust leak",
+        "type": "issue",
+        "context": "dust leak operators side window",
+        "entity_id": "entity_266"
+      },
+      {
+        "text": "operators side window",
+        "type": "location",
+        "context": "dust leak operators side window",
+        "entity_id": "entity_267"
+      },
+      {
+        "text": "electrical fault",
+        "type": "issue",
+        "context": "electrical fault in the",
+        "entity_id": "entity_268"
+      },
+      {
+        "text": "rollers",
+        "type": "component",
+        "context": "inspect and replace rollers as required",
+        "entity_id": "entity_269"
+      },
+      {
+        "text": "ripper control valve",
+        "type": "component",
+        "context": "ripper control valve falling off",
+        "entity_id": "entity_270"
+      },
+      {
+        "text": "falling off",
+        "type": "issue",
+        "context": "ripper control valve falling off",
+        "entity_id": "entity_271"
+      },
+      {
+        "text": "left hand crowd hose",
+        "type": "component",
+        "context": "replace left hand crowd hose",
+        "entity_id": "entity_272"
+      },
+      {
+        "text": "brake sensor",
+        "type": "component",
+        "context": "faulty brake sensor",
+        "entity_id": "entity_273"
+      },
+      {
+        "text": "cable gantry",
+        "type": "equipment",
+        "context": "cable gantry crack repairs",
+        "entity_id": "entity_274"
+      },
+      {
+        "text": "repairs",
+        "type": "procedure",
+        "context": "cable gantry crack repairs",
+        "entity_id": "entity_275"
+      },
+      {
+        "text": "PTO",
+        "type": "component",
+        "context": "failed PTO",
+        "entity_id": "entity_276"
+      },
+      {
+        "text": "auxiliary drive",
+        "type": "component",
+        "context": "failed auxiliary drive",
+        "entity_id": "entity_277"
+      },
+      {
+        "text": "wiring harness",
+        "type": "component",
+        "context": "replace torque converter wiring harness",
+        "entity_id": "entity_278"
+      },
+      {
+        "text": "transfer pipe",
+        "type": "component",
+        "context": "replace leaking transfer pipe",
+        "entity_id": "entity_279"
+      },
+      {
+        "text": "brake temperature",
+        "type": "issue",
+        "context": "position num brake temperature error",
+        "entity_id": "entity_280"
+      },
+      {
+        "text": "front revolving light",
+        "type": "component",
+        "context": "front revolving light not working",
+        "entity_id": "entity_281"
+      },
+      {
+        "text": "operator cabin",
+        "type": "location",
+        "context": "operator cabin air conditioner air outlet modifications",
+        "entity_id": "entity_282"
+      },
+      {
+        "text": "air conditioner air outlet",
+        "type": "component",
+        "context": "operator cabin air conditioner air outlet modifications",
+        "entity_id": "entity_283"
+      },
+      {
+        "text": "AFFF system",
+        "type": "equipment",
+        "context": "repair AFFF system",
+        "entity_id": "entity_284"
+      },
+      {
+        "text": "hoist brake cylinder",
+        "type": "component",
+        "context": "replace number num hoist brake cylinder",
+        "entity_id": "entity_285"
+      },
+      {
+        "text": "recharge",
+        "type": "action",
+        "context": "recharge replace number num hoist brake cylinder",
+        "entity_id": "entity_286"
+      },
+      {
+        "text": "tub hook",
+        "type": "equipment",
+        "context": "tub hook greasing and inspection",
+        "entity_id": "entity_287"
+      },
+      {
+        "text": "greasing",
+        "type": "procedure",
+        "context": "tub hook greasing and inspection",
+        "entity_id": "entity_288"
+      },
+      {
+        "text": "inspection",
+        "type": "procedure",
+        "context": "tub hook greasing and inspection",
+        "entity_id": "entity_289"
+      },
+      {
+        "text": "drag",
+        "type": "component",
+        "context": "adjust drag number num brakes",
+        "entity_id": "entity_290"
+      },
+      {
+        "text": "brakes",
+        "type": "component",
+        "context": "adjust drag number num brakes",
+        "entity_id": "entity_291"
+      },
+      {
+        "text": "adjust",
+        "type": "action",
+        "context": "adjust drag number num brakes to standard CW",
+        "entity_id": "entity_292"
+      },
+      {
+        "text": "standard CW",
+        "type": "procedure",
+        "context": "adjust drag number num brakes to standard CW",
+        "entity_id": "entity_293"
+      },
+      {
+        "text": "slew brake",
+        "type": "component",
+        "context": "replace slew brake right hand front",
+        "entity_id": "entity_294"
+      },
+      {
+        "text": "right hand front",
+        "type": "location",
+        "context": "replace slew brake right hand front",
+        "entity_id": "entity_295"
+      },
+      {
+        "text": "rear door",
+        "type": "equipment",
+        "context": "rear door limit switches to be modified",
+        "entity_id": "entity_296"
+      },
+      {
+        "text": "limit switches",
+        "type": "components",
+        "context": "rear door limit switches to be modified",
+        "entity_id": "entity_297"
+      },
+      {
+        "text": "general light inspection",
+        "type": "procedure",
+        "context": "general light inspection",
+        "entity_id": "entity_298"
+      },
+      {
+        "text": "hoist motor",
+        "type": "equipment",
+        "context": "cleaning hoist motor",
+        "entity_id": "entity_299"
+      },
+      {
+        "text": "RTD",
+        "type": "components",
+        "context": "hoist motor num RTD wired incorrectly",
+        "entity_id": "entity_300"
+      },
+      {
+        "text": "front light",
+        "type": "component",
+        "context": "repair front light wiring",
+        "entity_id": "entity_301"
+      },
+      {
+        "text": "wiring",
+        "type": "component",
+        "context": "repair front light wiring",
+        "entity_id": "entity_302"
+      },
+      {
+        "text": "fuel tank",
+        "type": "equipment",
+        "context": "possible minor leak on fuel tank",
+        "entity_id": "entity_303"
+      },
+      {
+        "text": "minor leak",
+        "type": "issue",
+        "context": "possible minor leak on fuel tank",
+        "entity_id": "entity_304"
+      },
+      {
+        "text": "implement hose",
+        "type": "component",
+        "context": "replace blown implement hose",
+        "entity_id": "entity_305"
+      },
+      {
+        "text": "blower",
+        "type": "component",
+        "context": "swing motor blower lube inspect",
+        "entity_id": "entity_306"
+      },
+      {
+        "text": "lube",
+        "type": "procedure",
+        "context": "swing motor blower lube inspect",
+        "entity_id": "entity_307"
+      },
+      {
+        "text": "lube",
+        "type": "component",
+        "context": "swing motor blower lube inspection",
+        "entity_id": "entity_308"
+      },
+      {
+        "text": "lube module",
+        "type": "component",
+        "context": "replace lube module location pins",
+        "entity_id": "entity_309"
+      },
+      {
+        "text": "location pins",
+        "type": "component",
+        "context": "replace lube module location pins",
+        "entity_id": "entity_310"
+      },
+      {
+        "text": "light switch",
+        "type": "equipment",
+        "context": "replace light switch",
+        "entity_id": "entity_311"
+      },
+      {
+        "text": "side lamp",
+        "type": "equipment",
+        "context": "for side lamp",
+        "entity_id": "entity_312"
+      },
+      {
+        "text": "left hand side front second level platform",
+        "type": "location",
+        "context": "left hand side front second level platform",
+        "entity_id": "entity_313"
+      },
+      {
+        "text": "A-frame light",
+        "type": "equipment",
+        "context": "A-frame light not done",
+        "entity_id": "entity_314"
+      },
+      {
+        "text": "not done",
+        "type": "issue",
+        "context": "A-frame light not done",
+        "entity_id": "entity_315"
+      },
+      {
+        "text": "rear steering accumulator",
+        "type": "component",
+        "context": "rear steering accumulator leak",
+        "entity_id": "entity_316"
+      },
+      {
+        "text": "right hand steering hose",
+        "type": "component",
+        "context": "replace blown right hand steering hose",
+        "entity_id": "entity_317"
+      },
+      {
+        "text": "surf workshop",
+        "type": "location",
+        "context": "surf workshop",
+        "entity_id": "entity_318"
+      },
+      {
+        "text": "drain plug",
+        "type": "component",
+        "context": "drain plug unserviceable",
+        "entity_id": "entity_319"
+      },
+      {
+        "text": "pulley bearings",
+        "type": "component",
+        "context": "change pulley bearings",
+        "entity_id": "entity_320"
+      },
+      {
+        "text": "number num pulley",
+        "type": "equipment",
+        "context": "on number num pulley",
+        "entity_id": "entity_321"
+      },
+      {
+        "text": "transmission wiring harness",
+        "type": "component",
+        "context": "replace transmission wiring harness",
+        "entity_id": "entity_322"
+      },
+      {
+        "text": "mechanical inspection",
+        "type": "procedure",
+        "context": "num hour mechanical inspection",
+        "entity_id": "entity_323"
+      },
+      {
+        "text": "idler",
+        "type": "component",
+        "context": "idler right rear",
+        "entity_id": "entity_324"
+      },
+      {
+        "text": "right rear",
+        "type": "location",
+        "context": "idler right rear",
+        "entity_id": "entity_325"
+      },
+      {
+        "text": "bucket tooth lock",
+        "type": "component",
+        "context": "replace bucket tooth lock",
+        "entity_id": "entity_326"
+      },
+      {
+        "text": "shaft",
+        "type": "component",
+        "context": "rear through shaft",
+        "entity_id": "entity_327"
+      },
+      {
+        "text": "universal joint",
+        "type": "component",
+        "context": "universal joint unserviceable",
+        "entity_id": "entity_328"
+      },
+      {
+        "text": "swing num pedestal seals",
+        "type": "component",
+        "context": "repair leaking swing num pedestal seals",
+        "entity_id": "entity_329"
+      },
+      {
+        "text": "lighting",
+        "type": "equipment",
+        "context": "all lighting requires testing and tagging",
+        "entity_id": "entity_330"
+      },
+      {
+        "text": "testing and tagging",
+        "type": "procedure",
+        "context": "all lighting requires testing and tagging",
+        "entity_id": "entity_331"
+      },
+      {
+        "text": "drive package",
+        "type": "component",
+        "context": "drive package ribbon cable change out",
+        "entity_id": "entity_332"
+      },
+      {
+        "text": "ribbon cable",
+        "type": "component",
+        "context": "drive package ribbon cable change out",
+        "entity_id": "entity_333"
+      },
+      {
+        "text": "steering control valve",
+        "type": "component",
+        "context": "replace steering control valve",
+        "entity_id": "entity_334"
+      },
+      {
+        "text": "front crankshaft",
+        "type": "component",
+        "context": "replace front crankshaft",
+        "entity_id": "entity_335"
+      },
+      {
+        "text": "TBC steering cylinder bearings",
+        "type": "component",
+        "context": "TBC steering cylinder bearings have excess play",
+        "entity_id": "entity_336"
+      },
+      {
+        "text": "excess play",
+        "type": "issue",
+        "context": "bearings have excess play",
+        "entity_id": "entity_337"
+      },
+      {
+        "text": "fire suppression actuator",
+        "type": "component",
+        "context": "replace fire suppression actuator",
+        "entity_id": "entity_338"
+      },
+      {
+        "text": "mechanical service",
+        "type": "procedure",
+        "context": "num hour mechanical service",
+        "entity_id": "entity_339"
+      },
+      {
+        "text": "water truck",
+        "type": "equipment",
+        "context": "service water truck",
+        "entity_id": "entity_340"
+      },
+      {
+        "text": "PO movement",
+        "type": "issue",
+        "context": "PO movement found",
+        "entity_id": "entity_341"
+      },
+      {
+        "text": "right hand engine mount",
+        "type": "component",
+        "context": "right hand engine mount",
+        "entity_id": "entity_342"
+      },
+      {
+        "text": "left hand travel motor",
+        "type": "component",
+        "context": "replace left hand travel motor",
+        "entity_id": "entity_343"
+      },
+      {
+        "text": "rear wiper motor",
+        "type": "equipment",
+        "context": "rear wiper motor unserviceable",
+        "entity_id": "entity_344"
+      },
+      {
+        "text": "front right hand roller",
+        "type": "component",
+        "context": "front right hand roller need to be fitted",
+        "entity_id": "entity_345"
+      },
+      {
+        "text": "need to be fitted",
+        "type": "action",
+        "context": "front right hand roller need to be fitted",
+        "entity_id": "entity_346"
+      },
+      {
+        "text": "park brake",
+        "type": "component",
+        "context": "park brake alarm sounds continuously",
+        "entity_id": "entity_347"
+      },
+      {
+        "text": "alarm",
+        "type": "equipment",
+        "context": "park brake alarm sounds continuously",
+        "entity_id": "entity_348"
+      },
+      {
+        "text": "sounds",
+        "type": "action",
+        "context": "park brake alarm sounds continuously",
+        "entity_id": "entity_349"
+      },
+      {
+        "text": "continuously",
+        "type": "symptom",
+        "context": "park brake alarm sounds continuously",
+        "entity_id": "entity_350"
+      },
+      {
+        "text": "pump",
+        "type": "equipment",
+        "context": "pump pressure gauge not working",
+        "entity_id": "entity_351"
+      },
+      {
+        "text": "pressure gauge",
+        "type": "component",
+        "context": "pump pressure gauge not working",
+        "entity_id": "entity_352"
+      },
+      {
+        "text": "differential drain plugs",
+        "type": "component",
+        "context": "replace unserviceable differential drain plugs",
+        "entity_id": "entity_353"
+      },
+      {
+        "text": "roller bracket bearings",
+        "type": "component",
+        "context": "drag tune roller bracket bearings",
+        "entity_id": "entity_354"
+      },
+      {
+        "text": "drag tune",
+        "type": "procedure",
+        "context": "drag tune roller bracket bearings",
+        "entity_id": "entity_355"
+      },
+      {
+        "text": "right hand fuel tank",
+        "type": "component",
+        "context": "repair right hand fuel tank crack",
+        "entity_id": "entity_356"
+      },
+      {
+        "text": "grease pump",
+        "type": "equipment",
+        "context": "grease pump is bypassing air",
+        "entity_id": "entity_357"
+      },
+      {
+        "text": "air",
+        "type": "component",
+        "context": "grease pump is bypassing air",
+        "entity_id": "entity_358"
+      },
+      {
+        "text": "vent valve",
+        "type": "component",
+        "context": "replace auto-greaser vent valve",
+        "entity_id": "entity_359"
+      },
+      {
+        "text": "grommet",
+        "type": "component",
+        "context": "replace grommet",
+        "entity_id": "entity_360"
+      },
+      {
+        "text": "right hand lift cylinder",
+        "type": "equipment",
+        "context": "right hand lift cylinder",
+        "entity_id": "entity_361"
+      },
+      {
+        "text": "oil cooler",
+        "type": "equipment",
+        "context": "replace oil cooler lock pins",
+        "entity_id": "entity_362"
+      },
+      {
+        "text": "lock pins",
+        "type": "components",
+        "context": "replace oil cooler lock pins",
+        "entity_id": "entity_363"
+      },
+      {
+        "text": "replace",
+        "type": "actions",
+        "context": "replace oil cooler lock pins",
+        "entity_id": "entity_364"
+      },
+      {
+        "text": "boom",
+        "type": "equipment",
+        "context": "repair boom cracks",
+        "entity_id": "entity_365"
+      },
+      {
+        "text": "steering pilot hoses",
+        "type": "component",
+        "context": "replace steering pilot hoses",
+        "entity_id": "entity_366"
+      },
+      {
+        "text": "gear",
+        "type": "equipment",
+        "context": "no gear fault",
+        "entity_id": "entity_367"
+      },
+      {
+        "text": "handrail",
+        "type": "component",
+        "context": "handrail above battery box cracked",
+        "entity_id": "entity_368"
+      },
+      {
+        "text": "battery box",
+        "type": "component",
+        "context": "handrail above battery box",
+        "entity_id": "entity_369"
+      },
+      {
+        "text": "investigate",
+        "type": "action",
+        "context": "investigate repair",
+        "entity_id": "entity_370"
+      },
+      {
+        "text": "no gear fault",
+        "type": "issue",
+        "context": "investigate repair no gear fault",
+        "entity_id": "entity_371"
+      },
+      {
+        "text": "front window",
+        "type": "component",
+        "context": "front window cracked",
+        "entity_id": "entity_372"
+      },
+      {
+        "text": "bottom steering shaft universal joint",
+        "type": "component",
+        "context": "replace bottom steering shaft universal joint",
+        "entity_id": "entity_373"
+      },
+      {
+        "text": "tilt cylinder cover",
+        "type": "component",
+        "context": "fit tilt cylinder cover and guard",
+        "entity_id": "entity_374"
+      },
+      {
+        "text": "track roller group",
+        "type": "component",
+        "context": "mechanical inspection track roller group",
+        "entity_id": "entity_375"
+      },
+      {
+        "text": "left hand",
+        "type": "location",
+        "context": "track roller group left hand",
+        "entity_id": "entity_376"
+      },
+      {
+        "text": "oil",
+        "type": "component",
+        "context": "engine oil leak",
+        "entity_id": "entity_377"
+      },
+      {
+        "text": "right hand lift cylinder",
+        "type": "component",
+        "context": "replace right hand lift cylinder leaking",
+        "entity_id": "entity_378"
+      },
+      {
+        "text": "ladder",
+        "type": "equipment",
+        "context": "diagnose and repair ladder fault",
+        "entity_id": "entity_379"
+      },
+      {
+        "text": "grease gauges",
+        "type": "equipment",
+        "context": "grease gauges requires replacing",
+        "entity_id": "entity_380"
+      },
+      {
+        "text": "fire extinguisher bracket",
+        "type": "equipment",
+        "context": "fire extinguisher bracket on deck loose",
+        "entity_id": "entity_381"
+      },
+      {
+        "text": "deck",
+        "type": "location",
+        "context": "fire extinguisher bracket on deck",
+        "entity_id": "entity_382"
+      },
+      {
+        "text": "rear door struts",
+        "type": "component",
+        "context": "rear door struts require replacing",
+        "entity_id": "entity_383"
+      },
+      {
+        "text": "loose",
+        "type": "issue",
+        "context": "fire extinguisher bracket on deck loose",
+        "entity_id": "entity_384"
+      },
+      {
+        "text": "require replacing",
+        "type": "action",
+        "context": "rear door struts require replacing",
+        "entity_id": "entity_385"
+      },
+      {
+        "text": "air compressor",
+        "type": "equipment",
+        "context": "oil leak at air compressor",
+        "entity_id": "entity_386"
+      },
+      {
+        "text": "scavenge pump",
+        "type": "equipment",
+        "context": "replace leaking scavenge pump",
+        "entity_id": "entity_387"
+      },
+      {
+        "text": "neutraliser",
+        "type": "component",
+        "context": "repair transmission neutraliser change out leaking transmission hose",
+        "entity_id": "entity_388"
+      },
+      {
+        "text": "transmission hose",
+        "type": "component",
+        "context": "repair transmission neutraliser change out leaking transmission hose",
+        "entity_id": "entity_389"
+      },
+      {
+        "text": "tail pulley",
+        "type": "equipment",
+        "context": "tail pulley has no grease lines",
+        "entity_id": "entity_390"
+      },
+      {
+        "text": "grease lines",
+        "type": "component",
+        "context": "tail pulley has no grease lines",
+        "entity_id": "entity_391"
+      },
+      {
+        "text": "swing brake",
+        "type": "component",
+        "context": "swing brake num replace disc and pads",
+        "entity_id": "entity_392"
+      },
+      {
+        "text": "disc",
+        "type": "component",
+        "context": "replace disc and pads",
+        "entity_id": "entity_393"
+      },
+      {
+        "text": "pads",
+        "type": "component",
+        "context": "replace disc and pads",
+        "entity_id": "entity_394"
+      },
+      {
+        "text": "hoist pony drive motor",
+        "type": "equipment",
+        "context": "replace hoist pony drive motor num hour",
+        "entity_id": "entity_395"
+      },
+      {
+        "text": "hydraulic cylinder",
+        "type": "component",
+        "context": "hydraulic cylinder bucket right hand",
+        "entity_id": "entity_396"
+      },
+      {
+        "text": "bucket",
+        "type": "component",
+        "context": "hydraulic cylinder bucket right hand",
+        "entity_id": "entity_397"
+      },
+      {
+        "text": "right hand",
+        "type": "location",
+        "context": "hydraulic cylinder bucket right hand",
+        "entity_id": "entity_398"
+      },
+      {
+        "text": "num x cracked windows",
+        "type": "issue",
+        "context": "replace num x cracked windows",
+        "entity_id": "entity_399"
+      },
+      {
+        "text": "lube system",
+        "type": "component",
+        "context": "replace lube system",
+        "entity_id": "entity_400"
+      },
+      {
+        "text": "drag rope pump",
+        "type": "equipment",
+        "context": "drag rope pump change out",
+        "entity_id": "entity_401"
+      },
+      {
+        "text": "front steering accumulator",
+        "type": "component",
+        "context": "change out front steering accumulator",
+        "entity_id": "entity_402"
+      },
+      {
+        "text": "carry roller",
+        "type": "component",
+        "context": "carry roller number num right hand",
+        "entity_id": "entity_403"
+      },
+      {
+        "text": "front tyres",
+        "type": "component",
+        "context": "new front tyres",
+        "entity_id": "entity_404"
+      },
+      {
+        "text": "fit",
+        "type": "action",
+        "context": "fit num new front tyres",
+        "entity_id": "entity_405"
+      },
+      {
+        "text": "crowd cylinder",
+        "type": "equipment",
+        "context": "replace crowd cylinder transfer pipe",
+        "entity_id": "entity_406"
+      },
+      {
+        "text": "tilt cylinder hose",
+        "type": "component",
+        "context": "replace tilt cylinder hose",
+        "entity_id": "entity_407"
+      },
+      {
+        "text": "leaks",
+        "type": "issue",
+        "context": "engine oil leaks",
+        "entity_id": "entity_408"
+      },
+      {
+        "text": "right hand side",
+        "type": "location",
+        "context": "right hand side",
+        "entity_id": "entity_409"
+      },
+      {
+        "text": "spacer clamp",
+        "type": "component",
+        "context": "replace spacer clamp",
+        "entity_id": "entity_410"
+      },
+      {
+        "text": "main shaft",
+        "type": "component",
+        "context": "on main shaft",
+        "entity_id": "entity_411"
+      },
+      {
+        "text": "auto-lube",
+        "type": "equipment",
+        "context": "auto-lube fault CW",
+        "entity_id": "entity_412"
+      },
+      {
+        "text": "CW",
+        "type": "location",
+        "context": "auto-lube fault CW",
+        "entity_id": "entity_413"
+      },
+      {
+        "text": "universal joints",
+        "type": "component",
+        "context": "change out universal joints",
+        "entity_id": "entity_414"
+      },
+      {
+        "text": "pump drive",
+        "type": "equipment",
+        "context": "pump drive PO",
+        "entity_id": "entity_415"
+      },
+      {
+        "text": "cover",
+        "type": "component",
+        "context": "repair cover",
+        "entity_id": "entity_416"
+      },
+      {
+        "text": "fuel pressure sensor",
+        "type": "component",
+        "context": "faulty fuel pressure sensor",
+        "entity_id": "entity_417"
+      },
+      {
+        "text": "right hand bobbin roller",
+        "type": "component",
+        "context": "right hand bobbin roller unserviceable",
+        "entity_id": "entity_418"
+      },
+      {
+        "text": "faulty",
+        "type": "issue",
+        "context": "faulty fuel pressure sensor",
+        "entity_id": "entity_419"
+      },
+      {
+        "text": "lug tyres",
+        "type": "components",
+        "context": "fit full set of lug tyres",
+        "entity_id": "entity_420"
+      },
+      {
+        "text": "fit",
+        "type": "actions",
+        "context": "fit full set of lug tyres",
+        "entity_id": "entity_421"
+      },
+      {
+        "text": "drop saw cutting bench",
+        "type": "equipment",
+        "context": "fabricate drop saw cutting bench",
+        "entity_id": "entity_422"
+      },
+      {
+        "text": "hydraulic pump coupling",
+        "type": "component",
+        "context": "replace hydraulic pump coupling left hand side",
+        "entity_id": "entity_423"
+      },
+      {
+        "text": "pinion",
+        "type": "component",
+        "context": "change out cover cracking",
+        "entity_id": "entity_424"
+      },
+      {
+        "text": "cracking",
+        "type": "issue",
+        "context": "change out cover cracking",
+        "entity_id": "entity_425"
+      },
+      {
+        "text": "steering neutralizer system",
+        "type": "equipment",
+        "context": "repair steering neutralizer system",
+        "entity_id": "entity_426"
+      },
+      {
+        "text": "electrical welder",
+        "type": "equipment",
+        "context": "statutory electrical welder inspections",
+        "entity_id": "entity_427"
+      },
+      {
+        "text": "motor generator sets",
+        "type": "equipment",
+        "context": "clean all motor generator sets",
+        "entity_id": "entity_428"
+      },
+      {
+        "text": "inspections",
+        "type": "action",
+        "context": "statutory electrical welder inspections",
+        "entity_id": "entity_429"
+      },
+      {
+        "text": "clean",
+        "type": "action",
+        "context": "clean all motor generator sets",
+        "entity_id": "entity_430"
+      },
+      {
+        "text": "left hand rear brake cooling hose",
+        "type": "component",
+        "context": "left hand rear brake cooling hose leaking",
+        "entity_id": "entity_431"
+      },
+      {
+        "text": "engine timing sensor",
+        "type": "component",
+        "context": "replace engine timing sensor",
+        "entity_id": "entity_432"
+      },
+      {
+        "text": "fitting",
+        "type": "component",
+        "context": "sensor fitting leaking",
+        "entity_id": "entity_433"
+      },
+      {
+        "text": "main air tanks",
+        "type": "equipment",
+        "context": "out of main air tanks",
+        "entity_id": "entity_434"
+      },
+      {
+        "text": "repair centre",
+        "type": "location",
+        "context": "repair centre hitch oil leaks",
+        "entity_id": "entity_435"
+      },
+      {
+        "text": "hitch",
+        "type": "component",
+        "context": "repair centre hitch oil leaks",
+        "entity_id": "entity_436"
+      },
+      {
+        "text": "oil leaks",
+        "type": "issue",
+        "context": "repair centre hitch oil leaks",
+        "entity_id": "entity_437"
+      },
+      {
+        "text": "wheel end",
+        "type": "location",
+        "context": "position num wheel end",
+        "entity_id": "entity_438"
+      },
+      {
+        "text": "hydraulic fault",
+        "type": "issue",
+        "context": "investigate repair",
+        "entity_id": "entity_439"
+      },
+      {
+        "text": "steering hub caps",
+        "type": "component",
+        "context": "require replacing",
+        "entity_id": "entity_440"
+      },
+      {
+        "text": "sprockets",
+        "type": "component",
+        "context": "replace sprockets right hand",
+        "entity_id": "entity_441"
+      },
+      {
+        "text": "bulk fuel tank",
+        "type": "equipment",
+        "context": "bulk fuel tank cracked",
+        "entity_id": "entity_442"
+      },
+      {
+        "text": "centre of machine",
+        "type": "location",
+        "context": "leaking in centre of machine",
+        "entity_id": "entity_443"
+      },
+      {
+        "text": "speed sensor",
+        "type": "component",
+        "context": "repair speed sensor wiring",
+        "entity_id": "entity_444"
+      },
+      {
+        "text": "wiring fault",
+        "type": "issue",
+        "context": "and wiring fault",
+        "entity_id": "entity_445"
+      },
+      {
+        "text": "door",
+        "type": "component",
+        "context": "replace damage auto-greaser door",
+        "entity_id": "entity_446"
+      },
+      {
+        "text": "joystick",
+        "type": "equipment",
+        "context": "repair joystick needs repair",
+        "entity_id": "entity_447"
+      },
+      {
+        "text": "needs repair",
+        "type": "issue",
+        "context": "joystick needs repair",
+        "entity_id": "entity_448"
+      },
+      {
+        "text": "swing number",
+        "type": "equipment",
+        "context": "swing number num motor change out",
+        "entity_id": "entity_449"
+      },
+      {
+        "text": "num motor",
+        "type": "component",
+        "context": "swing number num motor change out",
+        "entity_id": "entity_450"
+      },
+      {
+        "text": "headboard",
+        "type": "component",
+        "context": "headboard welds broken",
+        "entity_id": "entity_451"
+      },
+      {
+        "text": "welds",
+        "type": "component",
+        "context": "headboard welds broken",
+        "entity_id": "entity_452"
+      },
+      {
+        "text": "taperlock",
+        "type": "component",
+        "context": "replace bearing and taperlock",
+        "entity_id": "entity_453"
+      },
+      {
+        "text": "roller",
+        "type": "equipment",
+        "context": "roller statutory electrical num week high voltage service",
+        "entity_id": "entity_454"
+      },
+      {
+        "text": "electrical components",
+        "type": "components",
+        "context": "clean and seal electrical components",
+        "entity_id": "entity_455"
+      },
+      {
+        "text": "hoist brake switches",
+        "type": "components",
+        "context": "hoist brake switches need adjusting",
+        "entity_id": "entity_456"
+      },
+      {
+        "text": "tyre",
+        "type": "components",
+        "context": "change out position num tyre worn",
+        "entity_id": "entity_457"
+      },
+      {
+        "text": "cabin jacking cylinder ends",
+        "type": "components",
+        "context": "cabin jacking cylinder ends unserviceable",
+        "entity_id": "entity_458"
+      },
+      {
+        "text": "slew ring",
+        "type": "components",
+        "context": "num hour mechanical inspection slew ring",
+        "entity_id": "entity_459"
+      },
+      {
+        "text": "clean and seal",
+        "type": "procedure",
+        "context": "clean and seal electrical components",
+        "entity_id": "entity_460"
+      },
+      {
+        "text": "adjusting",
+        "type": "procedure",
+        "context": "hoist brake switches need adjusting",
+        "entity_id": "entity_461"
+      },
+      {
+        "text": "movement",
+        "type": "issue",
+        "context": "repair movement",
+        "entity_id": "entity_462"
+      },
+      {
+        "text": "left hand steering pin",
+        "type": "component",
+        "context": "in left hand steering pin",
+        "entity_id": "entity_463"
+      },
+      {
+        "text": "electrical cabinet",
+        "type": "equipment",
+        "context": "remove electrical cabinet",
+        "entity_id": "entity_464"
+      },
+      {
+        "text": "remove",
+        "type": "action",
+        "context": "remove electrical cabinet",
+        "entity_id": "entity_465"
+      },
+      {
+        "text": "main pump hose",
+        "type": "component",
+        "context": "replace blown main pump hose",
+        "entity_id": "entity_466"
+      },
+      {
+        "text": "track chain",
+        "type": "component",
+        "context": "mechanical inspection track chain left hand",
+        "entity_id": "entity_467"
+      },
+      {
+        "text": "park brake indicator light",
+        "type": "component",
+        "context": "going on and off",
+        "entity_id": "entity_468"
+      },
+      {
+        "text": "shims",
+        "type": "component",
+        "context": "remove shims from behind drag num brake",
+        "entity_id": "entity_469"
+      },
+      {
+        "text": "drag num brake",
+        "type": "component",
+        "context": "remove shims from behind drag num brake",
+        "entity_id": "entity_470"
+      },
+      {
+        "text": "going on and off",
+        "type": "symptom",
+        "context": "park brake indicator light going on and off",
+        "entity_id": "entity_471"
+      },
+      {
+        "text": "lift cylinder",
+        "type": "equipment",
+        "context": "o-ring lift cylinder",
+        "entity_id": "entity_472"
+      },
+      {
+        "text": "dropbox",
+        "type": "component",
+        "context": "transmission dropbox",
+        "entity_id": "entity_473"
+      },
+      {
+        "text": "front window roller blind",
+        "type": "component",
+        "context": "front window roller blind broken",
+        "entity_id": "entity_474"
+      },
+      {
+        "text": "site glass",
+        "type": "component",
+        "context": "clean site glass",
+        "entity_id": "entity_475"
+      },
+      {
+        "text": "water pump",
+        "type": "component",
+        "context": "oil leak from behind water pump",
+        "entity_id": "entity_476"
+      },
+      {
+        "text": "flush",
+        "type": "action",
+        "context": "flush oil",
+        "entity_id": "entity_477"
+      },
+      {
+        "text": "oil leak",
+        "type": "symptom",
+        "context": "oil leak from behind water pump",
+        "entity_id": "entity_478"
+      },
+      {
+        "text": "needs replacing",
+        "type": "solution",
+        "context": "cabin seat unserviceable needs replacing",
+        "entity_id": "entity_479"
+      },
+      {
+        "text": "left hand luffing cylinder",
+        "type": "component",
+        "context": "left hand luffing cylinder change",
+        "entity_id": "entity_480"
+      },
+      {
+        "text": "mismatched",
+        "type": "issue",
+        "context": "tyre - mismatched",
+        "entity_id": "entity_481"
+      },
+      {
+        "text": "hoist brake",
+        "type": "equipment",
+        "context": "hoist brake number num position out of adjustment",
+        "entity_id": "entity_482"
+      },
+      {
+        "text": "number num",
+        "type": "component",
+        "context": "hoist brake number num position out of adjustment",
+        "entity_id": "entity_483"
+      },
+      {
+        "text": "out of adjustment",
+        "type": "issue",
+        "context": "hoist brake number num position out of adjustment",
+        "entity_id": "entity_484"
+      },
+      {
+        "text": "cluster",
+        "type": "equipment",
+        "context": "inspect repair",
+        "entity_id": "entity_485"
+      },
+      {
+        "text": "poppet valve",
+        "type": "component",
+        "context": "missing poppet valve",
+        "entity_id": "entity_486"
+      },
+      {
+        "text": "A-frame",
+        "type": "equipment",
+        "context": "A-frame safety ropes inspection",
+        "entity_id": "entity_487"
+      },
+      {
+        "text": "safety ropes",
+        "type": "components",
+        "context": "A-frame safety ropes inspection",
+        "entity_id": "entity_488"
+      },
+      {
+        "text": "inspection",
+        "type": "actions",
+        "context": "A-frame safety ropes inspection",
+        "entity_id": "entity_489"
+      },
+      {
+        "text": "AM FM radio",
+        "type": "equipment",
+        "context": "AM FM radio needs new aerial",
+        "entity_id": "entity_490"
+      },
+      {
+        "text": "aerial",
+        "type": "component",
+        "context": "AM FM radio needs new aerial",
+        "entity_id": "entity_491"
+      },
+      {
+        "text": "new",
+        "type": "solution",
+        "context": "AM FM radio needs new aerial",
+        "entity_id": "entity_492"
+      },
+      {
+        "text": "CW",
+        "type": "equipment",
+        "context": "CW left hand hoist cylinder",
+        "entity_id": "entity_493"
+      },
+      {
+        "text": "plug",
+        "type": "component",
+        "context": "leaking plug",
+        "entity_id": "entity_494"
+      },
+      {
+        "text": "right hand hoist cylinder",
+        "type": "component",
+        "context": "CW right hand hoist cylinder leaking",
+        "entity_id": "entity_495"
+      },
+      {
+        "text": "module",
+        "type": "component",
+        "context": "sensitive modifications to module",
+        "entity_id": "entity_496"
+      },
+      {
+        "text": "NDT",
+        "type": "procedure",
+        "context": "NDT A-frame clevis weld and pin",
+        "entity_id": "entity_497"
+      },
+      {
+        "text": "clevis",
+        "type": "component",
+        "context": "NDT A-frame clevis weld and pin",
+        "entity_id": "entity_498"
+      },
+      {
+        "text": "weld",
+        "type": "action",
+        "context": "NDT A-frame clevis weld and pin",
+        "entity_id": "entity_499"
+      },
+      {
+        "text": "pin",
+        "type": "component",
+        "context": "NDT A-frame clevis weld and pin",
+        "entity_id": "entity_500"
+      },
+      {
+        "text": "boom foot clevis",
+        "type": "component",
+        "context": "NDT boom foot clevis weld and pins",
+        "entity_id": "entity_501"
+      },
+      {
+        "text": "pins",
+        "type": "component",
+        "context": "NDT boom foot clevis weld and pins",
+        "entity_id": "entity_502"
+      },
+      {
+        "text": "PTO shaft",
+        "type": "component",
+        "context": "PTO shaft input seal leaking",
+        "entity_id": "entity_503"
+      },
+      {
+        "text": "input seal",
+        "type": "component",
+        "context": "PTO shaft input seal leaking",
+        "entity_id": "entity_504"
+      },
+      {
+        "text": "Tele-Remote camera",
+        "type": "equipment",
+        "context": "Tele-Remote camera fault",
+        "entity_id": "entity_505"
+      },
+      {
+        "text": "Tele-Remote cameras",
+        "type": "equipment",
+        "context": "Tele-Remote cameras fault",
+        "entity_id": "entity_506"
+      },
+      {
+        "text": "Tele-Remote",
+        "type": "equipment",
+        "context": "Tele-Remote installation and tune",
+        "entity_id": "entity_507"
+      },
+      {
+        "text": "installation",
+        "type": "action",
+        "context": "Tele-Remote installation and tune",
+        "entity_id": "entity_508"
+      },
+      {
+        "text": "tune",
+        "type": "action",
+        "context": "Tele-Remote installation and tune",
+        "entity_id": "entity_509"
+      },
+      {
+        "text": "turbo",
+        "type": "equipment",
+        "context": "change out position num turbo",
+        "entity_id": "entity_510"
+      },
+      {
+        "text": "corroded",
+        "type": "issue",
+        "context": "air conditioner compressor corroded",
+        "entity_id": "entity_511"
+      },
+      {
+        "text": "air conditioner system",
+        "type": "equipment",
+        "context": "air conditioner system leaking",
+        "entity_id": "entity_512"
+      },
+      {
+        "text": "brake hose",
+        "type": "component",
+        "context": "brake hose needs to be replaced",
+        "entity_id": "entity_513"
+      },
+      {
+        "text": "differential oil",
+        "type": "component",
+        "context": "change differential oil",
+        "entity_id": "entity_514"
+      },
+      {
+        "text": "transmission controller",
+        "type": "equipment",
+        "context": "change out - transmission controller filter hose",
+        "entity_id": "entity_515"
+      },
+      {
+        "text": "filter hose",
+        "type": "component",
+        "context": "change out - transmission controller filter hose",
+        "entity_id": "entity_516"
+      },
+      {
+        "text": "gauge",
+        "type": "component",
+        "context": "air compressor gauge",
+        "entity_id": "entity_517"
+      },
+      {
+        "text": "fuel injectors",
+        "type": "component",
+        "context": "change out num fuel injectors PO",
+        "entity_id": "entity_518"
+      },
+      {
+        "text": "PO",
+        "type": "procedure",
+        "context": "change out num fuel injectors PO",
+        "entity_id": "entity_519"
+      },
+      {
+        "text": "belts",
+        "type": "components",
+        "context": "change out air conditioner belts",
+        "entity_id": "entity_520"
+      },
+      {
+        "text": "condenser",
+        "type": "component",
+        "context": "change out air conditioner condenser",
+        "entity_id": "entity_521"
+      },
+      {
+        "text": "battery",
+        "type": "component",
+        "context": "change out battery right",
+        "entity_id": "entity_522"
+      },
+      {
+        "text": "brake swing",
+        "type": "component",
+        "context": "change out brake swing",
+        "entity_id": "entity_523"
+      },
+      {
+        "text": "left front",
+        "type": "location",
+        "context": "left front",
+        "entity_id": "entity_524"
+      },
+      {
+        "text": "left rear",
+        "type": "location",
+        "context": "left rear",
+        "entity_id": "entity_525"
+      },
+      {
+        "text": "right front",
+        "type": "location",
+        "context": "change out brake swing right front",
+        "entity_id": "entity_526"
+      },
+      {
+        "text": "grease lines",
+        "type": "components",
+        "context": "broken grease lines",
+        "entity_id": "entity_527"
+      },
+      {
+        "text": "broken",
+        "type": "issues",
+        "context": "broken grease lines",
+        "entity_id": "entity_528"
+      },
+      {
+        "text": "coolant flow switch",
+        "type": "component",
+        "context": "change out",
+        "entity_id": "entity_529"
+      },
+      {
+        "text": "coolant pump",
+        "type": "equipment",
+        "context": "change out coolant pump",
+        "entity_id": "entity_530"
+      },
+      {
+        "text": "core",
+        "type": "component",
+        "context": "change out crowd cylinder core return",
+        "entity_id": "entity_531"
+      },
+      {
+        "text": "dogbone bushes",
+        "type": "component",
+        "context": "change out dogbone bushes",
+        "entity_id": "entity_532"
+      },
+      {
+        "text": "engine oil pump",
+        "type": "component",
+        "context": "change out engine oil pump",
+        "entity_id": "entity_533"
+      },
+      {
+        "text": "fire suppression switch",
+        "type": "component",
+        "context": "change out fire suppression switch",
+        "entity_id": "entity_534"
+      },
+      {
+        "text": "bottle",
+        "type": "equipment",
+        "context": "on bottle",
+        "entity_id": "entity_535"
+      },
+      {
+        "text": "fuel breather",
+        "type": "component",
+        "context": "change out fuel breather",
+        "entity_id": "entity_536"
+      },
+      {
+        "text": "steering left",
+        "type": "location",
+        "context": "steering left",
+        "entity_id": "entity_537"
+      },
+      {
+        "text": "hydraulic motor",
+        "type": "equipment",
+        "context": "hydraulic motor cooler fan",
+        "entity_id": "entity_538"
+      },
+      {
+        "text": "cooler fan",
+        "type": "component",
+        "context": "hydraulic motor cooler fan",
+        "entity_id": "entity_539"
+      }
+    ],
+    "relationships": [
+      {
+        "source": "thermostat",
+        "target": "not working",
+        "relation": "symptom",
+        "context": "air conditioner thermostat not working"
+      },
+      {
+        "source": "air conditioner",
+        "target": "thermostat",
+        "relation": "component_of",
+        "context": "air conditioner thermostat not working"
+      },
+      {
+        "source": "air conditioner",
+        "target": "thermostat",
+        "relation": "has_component",
+        "context": "air conditioner thermostat unserviceable"
+      },
+      {
+        "source": "thermostat",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "air conditioner thermostat unserviceable"
+      },
+      {
+        "source": "air conditioner",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "air conditioner unserviceable"
+      },
+      {
+        "source": "unserviceable",
+        "target": "stationary",
+        "relation": "condition",
+        "context": "when stationary"
+      },
+      {
+        "source": "air horn",
+        "target": "compressor",
+        "relation": "dependency",
+        "context": "air horn not working compressor awaiting"
+      },
+      {
+        "source": "air horn",
+        "target": "working intermittently",
+        "relation": "exhibits",
+        "context": "air horn working intermittently"
+      },
+      {
+        "source": "air leak",
+        "target": "side of door",
+        "relation": "located at",
+        "context": "air leak near side of door"
+      },
+      {
+        "source": "air",
+        "target": "line",
+        "relation": "leaking_from",
+        "context": "air leaking from line"
+      },
+      {
+        "source": "line",
+        "target": "outside",
+        "relation": "located_at",
+        "context": "line outside"
+      },
+      {
+        "source": "air receiver",
+        "target": "safety valves",
+        "relation": "has_component",
+        "context": "air receiver safety valves to be replaced"
+      },
+      {
+        "source": "safety valves",
+        "target": "replaced",
+        "relation": "requires_action",
+        "context": "air receiver safety valves to be replaced"
+      },
+      {
+        "source": "alarm",
+        "target": "VIMS",
+        "relation": "part_of",
+        "context": "alarm on VIMS"
+      },
+      {
+        "source": "alarm",
+        "target": "doesnt work",
+        "relation": "exhibits",
+        "context": "alarm on VIMS doesnt work"
+      },
+      {
+        "source": "alternator",
+        "target": "overcharge",
+        "relation": "experiences",
+        "context": "alternator overcharge fault"
+      },
+      {
+        "source": "overcharge",
+        "target": "fault",
+        "relation": "causes",
+        "context": "alternator overcharge fault"
+      },
+      {
+        "source": "analyse",
+        "target": "driveline component",
+        "relation": "action-target",
+        "context": "analyse failed driveline component"
+      },
+      {
+        "source": "driveline component",
+        "target": "failed",
+        "relation": "issue-of",
+        "context": "failed driveline component"
+      },
+      {
+        "source": "lube system",
+        "target": "faults",
+        "relation": "experiences",
+        "context": "lube system faults"
+      },
+      {
+        "source": "auto-greaser",
+        "target": "control unit",
+        "relation": "part_of",
+        "context": "auto-greaser control unit"
+      },
+      {
+        "source": "auto-greaser",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "auto-greaser unserviceable"
+      },
+      {
+        "source": "auto-spray feature",
+        "target": "not working",
+        "relation": "exhibits",
+        "context": "auto-spray feature not working"
+      },
+      {
+        "source": "auxiliary Cat engine",
+        "target": "lube service",
+        "relation": "requires",
+        "context": "auxiliary Cat engine lube service"
+      },
+      {
+        "source": "axle",
+        "target": "temperature sensor",
+        "relation": "has_component",
+        "context": "axle temperature sensor fault"
+      },
+      {
+        "source": "temperature sensor",
+        "target": "fault",
+        "relation": "exhibits_issue",
+        "context": "axle temperature sensor fault"
+      },
+      {
+        "source": "back rest",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "back rest unserviceable"
+      },
+      {
+        "source": "handle",
+        "target": "broken",
+        "relation": "has_issue",
+        "context": "handle broken"
+      },
+      {
+        "source": "backhoe",
+        "target": "windscreen",
+        "relation": "has_component",
+        "context": "backhoe windscreen to be fixed"
+      },
+      {
+        "source": "windscreen",
+        "target": "fixed",
+        "relation": "requires_action",
+        "context": "backhoe windscreen to be fixed"
+      },
+      {
+        "source": "backlight",
+        "target": "dash",
+        "relation": "part_of",
+        "context": "backlight on dash"
+      },
+      {
+        "source": "backlight",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "backlight on dash unserviceable"
+      },
+      {
+        "source": "battery cover",
+        "target": "hinges",
+        "relation": "part_of",
+        "context": "battery cover hinges seized"
+      },
+      {
+        "source": "hinges",
+        "target": "seized",
+        "relation": "exhibits",
+        "context": "battery cover hinges seized"
+      },
+      {
+        "source": "bearing",
+        "target": "air conditioner compressor",
+        "relation": "part_of",
+        "context": "bearing on air conditioner compressor"
+      },
+      {
+        "source": "bearing",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "bearing on air conditioner compressor unserviceable"
+      },
+      {
+        "source": "blade light",
+        "target": "blown",
+        "relation": "has_issue",
+        "context": "blade light blown needs replacing"
+      },
+      {
+        "source": "blown",
+        "target": "replacing",
+        "relation": "requires_action",
+        "context": "blade light blown needs replacing"
+      },
+      {
+        "source": "blade wear plates",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "blade wear plates cracked and worn"
+      },
+      {
+        "source": "blade wear plates",
+        "target": "worn",
+        "relation": "has_issue",
+        "context": "blade wear plates cracked and worn"
+      },
+      {
+        "source": "blow out",
+        "target": "generators",
+        "relation": "action",
+        "context": "blow out generators electrical"
+      },
+      {
+        "source": "generators",
+        "target": "electrical",
+        "relation": "issue",
+        "context": "blow out generators electrical"
+      },
+      {
+        "source": "air conditioner",
+        "target": "hose",
+        "relation": "has_component",
+        "context": "blown air conditioner hose"
+      },
+      {
+        "source": "hose",
+        "target": "blown",
+        "relation": "has_issue",
+        "context": "blown air conditioner hose"
+      },
+      {
+        "source": "air conditioner hose",
+        "target": "radiator",
+        "relation": "connected_to",
+        "context": "air conditioner hose to radiator"
+      },
+      {
+        "source": "crowd cylinder",
+        "target": "hose",
+        "relation": "part_of",
+        "context": "crowd cylinder hose"
+      },
+      {
+        "source": "blown",
+        "target": "hose",
+        "relation": "symptom_of",
+        "context": "blown hose"
+      },
+      {
+        "source": "extension line",
+        "target": "position num",
+        "relation": "located at",
+        "context": "blown extension line from position num"
+      },
+      {
+        "source": "lift cylinder",
+        "target": "o-ring",
+        "relation": "contains",
+        "context": "blown lift cylinder o-ring"
+      },
+      {
+        "source": "o-ring",
+        "target": "blown",
+        "relation": "status",
+        "context": "blown lift cylinder o-ring"
+      },
+      {
+        "source": "o-ring",
+        "target": "steering hose",
+        "relation": "attached_to",
+        "context": "off steering hose"
+      },
+      {
+        "source": "o-ring",
+        "target": "blown",
+        "relation": "issue",
+        "context": "blown o-ring"
+      },
+      {
+        "source": "o-ring",
+        "target": "left hand lift cylinder",
+        "relation": "located_in",
+        "context": "on left hand lift cylinder"
+      },
+      {
+        "source": "blown",
+        "target": "o-ring",
+        "relation": "symptom_of",
+        "context": "blown o-ring"
+      },
+      {
+        "source": "o-ring",
+        "target": "steering hose",
+        "relation": "part_of",
+        "context": "o-ring on steering hose"
+      },
+      {
+        "source": "blown",
+        "target": "o-ring",
+        "relation": "issue_with",
+        "context": "blown o-ring"
+      },
+      {
+        "source": "oil cooler hose",
+        "target": "blown",
+        "relation": "has_issue",
+        "context": "blown oil cooler hose"
+      },
+      {
+        "source": "tyre",
+        "target": "blown",
+        "relation": "symptom",
+        "context": "blown position num tyre"
+      },
+      {
+        "source": "position num",
+        "target": "tyre",
+        "relation": "location",
+        "context": "blown position num tyre"
+      },
+      {
+        "source": "cylinder hose",
+        "target": "right hand bucket",
+        "relation": "located at",
+        "context": "blown right hand bucket cylinder hose"
+      },
+      {
+        "source": "blown",
+        "target": "cylinder hose",
+        "relation": "issue with",
+        "context": "blown right hand bucket cylinder hose"
+      },
+      {
+        "source": "boarding gate",
+        "target": "hinge",
+        "relation": "part_of",
+        "context": "boarding gate hinge broken"
+      },
+      {
+        "source": "hinge",
+        "target": "broken",
+        "relation": "has_issue",
+        "context": "boarding gate hinge broken"
+      },
+      {
+        "source": "boarding gate",
+        "target": "latch",
+        "relation": "contains",
+        "context": "boarding gate latch not working"
+      },
+      {
+        "source": "latch",
+        "target": "not working",
+        "relation": "exhibits",
+        "context": "boarding gate latch not working"
+      },
+      {
+        "source": "boarding ladder",
+        "target": "not working",
+        "relation": "has_issue",
+        "context": "boarding ladder not working"
+      },
+      {
+        "source": "boilermaker",
+        "target": "bucket assembly",
+        "relation": "repairs",
+        "context": "boilermaker repairs to bucket assembly"
+      },
+      {
+        "source": "boilermaker",
+        "target": "repairs",
+        "relation": "performs",
+        "context": "boilermaker repairs"
+      },
+      {
+        "source": "repairs",
+        "target": "engine cover",
+        "relation": "applied_to",
+        "context": "repairs to engine cover"
+      },
+      {
+        "source": "repairs",
+        "target": "exhaust area",
+        "relation": "applies_to",
+        "context": "repairs to exhaust area"
+      },
+      {
+        "source": "boilermakers",
+        "target": "bucket",
+        "relation": "repair",
+        "context": "boilermakers to repair bucket"
+      },
+      {
+        "source": "boilermakers",
+        "target": "cooler frame",
+        "relation": "repair",
+        "context": "boilermakers to repair cooler frame"
+      },
+      {
+        "source": "boilermakers",
+        "target": "plate",
+        "relation": "repair",
+        "context": "boilermakers to repair plate"
+      },
+      {
+        "source": "plate",
+        "target": "proximity switch",
+        "relation": "location",
+        "context": "plate over proximity switch"
+      },
+      {
+        "source": "stick cylinders",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "both stick cylinders leaking"
+      },
+      {
+        "source": "brake cooling hose",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "brake cooling hose leaking"
+      },
+      {
+        "source": "brake cooling hose",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "brake cooling hose leaking rear"
+      },
+      {
+        "source": "leaking",
+        "target": "rear",
+        "relation": "location_of_issue",
+        "context": "brake cooling hose leaking rear"
+      },
+      {
+        "source": "brake cooling return hose",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "brake cooling return hose leaking"
+      },
+      {
+        "source": "air conditioner",
+        "target": "guard",
+        "relation": "has_component",
+        "context": "broken air conditioner guard"
+      },
+      {
+        "source": "guard",
+        "target": "broken",
+        "relation": "has_issue",
+        "context": "broken air conditioner guard"
+      },
+      {
+        "source": "clamp",
+        "target": "crowd cylinder hose",
+        "relation": "part_of",
+        "context": "clamp on crowd cylinder hose"
+      },
+      {
+        "source": "clamp",
+        "target": "broken",
+        "relation": "has_issue",
+        "context": "broken clamp"
+      },
+      {
+        "source": "fuel cooler",
+        "target": "mounts",
+        "relation": "part_of",
+        "context": "broken fuel cooler mounts"
+      },
+      {
+        "source": "broken",
+        "target": "mounts",
+        "relation": "condition_of",
+        "context": "broken fuel cooler mounts"
+      },
+      {
+        "source": "broken",
+        "target": "left hand side mirror",
+        "relation": "describes",
+        "context": "broken left hand side mirror"
+      },
+      {
+        "source": "right hand side door window",
+        "target": "broken",
+        "relation": "has_issue",
+        "context": "broken right hand side door window"
+      },
+      {
+        "source": "bucket",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "bucket cracked"
+      },
+      {
+        "source": "cracked",
+        "target": "arch",
+        "relation": "located_at",
+        "context": "cracked in arch"
+      },
+      {
+        "source": "cabin door",
+        "target": "window",
+        "relation": "part_of",
+        "context": "cabin door window cracked"
+      },
+      {
+        "source": "window",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "cabin door window cracked"
+      },
+      {
+        "source": "cabin seals",
+        "target": "dust",
+        "relation": "leaking",
+        "context": "cabin seals leaking dust"
+      },
+      {
+        "source": "cabin seals",
+        "target": "leaking",
+        "relation": "experiencing",
+        "context": "cabin seals leaking dust bad"
+      },
+      {
+        "source": "leaking",
+        "target": "dust",
+        "relation": "causing",
+        "context": "cabin seals leaking dust bad"
+      },
+      {
+        "source": "cabin seat",
+        "target": "replacing",
+        "relation": "requires",
+        "context": "cabin seat needs replacing"
+      },
+      {
+        "source": "cabin window",
+        "target": "resealing",
+        "relation": "requires",
+        "context": "cabin window needs resealing"
+      },
+      {
+        "source": "bolt",
+        "target": "Loctite",
+        "relation": "needs",
+        "context": "carousel popped bolt needs Loctite"
+      },
+      {
+        "source": "centrifugal oil filter",
+        "target": "fault",
+        "relation": "has_issue",
+        "context": "centrifugal oil filter fault"
+      },
+      {
+        "source": "centrifugal oil filter",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "centrifugal oil filter leaking"
+      },
+      {
+        "source": "cutting edges",
+        "target": "outsides",
+        "relation": "location_of",
+        "context": "cutting edges outsides GET"
+      },
+      {
+        "source": "change",
+        "target": "differential",
+        "relation": "procedure",
+        "context": "change differential and final drive oils"
+      },
+      {
+        "source": "change",
+        "target": "final drive",
+        "relation": "procedure",
+        "context": "change differential and final drive oils"
+      },
+      {
+        "source": "change",
+        "target": "oils",
+        "relation": "procedure",
+        "context": "change differential and final drive oils"
+      },
+      {
+        "source": "change",
+        "target": "hub",
+        "relation": "procedure",
+        "context": "change differential and hub oils"
+      },
+      {
+        "source": "differential",
+        "target": "oils",
+        "relation": "component_of",
+        "context": "change differential and hub oils"
+      },
+      {
+        "source": "hub",
+        "target": "oils",
+        "relation": "component_of",
+        "context": "change differential and hub oils"
+      },
+      {
+        "source": "change",
+        "target": "engine oil",
+        "relation": "procedure",
+        "context": "change engine oil"
+      },
+      {
+        "source": "inspect",
+        "target": "cooling system",
+        "relation": "procedure",
+        "context": "inspect cooling system"
+      },
+      {
+        "source": "thrust bearing",
+        "target": "oil",
+        "relation": "uses",
+        "context": "thrust bearing oil"
+      },
+      {
+        "source": "change out",
+        "target": "tyres",
+        "relation": "procedure",
+        "context": "change out num x new tyres"
+      },
+      {
+        "source": "change out",
+        "target": "tyres",
+        "relation": "action-target",
+        "context": "change out all tyres"
+      },
+      {
+        "source": "tyres",
+        "target": "off hire",
+        "relation": "purpose",
+        "context": "for off hire"
+      },
+      {
+        "source": "change out",
+        "target": "auxiliary water pump",
+        "relation": "procedure",
+        "context": "change out auxiliary water pump"
+      },
+      {
+        "source": "o-ring",
+        "target": "steering pump",
+        "relation": "part of",
+        "context": "o-ring on steering pump"
+      },
+      {
+        "source": "change out",
+        "target": "o-ring",
+        "relation": "action on",
+        "context": "change out blown o-ring"
+      },
+      {
+        "source": "change out",
+        "target": "position num tyre",
+        "relation": "procedure",
+        "context": "change out blown position num tyre"
+      },
+      {
+        "source": "position num tyre",
+        "target": "blown",
+        "relation": "symptom",
+        "context": "blown position num tyre"
+      },
+      {
+        "source": "change out",
+        "target": "steering hose",
+        "relation": "procedure",
+        "context": "change out blown steering hose"
+      },
+      {
+        "source": "blown",
+        "target": "steering hose",
+        "relation": "symptom",
+        "context": "blown steering hose"
+      },
+      {
+        "source": "bolt",
+        "target": "brake pump",
+        "relation": "part_of",
+        "context": "bolt on brake pump"
+      },
+      {
+        "source": "change out",
+        "target": "bolt",
+        "relation": "procedure",
+        "context": "change out broken bolt"
+      },
+      {
+        "source": "broken",
+        "target": "bolt",
+        "relation": "symptom",
+        "context": "broken bolt"
+      },
+      {
+        "source": "change out",
+        "target": "prelube bracket",
+        "relation": "procedure",
+        "context": "change out broken prelube bracket"
+      },
+      {
+        "source": "prelube bracket",
+        "target": "broken",
+        "relation": "symptom",
+        "context": "broken prelube bracket"
+      },
+      {
+        "source": "change out",
+        "target": "stabilizer bar",
+        "relation": "procedure",
+        "context": "change out broken stabilizer bar"
+      },
+      {
+        "source": "stabilizer bar",
+        "target": "broken",
+        "relation": "symptom",
+        "context": "broken stabilizer bar"
+      },
+      {
+        "source": "pipe",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "cracked pipe"
+      },
+      {
+        "source": "pipe",
+        "target": "valve bank",
+        "relation": "located_on",
+        "context": "pipe on valve bank"
+      },
+      {
+        "source": "change out",
+        "target": "pipe",
+        "relation": "applies_to",
+        "context": "change out cracked pipe"
+      },
+      {
+        "source": "position num adaptor",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "cracked position num adaptor"
+      },
+      {
+        "source": "change out",
+        "target": "position num adaptor",
+        "relation": "action_target",
+        "context": "change out cracked position num adaptor"
+      },
+      {
+        "source": "change out",
+        "target": "tooth",
+        "relation": "action_target",
+        "context": "change out cracked position num adaptor and tooth"
+      },
+      {
+        "source": "change out",
+        "target": "crowd cylinder",
+        "relation": "procedure",
+        "context": "change out crowd cylinder"
+      },
+      {
+        "source": "change out",
+        "target": "engine",
+        "relation": "action-target",
+        "context": "change out engine"
+      },
+      {
+        "source": "change out",
+        "target": "engine",
+        "relation": "procedure",
+        "context": "change out engine"
+      },
+      {
+        "source": "change out",
+        "target": "air cleaners",
+        "relation": "procedure",
+        "context": "change out engine air cleaners"
+      },
+      {
+        "source": "air cleaners",
+        "target": "engine",
+        "relation": "component_of",
+        "context": "engine air cleaners"
+      },
+      {
+        "source": "exhaust clamp",
+        "target": "broken",
+        "relation": "has_issue",
+        "context": "exhaust clamp broken"
+      },
+      {
+        "source": "exhaust clamp",
+        "target": "left hand side",
+        "relation": "located_at",
+        "context": "on left hand side"
+      },
+      {
+        "source": "change out",
+        "target": "exhaust clamp",
+        "relation": "action_on",
+        "context": "change out exhaust clamp"
+      },
+      {
+        "source": "change out",
+        "target": "front upper window",
+        "relation": "procedure",
+        "context": "change out front upper window cracked"
+      },
+      {
+        "source": "front upper window",
+        "target": "cracked",
+        "relation": "symptom",
+        "context": "change out front upper window cracked"
+      },
+      {
+        "source": "change out",
+        "target": "jacket water pump",
+        "relation": "procedure",
+        "context": "change out jacket water pump"
+      },
+      {
+        "source": "leak",
+        "target": "slew motor hose",
+        "relation": "occurs_in",
+        "context": "leak slew motor hose"
+      },
+      {
+        "source": "change out",
+        "target": "slew motor hose",
+        "relation": "applied_to",
+        "context": "change out leak slew motor hose"
+      },
+      {
+        "source": "change out",
+        "target": "HMU",
+        "relation": "procedure",
+        "context": "change out leaking HMU"
+      },
+      {
+        "source": "HMU",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "leaking HMU"
+      },
+      {
+        "source": "change out",
+        "target": "fan hoses",
+        "relation": "procedure",
+        "context": "change out leaking fan hoses"
+      },
+      {
+        "source": "fan hoses",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "leaking fan hoses"
+      },
+      {
+        "source": "change out",
+        "target": "heater taps",
+        "relation": "procedure",
+        "context": "change out leaking heater taps"
+      },
+      {
+        "source": "heater taps",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "leaking heater taps"
+      },
+      {
+        "source": "change out",
+        "target": "hydraulic hose",
+        "relation": "procedure",
+        "context": "change out leaking hydraulic hose"
+      },
+      {
+        "source": "hydraulic hose",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "leaking hydraulic hose"
+      },
+      {
+        "source": "change out",
+        "target": "implement pump",
+        "relation": "procedure",
+        "context": "change out leaking implement pump"
+      },
+      {
+        "source": "implement pump",
+        "target": "leaking",
+        "relation": "issue",
+        "context": "leaking implement pump"
+      },
+      {
+        "source": "change out",
+        "target": "relay valve",
+        "relation": "procedure",
+        "context": "change out leaking relay valve"
+      },
+      {
+        "source": "relay valve",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "leaking relay valve"
+      },
+      {
+        "source": "steering hose",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "leaking steering hose"
+      },
+      {
+        "source": "left hand engine",
+        "target": "servo pumps",
+        "relation": "contains",
+        "context": "change out left hand engine servo pumps num x"
+      },
+      {
+        "source": "change out",
+        "target": "servo pumps",
+        "relation": "procedure",
+        "context": "change out left hand engine servo pumps num x"
+      },
+      {
+        "source": "change out",
+        "target": "left hand hoist cylinder",
+        "relation": "procedure",
+        "context": "change out left hand hoist cylinder with"
+      },
+      {
+        "source": "change out",
+        "target": "left hand lift cylinder",
+        "relation": "procedure",
+        "context": "change out left hand lift cylinder"
+      },
+      {
+        "source": "change out",
+        "target": "left hand steering cylinder",
+        "relation": "procedure",
+        "context": "change out left hand steering cylinder"
+      },
+      {
+        "source": "left hand steering cylinder",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "left hand steering cylinder leaking"
+      },
+      {
+        "source": "change out",
+        "target": "left hand steering cylinder",
+        "relation": "procedure_on",
+        "context": "change out left hand steering cylinder"
+      },
+      {
+        "source": "change out",
+        "target": "o-ring",
+        "relation": "procedure",
+        "context": "change out left hand stick cylinder o-ring"
+      },
+      {
+        "source": "o-ring",
+        "target": "left hand stick cylinder",
+        "relation": "part of",
+        "context": "change out left hand stick cylinder o-ring"
+      },
+      {
+        "source": "position num num num",
+        "target": "num tyres",
+        "relation": "change out",
+        "context": "change out position num num num and num tyres"
+      },
+      {
+        "source": "position",
+        "target": "tyres",
+        "relation": "location",
+        "context": "change out position num num and num tyres"
+      },
+      {
+        "source": "position num",
+        "target": "num tyre",
+        "relation": "location of",
+        "context": "change out position num and num tyre worn out"
+      },
+      {
+        "source": "num tyre",
+        "target": "worn out",
+        "relation": "symptom of",
+        "context": "change out position num and num tyre worn out"
+      },
+      {
+        "source": "change out",
+        "target": "num tyre",
+        "relation": "procedure for",
+        "context": "change out position num and num tyre worn out"
+      },
+      {
+        "source": "position num",
+        "target": "num tyres",
+        "relation": "change out",
+        "context": "change out position num and num tyres"
+      },
+      {
+        "source": "change out",
+        "target": "position num",
+        "relation": "procedure",
+        "context": "change out position num and num tyres and rims"
+      },
+      {
+        "source": "change out",
+        "target": "num tyres",
+        "relation": "procedure",
+        "context": "change out position num and num tyres and rims"
+      },
+      {
+        "source": "change out",
+        "target": "rims",
+        "relation": "procedure",
+        "context": "change out position num and num tyres and rims"
+      },
+      {
+        "source": "position num",
+        "target": "swing motor",
+        "relation": "part_of",
+        "context": "change out position num swing motor"
+      },
+      {
+        "source": "change out",
+        "target": "position num",
+        "relation": "action_on",
+        "context": "change out position num"
+      },
+      {
+        "source": "change out",
+        "target": "swing motor",
+        "relation": "action_on",
+        "context": "change out position num swing motor"
+      },
+      {
+        "source": "change out",
+        "target": "tyre",
+        "relation": "procedure",
+        "context": "change out position num tyre"
+      },
+      {
+        "source": "position num",
+        "target": "tyre",
+        "relation": "location of",
+        "context": "change out position num tyre"
+      },
+      {
+        "source": "position num tyre",
+        "target": "sensor",
+        "relation": "issue",
+        "context": "sensor not reading"
+      },
+      {
+        "source": "tyre",
+        "target": "damage",
+        "relation": "has_issue",
+        "context": "tyre damage"
+      },
+      {
+        "source": "change out",
+        "target": "position num",
+        "relation": "performed_at",
+        "context": "change out position num"
+      },
+      {
+        "source": "change out",
+        "target": "rear steering accumulator bladder",
+        "relation": "procedure",
+        "context": "change out rear steering accumulator bladder"
+      },
+      {
+        "source": "change out",
+        "target": "right hand steering cylinder",
+        "relation": "procedure",
+        "context": "change out right hand steering cylinder"
+      },
+      {
+        "source": "change out",
+        "target": "rotation shaft seal",
+        "relation": "procedure",
+        "context": "change out rotation shaft seal"
+      },
+      {
+        "source": "change out",
+        "target": "steering hoses",
+        "relation": "procedure",
+        "context": "change out steering hoses"
+      },
+      {
+        "source": "jacket water pump",
+        "target": "unserviceable",
+        "relation": "symptom",
+        "context": "unserviceable jacket water pump"
+      },
+      {
+        "source": "change out",
+        "target": "left hand bucket cylinder hose",
+        "relation": "procedure",
+        "context": "unserviceable"
+      },
+      {
+        "source": "tyre",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "unserviceable position num tyre"
+      },
+      {
+        "source": "change out",
+        "target": "tyre",
+        "relation": "action_on",
+        "context": "change out unserviceable position num tyre"
+      },
+      {
+        "source": "tyre",
+        "target": "position num",
+        "relation": "located_at",
+        "context": "unserviceable position num tyre"
+      },
+      {
+        "source": "right hand clam cylinder hose",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "change out unserviceable right hand clam cylinder hose"
+      },
+      {
+        "source": "change out",
+        "target": "right hand clam cylinder hose",
+        "relation": "procedure",
+        "context": "change out unserviceable right hand clam cylinder hose"
+      },
+      {
+        "source": "change out",
+        "target": "right hand tilt cylinder",
+        "relation": "procedure",
+        "context": "change out unserviceable right hand tilt cylinder"
+      },
+      {
+        "source": "right hand tilt cylinder",
+        "target": "unserviceable",
+        "relation": "symptom",
+        "context": "unserviceable right hand tilt cylinder"
+      },
+      {
+        "source": "change out",
+        "target": "swing brake cylinder",
+        "relation": "procedure",
+        "context": "change out unserviceable swing brake cylinder"
+      },
+      {
+        "source": "swing brake cylinder",
+        "target": "unserviceable",
+        "relation": "symptom",
+        "context": "unserviceable swing brake cylinder"
+      },
+      {
+        "source": "change out",
+        "target": "boom cylinder hose",
+        "relation": "procedure",
+        "context": "change out weeping boom cylinder hose"
+      },
+      {
+        "source": "weeping",
+        "target": "boom cylinder hose",
+        "relation": "symptom",
+        "context": "weeping boom cylinder hose"
+      },
+      {
+        "source": "tyre",
+        "target": "worn",
+        "relation": "has_issue",
+        "context": "change out worn position num tyre"
+      },
+      {
+        "source": "change out",
+        "target": "tyre",
+        "relation": "action_target",
+        "context": "change out worn position num tyre"
+      },
+      {
+        "source": "change",
+        "target": "position num",
+        "relation": "action-location",
+        "context": "change position num and num tyre"
+      },
+      {
+        "source": "change",
+        "target": "num tyre",
+        "relation": "action-component",
+        "context": "change position num and num tyre"
+      },
+      {
+        "source": "position num",
+        "target": "rim",
+        "relation": "location-component",
+        "context": "position num rim"
+      },
+      {
+        "source": "change",
+        "target": "position",
+        "relation": "action-target",
+        "context": "change position num and num tyres"
+      },
+      {
+        "source": "change",
+        "target": "tyres",
+        "relation": "action-target",
+        "context": "change position num and num tyres"
+      },
+      {
+        "source": "position num",
+        "target": "tyres",
+        "relation": "change",
+        "context": "change position num and position num tyres"
+      },
+      {
+        "source": "change",
+        "target": "position",
+        "relation": "action-location",
+        "context": "change position"
+      },
+      {
+        "source": "num",
+        "target": "flat tyre",
+        "relation": "component-issue",
+        "context": "num flat tyre"
+      },
+      {
+        "source": "change",
+        "target": "position",
+        "relation": "procedure",
+        "context": "change position num tyre"
+      },
+      {
+        "source": "change",
+        "target": "num",
+        "relation": "procedure",
+        "context": "change position num tyre"
+      },
+      {
+        "source": "change",
+        "target": "tyre",
+        "relation": "procedure",
+        "context": "change position num tyre"
+      },
+      {
+        "source": "position num",
+        "target": "tyre",
+        "relation": "component_of",
+        "context": "change position num tyre damage text"
+      },
+      {
+        "source": "tyre",
+        "target": "run outs",
+        "relation": "solution_for",
+        "context": "change tyre for run outs"
+      },
+      {
+        "source": "change",
+        "target": "tyre",
+        "relation": "action_on",
+        "context": "change tyre position num"
+      },
+      {
+        "source": "tyre",
+        "target": "position",
+        "relation": "located_at",
+        "context": "change tyre position num"
+      },
+      {
+        "source": "repair",
+        "target": "oil leak",
+        "relation": "action-target",
+        "context": "repair engine oil leak"
+      },
+      {
+        "source": "oil leak",
+        "target": "engine",
+        "relation": "issue-location",
+        "context": "repair engine oil leak"
+      },
+      {
+        "source": "check",
+        "target": "auto-greaser unit",
+        "relation": "procedure",
+        "context": "check and repair auto-greaser unit"
+      },
+      {
+        "source": "repair",
+        "target": "auto-greaser unit",
+        "relation": "procedure",
+        "context": "check and repair auto-greaser unit"
+      },
+      {
+        "source": "check",
+        "target": "rear wiper motor",
+        "relation": "procedure",
+        "context": "check and repair"
+      },
+      {
+        "source": "repair",
+        "target": "rear wiper motor",
+        "relation": "procedure",
+        "context": "check and repair"
+      },
+      {
+        "source": "check",
+        "target": "left hand lift cylinder",
+        "relation": "action-target",
+        "context": "check left hand lift cylinder"
+      },
+      {
+        "source": "chord",
+        "target": "leaking air",
+        "relation": "has_issue",
+        "context": "chord leaking air found"
+      },
+      {
+        "source": "compressor",
+        "target": "oil pressure switch",
+        "relation": "has_component",
+        "context": "compressor oil pressure switch unserviceable"
+      },
+      {
+        "source": "oil pressure switch",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "compressor oil pressure switch unserviceable"
+      },
+      {
+        "source": "control valve",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "control valve unserviceable"
+      },
+      {
+        "source": "conveyor",
+        "target": "head pulley shaft",
+        "relation": "has_component",
+        "context": "conveyor head pulley shaft modifications"
+      },
+      {
+        "source": "head pulley shaft",
+        "target": "modifications",
+        "relation": "undergoes",
+        "context": "conveyor head pulley shaft modifications"
+      },
+      {
+        "source": "coolant hose",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "coolant hose leaking"
+      },
+      {
+        "source": "leaking",
+        "target": "right hand bottom",
+        "relation": "occurs_at",
+        "context": "leaking at right hand bottom"
+      },
+      {
+        "source": "coolant leak",
+        "target": "engine oil cooler",
+        "relation": "occurs at",
+        "context": "coolant leak at engine oil cooler"
+      },
+      {
+        "source": "coolant",
+        "target": "leak",
+        "relation": "symptom_of",
+        "context": "coolant leak"
+      },
+      {
+        "source": "leak",
+        "target": "jacket water pump",
+        "relation": "location_of",
+        "context": "at jacket water pump"
+      },
+      {
+        "source": "coolant pipe clamps",
+        "target": "fitting",
+        "relation": "requires",
+        "context": "coolant pipe clamps needs fitting"
+      },
+      {
+        "source": "cooler",
+        "target": "return pipe",
+        "relation": "part_of",
+        "context": "cooler return pipe coupling leak"
+      },
+      {
+        "source": "return pipe",
+        "target": "coupling",
+        "relation": "part_of",
+        "context": "cooler return pipe coupling leak"
+      },
+      {
+        "source": "coupling",
+        "target": "leak",
+        "relation": "exhibits",
+        "context": "cooler return pipe coupling leak"
+      },
+      {
+        "source": "cords",
+        "target": "cracked",
+        "relation": "symptom",
+        "context": "cords cracked at"
+      },
+      {
+        "source": "crack",
+        "target": "blade liner",
+        "relation": "occurs_in",
+        "context": "crack in blade liner left hand side"
+      },
+      {
+        "source": "crack",
+        "target": "left hand side",
+        "relation": "located_at",
+        "context": "crack in blade liner left hand side"
+      },
+      {
+        "source": "crack",
+        "target": "lower centre",
+        "relation": "located_at",
+        "context": "crack in lower centre of windscreen"
+      },
+      {
+        "source": "crack",
+        "target": "windscreen",
+        "relation": "affects",
+        "context": "crack in lower centre of windscreen"
+      },
+      {
+        "source": "crack",
+        "target": "rock deflector",
+        "relation": "occurs_on",
+        "context": "crack onside rock deflector"
+      },
+      {
+        "source": "steering tank",
+        "target": "suction tube",
+        "relation": "contains",
+        "context": "cracked steering tank suction tube"
+      },
+      {
+        "source": "suction tube",
+        "target": "cracked",
+        "relation": "exhibits",
+        "context": "cracked steering tank suction tube"
+      },
+      {
+        "source": "walkway",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "cracked walkway"
+      },
+      {
+        "source": "handrails",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "cracked handrails"
+      },
+      {
+        "source": "cracks",
+        "target": "back right hand side handrail",
+        "relation": "located_in",
+        "context": "cracks in back right hand side handrail"
+      },
+      {
+        "source": "cracks",
+        "target": "diagonal braces",
+        "relation": "occurs_in",
+        "context": "cracks in diagonal braces in front"
+      },
+      {
+        "source": "diagonal braces",
+        "target": "front",
+        "relation": "located_at",
+        "context": "cracks in diagonal braces in front"
+      },
+      {
+        "source": "cracks",
+        "target": "fire suppression mounts",
+        "relation": "occurs_in",
+        "context": "cracks in fire suppression mounts"
+      },
+      {
+        "source": "cylinder",
+        "target": "creeping",
+        "relation": "has_issue",
+        "context": "crowd cylinder creeping replace"
+      },
+      {
+        "source": "creeping",
+        "target": "replace",
+        "relation": "solution",
+        "context": "crowd cylinder creeping replace"
+      },
+      {
+        "source": "cutting edges",
+        "target": "change out",
+        "relation": "requires",
+        "context": "cutting edges need change out"
+      },
+      {
+        "source": "damage",
+        "target": "tyre",
+        "relation": "affects",
+        "context": "damage to position num tyre"
+      },
+      {
+        "source": "position num",
+        "target": "tyre",
+        "relation": "part of",
+        "context": "damaged position num tyre"
+      },
+      {
+        "source": "damaged",
+        "target": "tyre",
+        "relation": "condition of",
+        "context": "damaged position num tyre"
+      },
+      {
+        "source": "position num",
+        "target": "tyre",
+        "relation": "location_of",
+        "context": "damaged position num tyre and rim"
+      },
+      {
+        "source": "position num",
+        "target": "rim",
+        "relation": "location_of",
+        "context": "damaged position num tyre and rim"
+      },
+      {
+        "source": "damaged",
+        "target": "tyre",
+        "relation": "issue_with",
+        "context": "damaged position num tyre and rim"
+      },
+      {
+        "source": "damaged",
+        "target": "rim",
+        "relation": "issue_with",
+        "context": "damaged position num tyre and rim"
+      },
+      {
+        "source": "diagnose",
+        "target": "fuel fault",
+        "relation": "action-target",
+        "context": "diagnose repair fuel fault"
+      },
+      {
+        "source": "repair",
+        "target": "fuel fault",
+        "relation": "action-target",
+        "context": "diagnose repair fuel fault"
+      },
+      {
+        "source": "diagnose",
+        "target": "slow",
+        "relation": "action-target",
+        "context": "diagnose repair slow steering"
+      },
+      {
+        "source": "repair",
+        "target": "slow",
+        "relation": "action-target",
+        "context": "diagnose repair slow steering"
+      },
+      {
+        "source": "slow",
+        "target": "steering",
+        "relation": "symptom-of",
+        "context": "slow steering"
+      },
+      {
+        "source": "diagnose",
+        "target": "faults",
+        "relation": "procedure",
+        "context": "diagnose and repair spray faults"
+      },
+      {
+        "source": "repair",
+        "target": "faults",
+        "relation": "solution",
+        "context": "diagnose and repair spray faults"
+      },
+      {
+        "source": "diagnose",
+        "target": "temperature error",
+        "relation": "procedure",
+        "context": "diagnose and repair torque converter temperature error"
+      },
+      {
+        "source": "repair",
+        "target": "temperature error",
+        "relation": "solution",
+        "context": "diagnose and repair torque converter temperature error"
+      },
+      {
+        "source": "temperature error",
+        "target": "torque converter",
+        "relation": "symptom",
+        "context": "diagnose and repair torque converter temperature error"
+      },
+      {
+        "source": "transmission",
+        "target": "overheat",
+        "relation": "experiences",
+        "context": "transmission overheat fault"
+      },
+      {
+        "source": "overheat",
+        "target": "fault",
+        "relation": "causes",
+        "context": "transmission overheat fault"
+      },
+      {
+        "source": "diagnose",
+        "target": "fault",
+        "relation": "addresses",
+        "context": "diagnose transmission overheat fault"
+      },
+      {
+        "source": "transmission",
+        "target": "slipping",
+        "relation": "exhibits",
+        "context": "diagnose transmission slipping fault"
+      },
+      {
+        "source": "slipping",
+        "target": "fault",
+        "relation": "causes",
+        "context": "diagnose transmission slipping fault"
+      },
+      {
+        "source": "diagnose",
+        "target": "fault",
+        "relation": "action_on",
+        "context": "diagnose transmission slipping fault"
+      },
+      {
+        "source": "cooler fan hose",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "differential cooler fan hose leaking"
+      },
+      {
+        "source": "differential",
+        "target": "cooler fan hose",
+        "relation": "has",
+        "context": "differential cooler fan hose leaking"
+      },
+      {
+        "source": "cooler hose",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "differential cooler hose leaking"
+      },
+      {
+        "source": "differential",
+        "target": "cooler hose",
+        "relation": "has",
+        "context": "differential cooler hose leaking"
+      },
+      {
+        "source": "differential cooler pump",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "differential cooler pump leaking"
+      },
+      {
+        "source": "lube pump",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "differential lube pump leaking"
+      },
+      {
+        "source": "differential",
+        "target": "lube pump",
+        "relation": "component_of",
+        "context": "differential lube pump leaking"
+      },
+      {
+        "source": "lube pump",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "differential lube pump leaking PO"
+      },
+      {
+        "source": "differential",
+        "target": "lube pump",
+        "relation": "contains",
+        "context": "differential lube pump leaking PO"
+      },
+      {
+        "source": "differential",
+        "target": "pump motor",
+        "relation": "part_of",
+        "context": "differential pump motor"
+      },
+      {
+        "source": "pump motor",
+        "target": "hose",
+        "relation": "connected_to",
+        "context": "pump motor hose"
+      },
+      {
+        "source": "hose",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "hose leaking"
+      },
+      {
+        "source": "num input shaft",
+        "target": "front",
+        "relation": "location_of",
+        "context": "drag number num input shaft front change out"
+      },
+      {
+        "source": "change out",
+        "target": "num input shaft",
+        "relation": "procedure_for",
+        "context": "drag number num input shaft front change out"
+      },
+      {
+        "source": "mechanical",
+        "target": "change out",
+        "relation": "equipment_for",
+        "context": "drag number num input shaft front change out - mechanical"
+      },
+      {
+        "source": "num input shaft",
+        "target": "rear",
+        "relation": "located at",
+        "context": "drag number num input shaft rear change out"
+      },
+      {
+        "source": "num input shaft",
+        "target": "change out",
+        "relation": "requires",
+        "context": "drag number num input shaft rear change out"
+      },
+      {
+        "source": "intermediate shaft",
+        "target": "mechanical",
+        "relation": "change out",
+        "context": "drag number num intermediate shaft change out - mechanical"
+      },
+      {
+        "source": "dragline",
+        "target": "air conditioner units",
+        "relation": "has_component",
+        "context": "dragline air conditioner units"
+      },
+      {
+        "source": "air conditioner units",
+        "target": "cleaning",
+        "relation": "requires_action",
+        "context": "need cleaning"
+      },
+      {
+        "source": "drain",
+        "target": "engine oil",
+        "relation": "procedure",
+        "context": "drain and sample engine oil"
+      },
+      {
+        "source": "sample",
+        "target": "engine oil",
+        "relation": "procedure",
+        "context": "drain and sample engine oil"
+      },
+      {
+        "source": "drill",
+        "target": "bolt",
+        "relation": "procedure",
+        "context": "drill out broken bolt"
+      },
+      {
+        "source": "driver's door",
+        "target": "top hinge",
+        "relation": "part of",
+        "context": "drivers door top hinge broken"
+      },
+      {
+        "source": "top hinge",
+        "target": "broken",
+        "relation": "has issue",
+        "context": "drivers door top hinge broken"
+      },
+      {
+        "source": "duo-cone seals",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "duo-cone seals leaking"
+      },
+      {
+        "source": "dust leak",
+        "target": "operators side window",
+        "relation": "occurs at",
+        "context": "dust leak operators side window"
+      },
+      {
+        "source": "inspect",
+        "target": "rollers",
+        "relation": "action-target",
+        "context": "inspect and replace rollers as required"
+      },
+      {
+        "source": "replace",
+        "target": "rollers",
+        "relation": "action-target",
+        "context": "inspect and replace rollers as required"
+      },
+      {
+        "source": "ripper control valve",
+        "target": "falling off",
+        "relation": "experiencing",
+        "context": "ripper control valve falling off"
+      },
+      {
+        "source": "replace",
+        "target": "left hand crowd hose",
+        "relation": "procedure",
+        "context": "replace left hand crowd hose"
+      },
+      {
+        "source": "brake sensor",
+        "target": "replace",
+        "relation": "action_performed_on",
+        "context": "replace faulty brake sensor"
+      },
+      {
+        "source": "cable gantry",
+        "target": "crack",
+        "relation": "has_issue",
+        "context": "cable gantry crack repairs"
+      },
+      {
+        "source": "crack",
+        "target": "repairs",
+        "relation": "solution_for",
+        "context": "cable gantry crack repairs"
+      },
+      {
+        "source": "PTO",
+        "target": "auxiliary drive",
+        "relation": "issue",
+        "context": "failed PTO and auxiliary drive"
+      },
+      {
+        "source": "replace",
+        "target": "torque converter",
+        "relation": "action-target",
+        "context": "replace torque converter wiring harness"
+      },
+      {
+        "source": "replace",
+        "target": "wiring harness",
+        "relation": "action-target",
+        "context": "replace torque converter wiring harness"
+      },
+      {
+        "source": "replace",
+        "target": "transfer pipe",
+        "relation": "procedure",
+        "context": "replace leaking transfer pipe"
+      },
+      {
+        "source": "transfer pipe",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "replace leaking transfer pipe"
+      },
+      {
+        "source": "brake temperature",
+        "target": "error",
+        "relation": "symptom",
+        "context": "position num brake temperature error"
+      },
+      {
+        "source": "front revolving light",
+        "target": "not working",
+        "relation": "issue",
+        "context": "front revolving light not working"
+      },
+      {
+        "source": "operator cabin",
+        "target": "air conditioner air outlet",
+        "relation": "location of",
+        "context": "operator cabin air conditioner air outlet modifications"
+      },
+      {
+        "source": "air conditioner air outlet",
+        "target": "modifications",
+        "relation": "procedure",
+        "context": "operator cabin air conditioner air outlet modifications"
+      },
+      {
+        "source": "repair",
+        "target": "AFFF system",
+        "relation": "procedure",
+        "context": "repair AFFF system"
+      },
+      {
+        "source": "recharge",
+        "target": "hoist brake cylinder",
+        "relation": "procedure",
+        "context": "recharge replace number num hoist brake cylinder"
+      },
+      {
+        "source": "replace",
+        "target": "hoist brake cylinder",
+        "relation": "procedure",
+        "context": "recharge replace number num hoist brake cylinder"
+      },
+      {
+        "source": "tub hook",
+        "target": "greasing",
+        "relation": "requires",
+        "context": "tub hook greasing and inspection"
+      },
+      {
+        "source": "tub hook",
+        "target": "inspection",
+        "relation": "requires",
+        "context": "tub hook greasing and inspection"
+      },
+      {
+        "source": "drag",
+        "target": "brakes",
+        "relation": "part_of",
+        "context": "adjust drag number num brakes"
+      },
+      {
+        "source": "adjust",
+        "target": "drag",
+        "relation": "applies_to",
+        "context": "adjust drag number num brakes to standard CW"
+      },
+      {
+        "source": "adjust",
+        "target": "brakes",
+        "relation": "applies_to",
+        "context": "adjust drag number num brakes to standard CW"
+      },
+      {
+        "source": "adjust",
+        "target": "standard CW",
+        "relation": "results_in",
+        "context": "adjust drag number num brakes to standard CW"
+      },
+      {
+        "source": "replace",
+        "target": "slew brake",
+        "relation": "action-target",
+        "context": "replace slew brake right hand front"
+      },
+      {
+        "source": "slew brake",
+        "target": "right hand front",
+        "relation": "component-location",
+        "context": "replace slew brake right hand front"
+      },
+      {
+        "source": "rear door",
+        "target": "limit switches",
+        "relation": "has_component",
+        "context": "rear door limit switches to be modified"
+      },
+      {
+        "source": "limit switches",
+        "target": "modified",
+        "relation": "action",
+        "context": "rear door limit switches to be modified"
+      },
+      {
+        "source": "hoist motor",
+        "target": "RTD",
+        "relation": "has_component",
+        "context": "hoist motor num RTD wired incorrectly"
+      },
+      {
+        "source": "RTD",
+        "target": "wired incorrectly",
+        "relation": "issue",
+        "context": "hoist motor num RTD wired incorrectly"
+      },
+      {
+        "source": "repair",
+        "target": "front light",
+        "relation": "action-target",
+        "context": "repair front light wiring"
+      },
+      {
+        "source": "repair",
+        "target": "wiring",
+        "relation": "action-target",
+        "context": "repair front light wiring"
+      },
+      {
+        "source": "front light",
+        "target": "wiring",
+        "relation": "part-of",
+        "context": "repair front light wiring"
+      },
+      {
+        "source": "minor leak",
+        "target": "fuel tank",
+        "relation": "occurs_on",
+        "context": "possible minor leak on fuel tank"
+      },
+      {
+        "source": "blown",
+        "target": "implement hose",
+        "relation": "issue_of",
+        "context": "replace blown implement hose"
+      },
+      {
+        "source": "replace",
+        "target": "implement hose",
+        "relation": "action_on",
+        "context": "replace blown implement hose"
+      },
+      {
+        "source": "swing motor",
+        "target": "blower",
+        "relation": "has_component",
+        "context": "swing motor blower lube inspect"
+      },
+      {
+        "source": "blower",
+        "target": "lube",
+        "relation": "requires_procedure",
+        "context": "swing motor blower lube inspect"
+      },
+      {
+        "source": "blower",
+        "target": "inspect",
+        "relation": "requires_action",
+        "context": "swing motor blower lube inspect"
+      },
+      {
+        "source": "blower",
+        "target": "lube",
+        "relation": "requires_component",
+        "context": "swing motor blower lube inspection"
+      },
+      {
+        "source": "lube",
+        "target": "inspection",
+        "relation": "undergoes_procedure",
+        "context": "swing motor blower lube inspection"
+      },
+      {
+        "source": "lube module",
+        "target": "location pins",
+        "relation": "has_component",
+        "context": "replace lube module location pins"
+      },
+      {
+        "source": "light switch",
+        "target": "side lamp",
+        "relation": "component_of",
+        "context": "replace light switch for side lamp"
+      },
+      {
+        "source": "light switch",
+        "target": "left hand side front second level platform",
+        "relation": "located_at",
+        "context": "left hand side front second level platform"
+      },
+      {
+        "source": "repair",
+        "target": "A-frame light",
+        "relation": "action_on",
+        "context": "supports repair A-frame light"
+      },
+      {
+        "source": "not done",
+        "target": "A-frame light",
+        "relation": "issue_with",
+        "context": "A-frame light not done"
+      },
+      {
+        "source": "rear steering accumulator",
+        "target": "leak",
+        "relation": "has_issue",
+        "context": "rear steering accumulator leak"
+      },
+      {
+        "source": "blown",
+        "target": "right hand steering hose",
+        "relation": "issue_of",
+        "context": "replace blown right hand steering hose"
+      },
+      {
+        "source": "bucket",
+        "target": "surf workshop",
+        "relation": "location",
+        "context": "replace bucket surf workshop"
+      },
+      {
+        "source": "transmission",
+        "target": "drain plug",
+        "relation": "component_issue",
+        "context": "transmission fill drain plug unserviceable"
+      },
+      {
+        "source": "pulley bearings",
+        "target": "number num pulley",
+        "relation": "component_of",
+        "context": "change pulley bearings on number num pulley"
+      },
+      {
+        "source": "transmission",
+        "target": "transmission wiring harness",
+        "relation": "component_of",
+        "context": "replace transmission wiring harness"
+      },
+      {
+        "source": "mechanical inspection",
+        "target": "idler",
+        "relation": "procedure_on",
+        "context": "num hour mechanical inspection idler right rear"
+      },
+      {
+        "source": "idler",
+        "target": "right rear",
+        "relation": "location",
+        "context": "idler right rear"
+      },
+      {
+        "source": "bucket tooth lock",
+        "target": "replace",
+        "relation": "action",
+        "context": "replace bucket tooth lock"
+      },
+      {
+        "source": "universal joint",
+        "target": "unserviceable",
+        "relation": "issue",
+        "context": "universal joint unserviceable"
+      },
+      {
+        "source": "swing num pedestal seals",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "repair leaking swing num pedestal seals"
+      },
+      {
+        "source": "lighting",
+        "target": "testing and tagging",
+        "relation": "procedure",
+        "context": "all lighting requires testing and tagging"
+      },
+      {
+        "source": "drive package",
+        "target": "ribbon cable",
+        "relation": "component",
+        "context": "drive package ribbon cable change out"
+      },
+      {
+        "source": "ribbon cable",
+        "target": "change out",
+        "relation": "action",
+        "context": "drive package ribbon cable change out"
+      },
+      {
+        "source": "replace",
+        "target": "steering control valve",
+        "relation": "procedure",
+        "context": "replace steering control valve"
+      },
+      {
+        "source": "replace",
+        "target": "front crankshaft",
+        "relation": "procedure",
+        "context": "replace front crankshaft"
+      },
+      {
+        "source": "TBC steering cylinder bearings",
+        "target": "excess play",
+        "relation": "symptom",
+        "context": "bearings have excess play"
+      },
+      {
+        "source": "fire suppression actuator",
+        "target": "mechanical service",
+        "relation": "requires",
+        "context": "replace fire suppression actuator num hour mechanical service"
+      },
+      {
+        "source": "mechanical service",
+        "target": "water truck",
+        "relation": "performed on",
+        "context": "num hour mechanical service water truck"
+      },
+      {
+        "source": "PO movement",
+        "target": "right hand engine mount",
+        "relation": "found in",
+        "context": "PO movement found right hand engine mount"
+      },
+      {
+        "source": "right hand engine mount",
+        "target": "left hand travel motor",
+        "relation": "replace",
+        "context": "replace left hand travel motor"
+      },
+      {
+        "source": "rear wiper motor",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "rear wiper motor unserviceable"
+      },
+      {
+        "source": "front right hand roller",
+        "target": "need to be fitted",
+        "relation": "requires_action",
+        "context": "front right hand roller need to be fitted"
+      },
+      {
+        "source": "transmission",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "replace transmission - cracked"
+      },
+      {
+        "source": "replace",
+        "target": "transmission",
+        "relation": "action_on",
+        "context": "replace transmission - cracked"
+      },
+      {
+        "source": "investigate",
+        "target": "oil leak",
+        "relation": "action_on",
+        "context": "investigate and repair"
+      },
+      {
+        "source": "repair",
+        "target": "oil leak",
+        "relation": "action_on",
+        "context": "investigate and repair"
+      },
+      {
+        "source": "park brake",
+        "target": "alarm",
+        "relation": "associated_with",
+        "context": "park brake alarm sounds continuously"
+      },
+      {
+        "source": "alarm",
+        "target": "sounds",
+        "relation": "performs",
+        "context": "park brake alarm sounds continuously"
+      },
+      {
+        "source": "sounds",
+        "target": "continuously",
+        "relation": "manner",
+        "context": "park brake alarm sounds continuously"
+      },
+      {
+        "source": "pump",
+        "target": "pressure gauge",
+        "relation": "has_component",
+        "context": "pump pressure gauge not working"
+      },
+      {
+        "source": "pressure gauge",
+        "target": "not working",
+        "relation": "exhibits_issue",
+        "context": "pump pressure gauge not working"
+      },
+      {
+        "source": "replace",
+        "target": "differential drain plugs",
+        "relation": "action_on",
+        "context": "replace unserviceable differential drain plugs"
+      },
+      {
+        "source": "unserviceable",
+        "target": "differential drain plugs",
+        "relation": "issue_with",
+        "context": "replace unserviceable differential drain plugs"
+      },
+      {
+        "source": "drag tune",
+        "target": "roller bracket bearings",
+        "relation": "procedure_on",
+        "context": "drag tune roller bracket bearings"
+      },
+      {
+        "source": "repair",
+        "target": "crack",
+        "relation": "solution",
+        "context": "repair right hand fuel tank crack"
+      },
+      {
+        "source": "right hand fuel tank",
+        "target": "crack",
+        "relation": "location",
+        "context": "repair right hand fuel tank crack"
+      },
+      {
+        "source": "grease pump",
+        "target": "air",
+        "relation": "bypassing",
+        "context": "grease pump is bypassing air"
+      },
+      {
+        "source": "replace",
+        "target": "vent valve",
+        "relation": "action-target",
+        "context": "replace auto-greaser vent valve"
+      },
+      {
+        "source": "vent valve",
+        "target": "auto-greaser",
+        "relation": "part-of",
+        "context": "replace auto-greaser vent valve"
+      },
+      {
+        "source": "grommet",
+        "target": "clamp",
+        "relation": "part_of",
+        "context": "grommet clamp"
+      },
+      {
+        "source": "grommet",
+        "target": "right hand lift cylinder",
+        "relation": "located_in",
+        "context": "right hand lift cylinder"
+      },
+      {
+        "source": "replace",
+        "target": "grommet",
+        "relation": "procedure",
+        "context": "replace grommet"
+      },
+      {
+        "source": "replace",
+        "target": "lock pins",
+        "relation": "action-target",
+        "context": "replace oil cooler lock pins"
+      },
+      {
+        "source": "lock pins",
+        "target": "oil cooler",
+        "relation": "component-of",
+        "context": "replace oil cooler lock pins"
+      },
+      {
+        "source": "boom",
+        "target": "cracks",
+        "relation": "has_issue",
+        "context": "boom cracks"
+      },
+      {
+        "source": "cracks",
+        "target": "left hand side",
+        "relation": "located_at",
+        "context": "cracks left hand side"
+      },
+      {
+        "source": "replace",
+        "target": "steering pilot hoses",
+        "relation": "procedure",
+        "context": "replace steering pilot hoses"
+      },
+      {
+        "source": "investigate",
+        "target": "repair",
+        "relation": "procedure",
+        "context": "investigate repair"
+      },
+      {
+        "source": "handrail",
+        "target": "battery box",
+        "relation": "location",
+        "context": "handrail above battery box"
+      },
+      {
+        "source": "handrail",
+        "target": "cracked",
+        "relation": "symptom",
+        "context": "handrail above battery box cracked"
+      },
+      {
+        "source": "gear",
+        "target": "no gear fault",
+        "relation": "issue",
+        "context": "no gear fault"
+      },
+      {
+        "source": "front window",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "front window cracked"
+      },
+      {
+        "source": "replace",
+        "target": "front window",
+        "relation": "action_on",
+        "context": "replace replace bottom steering shaft universal joint"
+      },
+      {
+        "source": "replace",
+        "target": "bottom steering shaft universal joint",
+        "relation": "action_on",
+        "context": "replace bottom steering shaft universal joint"
+      },
+      {
+        "source": "tilt cylinder cover",
+        "target": "guard",
+        "relation": "and",
+        "context": "fit tilt cylinder cover and guard"
+      },
+      {
+        "source": "mechanical inspection",
+        "target": "track roller group",
+        "relation": "procedure for",
+        "context": "mechanical inspection track roller group"
+      },
+      {
+        "source": "track roller group",
+        "target": "left hand",
+        "relation": "location",
+        "context": "track roller group left hand"
+      },
+      {
+        "source": "engine",
+        "target": "oil",
+        "relation": "component_of",
+        "context": "engine oil leak"
+      },
+      {
+        "source": "oil",
+        "target": "leak",
+        "relation": "issue_with",
+        "context": "engine oil leak"
+      },
+      {
+        "source": "investigate",
+        "target": "leak",
+        "relation": "action_on",
+        "context": "investigate engine oil leak"
+      },
+      {
+        "source": "right hand lift cylinder",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "right hand lift cylinder leaking"
+      },
+      {
+        "source": "ladder",
+        "target": "fault",
+        "relation": "has_issue",
+        "context": "repair ladder fault"
+      },
+      {
+        "source": "replace",
+        "target": "tyre",
+        "relation": "procedure",
+        "context": "replace damaged position num tyre and position num"
+      },
+      {
+        "source": "damaged",
+        "target": "tyre",
+        "relation": "symptom",
+        "context": "replace damaged position num tyre and position num"
+      },
+      {
+        "source": "grease gauges",
+        "target": "replacing",
+        "relation": "requires",
+        "context": "grease gauges requires replacing"
+      },
+      {
+        "source": "fire extinguisher bracket",
+        "target": "deck",
+        "relation": "located_at",
+        "context": "fire extinguisher bracket on deck"
+      },
+      {
+        "source": "fire extinguisher bracket",
+        "target": "loose",
+        "relation": "has_issue",
+        "context": "fire extinguisher bracket on deck loose"
+      },
+      {
+        "source": "rear door struts",
+        "target": "require replacing",
+        "relation": "action_needed",
+        "context": "rear door struts require replacing"
+      },
+      {
+        "source": "oil leak",
+        "target": "air compressor",
+        "relation": "occurs at",
+        "context": "oil leak at air compressor"
+      },
+      {
+        "source": "replace",
+        "target": "scavenge pump",
+        "relation": "procedure",
+        "context": "replace leaking scavenge pump"
+      },
+      {
+        "source": "scavenge pump",
+        "target": "leaking",
+        "relation": "symptom",
+        "context": "replace leaking scavenge pump"
+      },
+      {
+        "source": "repair",
+        "target": "transmission",
+        "relation": "procedure",
+        "context": "repair transmission neutraliser change out leaking transmission hose"
+      },
+      {
+        "source": "change out",
+        "target": "transmission hose",
+        "relation": "procedure",
+        "context": "repair transmission neutraliser change out leaking transmission hose"
+      },
+      {
+        "source": "leaking",
+        "target": "transmission hose",
+        "relation": "symptom",
+        "context": "repair transmission neutraliser change out leaking transmission hose"
+      },
+      {
+        "source": "tail pulley",
+        "target": "grease lines",
+        "relation": "lacks",
+        "context": "tail pulley has no grease lines"
+      },
+      {
+        "source": "swing brake",
+        "target": "disc",
+        "relation": "requires replacement",
+        "context": "swing brake num replace disc and pads"
+      },
+      {
+        "source": "swing brake",
+        "target": "pads",
+        "relation": "requires replacement",
+        "context": "swing brake num replace disc and pads"
+      },
+      {
+        "source": "hoist pony drive motor",
+        "target": "mechanical inspection",
+        "relation": "requires",
+        "context": "replace hoist pony drive motor num hour mechanical inspection"
+      },
+      {
+        "source": "hydraulic cylinder",
+        "target": "bucket",
+        "relation": "part of",
+        "context": "hydraulic cylinder bucket right hand"
+      },
+      {
+        "source": "bucket",
+        "target": "right hand",
+        "relation": "located at",
+        "context": "hydraulic cylinder bucket right hand"
+      },
+      {
+        "source": "replace",
+        "target": "tyres",
+        "relation": "procedure",
+        "context": "replace position num num num tyres"
+      },
+      {
+        "source": "position num num num",
+        "target": "tyres",
+        "relation": "location",
+        "context": "replace position num num num tyres"
+      },
+      {
+        "source": "num x cracked windows",
+        "target": "replace",
+        "relation": "action",
+        "context": "replace num x cracked windows"
+      },
+      {
+        "source": "lube system",
+        "target": "replace",
+        "relation": "action",
+        "context": "replace lube system"
+      },
+      {
+        "source": "drag rope pump",
+        "target": "front steering accumulator",
+        "relation": "change out",
+        "context": "drag rope pump change out front steering accumulator"
+      },
+      {
+        "source": "mechanical inspection",
+        "target": "carry roller",
+        "relation": "inspection",
+        "context": "mechanical inspection carry roller"
+      },
+      {
+        "source": "fit",
+        "target": "front tyres",
+        "relation": "procedure",
+        "context": "fit num new front tyres"
+      },
+      {
+        "source": "crowd cylinder",
+        "target": "transfer pipe",
+        "relation": "component_of",
+        "context": "replace crowd cylinder transfer pipe"
+      },
+      {
+        "source": "replace",
+        "target": "transfer pipe",
+        "relation": "action_on",
+        "context": "replace crowd cylinder transfer pipe"
+      },
+      {
+        "source": "replace",
+        "target": "tilt cylinder hose",
+        "relation": "procedure",
+        "context": "replace tilt cylinder hose"
+      },
+      {
+        "source": "engine oil",
+        "target": "leaks",
+        "relation": "experiences",
+        "context": "engine oil leaks"
+      },
+      {
+        "source": "leaks",
+        "target": "right hand side",
+        "relation": "located at",
+        "context": "leaks right hand side"
+      },
+      {
+        "source": "mechanical inspection",
+        "target": "bucket",
+        "relation": "involves",
+        "context": "mechanical inspection bucket"
+      },
+      {
+        "source": "spacer clamp",
+        "target": "main shaft",
+        "relation": "location",
+        "context": "on main shaft"
+      },
+      {
+        "source": "replace",
+        "target": "spacer clamp",
+        "relation": "procedure",
+        "context": "replace spacer clamp"
+      },
+      {
+        "source": "investigate",
+        "target": "auto-lube",
+        "relation": "procedure",
+        "context": "investigate auto-lube fault CW"
+      },
+      {
+        "source": "auto-lube",
+        "target": "fault",
+        "relation": "symptom",
+        "context": "auto-lube fault CW"
+      },
+      {
+        "source": "fault",
+        "target": "CW",
+        "relation": "location",
+        "context": "auto-lube fault CW"
+      },
+      {
+        "source": "universal joints",
+        "target": "engine",
+        "relation": "part_of",
+        "context": "universal joints engine"
+      },
+      {
+        "source": "universal joints",
+        "target": "pump drive",
+        "relation": "related_to",
+        "context": "pump drive PO"
+      },
+      {
+        "source": "repair",
+        "target": "cover",
+        "relation": "action-target",
+        "context": "repair cover"
+      },
+      {
+        "source": "fuel pressure sensor",
+        "target": "faulty",
+        "relation": "has_issue",
+        "context": "faulty fuel pressure sensor"
+      },
+      {
+        "source": "bottom steering shaft universal joint",
+        "target": "worn",
+        "relation": "has_issue",
+        "context": "bottom steering shaft universal joint worn"
+      },
+      {
+        "source": "right hand bobbin roller",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "right hand bobbin roller unserviceable"
+      },
+      {
+        "source": "fit",
+        "target": "lug tyres",
+        "relation": "procedure",
+        "context": "fit full set of lug tyres"
+      },
+      {
+        "source": "tyre",
+        "target": "position num",
+        "relation": "location_of",
+        "context": "damaged tyre on position num"
+      },
+      {
+        "source": "fabricate",
+        "target": "drop saw cutting bench",
+        "relation": "procedure",
+        "context": "fabricate drop saw cutting bench"
+      },
+      {
+        "source": "replace",
+        "target": "hydraulic pump coupling",
+        "relation": "procedure",
+        "context": "replace hydraulic pump coupling left hand side"
+      },
+      {
+        "source": "hydraulic pump coupling",
+        "target": "left hand side",
+        "relation": "location_of",
+        "context": "replace hydraulic pump coupling left hand side"
+      },
+      {
+        "source": "change out",
+        "target": "cover",
+        "relation": "procedure",
+        "context": "change out cover cracking"
+      },
+      {
+        "source": "cover",
+        "target": "cracking",
+        "relation": "symptom_of",
+        "context": "change out cover cracking"
+      },
+      {
+        "source": "repair",
+        "target": "steering neutralizer system",
+        "relation": "procedure",
+        "context": "repair steering neutralizer system"
+      },
+      {
+        "source": "inspections",
+        "target": "electrical welder",
+        "relation": "procedure",
+        "context": "statutory electrical welder inspections"
+      },
+      {
+        "source": "clean",
+        "target": "motor generator sets",
+        "relation": "procedure",
+        "context": "clean all motor generator sets"
+      },
+      {
+        "source": "left hand rear brake cooling hose",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "left hand rear brake cooling hose leaking"
+      },
+      {
+        "source": "engine timing sensor",
+        "target": "fitting",
+        "relation": "part_of",
+        "context": "sensor fitting"
+      },
+      {
+        "source": "fitting",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "fitting leaking"
+      },
+      {
+        "source": "leaking",
+        "target": "main air tanks",
+        "relation": "location",
+        "context": "leaking out of main air tanks"
+      },
+      {
+        "source": "repair centre",
+        "target": "hitch",
+        "relation": "location_of",
+        "context": "repair centre hitch oil leaks"
+      },
+      {
+        "source": "hitch",
+        "target": "oil leaks",
+        "relation": "has_issue",
+        "context": "repair centre hitch oil leaks"
+      },
+      {
+        "source": "oil leak",
+        "target": "wheel end",
+        "relation": "issue-location",
+        "context": "oil leak position num wheel end"
+      },
+      {
+        "source": "hydraulic fault",
+        "target": "steering hub caps",
+        "relation": "related to",
+        "context": "investigate repair"
+      },
+      {
+        "source": "steering hub caps",
+        "target": "replacing",
+        "relation": "requires",
+        "context": "require replacing"
+      },
+      {
+        "source": "sprockets",
+        "target": "right hand",
+        "relation": "located at",
+        "context": "replace sprockets right hand"
+      },
+      {
+        "source": "mechanical",
+        "target": "sprockets",
+        "relation": "procedure for",
+        "context": "num hour mechanical replace sprockets"
+      },
+      {
+        "source": "bulk fuel tank",
+        "target": "cracked",
+        "relation": "has_issue",
+        "context": "bulk fuel tank cracked"
+      },
+      {
+        "source": "hydraulic hose",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "hydraulic hose leaking"
+      },
+      {
+        "source": "leaking",
+        "target": "centre of machine",
+        "relation": "location_of_issue",
+        "context": "leaking in centre of machine"
+      },
+      {
+        "source": "repair",
+        "target": "speed sensor",
+        "relation": "procedure",
+        "context": "repair speed sensor wiring"
+      },
+      {
+        "source": "repair",
+        "target": "wiring",
+        "relation": "procedure",
+        "context": "repair speed sensor wiring"
+      },
+      {
+        "source": "speed sensor",
+        "target": "wiring",
+        "relation": "component_of",
+        "context": "repair speed sensor wiring"
+      },
+      {
+        "source": "repair",
+        "target": "air conditioner",
+        "relation": "action-target",
+        "context": "repair air conditioner"
+      },
+      {
+        "source": "repair",
+        "target": "wiring fault",
+        "relation": "action-target",
+        "context": "repair air conditioner and wiring fault"
+      },
+      {
+        "source": "auto-greaser",
+        "target": "door",
+        "relation": "component_of",
+        "context": "replace damage auto-greaser door"
+      },
+      {
+        "source": "damage",
+        "target": "door",
+        "relation": "issue_with",
+        "context": "replace damage auto-greaser door"
+      },
+      {
+        "source": "replace",
+        "target": "damage",
+        "relation": "solution_for",
+        "context": "replace damage auto-greaser door"
+      },
+      {
+        "source": "joystick",
+        "target": "needs repair",
+        "relation": "has_issue",
+        "context": "joystick needs repair"
+      },
+      {
+        "source": "repair",
+        "target": "joystick",
+        "relation": "action_on",
+        "context": "repair joystick needs repair"
+      },
+      {
+        "source": "swing number",
+        "target": "num motor",
+        "relation": "component_of",
+        "context": "swing number num motor change out"
+      },
+      {
+        "source": "num motor",
+        "target": "change out",
+        "relation": "action_performed",
+        "context": "swing number num motor change out"
+      },
+      {
+        "source": "headboard",
+        "target": "welds",
+        "relation": "part_of",
+        "context": "headboard welds broken"
+      },
+      {
+        "source": "welds",
+        "target": "broken",
+        "relation": "has_issue",
+        "context": "headboard welds broken"
+      },
+      {
+        "source": "bearing",
+        "target": "replace",
+        "relation": "requires_action",
+        "context": "replace bearing"
+      },
+      {
+        "source": "taperlock",
+        "target": "replace",
+        "relation": "requires_action",
+        "context": "replace bearing and taperlock"
+      },
+      {
+        "source": "roller",
+        "target": "electrical components",
+        "relation": "service",
+        "context": "roller statutory electrical num week high voltage service clean and seal electrical components"
+      },
+      {
+        "source": "hoist brake switches",
+        "target": "adjusting",
+        "relation": "need",
+        "context": "hoist brake switches need adjusting"
+      },
+      {
+        "source": "tyre",
+        "target": "worn",
+        "relation": "condition",
+        "context": "change out position num tyre worn"
+      },
+      {
+        "source": "cabin jacking cylinder ends",
+        "target": "unserviceable",
+        "relation": "condition",
+        "context": "cabin jacking cylinder ends unserviceable"
+      },
+      {
+        "source": "slew ring",
+        "target": "mechanical inspection",
+        "relation": "requires",
+        "context": "num hour mechanical inspection slew ring"
+      },
+      {
+        "source": "repair",
+        "target": "movement",
+        "relation": "action-target",
+        "context": "repair movement"
+      },
+      {
+        "source": "movement",
+        "target": "left hand steering pin",
+        "relation": "location",
+        "context": "in left hand steering pin"
+      },
+      {
+        "source": "remove",
+        "target": "electrical cabinet",
+        "relation": "procedure",
+        "context": "remove electrical cabinet"
+      },
+      {
+        "source": "main pump hose",
+        "target": "replace",
+        "relation": "action",
+        "context": "replace blown main pump hose"
+      },
+      {
+        "source": "main pump hose",
+        "target": "blown",
+        "relation": "issue",
+        "context": "replace blown main pump hose"
+      },
+      {
+        "source": "mechanical inspection",
+        "target": "track chain",
+        "relation": "procedure",
+        "context": "mechanical inspection track chain left hand"
+      },
+      {
+        "source": "track chain",
+        "target": "left hand",
+        "relation": "location",
+        "context": "mechanical inspection track chain left hand"
+      },
+      {
+        "source": "park brake indicator light",
+        "target": "going on and off",
+        "relation": "exhibits",
+        "context": "park brake indicator light going on and off"
+      },
+      {
+        "source": "remove",
+        "target": "shims",
+        "relation": "applied_to",
+        "context": "remove shims from behind drag num brake"
+      },
+      {
+        "source": "shims",
+        "target": "drag num brake",
+        "relation": "located_behind",
+        "context": "remove shims from behind drag num brake"
+      },
+      {
+        "source": "o-ring",
+        "target": "lift cylinder",
+        "relation": "part_of",
+        "context": "o-ring lift cylinder"
+      },
+      {
+        "source": "replaced",
+        "target": "o-ring",
+        "relation": "action",
+        "context": "replaced o-ring"
+      },
+      {
+        "source": "front window roller blind",
+        "target": "broken",
+        "relation": "has_issue",
+        "context": "roller blind broken"
+      },
+      {
+        "source": "position num",
+        "target": "replace",
+        "relation": "requires",
+        "context": "replace position num"
+      },
+      {
+        "source": "tyre",
+        "target": "damaged",
+        "relation": "has_issue",
+        "context": "tyre damaged"
+      },
+      {
+        "source": "oil",
+        "target": "flush",
+        "relation": "requires",
+        "context": "flush oil"
+      },
+      {
+        "source": "site glass",
+        "target": "clean",
+        "relation": "requires",
+        "context": "clean site glass"
+      },
+      {
+        "source": "cabin seat",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "cabin seat unserviceable"
+      },
+      {
+        "source": "cabin seat",
+        "target": "needs replacing",
+        "relation": "solution",
+        "context": "cabin seat unserviceable needs replacing"
+      },
+      {
+        "source": "water pump",
+        "target": "oil leak",
+        "relation": "symptom_location",
+        "context": "oil leak from behind water pump"
+      },
+      {
+        "source": "left hand luffing cylinder",
+        "target": "change",
+        "relation": "requires",
+        "context": "left hand luffing cylinder change"
+      },
+      {
+        "source": "replace",
+        "target": "position num",
+        "relation": "procedure",
+        "context": "replace position num tyre"
+      },
+      {
+        "source": "tyre",
+        "target": "mismatched",
+        "relation": "symptom",
+        "context": "tyre - mismatched"
+      },
+      {
+        "source": "hoist brake",
+        "target": "number num",
+        "relation": "has_component",
+        "context": "hoist brake number num position out of adjustment"
+      },
+      {
+        "source": "number num",
+        "target": "position",
+        "relation": "has_component",
+        "context": "hoist brake number num position out of adjustment"
+      },
+      {
+        "source": "position",
+        "target": "out of adjustment",
+        "relation": "exhibits_issue",
+        "context": "hoist brake number num position out of adjustment"
+      },
+      {
+        "source": "inspect",
+        "target": "cluster",
+        "relation": "procedure",
+        "context": "inspect cluster"
+      },
+      {
+        "source": "repair",
+        "target": "cluster",
+        "relation": "procedure",
+        "context": "repair cluster"
+      },
+      {
+        "source": "poppet valve",
+        "target": "missing",
+        "relation": "issue",
+        "context": "missing poppet valve"
+      },
+      {
+        "source": "A-frame",
+        "target": "safety ropes",
+        "relation": "component_of",
+        "context": "A-frame safety ropes inspection"
+      },
+      {
+        "source": "safety ropes",
+        "target": "inspection",
+        "relation": "subject_of",
+        "context": "A-frame safety ropes inspection"
+      },
+      {
+        "source": "AM FM radio",
+        "target": "aerial",
+        "relation": "needs",
+        "context": "AM FM radio needs new aerial"
+      },
+      {
+        "source": "left hand hoist cylinder",
+        "target": "plug",
+        "relation": "part_of",
+        "context": "left hand hoist cylinder leaking plug"
+      },
+      {
+        "source": "plug",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "plug leaking"
+      },
+      {
+        "source": "right hand hoist cylinder",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "CW right hand hoist cylinder leaking"
+      },
+      {
+        "source": "CW",
+        "target": "right hand hoist cylinder",
+        "relation": "has_component",
+        "context": "CW right hand hoist cylinder leaking"
+      },
+      {
+        "source": "sensitive modifications",
+        "target": "module",
+        "relation": "action",
+        "context": "sensitive modifications to module"
+      },
+      {
+        "source": "NDT",
+        "target": "A-frame",
+        "relation": "procedure_on",
+        "context": "NDT A-frame clevis weld and pin"
+      },
+      {
+        "source": "clevis",
+        "target": "weld",
+        "relation": "action_on",
+        "context": "NDT A-frame clevis weld and pin"
+      },
+      {
+        "source": "clevis",
+        "target": "pin",
+        "relation": "component_of",
+        "context": "NDT A-frame clevis weld and pin"
+      },
+      {
+        "source": "NDT",
+        "target": "boom foot clevis",
+        "relation": "inspection",
+        "context": "NDT boom foot clevis weld and pins"
+      },
+      {
+        "source": "NDT",
+        "target": "weld",
+        "relation": "inspection",
+        "context": "NDT boom foot clevis weld and pins"
+      },
+      {
+        "source": "NDT",
+        "target": "pins",
+        "relation": "inspection",
+        "context": "NDT boom foot clevis weld and pins"
+      },
+      {
+        "source": "PTO shaft",
+        "target": "input seal",
+        "relation": "part_of",
+        "context": "PTO shaft input seal leaking"
+      },
+      {
+        "source": "input seal",
+        "target": "leaking",
+        "relation": "exhibits",
+        "context": "PTO shaft input seal leaking"
+      },
+      {
+        "source": "Tele-Remote camera",
+        "target": "fault",
+        "relation": "experiences",
+        "context": "Tele-Remote camera fault"
+      },
+      {
+        "source": "Tele-Remote cameras",
+        "target": "fault",
+        "relation": "has_issue",
+        "context": "Tele-Remote cameras fault"
+      },
+      {
+        "source": "Tele-Remote",
+        "target": "installation",
+        "relation": "requires",
+        "context": "Tele-Remote installation and tune"
+      },
+      {
+        "source": "Tele-Remote",
+        "target": "tune",
+        "relation": "requires",
+        "context": "Tele-Remote installation and tune"
+      },
+      {
+        "source": "change out",
+        "target": "position num",
+        "relation": "action-target",
+        "context": "change out position num turbo"
+      },
+      {
+        "source": "change out",
+        "target": "turbo",
+        "relation": "action-target",
+        "context": "change out position num turbo"
+      },
+      {
+        "source": "air conditioner",
+        "target": "compressor",
+        "relation": "has_component",
+        "context": "air conditioner compressor"
+      },
+      {
+        "source": "compressor",
+        "target": "corroded",
+        "relation": "has_issue",
+        "context": "air conditioner compressor corroded"
+      },
+      {
+        "source": "compressor",
+        "target": "unserviceable",
+        "relation": "has_issue",
+        "context": "air conditioner compressor unserviceable"
+      },
+      {
+        "source": "air conditioner",
+        "target": "no good",
+        "relation": "symptom",
+        "context": "air conditioner no good"
+      },
+      {
+        "source": "air conditioner system",
+        "target": "leaking",
+        "relation": "has_issue",
+        "context": "air conditioner system leaking"
+      },
+      {
+        "source": "brake hose",
+        "target": "replaced",
+        "relation": "requires",
+        "context": "brake hose needs to be replaced"
+      },
+      {
+        "source": "bucket",
+        "target": "repairs",
+        "relation": "performs",
+        "context": "bucket carrying out repairs"
+      },
+      {
+        "source": "change",
+        "target": "differential oil",
+        "relation": "procedure",
+        "context": "change differential oil"
+      },
+      {
+        "source": "transmission controller",
+        "target": "filter hose",
+        "relation": "has_component",
+        "context": "transmission controller filter hose"
+      },
+      {
+        "source": "change out",
+        "target": "filter hose",
+        "relation": "procedure",
+        "context": "change out - transmission controller filter hose"
+      },
+      {
+        "source": "air compressor",
+        "target": "gauge",
+        "relation": "has_component",
+        "context": "air compressor gauge"
+      },
+      {
+        "source": "change out",
+        "target": "fuel injectors",
+        "relation": "action-target",
+        "context": "change out num fuel injectors PO"
+      },
+      {
+        "source": "change out",
+        "target": "belts",
+        "relation": "action-target",
+        "context": "change out air conditioner belts"
+      },
+      {
+        "source": "belts",
+        "target": "air conditioner",
+        "relation": "component-of",
+        "context": "change out air conditioner belts"
+      },
+      {
+        "source": "change out",
+        "target": "compressor",
+        "relation": "procedure",
+        "context": "change out air conditioner compressor"
+      },
+      {
+        "source": "compressor",
+        "target": "air conditioner",
+        "relation": "part of",
+        "context": "change out air conditioner compressor"
+      },
+      {
+        "source": "change out",
+        "target": "condenser",
+        "relation": "procedure",
+        "context": "change out air conditioner condenser"
+      },
+      {
+        "source": "condenser",
+        "target": "air conditioner",
+        "relation": "part of",
+        "context": "change out air conditioner condenser"
+      },
+      {
+        "source": "change out",
+        "target": "battery",
+        "relation": "procedure",
+        "context": "change out battery right"
+      },
+      {
+        "source": "change out",
+        "target": "brake swing",
+        "relation": "procedure",
+        "context": "change out brake swing"
+      },
+      {
+        "source": "brake swing",
+        "target": "left front",
+        "relation": "location",
+        "context": "brake swing left front"
+      },
+      {
+        "source": "change out",
+        "target": "brake swing",
+        "relation": "action-target",
+        "context": "change out brake swing"
+      },
+      {
+        "source": "brake swing",
+        "target": "left rear",
+        "relation": "component-location",
+        "context": "brake swing left rear"
+      },
+      {
+        "source": "brake swing",
+        "target": "right front",
+        "relation": "component-location",
+        "context": "change out brake swing right front"
+      },
+      {
+        "source": "brake swing",
+        "target": "right rear",
+        "relation": "component-location",
+        "context": "change out brake swing right rear"
+      },
+      {
+        "source": "change out",
+        "target": "grease lines",
+        "relation": "procedure",
+        "context": "change out broken grease lines"
+      },
+      {
+        "source": "grease lines",
+        "target": "broken",
+        "relation": "symptom",
+        "context": "broken grease lines"
+      },
+      {
+        "source": "change out",
+        "target": "bucket assembly",
+        "relation": "procedure",
+        "context": "change out bucket assembly"
+      },
+      {
+        "source": "change out",
+        "target": "coolant flow switch",
+        "relation": "action-target",
+        "context": "change out coolant flow switch"
+      },
+      {
+        "source": "change out",
+        "target": "coolant pump",
+        "relation": "procedure",
+        "context": "change out coolant pump"
+      },
+      {
+        "source": "change out",
+        "target": "crowd cylinder",
+        "relation": "action",
+        "context": "change out crowd cylinder core return"
+      },
+      {
+        "source": "change out",
+        "target": "core",
+        "relation": "action",
+        "context": "change out crowd cylinder core return"
+      },
+      {
+        "source": "change out",
+        "target": "cutting edges",
+        "relation": "procedure",
+        "context": "change out cutting edges"
+      },
+      {
+        "source": "change out",
+        "target": "dogbone bushes",
+        "relation": "procedure",
+        "context": "change out dogbone bushes"
+      },
+      {
+        "source": "change out",
+        "target": "engine oil pump",
+        "relation": "procedure",
+        "context": "change out engine oil pump"
+      },
+      {
+        "source": "change out",
+        "target": "fire suppression switch",
+        "relation": "procedure",
+        "context": "change out fire suppression switch"
+      },
+      {
+        "source": "fire suppression switch",
+        "target": "bottle",
+        "relation": "location",
+        "context": "on bottle"
+      },
+      {
+        "source": "change out",
+        "target": "fuel breather",
+        "relation": "procedure",
+        "context": "change out fuel breather"
+      },
+      {
+        "source": "hydraulic cylinder",
+        "target": "steering left",
+        "relation": "located at",
+        "context": "hydraulic cylinder steering left"
+      },
+      {
+        "source": "change out",
+        "target": "hydraulic cylinder",
+        "relation": "action on",
+        "context": "change out hydraulic cylinder"
+      },
+      {
+        "source": "change out",
+        "target": "hydraulic motor",
+        "relation": "procedure",
+        "context": "change out hydraulic motor cooler fan"
+      },
+      {
+        "source": "change out",
+        "target": "cooler fan",
+        "relation": "procedure",
+        "context": "change out hydraulic motor cooler fan"
+      }
+    ]
+  },
+  "success": true,
+  "saved_to": "knowledge_extraction_maintenance_20250729_102716.json",
+  "azure_blobs_processed": [
+    "maintenance/demo_sample_10percent.md"
+  ],
+  "duration_seconds": 674.08
+}

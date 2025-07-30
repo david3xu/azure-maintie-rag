@@ -32,9 +32,30 @@ def build_knowledge_graph(
         Structured knowledge graph with entities and relations
     """
     try:
-        # Parse LLM outputs
-        entity_list = json.loads(entities) if isinstance(entities, str) else entities
-        relation_list = json.loads(relations) if isinstance(relations, str) else relations
+        # Parse LLM outputs safely
+        if isinstance(entities, str):
+            try:
+                entity_list = json.loads(entities)
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse entities JSON: {e}")
+                entity_list = []
+        elif isinstance(entities, (list, dict)):
+            entity_list = entities
+        else:
+            logger.warning(f"Unexpected entities type: {type(entities)}")
+            entity_list = []
+            
+        if isinstance(relations, str):
+            try:
+                relation_list = json.loads(relations)
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse relations JSON: {e}")
+                relation_list = []
+        elif isinstance(relations, (list, dict)):
+            relation_list = relations
+        else:
+            logger.warning(f"Unexpected relations type: {type(relations)}")
+            relation_list = []
         
         # Build universal entities (no predetermined types)
         processed_entities = []
@@ -148,9 +169,7 @@ def main(entities: str, relations: str, confidence_threshold: float = 0.7, max_e
 
 
 if __name__ == "__main__":
-    # Test with sample data
-    sample_entities = '["valve", "bearing", "hydraulic_hose", "engine", "sensor"]'
-    sample_relations = '["connected_to", "monitors", "part_of", "controls", "located_in"]'
-    
-    result = main(sample_entities, sample_relations)
-    print(json.dumps(result, indent=2))
+    # This module should only be called from the prompt flow - no standalone execution with hardcoded data
+    print("Error: This module is designed to be called from Azure Prompt Flow, not executed standalone.")
+    print("Use: make prompt-flow-extract to run knowledge extraction from raw data")
+    exit(1)

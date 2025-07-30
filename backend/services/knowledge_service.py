@@ -139,24 +139,39 @@ class KnowledgeService:
     
     def _parse_text_file(self, content: str) -> List[str]:
         """Parse text file into individual maintenance entries"""
-        # Split by lines and filter meaningful content
-        lines = content.split('\\n')
-        texts = []
-        
-        for line in lines:
-            line = line.strip()
-            if line and not line.startswith('#') and len(line) > 20:
-                texts.append(line)
-        
-        return texts
+        # Parse structured content with <id> markers (MaintIE format)
+        if '<id>' in content:
+            # Split by <id> markers and extract maintenance texts
+            maintenance_items = content.split('<id>')
+            texts = []
+            
+            for item in maintenance_items[1:]:  # Skip first empty split
+                item = item.strip()
+                if item and len(item) > 10:  # Filter out very short items
+                    texts.append(item)
+                    
+            logger.info(f"📄 Parsed {len(texts)} maintenance items from structured data")
+            return texts
+        else:
+            # Fallback to line-based parsing
+            lines = content.split('\n')  # Fixed: was using \\n
+            texts = []
+            
+            for line in lines:
+                line = line.strip()
+                if line and not line.startswith('#') and len(line) > 20:
+                    texts.append(line)
+            
+            logger.info(f"📄 Parsed {len(texts)} lines from unstructured data")
+            return texts
     
     def _clean_text(self, text: str) -> str:
         """Clean and normalize text"""
         import re
         # Remove extra whitespace
-        text = re.sub(r'\\s+', ' ', text.strip())
+        text = re.sub(r'\s+', ' ', text.strip())
         # Remove special characters but keep maintenance-relevant punctuation
-        text = re.sub(r'[^\\w\\s\\.,!?;:()-]', '', text)
+        text = re.sub(r'[^\w\s\.,!?;:()-]', '', text)
         return text
     
     # === VALIDATION ===
