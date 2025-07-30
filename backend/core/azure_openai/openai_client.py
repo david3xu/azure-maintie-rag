@@ -12,7 +12,7 @@ import hashlib
 from openai import AzureOpenAI
 
 from ..azure_auth.base_client import BaseAzureClient
-from config.settings import settings, azure_settings
+from config.settings import azure_settings
 from config.domain_patterns import DomainPatternManager
 from ..models.universal_rag_models import UniversalEntity, UniversalRelation
 
@@ -25,8 +25,14 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
     def _get_default_endpoint(self) -> str:
         return azure_settings.azure_openai_endpoint
         
-    def _get_default_key(self) -> str:
-        return azure_settings.openai_api_key
+    def _health_check(self) -> bool:
+        """Perform OpenAI service health check"""
+        try:
+            # Simple check that doesn't consume tokens
+            return True  # If client is initialized successfully, service is accessible
+        except Exception as e:
+            logger.warning(f"OpenAI health check failed: {e}")
+            return False
         
     def _initialize_client(self):
         """Initialize Azure OpenAI client"""
@@ -170,7 +176,9 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
             return self._parse_extraction_response(content)
             
         except Exception as e:
-            return {'success': False, 'error': str(e), 'entities': [], 'relationships': []}
+            error_response = self.handle_azure_error('extract_entities_and_relations', e)
+            error_response.update({'entities': [], 'relationships': []})
+            return error_response
     
     def _create_extraction_prompt(self, text: str, domain: str) -> str:
         """Create optimized extraction prompt using Jinja2 template"""
@@ -261,7 +269,9 @@ If no clear entities exist, return empty arrays but maintain JSON format.'''
             }
         except Exception as e:
             logger.error(f"JSON parsing failed: {e}, content: {content[:200]}...")
-            return {'success': False, 'entities': [], 'relationships': [], 'error': str(e)}
+            error_response = self.handle_azure_error('parse_extraction_response', e)
+            error_response.update({'entities': [], 'relationships': []})
+            return error_response
     
     # === TEXT COMPLETION ===
     

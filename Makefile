@@ -128,31 +128,55 @@ azure-teardown: ## Clean Azure resources with session audit
 	@./scripts/teardown.sh 2>&1 | tail -10 >> $(SESSION_REPORT) || echo "Teardown script not available" >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 
-# Data Processing Pipeline Commands - Unified CLI Interface
-data-prep-full: ## Complete data processing pipeline (extraction → graph → GNN)
+# Data Processing Pipeline Commands - New Dataflow Architecture
+data-prep-full: ## Complete data processing pipeline (00_full_pipeline.py)
 	@$(call start_clean_session)
-	@echo "🧠 Azure Universal RAG - Complete Data Pipeline"
+	@echo "🧠 Azure Universal RAG - Complete Data Pipeline (Dataflow Architecture)"
 	@echo "Data processing pipeline initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/rag_cli.py data --mode full 2>&1 | tail -15 >> $(SESSION_REPORT)
+	@cd backend && python scripts/dataflow/00_full_pipeline.py 2>&1 | tail -15 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Complete pipeline finished - Check: $(SESSION_REPORT)"
 
-data-upload: ## Upload documents & create chunks
+data-upload: ## Data ingestion stage (01_data_ingestion.py)
 	@$(call start_clean_session)
-	@echo "📤 Azure Universal RAG - Data Upload"
-	@echo "Data upload initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/rag_cli.py data --mode upload 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@echo "📤 Azure Universal RAG - Data Ingestion"
+	@echo "Data ingestion initiated at $(shell date)" >> $(SESSION_REPORT)
+	@cd backend && python scripts/dataflow/01_data_ingestion.py 2>&1 | tail -10 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
-	@echo "✅ Data upload finished - Check: $(SESSION_REPORT)"
+	@echo "✅ Data ingestion finished - Check: $(SESSION_REPORT)"
 
-knowledge-extract: ## Extract entities & relations using LLM
+knowledge-extract: ## Knowledge extraction stage (02_knowledge_extraction.py)
 	@$(call start_clean_session)
 	@echo "🧠 Azure Universal RAG - Knowledge Extraction"
 	@echo "Knowledge extraction initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/rag_cli.py data --mode extract 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@cd backend && python scripts/dataflow/02_knowledge_extraction.py 2>&1 | tail -10 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Knowledge extraction finished - Check: $(SESSION_REPORT)"
-	@echo "✅ Azure cleanup completed with audit trail"
+
+# New Dataflow Commands - Query Pipeline
+query-demo: ## Complete query pipeline (10_query_pipeline.py)
+	@$(call start_clean_session)
+	@echo "🔍 Azure Universal RAG - Query Pipeline Demo"
+	@echo "Query pipeline initiated at $(shell date)" >> $(SESSION_REPORT)
+	@cd backend && python scripts/dataflow/10_query_pipeline.py 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Query pipeline finished - Check: $(SESSION_REPORT)"
+
+unified-search-demo: ## Unified search demonstration (07_unified_search.py)
+	@$(call start_clean_session)
+	@echo "🎯 Azure Universal RAG - Unified Search Demo (Vector + Graph + GNN)"
+	@echo "Unified search demo initiated at $(shell date)" >> $(SESSION_REPORT)
+	@cd backend && python scripts/dataflow/07_unified_search.py 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Unified search demo finished - Check: $(SESSION_REPORT)"
+
+full-workflow-demo: ## End-to-end workflow demonstration
+	@$(call start_clean_session)
+	@echo "🚀 Azure Universal RAG - Full Workflow Demonstration"
+	@echo "Full workflow demo initiated at $(shell date)" >> $(SESSION_REPORT)
+	@cd backend && python scripts/dataflow/demo_full_workflow.py 2>&1 | tail -15 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Full workflow demo finished - Check: $(SESSION_REPORT)"
 
 sync-env: ## Sync backend configuration with current azd environment
 	@echo "🔄 Syncing backend with azd environment..."

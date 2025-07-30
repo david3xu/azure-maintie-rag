@@ -14,6 +14,8 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 
 from config.settings import azure_settings
+from core.utilities.workflow_evidence_collector import AzureDataWorkflowEvidenceCollector, DataWorkflowEvidence
+from core.utilities.azure_cost_tracker import AzureServiceCostTracker
 
 logger = logging.getLogger(__name__)
 
@@ -65,99 +67,6 @@ class DataWorkflowEvidence:
     cost_estimate_usd: Optional[float]
     quality_metrics: Dict[str, Any]
     timestamp: str
-
-
-# ===== COST TRACKING SERVICE =====
-
-class AzureServiceCostTracker:
-    """Azure service cost correlation for workflow transparency"""
-    
-    def __init__(self):
-        self.cost_per_service = {
-            "azure_openai": {"per_token": 0.00002, "per_request": 0.001},
-            "cognitive_search": {"per_document": 0.01, "per_query": 0.005},
-            "cosmos_db": {"per_operation": 0.0001, "per_ru": 0.00008},
-            "blob_storage": {"per_gb_month": 0.018, "per_operation": 0.0001}
-        }
-    
-    def _calculate_service_cost(self, service: str, usage: dict) -> float:
-        """Calculate cost for a specific service based on usage"""
-        cost = 0.0
-        rates = self.cost_per_service.get(service, {})
-        for key, value in usage.items():
-            rate_key = f"per_{key}"
-            if rate_key in rates:
-                cost += rates[rate_key] * value
-        return cost
-    
-    def calculate_workflow_cost(self, service_usage: dict) -> dict:
-        """Calculate total workflow cost across all services"""
-        return {
-            service: self._calculate_service_cost(service, usage)
-            for service, usage in service_usage.items()
-        }
-
-
-# ===== EVIDENCE COLLECTION SERVICE =====
-
-class AzureDataWorkflowEvidenceCollector:
-    """Collect and correlate evidence across Azure services"""
-    
-    def __init__(self, workflow_id: str):
-        self.workflow_id = workflow_id
-        self.evidence_chain: List[DataWorkflowEvidence] = []
-        self.azure_correlation_ids: Dict[str, str] = {}
-        self.cost_tracker = AzureServiceCostTracker()
-
-    async def record_azure_service_evidence(
-        self,
-        step_number: int,
-        azure_service: str,
-        operation_type: str,
-        input_data: Dict[str, Any],
-        output_data: Dict[str, Any],
-        processing_time_ms: float,
-        quality_metrics: Optional[Dict[str, Any]] = None
-    ) -> DataWorkflowEvidence:
-        """Record evidence for an Azure service operation"""
-        
-        # Calculate cost estimate
-        usage_data = self._extract_usage_from_operation(azure_service, input_data, output_data)
-        cost_estimate = self.cost_tracker._calculate_service_cost(azure_service, usage_data)
-        
-        evidence = DataWorkflowEvidence(
-            workflow_id=self.workflow_id,
-            step_number=step_number,
-            azure_service=azure_service,
-            operation_type=operation_type,
-            input_data=input_data,
-            output_data=output_data,
-            processing_time_ms=processing_time_ms,
-            cost_estimate_usd=cost_estimate,
-            quality_metrics=quality_metrics or {},
-            timestamp=datetime.now().isoformat()
-        )
-        
-        self.evidence_chain.append(evidence)
-        return evidence
-    
-    def _extract_usage_from_operation(self, service: str, input_data: Dict, output_data: Dict) -> Dict:
-        """Extract usage metrics from operation data"""
-        usage = {}
-        
-        if service == "azure_openai":
-            usage["token"] = input_data.get("token_count", 0) + output_data.get("token_count", 0)
-            usage["request"] = 1
-        elif service == "cognitive_search":
-            usage["document"] = len(input_data.get("documents", []))
-            usage["query"] = input_data.get("query_count", 1)
-        elif service == "cosmos_db":
-            usage["operation"] = 1
-            usage["ru"] = output_data.get("ru_charge", 5)  # Default RU estimate
-        elif service == "blob_storage":
-            usage["operation"] = 1
-            
-        return usage
 
 
 # ===== PROGRESS TRACKING SERVICE =====

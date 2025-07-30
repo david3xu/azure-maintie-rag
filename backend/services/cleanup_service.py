@@ -1,7 +1,7 @@
 """
 Cleanup Service
 Handles Azure data cleanup, maintenance, and resource management
-Extracted from integrations/azure_services.py
+Clean services architecture implementation
 """
 
 import logging

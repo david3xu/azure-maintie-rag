@@ -20,7 +20,13 @@ from config.settings import AzureSettings
 from config.settings import settings
 from api.endpoints import health_endpoint
 from api.endpoints import query_endpoint
-from api.dependencies import set_azure_services, set_openai_integration, set_azure_settings
+from api.dependencies import (
+    set_infrastructure_service, 
+    set_data_service, 
+    set_workflow_service,
+    set_query_service, 
+    set_azure_settings
+)
 from api.middleware import configure_middleware
 
 # Configure logging
@@ -40,32 +46,35 @@ async def lifespan(app: FastAPI):
     try:
         # Initialize Azure services using focused services
         logger.info("Initializing Azure services...")
-        from integrations.azure_services import AzureServicesManager
-        from core.azure_openai.openai_client import UnifiedAzureOpenAIClient
+        from services.workflow_service import WorkflowService
+        from services.query_service import QueryService
         
+        # Initialize services in proper dependency order
         infrastructure = InfrastructureService()
         data_service = DataService(infrastructure)
+        workflow_service = WorkflowService(infrastructure)
+        query_service = QueryService()
 
-        # Validate services instead
+        # Validate services
         validation = infrastructure.validate_configuration()
         if not validation.get('valid', False):
             logger.warning(f"Azure services validation issues: {validation}")
             # Continue for development - don't fail completely
 
-        azure_services = AzureServicesManager()
-        await azure_services.initialize()
-        
-        openai_integration = UnifiedAzureOpenAIClient()
         azure_settings = AzureSettings()
 
-        # Store in app state following your existing pattern
-        app.state.azure_services = azure_services
-        app.state.openai_integration = openai_integration
+        # Store in app state
+        app.state.infrastructure_service = infrastructure
+        app.state.data_service = data_service
+        app.state.workflow_service = workflow_service
+        app.state.query_service = query_service
         app.state.azure_settings = azure_settings
 
         # Set global dependencies for endpoints
-        set_azure_services(azure_services)
-        set_openai_integration(openai_integration)
+        set_infrastructure_service(infrastructure)
+        set_data_service(data_service)
+        set_workflow_service(workflow_service)
+        set_query_service(query_service)
         set_azure_settings(azure_settings)
 
         logger.info("Azure Universal RAG API startup completed")
@@ -117,6 +126,10 @@ app.include_router(gnn_router)
 from api.endpoints.workflow_endpoint import router as workflow_router
 app.include_router(workflow_router)
 
+# Import and include unified search demo endpoint (Crown Jewel Demo)
+from api.endpoints.unified_search_endpoint import router as unified_search_router
+app.include_router(unified_search_router)
+
 # Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -166,21 +179,20 @@ async def root():
 async def get_system_info():
     """Get system information and Azure services status"""
     try:
-        # Get Azure services status
-        azure_services = getattr(app.state, 'azure_services', None)
+        # Get services status
+        infrastructure = getattr(app.state, 'infrastructure_service', None)
         azure_settings = getattr(app.state, 'azure_settings', None)
 
         azure_status = {
-            "initialized": azure_services is not None,
+            "initialized": infrastructure is not None,
             "location": azure_settings.azure_region if azure_settings else None,
             "resource_prefix": azure_settings.azure_resource_prefix if azure_settings else None,
             "services": {
-                "rag_storage": azure_services.get_rag_storage_client() is not None if azure_services else False,
-                "ml_storage": azure_services.get_ml_storage_client() is not None if azure_services else False,
-                "app_storage": azure_services.get_app_storage_client() is not None if azure_services else False,
-                "cognitive_search": azure_services.get_service('search') is not None if azure_services else False,
-                "cosmos_db_gremlin": azure_services.get_service('cosmos') is not None if azure_services else False,
-                "machine_learning": azure_services.get_service('ml') is not None if azure_services else False
+                "storage": infrastructure.storage_client is not None if infrastructure else False,
+                "cognitive_search": infrastructure.search_client is not None if infrastructure else False,
+                "cosmos_db_gremlin": infrastructure.cosmos_client is not None if infrastructure else False,
+                "openai": infrastructure.openai_client is not None if infrastructure else False,
+                "machine_learning": infrastructure.ml_client is not None if infrastructure else False
             }
         }
 

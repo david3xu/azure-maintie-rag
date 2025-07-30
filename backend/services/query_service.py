@@ -8,12 +8,15 @@ CONFIGURATION-DRIVEN: All parameters sourced from domain_patterns.py - NO hardco
 import logging
 from typing import Dict, List, Any, Optional
 import asyncio
+import time
 from datetime import datetime
 
 from core.azure_openai import UnifiedAzureOpenAIClient
 from core.azure_search import UnifiedSearchClient
 from core.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
 from .graph_service import GraphService
+from .cache_service import SimpleCacheService
+from .performance_service import PerformanceService
 from config.domain_patterns import DomainPatternManager, DomainType
 
 logger = logging.getLogger(__name__)
@@ -27,125 +30,215 @@ class QueryService:
         self.search_client = UnifiedSearchClient()
         self.cosmos_client = AzureCosmosGremlinClient()
         self.graph_service = GraphService()
+        self.cache_service = SimpleCacheService(use_redis=False)  # Start with memory cache
+        self.performance_service = PerformanceService()
         
     # === MAIN QUERY PROCESSING ===
     
     async def process_universal_query(self, query: str, domain: str = None, 
                                     max_results: int = None) -> Dict[str, Any]:
-        """Process query using full RAG pipeline"""
-        try:
-            start_time = datetime.now()
-            
-            # Auto-detect domain if not provided
-            if domain is None:
-                domain = DomainPatternManager.detect_domain(query)
-            
-            # Load domain-specific configuration
-            patterns = DomainPatternManager.get_patterns(domain)
-            training = DomainPatternManager.get_training(domain)
-            
-            # Set max_results from configuration if not provided
-            if max_results is None:
-                max_results = training.batch_size // 2  # Use half of training batch size as reasonable default
-            
-            # Step 1: Analyze query using domain patterns
-            query_analysis = DomainPatternManager.enhance_query(query, domain)
-            enhanced_query = query_analysis.get('enhanced_query', query)
-            
-            # Step 2: Multi-source retrieval
-            retrieval_tasks = [
-                self._search_documents(enhanced_query, max_results),
-                self._search_knowledge_graph(query, domain),
-                self._find_related_entities(query, domain)
-            ]
-            
-            search_results, graph_results, entity_results = await asyncio.gather(
-                *retrieval_tasks, return_exceptions=True
-            )
-            
-            # Step 3: Consolidate context
-            context = self._consolidate_context(search_results, graph_results, entity_results)
-            
-            # Step 4: Generate response
-            response = await self._generate_response(query, context, domain)
-            
-            # Step 5: Create final result
-            processing_time = (datetime.now() - start_time).total_seconds()
-            
-            return {
-                'success': True,
-                'operation': 'process_universal_query',
-                'data': {
-                    'query': query,
-                    'domain': domain,
-                    'response': response,
-                    'context_sources': len(context['sources']),
-                    'processing_time': processing_time,
-                    'query_analysis': query_analysis,
-                    'timestamp': start_time.isoformat()
+        """Process query using full RAG pipeline with caching and performance tracking"""
+        # Auto-detect domain if not provided
+        if domain is None:
+            domain = DomainPatternManager.detect_domain(query)
+        
+        async with self.performance_service.create_performance_context(
+            query, domain, "process_universal_query"
+        ) as perf:
+            try:
+                start_time = datetime.now()
+                
+                # Check cache first
+                cached_result = await self.cache_service.get_cached_query_result(query, domain)
+                if cached_result:
+                    logger.debug(f"Cache HIT for universal query: {query[:50]}...")
+                    perf.mark_cache_hit()
+                    perf.set_result_count(cached_result.get('data', {}).get('context_sources', 0))
+                    return cached_result
+                
+                logger.debug(f"Cache MISS for universal query: {query[:50]}...")
+                
+                # Load domain-specific configuration
+                patterns = DomainPatternManager.get_patterns(domain)
+                training = DomainPatternManager.get_training(domain)
+                
+                # Set max_results from configuration if not provided
+                if max_results is None:
+                    max_results = training.batch_size // 2  # Use half of training batch size as reasonable default
+                
+                # Step 1: Analyze query using domain patterns
+                analysis_start = time.time()
+                query_analysis = DomainPatternManager.enhance_query(query, domain)
+                enhanced_query = query_analysis.get('enhanced_query', query)
+                perf.record_phase_time("query_analysis", analysis_start)
+                
+                # Step 2: Multi-source retrieval (parallel)
+                retrieval_start = time.time()
+                retrieval_tasks = [
+                    self._search_documents(enhanced_query, max_results),
+                    self._search_knowledge_graph(query, domain),
+                    self._find_related_entities(query, domain)
+                ]
+                
+                search_results, graph_results, entity_results = await asyncio.gather(
+                    *retrieval_tasks, return_exceptions=True
+                )
+                perf.record_phase_time("parallel_retrieval", retrieval_start)
+                
+                # Step 3: Consolidate context
+                context_start = time.time()
+                context = self._consolidate_context(search_results, graph_results, entity_results)
+                perf.record_phase_time("context_consolidation", context_start)
+                
+                # Step 4: Generate response
+                response_start = time.time()
+                response = await self._generate_response(query, context, domain)
+                perf.record_phase_time("response_generation", response_start)
+                
+                # Step 5: Create final result
+                processing_time = (datetime.now() - start_time).total_seconds()
+                context_sources = len(context['sources'])
+                
+                result = {
+                    'success': True,
+                    'operation': 'process_universal_query',
+                    'data': {
+                        'query': query,
+                        'domain': domain,
+                        'response': response,
+                        'context_sources': context_sources,
+                        'processing_time': processing_time,
+                        'query_analysis': query_analysis,
+                        'timestamp': start_time.isoformat()
+                    }
                 }
-            }
-            
-        except Exception as e:
-            logger.error(f"Universal query processing failed: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-                'operation': 'process_universal_query'
-            }
+                
+                # Set result count for performance tracking
+                perf.set_result_count(context_sources)
+                
+                # Cache successful results (TTL: 5 minutes)
+                await self.cache_service.cache_query_result(
+                    query, domain, result, ttl_seconds=300
+                )
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Universal query processing failed: {e}")
+                return {
+                    'success': False,
+                    'error': str(e),
+                    'operation': 'process_universal_query'
+                }
     
     async def semantic_search(self, query: str, search_type: str = "hybrid", 
                             filters: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Perform semantic search across multiple sources"""
-        try:
-            # Auto-detect domain if not provided in filters
-            domain = filters.get('domain') if filters else None
-            if domain is None:
-                domain = DomainPatternManager.detect_domain(query)
-            
-            # Load domain-specific configuration
-            training = DomainPatternManager.get_training(domain)
-            doc_search_limit = training.batch_size  # Use batch_size as document search limit
-            
-            results = {}
-            
-            if search_type in ["hybrid", "documents"]:
-                # Document search using configured limit
-                doc_results = await self.search_client.search_documents(
-                    query, 
-                    top=doc_search_limit, 
-                    filters=filters.get('document_filters') if filters else None
+        """Perform semantic search across multiple sources with caching and performance tracking"""
+        # Auto-detect domain if not provided in filters
+        domain = filters.get('domain') if filters else None
+        if domain is None:
+            domain = DomainPatternManager.detect_domain(query)
+        
+        async with self.performance_service.create_performance_context(
+            query, domain, f"semantic_search_{search_type}"
+        ) as perf:
+            try:
+                # Check cache first (shorter TTL for search results)
+                cached_result = await self.cache_service.get_cached_search_result(
+                    search_type, query, domain
                 )
-                results['documents'] = doc_results['data']['documents'] if doc_results['success'] else []
-            
-            if search_type in ["hybrid", "graph"]:
-                # Graph search using detected domain
-                graph_results = await self._search_knowledge_graph(query, domain)
-                results['graph'] = graph_results
-            
-            if search_type in ["hybrid", "entities"]:
-                # Entity search using detected domain
-                entity_results = await self._find_related_entities(query, domain)
-                results['entities'] = entity_results
-            
-            return {
-                'success': True,
-                'operation': 'semantic_search',
-                'data': {
-                    'query': query,
-                    'search_type': search_type,
-                    'results': results,
-                    'total_sources': sum(len(v) if isinstance(v, list) else 1 for v in results.values())
+                if cached_result:
+                    logger.debug(f"Cache HIT for semantic search: {search_type} - {query[:50]}...")
+                    perf.mark_cache_hit()
+                    total_sources = cached_result.get('data', {}).get('total_sources', 0)
+                    perf.set_result_count(total_sources)
+                    return cached_result
+                
+                logger.debug(f"Cache MISS for semantic search: {search_type} - {query[:50]}...")
+                
+                # Load domain-specific configuration
+                training = DomainPatternManager.get_training(domain)
+                doc_search_limit = training.batch_size  # Use batch_size as document search limit
+                
+                # Build tasks for parallel execution (like process_universal_query does)
+                tasks = []
+                task_types = []
+                
+                if search_type in ["hybrid", "documents"]:
+                    tasks.append(
+                        self.search_client.search_documents(
+                            query, 
+                            top=doc_search_limit, 
+                            filters=filters.get('document_filters') if filters else None
+                        )
+                    )
+                    task_types.append("documents")
+                
+                if search_type in ["hybrid", "graph"]:
+                    tasks.append(self._search_knowledge_graph(query, domain))
+                    task_types.append("graph")
+                
+                if search_type in ["hybrid", "entities"]:
+                    tasks.append(self._find_related_entities(query, domain))
+                    task_types.append("entities")
+                
+                # Execute all searches in parallel with timing
+                search_start = time.time()
+                task_results = await asyncio.gather(*tasks, return_exceptions=True)
+                perf.record_phase_time("parallel_search", search_start)
+                
+                # Process results maintaining existing structure
+                results = {}
+                for i, task_type in enumerate(task_types):
+                    task_result = task_results[i]
+                    
+                    if isinstance(task_result, Exception):
+                        logger.error(f"Error in {task_type} search: {task_result}")
+                        if task_type == "documents":
+                            results['documents'] = []
+                        elif task_type == "graph":
+                            results['graph'] = []
+                        elif task_type == "entities":
+                            results['entities'] = []
+                        continue
+                    
+                    if task_type == "documents":
+                        results['documents'] = task_result['data']['documents'] if task_result.get('success') else []
+                    elif task_type == "graph":
+                        results['graph'] = task_result
+                    elif task_type == "entities":
+                        results['entities'] = task_result
+                
+                total_sources = sum(len(v) if isinstance(v, list) else 1 for v in results.values())
+                
+                result = {
+                    'success': True,
+                    'operation': 'semantic_search',
+                    'data': {
+                        'query': query,
+                        'search_type': search_type,
+                        'results': results,
+                        'total_sources': total_sources
+                    }
                 }
-            }
-            
-        except Exception as e:
-            logger.error(f"Semantic search failed: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-                'operation': 'semantic_search'
-            }
+                
+                # Set result count for performance tracking
+                perf.set_result_count(total_sources)
+                
+                # Cache successful search results (TTL: 3 minutes)
+                await self.cache_service.cache_search_result(
+                    search_type, query, domain, result, ttl_seconds=180
+                )
+                
+                return result
+                
+            except Exception as e:
+                logger.error(f"Semantic search failed: {e}")
+                return {
+                    'success': False,
+                    'error': str(e),
+                    'operation': 'semantic_search'
+                }
     
     # === SPECIALIZED QUERIES ===
     
