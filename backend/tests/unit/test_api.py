@@ -32,7 +32,7 @@ class TestAPIEndpoints:
         """Test query endpoint structure"""
         # Test that endpoint exists
         response = client.post(
-            "/api/v1/query",
+            "/api/v1/query/universal",
             json={"query": "test query", "domain": "general"}
         )
         # May fail due to dependencies, but should not be 404
@@ -109,7 +109,7 @@ class TestAPIMiddleware:
         configure_middleware(app)
         
         # Check that middleware was added
-        assert len(app.middleware) > 0
+        assert len(app.user_middleware) > 0
     
     def test_cors_configuration(self):
         """Test CORS middleware settings"""
@@ -121,7 +121,7 @@ class TestAPIMiddleware:
         
         # CORS should be configured
         # This is a basic test - in production would test actual CORS behavior
-        assert any('CORSMiddleware' in str(m) for m in app.middleware)
+        assert any('CORSMiddleware' in str(m) for m in app.user_middleware)
 
 
 class TestStreaming:

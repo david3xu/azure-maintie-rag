@@ -4,7 +4,7 @@ Used across multi-modal, structured, and comparison endpoints
 """
 
 from typing import Dict, List, Any, Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class QueryRequest(BaseModel):
@@ -34,15 +34,21 @@ class QueryRequest(BaseModel):
         default="detailed",
         description="Response format: 'detailed', 'summary', or 'minimal'"
     )
+    domain: str = Field(
+        default="general",
+        description="Domain for specialized processing"
+    )
 
-    @validator('query')
+    @field_validator('query')
+    @classmethod
     def validate_query(cls, v):
         """Validate query content"""
         if not v.strip():
             raise ValueError("Query cannot be empty")
         return v.strip()
 
-    @validator('response_format')
+    @field_validator('response_format')
+    @classmethod
     def validate_response_format(cls, v):
         """Validate response format"""
         valid_formats = ['detailed', 'summary', 'minimal']

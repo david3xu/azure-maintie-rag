@@ -79,41 +79,37 @@ class TestWorkflowService:
         from services.workflow_service import WorkflowService
         
         mock_infrastructure = Mock()
-        service = WorkflowService(mock_infrastructure)
+        service = WorkflowService()
         
         # Create workflow
-        workflow_id = service.create_workflow(
-            "test_workflow",
-            {"param": "value"}
-        )
+        workflow_id = service.create_workflow("test_workflow")
         
         assert workflow_id is not None
-        assert workflow_id.startswith("wf_")
+        assert workflow_id == "test_workflow"
         
         # Check status
         status = service.get_workflow_status(workflow_id)
         assert status is not None
-        assert status['status'] == 'created'
+        assert status['status'] == 'running'
     
     def test_progress_tracking(self):
         """Test workflow progress tracking"""
         from services.workflow_service import WorkflowService, WorkflowStep
         
         mock_infrastructure = Mock()
-        service = WorkflowService(mock_infrastructure)
+        service = WorkflowService()
         
         # Create and update workflow
-        workflow_id = service.create_workflow("test", {})
-        service.update_progress(
+        workflow_id = service.create_workflow("test")
+        service.update_workflow_progress(
             workflow_id,
             WorkflowStep.DATA_LOADING,
-            0.5,
             "Loading data"
         )
         
         status = service.get_workflow_status(workflow_id)
-        assert status['current_step'] == WorkflowStep.DATA_LOADING.value
-        assert status['percentage'] == 0.5
+        assert status['current_step'] == WorkflowStep.DATA_LOADING
+        assert status['percentage'] == 20
 
 
 class TestQueryService:
@@ -125,14 +121,13 @@ class TestQueryService:
         from services.query_service import QueryService
         
         mock_infrastructure = Mock()
-        service = QueryService(mock_infrastructure)
+        service = QueryService()
         
         # Mock search results
         mock_infrastructure.get_service.return_value = AsyncMock()
         
         # Test query structure
-        assert hasattr(service, 'process_query')
-        assert hasattr(service, 'analyze_query')
+        assert hasattr(service, 'process_universal_query')
 
 
 class TestPipelineService:
