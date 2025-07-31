@@ -14,11 +14,25 @@ class TestAPIEndpoints:
     @pytest.fixture
     def client(self):
         """Create test client"""
-        # Import app with mocked dependencies
-        with patch('api.main.InfrastructureService') as mock_infra:
-            with patch('api.main.DataService') as mock_data:
-                from api.main import app
-                return TestClient(app)
+        # Mock the dependency injection functions
+        with patch('api.dependencies.get_infrastructure_service') as mock_get_infra:
+            # Create a mock infrastructure service
+            mock_infrastructure = Mock()
+            mock_infrastructure.check_all_services_health.return_value = {
+                "overall_status": "healthy",
+                "services": {"test": "ok"},
+                "summary": {"total_services": 1, "healthy_services": 1}
+            }
+            mock_infrastructure.initialized = True
+            mock_infrastructure.openai_client = Mock()
+            mock_infrastructure.cosmos_client = Mock()
+            mock_infrastructure.ml_client = Mock()
+            
+            # Make the dependency function return the mock
+            mock_get_infra.return_value = mock_infrastructure
+            
+            from api.main import app
+            return TestClient(app)
     
     def test_health_endpoint(self, client):
         """Test health check endpoint"""
@@ -80,7 +94,7 @@ class TestAPIModels:
     
     def test_stream_models(self):
         """Test streaming models"""
-        from api.models.streams import (
+        from api.models.streaming_models import (
             StreamEvent,
             ProgressEvent,
             StreamEventType

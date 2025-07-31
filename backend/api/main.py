@@ -88,8 +88,8 @@ app.include_router(health.router)
 app.include_router(queries.router)
 
 # Include core functionality routers
-from api.streaming.streams import router as streams_router
-app.include_router(streams_router)
+from api.streaming.workflow_streaming import router as workflow_router
+app.include_router(workflow_router)
 
 # Error handlers
 @app.exception_handler(HTTPException)

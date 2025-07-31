@@ -140,7 +140,8 @@ def wire_container() -> None:
     """Wire the container to enable dependency injection in FastAPI endpoints"""
     container.wire(modules=[
         "api.endpoints.health",
-        "api.endpoints.queries"
+        "api.endpoints.queries",
+        __name__  # Wire this module too
     ])
 
 
