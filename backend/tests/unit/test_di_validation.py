@@ -10,7 +10,7 @@ from unittest.mock import Mock
 def test_import_new_dependencies():
     """Test that new dependencies module can be imported"""
     try:
-        from api.dependencies_new import (
+        from api.dependencies import (
             ApplicationContainer,
             container,
             get_infrastructure_service,
@@ -30,7 +30,7 @@ def test_import_new_dependencies():
 
 def test_container_exists():
     """Test that container is properly instantiated"""
-    from api.dependencies_new import container
+    from api.dependencies import container
     
     assert container is not None
     assert hasattr(container, 'providers')
@@ -38,7 +38,7 @@ def test_container_exists():
 
 def test_container_has_all_providers():
     """Test that container has all required providers"""
-    from api.dependencies_new import container
+    from api.dependencies import container
     
     # Check that all expected providers exist
     expected_providers = [
@@ -56,7 +56,7 @@ def test_container_has_all_providers():
 @pytest.mark.asyncio
 async def test_application_lifecycle():
     """Test basic application lifecycle functions"""
-    from api.dependencies_new import initialize_application, shutdown_application
+    from api.dependencies import initialize_application, shutdown_application
     
     # These should not raise exceptions
     await initialize_application()
@@ -65,7 +65,7 @@ async def test_application_lifecycle():
 
 def test_no_global_state_variables():
     """Test that new implementation doesn't use global state variables"""
-    import api.dependencies_new as new_deps
+    import api.dependencies as new_deps
     
     # Should not have global service variables like old implementation
     global_service_vars = [
@@ -78,7 +78,7 @@ def test_no_global_state_variables():
 
 def test_no_setter_functions():
     """Test that new implementation doesn't have global setter functions"""
-    import api.dependencies_new as new_deps
+    import api.dependencies as new_deps
     
     # Should not have setter functions like old implementation
     setter_functions = [
@@ -92,7 +92,7 @@ def test_no_setter_functions():
 @pytest.mark.asyncio 
 async def test_dependency_functions_exist():
     """Test that all FastAPI dependency functions exist and are callable"""
-    from api.dependencies_new import (
+    from api.dependencies import (
         get_infrastructure_service,
         get_data_service, 
         get_query_service,
@@ -118,7 +118,7 @@ async def test_dependency_functions_exist():
 
 def test_wire_container_function():
     """Test that wire_container function exists and is callable"""
-    from api.dependencies_new import wire_container
+    from api.dependencies import wire_container
     
     assert callable(wire_container)
     

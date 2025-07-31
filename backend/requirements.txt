@@ -30,6 +30,7 @@ structlog>=23.2.0
 pyyaml>=6.0
 pydantic-settings>=2.0.0
 jinja2>=3.1.2
+tenacity>=8.2.0              # Retry patterns for robust Azure operations (inspired by Graphiti)
 
 # Dependency Injection - NEW for proper DI container
 dependency-injector>=4.41.0
