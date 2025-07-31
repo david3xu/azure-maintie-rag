@@ -139,8 +139,8 @@ async def shutdown_application() -> None:
 def wire_container() -> None:
     """Wire the container to enable dependency injection in FastAPI endpoints"""
     container.wire(modules=[
-        "api.endpoints.health_endpoint",
-        "api.endpoints.query_endpoint"
+        "api.endpoints.health",
+        "api.endpoints.queries"
     ])
 
 

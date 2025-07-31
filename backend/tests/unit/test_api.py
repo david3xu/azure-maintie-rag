@@ -44,7 +44,7 @@ class TestAPIModels:
     
     def test_query_models(self):
         """Test query request/response models"""
-        from api.models.query_models import QueryRequest, QueryResponse
+        from api.models.queries import QueryRequest, QueryResponse
         
         # Test request model
         request = QueryRequest(
@@ -57,7 +57,7 @@ class TestAPIModels:
     
     def test_response_models(self):
         """Test response models"""
-        from api.models.response_models import (
+        from api.models.responses import (
             BaseResponse,
             ErrorResponse,
             QueryResponse
@@ -80,7 +80,7 @@ class TestAPIModels:
     
     def test_stream_models(self):
         """Test streaming models"""
-        from api.models.stream_models import (
+        from api.models.streams import (
             StreamEvent,
             ProgressEvent,
             StreamEventType
