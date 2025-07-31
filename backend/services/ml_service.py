@@ -11,7 +11,7 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 
-from core.azure_storage import UnifiedStorageClient
+from infra.azure_storage import UnifiedStorageClient
 
 logger = logging.getLogger(__name__)
 
@@ -207,7 +207,7 @@ class MLService:
             
             # Load and use actual GNN model for predictions
             try:
-                from core.azure_ml.gnn_processor import GNNProcessor
+                from infra.azure_ml.gnn_processor import GNNProcessor
                 gnn_processor = GNNProcessor()
                 predictions = await gnn_processor.predict(input_data, model_file)
             except Exception as model_error:
@@ -357,8 +357,8 @@ class MLService:
     async def _create_and_train_gnn(self, training_data: Dict, config: Dict) -> Dict[str, Any]:
         """Create and train GNN model using real Azure ML services"""
         try:
-            from core.azure_ml.gnn_orchestrator import GNNOrchestrator
-            from core.azure_ml.gnn.unified_training_pipeline import UnifiedTrainingPipeline
+            from infra.azure_ml.gnn_orchestrator import GNNOrchestrator
+            from infra.azure_ml.gnn.unified_training_pipeline import UnifiedTrainingPipeline
             
             # Use actual GNN training pipeline
             gnn_orchestrator = GNNOrchestrator()

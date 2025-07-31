@@ -8,7 +8,7 @@ import asyncio
 from datetime import datetime
 from unittest.mock import patch
 
-from services.infrastructure_service_async import (
+from services.infrastructure_service import (
     AsyncInfrastructureService,
     ServiceInitializationResult,
     ServiceInitializationError
@@ -69,12 +69,12 @@ class TestAsyncInfrastructureBasics:
         service = AsyncInfrastructureService()
         
         # Mock all Azure clients to avoid real connections
-        with patch('services.infrastructure_service_async.UnifiedAzureOpenAIClient'), \
-             patch('services.infrastructure_service_async.UnifiedSearchClient'), \
-             patch('services.infrastructure_service_async.UnifiedStorageClient'), \
-             patch('services.infrastructure_service_async.AzureCosmosGremlinClient'), \
-             patch('services.infrastructure_service_async.AzureMLClient'), \
-             patch('services.infrastructure_service_async.AzureApplicationInsightsClient'), \
+        with patch('services.infrastructure_service.UnifiedAzureOpenAIClient'), \
+             patch('services.infrastructure_service.UnifiedSearchClient'), \
+             patch('services.infrastructure_service.UnifiedStorageClient'), \
+             patch('services.infrastructure_service.AzureCosmosGremlinClient'), \
+             patch('services.infrastructure_service.AzureMLClient'), \
+             patch('services.infrastructure_service.AzureApplicationInsightsClient'), \
              patch('services.vector_service.VectorService'):
             
             # Should not be initialized initially
@@ -94,12 +94,12 @@ class TestAsyncInfrastructureBasics:
         """Test that repeated initialization is handled correctly"""
         service = AsyncInfrastructureService()
         
-        with patch('services.infrastructure_service_async.UnifiedAzureOpenAIClient'), \
-             patch('services.infrastructure_service_async.UnifiedSearchClient'), \
-             patch('services.infrastructure_service_async.UnifiedStorageClient'), \
-             patch('services.infrastructure_service_async.AzureCosmosGremlinClient'), \
-             patch('services.infrastructure_service_async.AzureMLClient'), \
-             patch('services.infrastructure_service_async.AzureApplicationInsightsClient'), \
+        with patch('services.infrastructure_service.UnifiedAzureOpenAIClient'), \
+             patch('services.infrastructure_service.UnifiedSearchClient'), \
+             patch('services.infrastructure_service.UnifiedStorageClient'), \
+             patch('services.infrastructure_service.AzureCosmosGremlinClient'), \
+             patch('services.infrastructure_service.AzureMLClient'), \
+             patch('services.infrastructure_service.AzureApplicationInsightsClient'), \
              patch('services.vector_service.VectorService'):
             
             # First initialization
@@ -135,7 +135,7 @@ class TestAsyncInfrastructureBasics:
         service = AsyncInfrastructureService()
         
         # Test alias import
-        from services.infrastructure_service_async import InfrastructureService
+        from services.infrastructure_service import InfrastructureService
         alias_service = InfrastructureService()
         assert isinstance(alias_service, AsyncInfrastructureService)
         

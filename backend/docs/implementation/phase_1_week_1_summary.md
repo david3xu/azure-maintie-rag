@@ -9,7 +9,7 @@
 - **Result**: Eliminated global state variables across the API layer
 
 ### **Step 1.2: Implement Async Service Initialization** ✅
-- **Created**: `backend/services/infrastructure_service_async.py`
+- **Created**: `backend/services/infrastructure_service.py`
 - **Implemented**: Non-blocking parallel service initialization
 - **Added**: Comprehensive async health checks and monitoring
 - **Result**: Faster startup times and better resource utilization
@@ -79,7 +79,7 @@ The foundation is now solid for proceeding to **Phase 1 Week 2**:
 
 ### **New Architecture Files**
 - `backend/api/dependencies_new.py` - DI Container
-- `backend/services/infrastructure_service_async.py` - Async Infrastructure  
+- `backend/services/infrastructure_service.py` - Async Infrastructure  
 - `backend/api/endpoints/universal_endpoint.py` - Unified API
 
 ### **Updated Core Services**

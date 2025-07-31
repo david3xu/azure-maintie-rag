@@ -13,8 +13,8 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 # Azure service components
-from services.infrastructure_service import InfrastructureService
-from services.data_service import DataService
+from services.infrastructure_service import AsyncInfrastructureService
+# DataService accessed through infrastructure service to maintain proper layer boundaries
 # Removed integrations import - using focused services
 from config.settings import AzureSettings
 from config.settings import settings

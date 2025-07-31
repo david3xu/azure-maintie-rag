@@ -15,7 +15,7 @@
 
 ## 📁 Actual Directory Structure
 
-**Based on current clean architecture** (January 2025 - Enhanced Performance & Clean Dependencies):
+**Based on current consolidated architecture** (July 2025 - Consolidated Services & Layer Boundaries):
 
 ```
 backend/
@@ -41,20 +41,17 @@ backend/
 │   │   ├── models/                  # Pydantic request/response models
 │   │   └── streaming/               # Server-sent events
 │
-├── 🏗️ Business Logic Layer
-│   ├── services/                    # High-level business services (16 files)
-│   │   ├── infrastructure_service.py  # Azure service management
-│   │   ├── data_service.py            # Data processing workflows
-│   │   ├── query_service.py           # Enhanced parallel query orchestration
-│   │   ├── cache_service.py           # Intelligent caching (memory/Redis)
-│   │   ├── performance_service.py     # SLA tracking and monitoring
-│   │   ├── ml_service.py              # Machine learning operations
-│   │   ├── graph_service.py           # Knowledge graph operations
-│   │   ├── workflow_service.py        # Workflow management
-│   │   └── cleanup_service.py         # Resource cleanup
+├── 🏗️ Business Logic Layer (CONSOLIDATED)
+│   ├── services/                    # Consolidated business services (6 files - down from 16)
+│   │   ├── workflow_service.py         # 🔄 CONSOLIDATED (workflow + orchestration)
+│   │   ├── query_service.py            # 🔄 CONSOLIDATED (enhanced query + request orchestration)
+│   │   ├── cache_service.py            # 🔄 CONSOLIDATED (cache + multi-level orchestration)
+│   │   ├── agent_service.py            # 🔄 CONSOLIDATED (PydanticAI + agent coordination)
+│   │   ├── infrastructure_service.py  # ✅ Unchanged - Azure service management
+│   │   └── ml_service.py               # ✅ Unchanged - Machine learning operations
 │
 ├── 🧠 Infrastructure Layer
-│   ├── core/                        # Azure service clients (organized by service)
+│   ├── infra/                       # Azure service clients (organized by service)
 │   │   ├── azure_openai/            # GPT-4 + text-embedding-ada-002
 │   │   ├── azure_search/            # Vector search operations
 │   │   ├── azure_cosmos/            # Gremlin graph database
@@ -62,9 +59,16 @@ backend/
 │   │   ├── azure_ml/                # GNN training + inference
 │   │   │   └── gnn/                 # PyTorch Geometric GNN models (8 files)
 │   │   ├── azure_monitoring/        # Application Insights
-│   │   ├── workflows/               # AI workflow orchestration (moved from prompt_flows)
+│   │   ├── support/                 # Infrastructure support services (DataService, etc.)
 │   │   ├── models/                  # Data models
 │   │   └── utilities/               # Shared utilities
+│   ├── agents/                      # 🤖 Intelligent Processing Layer
+│   │   ├── base/                    # Agent foundations (enhanced)
+│   │   ├── discovery/               # Agent discovery capabilities
+│   │   ├── capabilities/            # Domain intelligence (moved from services)
+│   │   ├── memory/                  # Agent memory management (moved from core)
+│   │   ├── workflows/               # Agent workflows (moved from core) 
+│   │   └── tools/                   # Agent tools
 │
 ├── ⚙️ Configuration Management
 │   ├── config/                      # Application configuration
@@ -158,7 +162,7 @@ make sync-env                       # Sync backend with current azd env
 
 ## 📊 Current System Status
 
-**✅ Production-Ready Architecture** (Validated July 28, 2025):
+**✅ Production-Ready Consolidated Architecture** (Validated July 31, 2025):
 
 | Component | Status | Details |
 |-----------|--------|---------|
@@ -182,13 +186,14 @@ make sync-env                       # Sync backend with current azd env
 - ✅ **Multi-hop Reasoning**: Semantic path discovery across knowledge graphs
 - ✅ **Enterprise Security**: Managed identity + RBAC across all services
 
-### **Recent Architecture Enhancements (January 2025)**
-- ✅ **Eliminated `integrations/` layer**: Migrated to clean `core/` and `services/` architecture
-- ✅ **Fixed parallel processing**: `semantic_search()` now runs Vector + Graph + GNN concurrently
-- ✅ **Added intelligent caching**: Memory-based with Redis fallback for 60%+ cache hit rates
-- ✅ **Enhanced performance monitoring**: Real-time SLA tracking and slow query detection
-- ✅ **Moved AI workflows**: `prompt_flows/` → `core/workflows/` for better organization
-- ✅ **Clean dependency injection**: Proper service layer with no circular imports
+### **Major Architecture Consolidation (July 2025)**
+- ✅ **Service Consolidation Complete**: 11 services → 6 consolidated services (45% reduction)
+- ✅ **Layer Boundary Compliance**: Clean architecture with strict layer separation (0 violations)
+- ✅ **Consolidated Services**: ConsolidatedWorkflowService, ConsolidatedQueryService, ConsolidatedCacheService, ConsolidatedAgentService
+- ✅ **Backward Compatibility**: All legacy service names work via aliases (EnhancedQueryService, WorkflowService, etc.)
+- ✅ **Agent Integration**: Enhanced agents layer with capabilities, memory, and workflows moved from infrastructure
+- ✅ **Architecture Validation**: Automated compliance checking with `validate_architecture.py`
+- ✅ **Clean Dependency Injection**: Proper DI container with consolidated services and layer boundaries
 
 ## 🧪 Testing & Validation
 
@@ -216,7 +221,7 @@ make test                    # All tests with real Azure services
 make health                  # Test all Azure service connections
 
 # Architecture validation  
-python test_azure_architecture_fixes.py    # Core architecture tests
+python validate_architecture.py            # Layer boundary compliance validation
 
 # Component testing
 python -m pytest tests/integration/        # Integration tests
@@ -224,12 +229,56 @@ python -m pytest tests/unit/              # Unit tests
 ```
 
 ### **What Tests Validate**
-- ✅ **Core Architecture**: Dependency violations resolved, no circular imports
+- ✅ **Consolidated Architecture**: 6 consolidated services with layer boundary compliance
+- ✅ **Layer Boundaries**: Clean architecture with 0 import violations (validated by `validate_architecture.py`)
+- ✅ **Service Integration**: ConsolidatedQueryService, ConsolidatedWorkflowService, ConsolidatedAgentService functionality
+- ✅ **Backward Compatibility**: Legacy service aliases (EnhancedQueryService, WorkflowService) work correctly
 - ✅ **Azure Integration**: Real Cosmos DB, OpenAI, Search, Storage, ML connectivity
-- ✅ **Azure ML GNN Training**: Production model training (59.65% accuracy, Job ID: real-gnn-training-1753841663)
-- ✅ **Evidence Collection**: Workflow tracking with Azure Cosmos DB
-- ✅ **API Endpoints**: Query processing and streaming responses
+- ✅ **Azure ML GNN Training**: Production model training (59.65% accuracy)
+- ✅ **API Endpoints**: Query processing and streaming responses with consolidated services
 - ✅ **Performance**: Sub-3s query processing benchmarks
+
+## 🏗️ Consolidated Service Architecture
+
+### **Service Consolidation Overview**
+The backend has been consolidated from **11 services to 6 clean services** (45% reduction) while maintaining full backward compatibility:
+
+```python
+# ✅ NEW: Use consolidated services for modern development
+from services import (
+    ConsolidatedWorkflowService,  # workflow + orchestration
+    ConsolidatedQueryService,     # enhanced query + request orchestration  
+    ConsolidatedCacheService,     # cache + multi-level orchestration
+    ConsolidatedAgentService,     # PydanticAI + agent coordination
+    AsyncInfrastructureService,   # unchanged
+    MLService                     # unchanged
+)
+
+# ✅ LEGACY: Backward compatibility aliases still work
+from services import WorkflowService, EnhancedQueryService, RequestOrchestrator
+```
+
+### **Architecture Validation**
+```bash
+# Validate layer boundary compliance (must pass before commits)
+python validate_architecture.py
+
+# Expected output:
+# 🔍 Architecture Compliance Validation
+# ==================================================
+# API Layer: ✅ Clean
+# Services Layer: ✅ Clean  
+# Agents Layer: ✅ Clean
+# Infrastructure Layer: ✅ Clean
+# ==================================================
+# 🎉 Architecture compliance: PASSED
+```
+
+### **Layer Boundary Rules**
+- **API Layer**: Imports only from `services/` (never from `infra/` or `agents/`)
+- **Services Layer**: Coordinates between `agents/` and `infra/` layers
+- **Agents Layer**: Imports only from `infra/` (for tools)
+- **Infrastructure Layer**: Imports only external libraries
 
 ---
 

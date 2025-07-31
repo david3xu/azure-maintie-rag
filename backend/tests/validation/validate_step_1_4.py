@@ -99,7 +99,7 @@ def validate_async_infrastructure():
     print("\n🔍 Validating Async Infrastructure Service...")
     
     try:
-        from services.infrastructure_service_async import AsyncInfrastructureService
+        from services.infrastructure_service import AsyncInfrastructureService
         
         # Test instantiation
         service = AsyncInfrastructureService()

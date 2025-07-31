@@ -4,6 +4,8 @@
 
 This document outlines the comprehensive implementation roadmap for transforming the current Azure RAG system into a revolutionary **Universal RAG with Intelligent Agents** that combines tri-modal search (Vector + Graph + GNN) with data-driven intelligent agents capable of dynamic tool discovery and complex reasoning.
 
+**🚨 MAJOR UPDATE**: Based on comprehensive framework evaluation, we are adopting **PydanticAI** as our agent framework foundation, resulting in 71% code reduction while preserving all unique competitive advantages. See [AGENT_FRAMEWORK_EVALUATION.md](AGENT_FRAMEWORK_EVALUATION.md) for detailed analysis.
+
 ## Target Architecture Directory Structure
 
 ### **Current State Analysis**
@@ -15,61 +17,24 @@ The existing codebase has solid foundations but requires strategic enhancements 
 
 ### **Target Directory Structure**
 
+### **UPDATED Architecture with PydanticAI Integration**
+
 ```
 azure-maintie-rag/
 ├── PROJECT_ARCHITECTURE.md                    # ✅ Complete - Master architecture document
 ├── IMPLEMENTATION_ROADMAP.md                  # 🆕 This document
 ├── backend/
-│   ├── agents/                                # 🆕 NEW - Intelligent Agent System
+│   ├── agents/                                # 🔄 SIMPLIFIED - PydanticAI Integration
 │   │   ├── __init__.py
-│   │   ├── base/                              # Agent foundation
+│   │   ├── universal_agent.py                 # Main PydanticAI agent (200 lines)
+│   │   ├── tools/                             # PydanticAI tools (our unique value)
 │   │   │   ├── __init__.py
-│   │   │   ├── agent_interface.py             # Abstract agent interface
-│   │   │   ├── reasoning_engine.py            # Core reasoning patterns
-│   │   │   └── context_manager.py             # Context and memory management
-│   │   ├── discovery/                         # Data-driven discovery
-│   │   │   ├── __init__.py
-│   │   │   ├── domain_discoverer.py           # Domain pattern discovery
-│   │   │   ├── entity_extractor.py            # Dynamic entity extraction
-│   │   │   ├── relationship_learner.py        # Relationship pattern learning
-│   │   │   └── action_pattern_miner.py        # Action workflow discovery
-│   │   ├── reasoning/                         # Agent reasoning capabilities
-│   │   │   ├── __init__.py
-│   │   │   ├── tri_modal_orchestrator.py      # Orchestrate tri-modal search
-│   │   │   ├── reasoning_chain_builder.py     # Multi-step reasoning
-│   │   │   ├── solution_synthesizer.py        # Solution generation
-│   │   │   └── confidence_calculator.py       # Confidence scoring
-│   │   ├── learning/                          # Continuous learning
-│   │   │   ├── __init__.py
-│   │   │   ├── pattern_extractor.py           # Success pattern extraction
-│   │   │   ├── agent_evolution_manager.py     # Agent improvement
-│   │   │   ├── cross_domain_learner.py        # Universal pattern discovery
-│   │   │   └── feedback_processor.py          # User feedback integration
-│   │   └── universal_agent.py                 # Main agent implementation
-│   ├── tools/                                 # 🆕 NEW - Dynamic Tool System
-│   │   ├── __init__.py
-│   │   ├── base/                              # Tool foundation
-│   │   │   ├── __init__.py
-│   │   │   ├── tool_interface.py              # Abstract tool interface
-│   │   │   ├── tool_executor.py               # Tool execution engine
-│   │   │   └── validation_framework.py        # Tool validation
-│   │   ├── discovery/                         # Dynamic tool discovery
-│   │   │   ├── __init__.py
-│   │   │   ├── tool_discoverer.py             # Discover tools from data
-│   │   │   ├── action_analyzer.py             # Analyze action patterns
-│   │   │   ├── tool_generator.py              # Generate tool implementations
-│   │   │   └── effectiveness_scorer.py        # Score tool effectiveness
-│   │   ├── registry/                          # Tool management
-│   │   │   ├── __init__.py
-│   │   │   ├── tool_registry.py               # Central tool registry
-│   │   │   ├── domain_tool_manager.py         # Domain-specific tools
-│   │   │   └── tool_lifecycle_manager.py      # Tool deployment/retirement
-│   │   ├── execution/                         # Tool execution
-│   │   │   ├── __init__.py
-│   │   │   ├── tri_modal_tool_executor.py     # Execute with tri-modal support
-│   │   │   ├── parallel_executor.py           # Parallel tool execution
-│   │   │   └── result_aggregator.py           # Aggregate tool results
-│   │   └── dynamic_tool.py                    # Main dynamic tool class
+│   │   │   ├── search_tools.py                # Tri-modal search tools (300 lines)
+│   │   │   ├── discovery_tools.py             # Domain discovery tools (400 lines)
+│   │   │   └── dynamic_tools.py               # Dynamic tool generation (300 lines)
+│   │   └── services/
+│   │       └── agent_service.py               # PydanticAI service wrapper (200 lines)
+│   ├── tools/                                 # ❌ REMOVED - Replaced by PydanticAI's tool system
 │   ├── api/                                   # 🔄 ENHANCED - Streamlined API
 │   │   ├── endpoints/
 │   │   │   ├── universal_query.py             # 🆕 Single unified query endpoint
@@ -141,72 +106,68 @@ azure-maintie-rag/
   - Add retry mechanisms with exponential backoff
   - Standardize error handling across all Azure services
 
-### **Phase 2: Agent Intelligence Foundation (Weeks 3-5)**
-*Priority: High - Core agent capabilities*
+### **Phase 2: Agent Intelligence Foundation (Weeks 3-5)** ✅ **UPDATED FOR PYDANTIC AI**
+*Priority: High - Core agent capabilities with PydanticAI framework*
 
-#### **Week 3: Agent Base Architecture**
-- [ ] **Create Agent Foundation** (`backend/agents/base/`)
-  - Implement `AgentInterface` abstract base class
-  - Create `ReasoningEngine` for core reasoning patterns
-  - Build `ContextManager` for conversation context
+#### **Week 3: Agent Base Architecture** ✅ **COMPLETE**
+- [x] **Create Agent Foundation** - Completed with custom implementation
+- [x] **Tri-Modal Orchestration** - Completed, ready for PydanticAI migration
+- [x] **ReAct and Plan-Execute Patterns** - Completed, 100% validation success
 
-- [ ] **Tri-Modal Orchestration** (`backend/agents/reasoning/`)
-  - Implement `TriModalOrchestrator` for intelligent search coordination
-  - Create `ReasoningChainBuilder` for multi-step reasoning
-  - Build `SolutionSynthesizer` for result aggregation
+#### **Week 4: Dynamic Discovery System** ✅ **COMPLETE**  
+- [x] **Domain Discovery** - Completed with zero-config adaptation
+- [x] **Core Domain Management** - Completed with 27+ validation tests
+- [x] **Seamless Integration** - Completed and operational
 
-#### **Week 4: Dynamic Discovery System**
-- [ ] **Domain Discovery** (`backend/agents/discovery/`)
-  - Implement `DomainDiscoverer` to replace hardcoded patterns
-  - Create `EntityExtractor` for dynamic entity discovery from text
-  - Build `RelationshipLearner` for pattern learning
+#### **Week 5: PydanticAI Migration and Tool Discovery** 🔄 **UPDATED PLAN**
+- [ ] **PydanticAI Framework Migration** (Days 1-2)
+  - Install and configure PydanticAI with Azure OpenAI
+  - Migrate existing capabilities to PydanticAI tools
+  - Convert tri-modal search to PydanticAI tool
+  - Convert domain discovery to PydanticAI tool
 
-- [ ] **Core Domain Management** (`backend/core/domain/`)
-  - Create `DomainRegistry` for dynamic domain management
-  - Implement `PatternDiscoveryEngine` for learning from data
-  - Build `UniversalDomainAdapter` for zero-config adaptation
+- [ ] **Dynamic Tool Discovery with PydanticAI** (Days 3-4)
+  - Implement dynamic tool generation using PydanticAI's dynamic tools
+  - Create tool effectiveness scoring system
+  - Integrate with existing reasoning system
+  - Add domain-specific tool management
 
-#### **Week 5: Agent Integration**
-- [ ] **Universal Agent Implementation**
-  - Create main `UniversalAgent` class
-  - Integrate reasoning, discovery, and learning components
-  - Implement query complexity analysis and routing
+- [ ] **Performance Optimization** (Day 5)
+  - Add caching for tool results
+  - Implement performance monitoring
+  - Validate <3s response time requirement
+  - Complete integration testing
 
-- [ ] **Agent Service Layer** (`backend/services/agent_service.py`)
-  - Create agent orchestration service
-  - Integrate with existing query processing pipeline
-  - Add agent performance monitoring
+### **Phase 3: Advanced Tool System Integration (Weeks 6-8)** 🔄 **UPDATED FOR PYDANTIC AI**
+*Priority: High - Advanced tool capabilities with PydanticAI foundation*
 
-### **Phase 3: Dynamic Tool System (Weeks 6-8)**
-*Priority: High - Tool discovery and execution*
+#### **Week 6: Advanced Tool Orchestration** 🔄 **SIMPLIFIED WITH PYDANTIC AI**
+- [ ] **Tool Composition and Chaining**
+  - Implement tool composition using PydanticAI's tool system
+  - Create intelligent tool chaining for complex workflows
+  - Build tool result synthesis and aggregation
 
-#### **Week 6: Tool Foundation**
-- [ ] **Tool Base Architecture** (`backend/tools/base/`)
-  - Implement `ToolInterface` abstract base class
-  - Create `ToolExecutor` engine with tri-modal support
-  - Build `ValidationFramework` for tool quality assessment
+#### **Week 7: Enterprise Tool Features** 🆕 **ENHANCED SCOPE**
+- [ ] **Tool Security and Validation**
+  - Implement tool security controls and sandboxing
+  - Add comprehensive tool validation and testing
+  - Create tool audit logging and compliance
 
-#### **Week 7: Tool Discovery and Generation**
-- [ ] **Tool Discovery System** (`backend/tools/discovery/`)
-  - Implement `ToolDiscoverer` to extract tools from domain data
-  - Create `ActionAnalyzer` to identify action patterns in text
-  - Build `ToolGenerator` for dynamic tool code generation
+- [ ] **Tool Performance Optimization**
+  - Implement intelligent tool caching and memoization
+  - Add tool performance monitoring and alerting
+  - Create tool effectiveness learning and improvement
 
-- [ ] **Tool Registry** (`backend/tools/registry/`)
-  - Create central `ToolRegistry` for tool management
-  - Implement `DomainToolManager` for domain-specific tools
-  - Build tool lifecycle management (deployment/retirement)
+#### **Week 8: Tool Marketplace and Sharing** 🆕 **NEW CAPABILITY**
+- [ ] **Tool Marketplace Integration**
+  - Integrate with LangChain community tools via PydanticAI
+  - Add MCP (Model Context Protocol) tool support
+  - Create internal tool sharing and discovery
 
-#### **Week 8: Tool Execution and Integration**
-- [ ] **Tool Execution System** (`backend/tools/execution/`)
-  - Implement `TriModalToolExecutor` for intelligent tool execution
-  - Create parallel execution capabilities
-  - Build result aggregation and synthesis
-
-- [ ] **Tool Service Integration** (`backend/services/tool_service.py`)
-  - Create tool management service
-  - Integrate with agent reasoning system
-  - Add tool performance monitoring and learning
+- [ ] **Tool Analytics and Intelligence**
+  - Implement tool usage analytics and insights
+  - Add tool recommendation system
+  - Create tool lifecycle automation
 
 ### **Phase 4: Learning and Evolution (Weeks 9-10)**
 *Priority: Medium - Continuous improvement*

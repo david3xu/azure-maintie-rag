@@ -19,15 +19,16 @@ import json
 import uuid
 
 # Azure service components
-from services.infrastructure_service import InfrastructureService
-from services.data_service import DataService
-from services.query_service import QueryService
+from services.infrastructure_service import AsyncInfrastructureService
+# DataService accessed through infrastructure service to maintain proper layer boundaries
+from services.query_service import ConsolidatedQueryService
 # Using focused services instead of direct integrations
 from config.settings import AzureSettings
 from config.settings import settings, azure_settings
 
 # Import dependency functions from dependencies module
-from api.dependencies import get_infrastructure_service, get_query_service
+from api.dependencies import get_infrastructure_service, get_query_service, get_agent_service
+from services.agent_service import ConsolidatedAgentService, AgentServiceRequest
 
 logger = logging.getLogger(__name__)
 
@@ -93,11 +94,116 @@ class BatchQueryRequest(BaseModel):
     include_explanations: bool = Field(default=True, description="Whether to include explanations")
 
 
+class PydanticAIQueryRequest(BaseModel):
+    """PydanticAI agent query request model"""
+    query: str = Field(..., description="The query to process with PydanticAI agent")
+    domain: Optional[str] = Field(default=None, description="Domain context for the query")
+    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context for the query")
+    session_id: Optional[str] = Field(default=None, description="Session ID for tracking")
+    user_id: Optional[str] = Field(default=None, description="User ID for personalization")
+    performance_requirements: Dict[str, float] = Field(
+        default_factory=lambda: {"max_response_time": 3.0},
+        description="Performance requirements"
+    )
+
+
+class PydanticAIQueryResponse(BaseModel):
+    """PydanticAI agent query response model"""
+    success: bool
+    query: str
+    agent_response: str
+    confidence: float
+    execution_time: float
+    tools_used: List[str]
+    session_id: str
+    correlation_id: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: str
+    error: Optional[str] = None
+
+
+@router.post("/agent/query", response_model=PydanticAIQueryResponse)
+async def process_pydantic_ai_query(
+    request: PydanticAIQueryRequest,
+    agent_service: ConsolidatedAgentService = Depends(get_agent_service)
+) -> Dict[str, Any]:
+    """
+    Process a query using the PydanticAI agent with tri-modal search and domain discovery.
+    
+    This endpoint leverages our competitive advantages:
+    - Tri-modal search (Vector + Graph + GNN)
+    - Zero-config domain adaptation
+    - Dynamic tool discovery and generation
+    - Intelligent reasoning with tool chaining
+    """
+    logger.info(f"Processing PydanticAI agent query: {request.query[:100]}...")
+    
+    try:
+        start_time = time.time()
+        
+        # Create agent service request
+        agent_request = AgentServiceRequest(
+            query=request.query,
+            context=request.context,
+            session_id=request.session_id,
+            user_id=request.user_id,
+            performance_requirements=request.performance_requirements
+        )
+        
+        # Process request through PydanticAI agent
+        agent_response = await agent_service.process_request(agent_request)
+        
+        execution_time = time.time() - start_time
+        
+        # Return structured response
+        return {
+            "success": True,
+            "query": request.query,
+            "agent_response": agent_response.response,
+            "confidence": agent_response.confidence,
+            "execution_time": agent_response.execution_time,
+            "tools_used": agent_response.tools_used,
+            "session_id": agent_response.session_id,
+            "correlation_id": agent_response.correlation_id,
+            "metadata": {
+                **agent_response.metadata,
+                "domain": request.domain,
+                "user_id": request.user_id,
+                "agent_type": "PydanticAI",
+                "competitive_advantages": [
+                    "tri_modal_search",
+                    "zero_config_domain_adaptation", 
+                    "dynamic_tool_discovery",
+                    "intelligent_reasoning"
+                ]
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"PydanticAI agent query failed: {e}")
+        execution_time = time.time() - start_time
+        
+        return {
+            "success": False,
+            "query": request.query,
+            "agent_response": f"I apologize, but I encountered an error processing your request: {str(e)}",
+            "confidence": 0.0,
+            "execution_time": execution_time,
+            "tools_used": [],
+            "session_id": request.session_id or str(uuid.uuid4()),
+            "correlation_id": str(uuid.uuid4()),
+            "metadata": {"error": True, "error_type": type(e).__name__},
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }
+
+
 @router.post("/query/universal", response_model=AzureQueryResponse)
 async def process_azure_query(
     request: AzureQueryRequest,
-    infrastructure: InfrastructureService = Depends(get_infrastructure_service),
-    query_service: QueryService = Depends(get_query_service)
+    infrastructure: AsyncInfrastructureService = Depends(get_infrastructure_service),
+    query_service: ConsolidatedQueryService = Depends(get_query_service)
 ) -> Dict[str, Any]:
     """
     Process an Azure-powered query that works with any domain
@@ -112,7 +218,7 @@ async def process_azure_query(
         azure_services_used = []
 
         # Step 1: Process query using the query service
-        logger.info("Processing query using QueryService...")
+        logger.info("Processing query using EnhancedQueryService...")
         query_response = await query_service.process_universal_query(
             request.query, 
             domain=request.domain, 
@@ -403,7 +509,7 @@ async def list_available_domains() -> Dict[str, Any]:
     """
     try:
         # Query Azure services for available domains from actual data
-        infrastructure = InfrastructureService()
+        infrastructure = AsyncInfrastructureService()
         storage_client = infrastructure.storage_client
         
         # Get available domains from storage containers

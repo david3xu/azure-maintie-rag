@@ -10,6 +10,9 @@ python-dotenv>=1.0.0
 openai>=1.13.3
 tiktoken>=0.5.0
 
+# PydanticAI Framework - NEW for agent system
+pydantic-ai>=0.4.10
+
 # GNN Libraries (Optional - for weeks 9-12)
 torch>=2.0.0
 torch-geometric>=2.3.0
