@@ -18,8 +18,8 @@ from services.data_service import DataService
 # Removed integrations import - using focused services
 from config.settings import AzureSettings
 from config.settings import settings
-from api.endpoints import health_endpoint
-from api.endpoints import query_endpoint
+from api.endpoints import health
+from api.endpoints import queries
 from api.dependencies import (
     container, 
     initialize_application, 
@@ -84,12 +84,12 @@ app = FastAPI(
 configure_middleware(app)
 
 # Include essential routers only
-app.include_router(health_endpoint.router)
-app.include_router(query_endpoint.router)
+app.include_router(health.router)
+app.include_router(queries.router)
 
 # Include core functionality routers
-from api.streaming.workflow_stream import router as workflow_stream_router
-app.include_router(workflow_stream_router)
+from api.streaming.streams import router as streams_router
+app.include_router(streams_router)
 
 # Error handlers
 @app.exception_handler(HTTPException)
