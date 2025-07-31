@@ -8,10 +8,11 @@ from typing import AsyncGenerator
 from dependency_injector import containers, providers
 from dependency_injector.wiring import Provide, inject
 
-from services.infrastructure_service import InfrastructureService
-from services.data_service import DataService
-from services.query_service import QueryService
-from services.workflow_service import WorkflowService
+from services.infrastructure_service import AsyncInfrastructureService
+from services.query_service import ConsolidatedQueryService
+from services.workflow_service import ConsolidatedWorkflowService
+from services.agent_service import ConsolidatedAgentService
+# DataService accessed through infrastructure service to maintain proper layer boundaries
 from config.settings import AzureSettings
 
 logger = logging.getLogger(__name__)
@@ -33,21 +34,22 @@ class ApplicationContainer(containers.DeclarativeContainer):
 
     # Infrastructure Services - Singleton for shared resources  
     infrastructure_service = providers.Singleton(
-        InfrastructureService
+        AsyncInfrastructureService
     )
 
     # Core Services - Factory for proper lifecycle management
-    data_service = providers.Factory(
-        DataService,
-        infrastructure=infrastructure_service
-    )
+    # DataService accessed through infrastructure service to maintain layer boundaries
 
     workflow_service = providers.Factory(
-        WorkflowService
+        ConsolidatedWorkflowService
     )
 
     query_service = providers.Factory(
-        QueryService
+        ConsolidatedQueryService
+    )
+
+    agent_service = providers.Factory(
+        ConsolidatedAgentService
     )
 
 
@@ -66,10 +68,11 @@ async def get_infrastructure_service(
 
 @inject
 async def get_data_service(
-    service = Provide[ApplicationContainer.data_service]
+    infrastructure = Provide[ApplicationContainer.infrastructure_service]
 ):
-    """Get data service with proper DI"""
-    return service
+    """Get data service through infrastructure service to maintain layer boundaries"""
+    # Access DataService through infrastructure layer to respect boundaries
+    return infrastructure.get_data_service()
 
 
 @inject
@@ -94,6 +97,14 @@ async def get_azure_settings(
 ):
     """Get Azure settings with proper DI"""
     return settings
+
+
+@inject
+async def get_agent_service(
+    service = Provide[ApplicationContainer.agent_service]
+):
+    """Get agent service with proper DI"""
+    return service
 
 
 # Application lifecycle management
@@ -155,7 +166,8 @@ async def validate_dependencies() -> dict:
         # Test that each service can be created
         settings = container.azure_settings()
         infrastructure = container.infrastructure_service()
-        data_service = container.data_service()
+        # DataService accessed through infrastructure to maintain boundaries
+        data_service = infrastructure.get_data_service() if hasattr(infrastructure, 'get_data_service') else None
         workflow_service = container.workflow_service()
         query_service = container.query_service()
         

@@ -85,7 +85,7 @@ This document provides a comprehensive summary of Phase 1 implementation, includ
 
 ### **Key Infrastructure Components**
 1. **DI Container** (`api/dependencies_new.py`) - Proper service lifecycle
-2. **Async Infrastructure** (`services/infrastructure_service_async.py`) - Non-blocking initialization
+2. **Async Infrastructure** (`services/infrastructure_service.py`) - Non-blocking initialization
 3. **Universal Endpoints** (`api/endpoints/universal_endpoint.py`) - Consolidated API
 4. **BaseAzureClient** (`core/azure_auth/base_client.py`) - Standardized patterns
 

@@ -8,7 +8,7 @@ import asyncio
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
 
-from services.infrastructure_service_async import (
+from services.infrastructure_service import (
     AsyncInfrastructureService,
     ServiceInitializationResult,
     ServiceInitializationError
@@ -42,12 +42,12 @@ class TestAsyncInfrastructureService:
     @pytest.mark.asyncio
     async def test_initialize_async_parallel_execution(self):
         """Test that async initialization runs services in parallel"""
-        with patch('services.infrastructure_service_async.UnifiedAzureOpenAIClient') as mock_openai, \
-             patch('services.infrastructure_service_async.UnifiedSearchClient') as mock_search, \
-             patch('services.infrastructure_service_async.UnifiedStorageClient') as mock_storage, \
-             patch('services.infrastructure_service_async.AzureCosmosGremlinClient') as mock_cosmos, \
-             patch('services.infrastructure_service_async.AzureMLClient') as mock_ml, \
-             patch('services.infrastructure_service_async.AzureApplicationInsightsClient') as mock_insights:
+        with patch('services.infrastructure_service.UnifiedAzureOpenAIClient') as mock_openai, \
+             patch('services.infrastructure_service.UnifiedSearchClient') as mock_search, \
+             patch('services.infrastructure_service.UnifiedStorageClient') as mock_storage, \
+             patch('services.infrastructure_service.AzureCosmosGremlinClient') as mock_cosmos, \
+             patch('services.infrastructure_service.AzureMLClient') as mock_ml, \
+             patch('services.infrastructure_service.AzureApplicationInsightsClient') as mock_insights:
             
             # Mock service instances
             mock_openai.return_value = Mock()
@@ -203,7 +203,7 @@ class TestAsyncInfrastructureService:
         
         with patch.object(service, '_initialize_openai_service') as mock_openai, \
              patch.object(service, '_initialize_vector_service') as mock_vector, \
-             patch('services.infrastructure_service_async.asyncio.gather') as mock_gather:
+             patch('services.infrastructure_service.asyncio.gather') as mock_gather:
             
             # Mock OpenAI success
             openai_result = ServiceInitializationResult(
@@ -228,7 +228,7 @@ class TestAsyncInfrastructureService:
 
     def test_backward_compatibility_alias(self):
         """Test that InfrastructureService alias works for backward compatibility"""
-        from services.infrastructure_service_async import InfrastructureService
+        from services.infrastructure_service import InfrastructureService
         
         # Should be able to create service using old name
         service = InfrastructureService()
@@ -289,7 +289,7 @@ class TestComparisonWithSyncService:
         """Test that async constructor is much faster than sync constructor"""
         # Import both services
         from services.infrastructure_service import InfrastructureService as SyncService
-        from services.infrastructure_service_async import AsyncInfrastructureService
+        from services.infrastructure_service import AsyncInfrastructureService
         
         # Mock all Azure clients to avoid actual initialization
         with patch('services.infrastructure_service.UnifiedAzureOpenAIClient'), \
@@ -298,12 +298,12 @@ class TestComparisonWithSyncService:
              patch('services.infrastructure_service.AzureCosmosGremlinClient'), \
              patch('services.infrastructure_service.AzureMLClient'), \
              patch('services.infrastructure_service.AzureApplicationInsightsClient'), \
-             patch('services.infrastructure_service_async.UnifiedAzureOpenAIClient'), \
-             patch('services.infrastructure_service_async.UnifiedSearchClient'), \
-             patch('services.infrastructure_service_async.UnifiedStorageClient'), \
-             patch('services.infrastructure_service_async.AzureCosmosGremlinClient'), \
-             patch('services.infrastructure_service_async.AzureMLClient'), \
-             patch('services.infrastructure_service_async.AzureApplicationInsightsClient'):
+             patch('services.infrastructure_service.UnifiedAzureOpenAIClient'), \
+             patch('services.infrastructure_service.UnifiedSearchClient'), \
+             patch('services.infrastructure_service.UnifiedStorageClient'), \
+             patch('services.infrastructure_service.AzureCosmosGremlinClient'), \
+             patch('services.infrastructure_service.AzureMLClient'), \
+             patch('services.infrastructure_service.AzureApplicationInsightsClient'):
             
             # Time sync service constructor (blocks during initialization)
             sync_start = datetime.utcnow()
@@ -324,7 +324,7 @@ class TestComparisonWithSyncService:
     @pytest.mark.asyncio
     async def test_async_vs_sync_initialization_patterns(self):
         """Test that async pattern allows for better error handling and parallel execution"""
-        from services.infrastructure_service_async import AsyncInfrastructureService
+        from services.infrastructure_service import AsyncInfrastructureService
         
         # Mock services with different initialization times
         async def fast_service():

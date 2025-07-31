@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 # Import Azure service components
-from services.infrastructure_service import InfrastructureService
+from services.infrastructure_service import AsyncInfrastructureService
 from services.workflow_service import WorkflowService
 from config.settings import AzureSettings
 
