@@ -677,7 +677,7 @@ sequenceDiagram
     QS->>UA: process_query(request)
     
     UA->>ZC: detect_domain(query)
-    ZC-->>UA: domain="technical"
+    ZC-->>UA: domain=technical
     
     UA->>ST: execute_tri_modal_search(query, domain)
     ST->>TM: execute_unified_search(query, context)
@@ -725,7 +725,7 @@ flowchart TD
     
     I --> J{Confidence > Threshold?}
     J -->|Yes| K[Return Detected Domain]
-    J -->|No| L[Return "general"]
+    J -->|No| L[Return general]
     
     E --> M[Domain Validation]
     M --> N[Cache Domain Result]
