@@ -1168,6 +1168,318 @@ SYSTEM_CAPABILITIES = {
 
 ---
 
+## 🧠 PydanticAI Framework Integration Analysis
+
+### **Current Implementation vs PydanticAI Best Practices**
+
+Based on our analysis of the PydanticAI framework and current `SimplifiedUniversalAgent` implementation, we've identified several areas where the consolidation can be enhanced with proper PydanticAI patterns.
+
+#### **Current Architecture Assessment**
+
+**✅ What We're Doing Right:**
+- Using `pydantic_ai.Agent` and `RunContext` imports
+- Proper Pydantic `BaseModel` for request validation (`QueryRequest`)
+- Clean dependency injection pattern with `AzureServiceContainer`
+- Structured error handling and logging
+
+**⚠️ Areas for PydanticAI Optimization:**
+- **Not using actual PydanticAI Agent class** - Current implementation is wrapper class
+- **Manual tool execution** instead of PydanticAI's tool registration
+- **Custom RunContext creation** instead of framework-provided patterns
+- **Missing structured output validation** for agent responses
+- **No system prompts or LLM integration** despite importing framework
+
+### **PydanticAI Framework Advantages for Consolidation**
+
+#### **1. Native Tool Registration and Orchestration**
+```python
+# Current pattern (manual tool execution):
+async def tool_executor(tool_name: str, params: Dict[str, Any]) -> Any:
+    if tool_name == "vector_search":
+        return await self._vector_search(params["query"])
+    elif tool_name == "graph_search":
+        return await self._graph_search(params["query"])
+    # ... manual routing
+
+# PydanticAI pattern (automatic tool discovery):
+from pydantic_ai import Agent
+
+agent = Agent(
+    'openai:gpt-4',
+    deps_type=AzureServiceContainer,
+    result_type=AgentResponse
+)
+
+@agent.tool
+async def vector_search(ctx: RunContext[AzureServiceContainer], query: str) -> Dict[str, Any]:
+    """Execute vector search using Azure Cognitive Search"""
+    return await execute_vector_search(ctx, VectorSearchRequest(query=query))
+
+@agent.tool  
+async def graph_search(ctx: RunContext[AzureServiceContainer], query: str) -> Dict[str, Any]:
+    """Execute graph search using Azure Cosmos DB Gremlin"""
+    return await execute_graph_search(ctx, GraphSearchRequest(query=query))
+
+@agent.tool
+async def gnn_search(ctx: RunContext[AzureServiceContainer], query: str) -> Dict[str, Any]:
+    """Execute GNN search using trained model"""
+    return await execute_tri_modal_search(ctx, TriModalSearchRequest(query=query))
+```
+
+#### **2. Structured Output Validation**
+```python
+# Current pattern (manual response building):
+@dataclass
+class AgentResponse:
+    success: bool
+    result: Any  # Unstructured
+    execution_time: float
+
+# PydanticAI pattern (validated structured output):
+class TriModalSearchResult(BaseModel):
+    """Structured, validated tri-modal search result"""
+    query: str
+    domain: str
+    vector_results: List[SearchDocument]
+    graph_results: List[GraphEntity]
+    gnn_results: List[GNNPrediction]
+    confidence_scores: Dict[str, float]
+    execution_time: float
+    cached: bool = False
+
+class AgentResponse(BaseModel):
+    """Fully validated agent response"""
+    success: bool
+    result: TriModalSearchResult
+    execution_time: float
+    competitive_advantages: List[str]
+    error: Optional[str] = None
+```
+
+#### **3. Proper Dependency Injection Integration**
+```python
+# Current pattern (manual context creation):
+class ToolRunContext:
+    def __init__(self, azure_services):
+        self.deps = azure_services
+
+context = ToolRunContext(self.azure_services)
+
+# PydanticAI pattern (framework-managed context):
+agent = Agent(
+    'openai:gpt-4',
+    deps_type=AzureServiceContainer,
+    system_prompt="You are a Universal RAG agent with tri-modal search capabilities..."
+)
+
+async def run_agent(azure_services: AzureServiceContainer, query: str):
+    result = await agent.run(
+        query,
+        deps=azure_services  # Framework handles RunContext creation
+    )
+    return result
+```
+
+### **Enhanced Consolidation Strategy with PydanticAI**
+
+#### **Phase 1 Enhancement: Proper PydanticAI Agent Implementation**
+
+**Target: Convert SimplifiedUniversalAgent to True PydanticAI Agent**
+
+```python
+# Enhanced consolidation target:
+from pydantic_ai import Agent
+from typing import Annotated
+
+# Single consolidated agent with proper PydanticAI patterns
+universal_agent = Agent(
+    'openai:gpt-4o',  # Or Azure OpenAI
+    deps_type=AzureServiceContainer,
+    result_type=TriModalSearchResult,
+    system_prompt="""
+    You are an intelligent Universal RAG agent with advanced tri-modal search capabilities.
+    
+    Your core advantages:
+    1. Tri-modal search orchestration (Vector + Graph + GNN)
+    2. Zero-config domain adaptation
+    3. Sub-3-second performance guarantee
+    4. 100% data-driven intelligence
+    
+    Use your available tools to provide comprehensive, accurate responses.
+    Always synthesize results from multiple search modalities for maximum accuracy.
+    """,
+    max_result_retries=2
+)
+
+@universal_agent.tool
+async def execute_tri_modal_search(
+    ctx: RunContext[AzureServiceContainer], 
+    query: Annotated[str, "User query to search for"],
+    domain: Annotated[Optional[str], "Domain context (auto-detected if not provided)"] = None
+) -> TriModalSearchResult:
+    """
+    Execute comprehensive tri-modal search combining Vector, Graph, and GNN approaches.
+    This is our core competitive advantage providing 94% accuracy vs 75% standard RAG.
+    """
+    # Domain detection (consolidated in ZeroConfigAdapter)
+    if not domain:
+        domain = await ctx.deps.zero_config_adapter.detect_domain(query)
+    
+    # Parallel tri-modal search execution (consolidated in TriModalOrchestrator)  
+    search_result = await ctx.deps.tri_modal_orchestrator.execute_unified_search(
+        query=query,
+        domain=domain,
+        search_types=["vector", "graph", "gnn"]
+    )
+    
+    return TriModalSearchResult(
+        query=query,
+        domain=domain,
+        vector_results=search_result.vector_results,
+        graph_results=search_result.graph_results,
+        gnn_results=search_result.gnn_results,
+        confidence_scores=search_result.confidence_scores,
+        execution_time=search_result.execution_time
+    )
+
+@universal_agent.tool
+async def detect_and_adapt_domain(
+    ctx: RunContext[AzureServiceContainer],
+    text: Annotated[str, "Text to analyze for domain detection"]
+) -> DomainDetectionResult:
+    """
+    Zero-config domain detection and adaptation.
+    Competitive advantage: 96% accuracy with 0.0009s processing time.
+    """
+    return await ctx.deps.zero_config_adapter.detect_domain_with_confidence(text)
+
+@universal_agent.tool
+async def learn_patterns_from_data(
+    ctx: RunContext[AzureServiceContainer],
+    data_samples: Annotated[List[str], "Text samples to learn patterns from"],
+    domain: Annotated[str, "Target domain for pattern learning"]
+) -> PatternLearningResult:
+    """
+    Learn statistical patterns from real data without hardcoded assumptions.
+    Competitive advantage: 100% data-driven intelligence.
+    """
+    return await ctx.deps.pattern_learning_system.learn_patterns(data_samples, domain)
+```
+
+#### **Benefits of PydanticAI Integration:**
+
+**1. Eliminates Tool Orchestration Overlap**
+- **Before**: Manual tool routing in 4 different places
+- **After**: Single agent with registered tools, automatic orchestration
+
+**2. Structured Validation Throughout**
+- **Before**: Manual validation and error handling
+- **After**: Automatic Pydantic validation for inputs/outputs
+
+**3. Clean Dependency Management**
+- **Before**: Manual RunContext creation and management
+- **After**: Framework-managed dependency injection
+
+**4. Built-in Observability**
+- **Before**: Custom logging and monitoring
+- **After**: Integrated Pydantic Logfire support
+
+**5. LLM-Driven Intelligence**
+- **Before**: Hardcoded orchestration logic
+- **After**: LLM can intelligently decide tool usage and orchestration
+
+### **Integration with Layer Boundaries**
+
+#### **Enhanced Agent Layer Responsibility**
+```python
+# Agents Layer becomes pure PydanticAI intelligence
+🧠 Agents Layer: "PydanticAI Intelligence & Tool Coordination"
+├── universal_agent.py           # Single PydanticAI Agent with registered tools
+├── discovery/
+│   ├── zero_config_adapter.py   # Tool implementations (no agent orchestration)
+│   └── pattern_learning_system.py # Tool implementations (no agent orchestration)
+└── tools/
+    ├── search_tools.py          # Tool function implementations
+    └── discovery_tools.py       # Tool function implementations
+
+# Services Layer delegates to single agent
+🔧 Services Layer: "Agent Coordination"
+async def process_universal_query(self, request: QueryRequest):
+    return await universal_agent.run(
+        request.query,
+        deps=self.azure_services
+    )
+```
+
+#### **Consolidation Impact with PydanticAI**
+
+| Consolidation Area | Without PydanticAI | With PydanticAI | Additional Benefit |
+|-------------------|-------------------|-----------------|-------------------|
+| **Tool Orchestration** | 4 manual implementations | 1 agent with registered tools | **Automatic LLM routing** |
+| **Input Validation** | Manual per component | Framework validation | **Type safety guarantee** |
+| **Output Validation** | Manual response building | Structured Pydantic models | **Schema enforcement** |
+| **Error Handling** | Custom per component | Built-in retry mechanisms | **Framework resilience** |
+| **Observability** | Custom logging | Integrated Logfire support | **Enterprise monitoring** |
+
+### **Migration Path to PydanticAI**
+
+#### **Phase 1: Framework Integration**
+1. **Convert SimplifiedUniversalAgent to proper PydanticAI Agent**
+2. **Register existing tools as PydanticAI tools**
+3. **Implement structured output models**
+4. **Integrate with consolidated infrastructure layer**
+
+#### **Phase 2: Enhanced Intelligence**
+1. **Add system prompts for intelligent tool selection**
+2. **Implement multi-step reasoning workflows**
+3. **Add self-correction capabilities with validation retries**
+4. **Integrate Logfire observability**
+
+#### **Phase 3: Advanced Patterns**
+1. **Multi-agent coordination for complex queries**
+2. **Dynamic tool generation based on patterns**
+3. **Adaptive system prompts based on domain detection**
+4. **Performance optimization with model switching**
+
+### **Code Reduction with PydanticAI**
+
+```python
+# Before: Manual orchestration (200+ lines)
+class SimplifiedUniversalAgent:
+    async def tri_modal_search(self, query: str, domain: str):
+        # 50+ lines of manual tool routing
+        # 30+ lines of error handling  
+        # 40+ lines of response building
+        # 80+ lines of context management
+
+# After: PydanticAI agent (50 lines)
+universal_agent = Agent('openai:gpt-4o', deps_type=AzureServiceContainer)
+
+@universal_agent.tool
+async def tri_modal_search(ctx: RunContext[AzureServiceContainer], query: str):
+    # 20 lines of actual business logic
+    # Framework handles routing, validation, errors, context
+```
+
+**Additional Reduction**: **150+ lines per agent implementation** through framework automation
+
+### **Performance Benefits**
+
+1. **LLM-Optimized Tool Selection**: Framework can intelligently choose which tools to use
+2. **Parallel Tool Execution**: Built-in support for concurrent tool calls
+3. **Automatic Caching**: Framework-level caching of tool results
+4. **Model Optimization**: Easy switching between models for different performance profiles
+
+### **Enterprise Benefits**
+
+1. **Type Safety**: Full Pydantic validation throughout the system
+2. **Observability**: Built-in monitoring and tracing with Logfire
+3. **Testing**: Framework provides testing utilities for agent validation
+4. **Scalability**: Model-agnostic design supports multiple LLM providers
+5. **Maintainability**: Standard PydanticAI patterns for team development
+
+---
+
 ## 📚 Related Documents
 
 - **[System Architecture](SYSTEM_ARCHITECTURE.md)** - Current simplified architecture
