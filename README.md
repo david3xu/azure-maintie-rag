@@ -209,6 +209,20 @@ make sync-env                      # Sync backend to match
 ./scripts/sync-env.sh production && azd up
 ```
 
+### **🔄 Automatic CI/CD Setup** 🆕
+```bash
+# One command sets up complete CI/CD pipeline
+azd pipeline config
+```
+This automatically:
+- ✅ Creates GitHub Actions workflow
+- ✅ Sets up Azure service principal  
+- ✅ Configures all secrets
+- ✅ Enables automatic deployment on push
+- ✅ **Zero manual configuration required!**
+
+**[→ Full CI/CD Setup Guide](CICD_SETUP.md)**
+
 ### **Expected Results**
 - **Infrastructure provisioning**: ~15 minutes
 - **Backend deployment**: ~5 minutes
