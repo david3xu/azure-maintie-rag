@@ -98,7 +98,7 @@ async def health_check(
         )
 
 
-async def test_rag_system_with_di(infrastructure: AsyncInfrastructureService) -> Dict[str, Any]:
+async def test_rag_system_with_di(infrastructure: InfrastructureService) -> Dict[str, Any]:
     """Test the Universal RAG system components using dependency injection"""
     try:
         # Get actual service status instead of creating new instances
