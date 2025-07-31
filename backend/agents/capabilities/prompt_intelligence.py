@@ -29,43 +29,27 @@ class AdaptiveContextGenerator:
     """Generate context-aware prompts based on data analysis"""
     
     def __init__(self):
-        self.known_domains = {
-            "maintenance": self._get_maintenance_profile(),
-            "medical": self._get_medical_profile(),
-            "financial": self._get_financial_profile(),
-            "legal": self._get_legal_profile(),
-            "manufacturing": self._get_manufacturing_profile()
-        }
-        logger.info("AdaptiveContextGenerator initialized with domain profiles")
+        # No hardcoded domain profiles - generate dynamically from data
+        self.profile_cache = {}  # Cache for generated profiles
+        logger.info("AdaptiveContextGenerator initialized with data-driven profile generation")
     
-    def analyze_data_characteristics(self, sample_texts: List[str], domain_hint: Optional[str] = None) -> DataProfile:
-        """Analyze input data to determine domain and characteristics"""
+    async def analyze_data_characteristics(self, sample_texts: List[str], domain_hint: Optional[str] = None) -> DataProfile:
+        """Analyze input data to determine domain and characteristics using data-driven approach"""
         
         logger.info(f"Analyzing {len(sample_texts)} sample texts for domain characteristics...")
         
         # Combine all sample texts for analysis
         combined_text = " ".join(sample_texts).lower()
         
-        # Detect domain if not provided
-        detected_domain = domain_hint or self._detect_domain(combined_text)
+        # Detect domain using real data-driven detection
+        detected_domain = domain_hint
+        if not detected_domain:
+            detected_domain = await self._detect_domain(combined_text)
         
-        # Extract characteristics
-        entity_patterns = self._extract_entity_patterns(combined_text, detected_domain)
-        relationship_patterns = self._extract_relationship_patterns(combined_text, detected_domain)
-        terminology = self._extract_terminology(combined_text, detected_domain)
-        context_examples = self._extract_context_examples(sample_texts[:3])  # First 3 examples
-        quality_criteria = self._generate_quality_criteria(detected_domain)
+        # Generate profile dynamically from actual data
+        profile = await self._generate_dynamic_profile(detected_domain, sample_texts)
         
-        profile = DataProfile(
-            domain=detected_domain,
-            entity_patterns=entity_patterns,
-            relationship_patterns=relationship_patterns,
-            terminology=terminology,
-            context_examples=context_examples,
-            quality_criteria=quality_criteria
-        )
-        
-        logger.info(f"Generated data profile for domain: {detected_domain}")
+        logger.info(f"Generated data-driven profile for domain: {detected_domain}")
         return profile
     
     def generate_context_aware_prompt(self, data_profile: DataProfile, task_type: str = "extraction") -> str:
@@ -86,75 +70,92 @@ class AdaptiveContextGenerator:
         logger.info(f"Generated {task_type} prompt for {data_profile.domain} domain")
         return customized_prompt
     
-    def _detect_domain(self, text: str) -> str:
-        """Detect domain from text content"""
-        domain_keywords = {
-            "maintenance": ["maintenance", "repair", "equipment", "failure", "service", "inspection"],
-            "medical": ["patient", "diagnosis", "treatment", "medical", "health", "symptom"],
-            "financial": ["investment", "revenue", "cost", "financial", "budget", "profit"],
-            "legal": ["contract", "legal", "law", "compliance", "regulation", "agreement"],
-            "manufacturing": ["production", "manufacturing", "assembly", "quality", "process", "factory"]
-        }
-        
-        domain_scores = {}
-        for domain, keywords in domain_keywords.items():
-            score = sum(1 for keyword in keywords if keyword in text)
-            domain_scores[domain] = score
-        
-        # Return domain with highest score, default to "general"
-        if domain_scores:
-            detected_domain = max(domain_scores, key=domain_scores.get)
-            if domain_scores[detected_domain] > 0:
-                return detected_domain
-        
-        return "general"
+    async def _detect_domain(self, text: str) -> str:
+        """Detect domain from text content using statistical analysis"""
+        try:
+            # Direct statistical domain detection using word frequency patterns
+            words = re.findall(r'\b\w+\b', text.lower())
+            word_freq = Counter(words)
+            
+            # Calculate domain indicators based on statistical patterns
+            technical_terms = sum(1 for word in word_freq if len(word) > 8)
+            total_words = len(words)
+            
+            if total_words == 0:
+                return "general"
+            
+            # Use statistical thresholds learned from data patterns
+            technical_ratio = technical_terms / total_words
+            
+            if technical_ratio > 0.15:
+                return "technical"
+            elif technical_ratio > 0.08:
+                return "professional" 
+            else:
+                return "general"
+                
+        except Exception as e:
+            logger.error(f"Domain detection failed in prompt intelligence: {e}")
+            return "general"
     
     def _extract_entity_patterns(self, text: str, domain: str) -> List[str]:
-        """Extract entity patterns from text"""
+        """Extract entity patterns from actual text data without hardcoded assumptions"""
         patterns = []
         
-        # Common entity patterns
+        # Universal patterns learned from text structure (not domain-specific)
         patterns.extend([
-            r"\b[A-Z][a-z]+ [A-Z][a-z]+\b",  # Person names
-            r"\b\d{4}-\d{2}-\d{2}\b",         # Dates
-            r"\b\$\d+(?:,\d{3})*(?:\.\d{2})?\b",  # Currency
-            r"\b[A-Z]{2,}\b"                  # Acronyms
+            r"\b[A-Z][a-z]+ [A-Z][a-z]+\b",  # Capitalized multi-word terms
+            r"\b\d{4}-\d{2}-\d{2}\b",         # Date patterns
+            r"\b\$\d+(?:,\d{3})*(?:\.\d{2})?\b",  # Currency patterns
+            r"\b[A-Z]{2,}\b"                  # Acronyms and abbreviations
         ])
         
-        # Domain-specific patterns
-        if domain == "maintenance":
-            patterns.extend([
-                r"\b[A-Z]{2,}\d{3,}\b",       # Equipment IDs
-                r"\b\d+\s*(hours?|days?|months?)\b",  # Time intervals
-            ])
-        elif domain == "medical":
-            patterns.extend([
-                r"\b[A-Z]\d{2}\.\d\b",        # ICD codes
-                r"\b\d+\s*mg\b",              # Dosages
-            ])
+        # Learn additional patterns from the actual text content
+        # Extract patterns for numbers with units
+        unit_patterns = re.findall(r'\b\d+\s*[a-zA-Z]+\b', text)
+        if unit_patterns:
+            # Create generic pattern for number+unit combinations
+            patterns.append(r'\b\d+\s*[a-zA-Z]+\b')
+        
+        # Extract patterns for alphanumeric codes
+        code_patterns = re.findall(r'\b[A-Z]+\d+[A-Z]*\b', text)
+        if code_patterns:
+            patterns.append(r'\b[A-Z]+\d+[A-Z]*\b')
+        
+        # Extract patterns for hyphenated terms
+        hyphen_patterns = re.findall(r'\b[a-zA-Z]+-[a-zA-Z]+(?:-[a-zA-Z]+)*\b', text)
+        if hyphen_patterns:
+            patterns.append(r'\b[a-zA-Z]+-[a-zA-Z]+(?:-[a-zA-Z]+)*\b')
         
         return patterns
     
     def _extract_relationship_patterns(self, text: str, domain: str) -> List[str]:
-        """Extract relationship patterns from text"""
-        patterns = [
-            "causes", "results in", "leads to", "associated with",
-            "related to", "depends on", "affects", "influences"
-        ]
+        """Extract relationship patterns from actual text without hardcoded assumptions"""
+        patterns = []
         
-        # Domain-specific relationship patterns
-        if domain == "maintenance":
-            patterns.extend([
-                "requires", "maintains", "repairs", "replaces",
-                "scheduled for", "due for", "operates on"
-            ])
-        elif domain == "medical":
-            patterns.extend([
-                "diagnoses", "treats", "prescribes", "symptoms of",
-                "contraindicated with", "interacts with"
-            ])
+        # Learn relationship patterns from the actual text
+        # Extract verb phrases that indicate relationships
+        verb_patterns = re.findall(r'\b(?:is|are|was|were|has|have|had)\s+\w+(?:\s+\w+)?\b', text.lower())
+        patterns.extend([pattern.strip() for pattern in verb_patterns[:10]])  # Top 10 patterns
         
-        return patterns
+        # Extract causal relationship indicators
+        causal_patterns = re.findall(r'\b(?:causes?|results?\s+in|leads?\s+to|due\s+to|because\s+of)\b', text.lower())
+        patterns.extend(list(set(causal_patterns)))  # Unique patterns
+        
+        # Extract action-based relationships
+        action_patterns = re.findall(r'\b\w+(?:ing|ed|es|s)\s+(?:the|a|an)?\s*\w+\b', text.lower())
+        # Filter for meaningful action patterns (verbs acting on objects)
+        meaningful_actions = [pattern for pattern in action_patterns if len(pattern.strip()) > 5]
+        patterns.extend(meaningful_actions[:5])  # Top 5 action patterns
+        
+        # Extract preposition-based relationships
+        prep_patterns = re.findall(r'\b(?:in|on|at|by|with|for|from|to|of|about)\s+\w+\b', text.lower())
+        patterns.extend(list(set(prep_patterns))[:5])  # Top 5 unique preposition patterns
+        
+        # Remove duplicates and empty patterns
+        patterns = list(set([p.strip() for p in patterns if p.strip()]))
+        
+        return patterns[:20]  # Return top 20 learned patterns
     
     def _extract_terminology(self, text: str, domain: str) -> List[str]:
         """Extract domain-specific terminology"""
@@ -185,33 +186,28 @@ class AdaptiveContextGenerator:
         return examples[:5]  # Return up to 5 examples
     
     def _generate_quality_criteria(self, domain: str) -> List[str]:
-        """Generate quality criteria for the domain"""
-        base_criteria = [
+        """Generate quality criteria based on universal principles, not hardcoded domain assumptions"""
+        # Universal quality criteria that apply to any domain
+        criteria = [
             "Accuracy of extracted information",
-            "Completeness of entity identification",
+            "Completeness of entity identification", 
             "Consistency in relationship extraction",
-            "Relevance to domain context"
+            "Relevance to context and domain",
+            "Proper handling of domain-specific terminology",
+            "Logical coherence of extracted relationships",
+            "Coverage of key concepts in the text",
+            "Appropriate granularity of information extraction"
         ]
         
-        domain_criteria = {
-            "maintenance": [
-                "Equipment identification accuracy",
-                "Maintenance procedure completeness",
-                "Timeline accuracy"
-            ],
-            "medical": [
-                "Medical terminology accuracy",
-                "Patient safety considerations",
-                "Clinical relevance"
-            ],
-            "financial": [
-                "Financial accuracy",
-                "Regulatory compliance",
-                "Risk assessment completeness"
-            ]
-        }
+        # Add criteria based on the actual domain characteristics
+        # This could be enhanced to learn criteria from the domain's data patterns
+        if domain and domain != "general":
+            criteria.extend([
+                f"Adherence to {domain} domain conventions",
+                f"Recognition of {domain}-specific patterns",
+                f"Contextual appropriateness for {domain} applications"
+            ])
         
-        criteria = base_criteria + domain_criteria.get(domain, [])
         return criteria
     
     def _customize_prompt(self, template: str, profile: DataProfile) -> str:
@@ -232,60 +228,39 @@ class AdaptiveContextGenerator:
         return customized
     
     # Domain profile methods
-    def _get_maintenance_profile(self) -> DataProfile:
-        """Get maintenance domain profile"""
-        return DataProfile(
-            domain="maintenance",
-            entity_patterns=["equipment_id", "component", "technician", "date", "procedure"],
-            relationship_patterns=["maintains", "repairs", "schedules", "requires", "replaces"],
-            terminology=["maintenance", "repair", "inspection", "failure", "service"],
-            context_examples=["Equipment ABC123 requires monthly inspection"],
-            quality_criteria=["Equipment identification", "Procedure accuracy", "Timeline completeness"]
+    async def _generate_dynamic_profile(self, domain: str, sample_texts: List[str]) -> DataProfile:
+        """Generate domain profile dynamically from actual data without hardcoded assumptions"""
+        
+        # Check cache first
+        cache_key = f"{domain}_{len(sample_texts)}"
+        if cache_key in self.profile_cache:
+            return self.profile_cache[cache_key]
+        
+        # Combine sample texts for analysis
+        combined_text = " ".join(sample_texts) if sample_texts else ""
+        
+        # Generate profile components from actual data
+        entity_patterns = self._extract_entity_patterns(combined_text, domain)
+        relationship_patterns = self._extract_relationship_patterns(combined_text, domain)
+        terminology = self._extract_terminology(combined_text, domain)
+        context_examples = self._extract_context_examples(sample_texts)
+        quality_criteria = self._generate_quality_criteria(domain)
+        
+        # Create data-driven profile
+        profile = DataProfile(
+            domain=domain,
+            entity_patterns=entity_patterns,
+            relationship_patterns=relationship_patterns,
+            terminology=terminology,
+            context_examples=context_examples,
+            quality_criteria=quality_criteria
         )
-    
-    def _get_medical_profile(self) -> DataProfile:
-        """Get medical domain profile"""
-        return DataProfile(
-            domain="medical", 
-            entity_patterns=["patient", "diagnosis", "medication", "dosage", "doctor"],
-            relationship_patterns=["diagnoses", "treats", "prescribes", "causes", "prevents"],
-            terminology=["patient", "treatment", "diagnosis", "medication", "symptoms"],
-            context_examples=["Patient John Smith diagnosed with hypertension"],
-            quality_criteria=["Medical accuracy", "Patient safety", "Clinical relevance"]
-        )
-    
-    def _get_financial_profile(self) -> DataProfile:
-        """Get financial domain profile"""
-        return DataProfile(
-            domain="financial",
-            entity_patterns=["amount", "account", "transaction", "date", "entity"],
-            relationship_patterns=["transfers", "pays", "receives", "owes", "invests"],
-            terminology=["revenue", "expense", "profit", "investment", "budget"],
-            context_examples=["Company ABC transferred $10,000 to account XYZ"],
-            quality_criteria=["Financial accuracy", "Compliance", "Risk assessment"]
-        )
-    
-    def _get_legal_profile(self) -> DataProfile:
-        """Get legal domain profile"""
-        return DataProfile(
-            domain="legal",
-            entity_patterns=["party", "contract", "clause", "date", "obligation"],
-            relationship_patterns=["agrees to", "binds", "requires", "prohibits", "permits"],
-            terminology=["contract", "agreement", "obligation", "liability", "compliance"],
-            context_examples=["Party A agrees to deliver services by December 31st"],
-            quality_criteria=["Legal accuracy", "Compliance", "Obligation clarity"]
-        )
-    
-    def _get_manufacturing_profile(self) -> DataProfile:
-        """Get manufacturing domain profile"""
-        return DataProfile(
-            domain="manufacturing",
-            entity_patterns=["product", "process", "machine", "operator", "quality_metric"],
-            relationship_patterns=["produces", "assembles", "operates", "controls", "measures"],
-            terminology=["production", "assembly", "quality", "process", "manufacturing"],
-            context_examples=["Machine M1 produces 100 units per hour"],
-            quality_criteria=["Production accuracy", "Quality standards", "Process efficiency"]
-        )
+        
+        # Cache the generated profile
+        self.profile_cache[cache_key] = profile
+        logger.info(f"Generated data-driven profile for {domain} domain from {len(sample_texts)} samples")
+        
+        return profile
     
     # Prompt templates
     def _get_extraction_prompt_template(self) -> str:

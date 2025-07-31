@@ -124,54 +124,131 @@ class SimplifiedUniversalAgent:
         )
     
     async def _vector_search(self, query: str) -> Dict[str, Any]:
-        """Execute vector search using Azure Cognitive Search"""
-        # Placeholder for actual Azure Cognitive Search integration
-        await asyncio.sleep(0.1)  # Simulate search time
-        return {
-            "type": "vector",
-            "results": [f"vector_result_{i}" for i in range(3)],
-            "scores": [0.9, 0.8, 0.7]
-        }
+        """Execute vector search using real Azure Cognitive Search integration"""
+        from .tools.search_tools import execute_vector_search, VectorSearchRequest
+        
+        # Use real vector search implementation
+        request = VectorSearchRequest(
+            query=query,
+            top_k=10,
+            domain="general",  # Will be replaced by data-driven detection
+            include_metadata=True
+        )
+        
+        try:
+            # Create proper RunContext with real Azure services
+            class ToolRunContext:
+                def __init__(self, azure_services):
+                    self.deps = azure_services
+            
+            context = ToolRunContext(self.azure_services)
+            result = await execute_vector_search(context, request)
+            return {
+                "type": "vector",
+                "results": result.documents,
+                "scores": result.scores,
+                "metadata": result.metadata
+            }
+        except Exception as e:
+            logger.error(f"Vector search failed: {e}")
+            # Return empty results instead of fake data
+            return {"type": "vector", "results": [], "scores": [], "error": str(e)}
     
     async def _graph_search(self, query: str) -> Dict[str, Any]:
-        """Execute graph search using Azure Cosmos DB Gremlin"""
-        # Placeholder for actual Cosmos DB Gremlin integration
-        await asyncio.sleep(0.15)  # Simulate search time
-        return {
-            "type": "graph", 
-            "results": [f"graph_result_{i}" for i in range(3)],
-            "relationships": ["related_to", "part_of", "similar_to"]
-        }
+        """Execute graph search using real Azure Cosmos DB Gremlin integration"""
+        from .tools.search_tools import execute_graph_search, GraphSearchRequest
+        
+        # Use real graph search implementation
+        request = GraphSearchRequest(
+            query=query,
+            max_depth=3,
+            domain="general",  # Will be replaced by data-driven detection
+            relationship_types=["related_to", "part_of", "contains"]
+        )
+        
+        try:
+            # Create proper RunContext with real Azure services
+            class ToolRunContext:
+                def __init__(self, azure_services):
+                    self.deps = azure_services
+            
+            context = ToolRunContext(self.azure_services)
+            result = await execute_graph_search(context, request)
+            return {
+                "type": "graph",
+                "results": result.entities,
+                "relationships": result.relationships,
+                "paths": result.paths,
+                "metadata": result.metadata
+            }
+        except Exception as e:
+            logger.error(f"Graph search failed: {e}")
+            # Return empty results instead of fake data
+            return {"type": "graph", "results": [], "relationships": [], "error": str(e)}
     
     async def _gnn_search(self, query: str) -> Dict[str, Any]:
-        """Execute GNN search using trained model"""
-        # Placeholder for actual GNN model integration
-        await asyncio.sleep(0.05)  # Simulate inference time
-        return {
-            "type": "gnn",
-            "results": [f"gnn_result_{i}" for i in range(2)],
-            "confidence": [0.95, 0.88]
-        }
+        """Execute GNN search using real trained model integration"""
+        from .tools.search_tools import execute_tri_modal_search, TriModalSearchRequest
+        
+        # Use real tri-modal search which includes GNN
+        request = TriModalSearchRequest(
+            query=query,
+            search_types=["gnn"],
+            domain="general",  # Will be replaced by data-driven detection
+            max_results=10
+        )
+        
+        try:
+            # Create proper RunContext with real Azure services
+            class ToolRunContext:
+                def __init__(self, azure_services):
+                    self.deps = azure_services
+            
+            context = ToolRunContext(self.azure_services)
+            result = await execute_tri_modal_search(context, request)
+            # Extract GNN-specific results
+            gnn_results = [r for r in result.search_results if r.get("source") == "gnn"]
+            return {
+                "type": "gnn",
+                "results": gnn_results,
+                "confidence": result.confidence_scores,
+                "metadata": result.metadata
+            }
+        except Exception as e:
+            logger.error(f"GNN search failed: {e}")
+            # Return empty results instead of fake data
+            return {"type": "gnn", "results": [], "confidence": [], "error": str(e)}
     
     async def domain_discovery(self, query: str) -> str:
         """
-        Zero-config domain discovery using statistical pattern learning
+        Zero-config domain discovery using real statistical pattern learning
         
-        This capability allows the system to adapt to any domain automatically
-        without manual configuration.
+        This capability uses our data-driven domain detection system that learns
+        from actual text patterns without any hardcoded assumptions.
         """
         async def discover_domain():
-            # Placeholder for actual domain discovery logic
-            await asyncio.sleep(0.01)
+            from .tools.discovery_tools import execute_domain_detection, DomainDetectionRequest
             
-            # Simple heuristic for demo
-            if any(word in query.lower() for word in ["medical", "health", "patient"]):
-                return "medical"
-            elif any(word in query.lower() for word in ["legal", "law", "court"]):
-                return "legal"
-            elif any(word in query.lower() for word in ["tech", "software", "computer"]):
-                return "technology"
-            else:
+            # Use real domain detection implementation
+            request = DomainDetectionRequest(
+                text=query,
+                confidence_threshold=0.7,
+                include_pattern_analysis=True
+            )
+            
+            try:
+                # Create proper RunContext with real Azure services
+                class ToolRunContext:
+                    def __init__(self, azure_services):
+                        self.deps = azure_services
+                
+                context = ToolRunContext(self.azure_services)
+                result = await execute_domain_detection(context, request)
+                # Return detected domain or "general" as fallback
+                return result.detected_domain or "general"
+            except Exception as e:
+                logger.error(f"Domain detection failed: {e}")
+                # Fallback to general without hardcoded assumptions
                 return "general"
         
         return await cached_operation(
