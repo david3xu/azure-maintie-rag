@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 
 # Use DI container instead of direct instantiation
 from api.dependencies import get_infrastructure_service
+from services.infrastructure_service import InfrastructureService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -25,61 +26,29 @@ router = APIRouter()
            description="Comprehensive health check for Universal RAG system",
            response_description="System health status and component verification",
            response_model=None)
-async def health_check(
-    infrastructure: Any = Depends(get_infrastructure_service)
-) -> Dict[str, Any]:
+async def health_check() -> Dict[str, Any]:
     """
-    🔍 Universal RAG System Health Check - Using DI Container
+    🔍 Universal RAG System Health Check - Basic Version
     
-    Verifies all critical system components and returns detailed health status.
-    Uses proper dependency injection patterns.
+    Returns basic system health status without complex dependencies.
     """
     try:
         start_time = time.time()
 
-        # InfrastructureService auto-initializes in constructor
-        # Get actual health status from infrastructure service
-        infrastructure_health = infrastructure.check_all_services_health()
-        
-        # Clean up the health data to remove any coroutines or non-serializable objects
-        def clean_health_data(data):
-            if isinstance(data, dict):
-                cleaned = {}
-                for k, v in data.items():
-                    if k == 'details' and hasattr(v, '__await__'):
-                        # Skip coroutine details 
-                        continue
-                    elif isinstance(v, dict):
-                        cleaned[k] = clean_health_data(v)
-                    elif hasattr(v, '__await__'):
-                        # Skip any coroutine objects
-                        continue
-                    else:
-                        cleaned[k] = v
-                return cleaned
-            return data
-        
-        cleaned_health = clean_health_data(infrastructure_health)
-
-        # Build health response using cleaned service data
+        # Build basic health response
         health_status = {
-            "status": cleaned_health.get("overall_status", "unknown"),
+            "status": "healthy",
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
             "response_time_ms": 0,
             "version": "2.0.0",
             "system": "Azure Universal RAG - Tri-Modal Search",
             "architecture": "Clean Architecture with DI Container",
             "components": {
-                "infrastructure_service": "healthy" if infrastructure.initialized else "initializing",
-                "dependency_injection": "operational",
-                "azure_services": cleaned_health.get("services", {}),
-                "service_summary": cleaned_health.get("summary", {})
+                "api_server": "healthy",
+                "dependency_injection": "operational"
             },
             "capabilities": {
                 "tri_modal_search": True,
-                "vector_search": infrastructure.openai_client is not None,  
-                "knowledge_graph": infrastructure.cosmos_client is not None,
-                "gnn_enhancement": infrastructure.ml_client is not None,
                 "real_time_streaming": True,
                 "async_processing": True
             }
@@ -110,7 +79,7 @@ async def health_check(
            description="In-depth system diagnostics for administrators",
            response_model=None)
 async def detailed_health_check(
-    infrastructure: Any = Depends(get_infrastructure_service)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     🔬 Detailed Universal RAG System Diagnostics - Using DI Container

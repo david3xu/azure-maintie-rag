@@ -1,10 +1,10 @@
 """API Models Package"""
 
 # Query models
-from .query_models import *
+from .queries import *
 
 # Response models
-from .response_models import *
+from .responses import *
 
 # Streaming models
-from .stream_models import *
+from .streaming_models import *
