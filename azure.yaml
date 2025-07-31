@@ -4,12 +4,12 @@ metadata:
   template: azure-search-openai-demo@main
   description: "Azure Universal RAG system with knowledge graphs, vector search, and GNN training"
 
-# Services to deploy (commented out due to Docker-in-Docker limitations)
-# services:
-#   backend:
-#     project: ./backend
-#     language: py
-#     host: containerapp
+# Services to deploy
+services:
+  backend:
+    project: ./backend
+    language: py
+    host: containerapp
 
 # Infrastructure configuration
 infra:
