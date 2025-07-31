@@ -743,6 +743,431 @@ flowchart TD
 
 ---
 
+## 🏗️ Refined Layer Boundary Architecture
+
+### **Root Cause Analysis: Why Overlaps Occurred**
+
+The **70-80% design overlap** we identified wasn't just a code organization issue—it was a symptom of **unclear layer boundaries**. Our analysis revealed that the original layer definitions were:
+
+- **Aspirational rather than enforced** (12+ direct violations found)
+- **Responsibility-ambiguous** (multiple layers implementing same functionality)
+- **Dependency-permissive** (circular dependencies allowed)
+- **Validation-absent** (no automated boundary checking)
+
+### **New Architectural Philosophy: "Single Direction, Single Responsibility"**
+
+#### **Core Principle**
+```mermaid
+graph TD
+    A[🌐 API Layer<br/>Pure HTTP Interface] --> B[🔧 Services Layer<br/>Business Orchestration]
+    B --> C[🧠 Agents Layer<br/>Intelligence & Reasoning] 
+    C --> D[🏗️ Infrastructure Layer<br/>External Integration]
+    C --> E[📁 Config Layer<br/>Pure Data Storage]
+    
+    A1[❌ No business logic<br/>❌ No direct infra calls<br/>❌ No agent reasoning] -.-> A
+    B1[❌ No search execution<br/>❌ No Azure service calls<br/>❌ No domain detection] -.-> B
+    C1[❌ No HTTP handling<br/>❌ No Azure instantiation<br/>❌ No workflow management] -.-> C
+    D1[❌ No business logic<br/>❌ No intelligence<br/>❌ No API concerns] -.-> D
+    E1[❌ No business logic<br/>❌ No service instantiation<br/>❌ No runtime operations] -.-> E
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5  
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+    style A1 fill:#ffebee
+    style B1 fill:#ffebee
+    style C1 fill:#ffebee
+    style D1 fill:#ffebee
+    style E1 fill:#ffebee
+```
+
+### **Redefined Layer Responsibilities**
+
+#### **🌐 API Layer: "Pure HTTP Interface"**
+```python
+# ✅ EXCLUSIVE responsibilities:
+class APILayerContract:
+    - HTTP request/response handling
+    - Input validation (format only, not business logic)
+    - Authentication/authorization
+    - Rate limiting and throttling
+    - API documentation and OpenAPI specs
+    - Request correlation ID generation
+
+# ❌ STRICTLY FORBIDDEN:
+    - Business logic implementation
+    - Direct infrastructure service calls
+    - Agent reasoning or intelligence
+    - Data processing or transformation
+    - Search execution or coordination
+    - Domain detection algorithms
+
+# Implementation pattern:
+@router.post("/api/v1/query")
+async def query_endpoint(
+    request: QueryRequest,
+    query_service: ConsolidatedQueryService = Depends(get_query_service)  # Services layer only
+):
+    # ✅ Validation and coordination only
+    validated_request = validate_request_format(request)
+    response = await query_service.process_universal_query(validated_request)
+    return format_api_response(response)
+```
+
+#### **🔧 Services Layer: "Business Orchestration"**
+```python
+# ✅ EXCLUSIVE responsibilities:
+class ServicesLayerContract:
+    - Business workflow orchestration
+    - Agent lifecycle coordination
+    - Transaction and state management
+    - Cross-cutting concerns (caching, monitoring)
+    - Request/response transformation
+    - Error handling and recovery
+
+# ❌ STRICTLY FORBIDDEN:
+    - Direct Azure service instantiation
+    - Search algorithm implementation
+    - Domain detection logic
+    - Pattern learning algorithms
+    - Infrastructure service calls
+    - HTTP request processing
+
+# Implementation pattern:
+class ConsolidatedQueryService:
+    def __init__(self, agent: AgentInterface):  # Interface, not concrete
+        self.agent = agent
+    
+    async def process_universal_query(self, request: QueryRequest):
+        # ✅ Orchestration and coordination only
+        start_time = time.time()
+        agent_response = await self.agent.process_intelligent_query(request)
+        execution_time = time.time() - start_time
+        
+        return self.format_business_response(agent_response, execution_time)
+```
+
+#### **🧠 Agents Layer: "Intelligence & Reasoning"**
+```python
+# ✅ EXCLUSIVE responsibilities:
+class AgentsLayerContract:
+    - Query understanding and reasoning
+    - Domain detection and adaptation
+    - Pattern learning and evolution
+    - Intelligent tool coordination (not execution)
+    - Response synthesis and contextualiza
+    - Agent-to-agent communication
+
+# ❌ STRICTLY FORBIDDEN:
+    - Direct Azure service instantiation
+    - HTTP request/response handling
+    - Business workflow management
+    - Infrastructure service implementation
+    - Low-level data storage operations
+    - API endpoint definitions
+
+# Implementation pattern:
+class SimplifiedUniversalAgent:
+    def __init__(self, search_executor: SearchExecutorInterface):  # Interface delegation
+        self.search_executor = search_executor
+    
+    async def process_intelligent_query(self, request: QueryRequest):
+        # ✅ Intelligence and reasoning only
+        domain = await self.detect_domain(request.query)  # Intelligence
+        search_strategy = self.determine_search_strategy(domain)  # Reasoning
+        
+        # Delegate execution to infrastructure
+        search_request = SearchRequest(query=request.query, strategy=search_strategy)
+        search_result = await self.search_executor.execute_search(search_request)
+        
+        return self.synthesize_intelligent_response(search_result)  # Intelligence
+```
+
+#### **🏗️ Infrastructure Layer: "External Service Integration"**
+```python
+# ✅ EXCLUSIVE responsibilities:
+class InfrastructureLayerContract:
+    - Azure service client implementations
+    - Search execution (Vector, Graph, GNN)
+    - Database operations and data persistence
+    - File system and blob storage operations
+    - Network communications and protocols
+    - External API integrations
+
+# ❌ STRICTLY FORBIDDEN:
+    - Business logic or workflow decisions
+    - Intelligence, reasoning, or learning
+    - API endpoint handling
+    - Agent coordination or management
+    - Configuration logic or processing
+    - User interface concerns
+
+# Implementation pattern:
+class TriModalOrchestrator:
+    def __init__(self, azure_clients: AzureServiceClients):
+        self.azure_clients = azure_clients
+    
+    async def execute_search(self, search_request: SearchRequest):
+        # ✅ Pure execution, no intelligence
+        tasks = [
+            self.azure_clients.cognitive_search.vector_search(search_request),
+            self.azure_clients.cosmos_db.graph_search(search_request),
+            self.azure_clients.ml_service.gnn_search(search_request)
+        ]
+        
+        results = await asyncio.gather(*tasks)
+        return SearchResult(vector=results[0], graph=results[1], gnn=results[2])
+```
+
+#### **📁 Config Layer: "Pure Data Storage"**
+```python
+# ✅ EXCLUSIVE responsibilities:
+class ConfigLayerContract:
+    - Configuration data storage and retrieval
+    - Environment-specific settings management
+    - Pattern data persistence and loading
+    - Static resource management
+    - Schema definitions and validation rules
+    - Default value specifications
+
+# ❌ STRICTLY FORBIDDEN:
+    - Business logic or processing
+    - Service instantiation or lifecycle
+    - Runtime data transformation
+    - Network operations or API calls
+    - Agent intelligence or reasoning
+    - Infrastructure service coordination
+
+# Implementation pattern:
+class DataDrivenPatternManager:
+    def load_learned_patterns(self, domain: str) -> LearnedPatterns:
+        # ✅ Pure data loading, no processing
+        pattern_data = self._load_from_storage(f"patterns/{domain}.json")
+        return LearnedPatterns.model_validate(pattern_data)
+    
+    def save_learned_patterns(self, domain: str, patterns: LearnedPatterns):
+        # ✅ Pure data persistence, no logic
+        self._save_to_storage(f"patterns/{domain}.json", patterns.model_dump())
+```
+
+### **Boundary Enforcement Mechanisms**
+
+#### **1. Strict Import Rules**
+```python
+# Automated import validation
+ALLOWED_IMPORTS = {
+    "api": ["services", "models", "dependencies"],
+    "services": ["agents", "config", "models"],
+    "agents": ["infrastructure", "config", "tools"],
+    "infrastructure": ["external_libraries_only"],
+    "config": []  # Pure data, no imports allowed
+}
+
+FORBIDDEN_IMPORTS = {
+    "api": ["agents", "infrastructure"],      # Must go through services
+    "services": ["infrastructure"],           # Must go through agents
+    "infrastructure": ["agents", "services"], # No reverse dependencies
+    "any": ["api"]                           # No reverse dependencies to API
+}
+
+def validate_import_boundaries():
+    violations = []
+    for file_path in get_all_python_files():
+        layer = determine_layer(file_path)
+        imports = extract_imports(file_path)
+        
+        for imp in imports:
+            imp_layer = determine_import_layer(imp)
+            if imp_layer in FORBIDDEN_IMPORTS.get(layer, []):
+                violations.append(
+                    f"VIOLATION: {file_path} ({layer}) imports {imp} ({imp_layer})"
+                )
+    
+    return violations
+```
+
+#### **2. Interface-Based Contracts**
+```python
+# Each layer exposes clean interfaces
+from abc import ABC, abstractmethod
+
+class AgentInterface(ABC):
+    """Single interface for all agent intelligence"""
+    @abstractmethod
+    async def process_intelligent_query(self, request: QueryRequest) -> AgentResponse:
+        pass
+
+class SearchExecutorInterface(ABC):
+    """Single interface for all search execution"""
+    @abstractmethod
+    async def execute_search(self, request: SearchRequest) -> SearchResult:
+        pass
+
+class PatternManagerInterface(ABC):
+    """Single interface for pattern data management"""
+    @abstractmethod
+    def load_learned_patterns(self, domain: str) -> LearnedPatterns:
+        pass
+
+# Layer implementations depend on interfaces, not concrete classes
+class ConsolidatedQueryService:
+    def __init__(
+        self,
+        agent: AgentInterface,  # ✅ Interface dependency
+        pattern_manager: PatternManagerInterface  # ✅ Interface dependency
+    ):
+        self.agent = agent
+        self.pattern_manager = pattern_manager
+```
+
+#### **3. Single Authority Principle**
+```python
+# Each capability has exactly ONE authoritative implementation
+CAPABILITY_AUTHORITIES = {
+    "domain_detection": "agents.discovery.zero_config_adapter.ZeroConfigAdapter",
+    "pattern_learning": "agents.discovery.pattern_learning_system.PatternLearningSystem", 
+    "search_execution": "infra.search.tri_modal_orchestrator.TriModalOrchestrator",
+    "business_coordination": "services.query_service.ConsolidatedQueryService",
+    "http_interface": "api.endpoints.queries",
+    "configuration_data": "config.data_driven_patterns.DataDrivenPatternManager"
+}
+
+def validate_single_authority():
+    violations = []
+    for capability, authority in CAPABILITY_AUTHORITIES.items():
+        implementations = find_implementations(capability)
+        if len(implementations) > 1:
+            violations.append(
+                f"VIOLATION: Multiple implementations of {capability}: {implementations}"
+            )
+    return violations
+```
+
+### **Boundary Quality Metrics**
+
+#### **Architecture Compliance Dashboard**
+```python
+class ArchitectureBoundaryMetrics:
+    def __init__(self):
+        self.targets = {
+            "import_violations": 0,           # Zero violations allowed
+            "circular_dependencies": 0,       # Zero circular dependencies
+            "responsibility_overlap": 5,      # < 5% overlap between layers
+            "interface_coverage": 95,         # > 95% interface usage
+            "single_authority": 100          # 100% single authority compliance
+        }
+    
+    def generate_compliance_report(self) -> ComplianceReport:
+        return ComplianceReport(
+            import_violations=len(validate_import_boundaries()),
+            circular_deps=len(detect_circular_dependencies()),
+            overlap_percentage=calculate_responsibility_overlap(),
+            interface_coverage=calculate_interface_coverage(),
+            authority_compliance=calculate_single_authority_compliance()
+        )
+```
+
+### **Integration with Consolidation Plan**
+
+#### **Phase-Specific Boundary Enforcement**
+
+**Phase 1: Search Orchestration Consolidation**
+```python
+# Before: Boundary violations
+# Services -> Infrastructure (skipping Agents)
+# Agents -> Infrastructure (direct Azure calls)
+
+# After: Clean boundaries
+API -> Services -> Agents -> Infrastructure
+                   ↓
+                Config
+
+# Enforcement:
+- Remove direct Azure clients from Agents layer
+- All search execution goes through Infrastructure layer
+- Services coordinate, don't execute
+```
+
+**Phase 2-4: Apply Same Boundary Principles**
+- Domain detection: Single authority in Agents layer
+- Pattern learning: Single authority in Agents layer  
+- Tool coordination: Clean interfaces between layers
+
+#### **Validation Integration**
+```python
+# Add boundary validation to existing architecture validation
+def validate_architecture():
+    """Enhanced validation including boundary compliance"""
+    violations = []
+    
+    # Existing validations
+    violations.extend(validate_dependency_injection())
+    violations.extend(validate_service_consolidation())
+    
+    # New boundary validations
+    violations.extend(validate_import_boundaries())
+    violations.extend(validate_single_authority())
+    violations.extend(validate_interface_coverage())
+    violations.extend(detect_circular_dependencies())
+    
+    if violations:
+        print("❌ ARCHITECTURE BOUNDARY VIOLATIONS:")
+        for violation in violations:
+            print(f"  {violation}")
+        return False
+    
+    print("✅ ARCHITECTURE BOUNDARY COMPLIANCE: PASSED")
+    return True
+```
+
+### **Future-Proofing: Capability-Oriented Evolution**
+
+#### **From Layers to Capabilities**
+```python
+# Future vision: Capability-based architecture
+class CapabilityDefinition:
+    name: str
+    responsibilities: List[str]
+    interfaces: List[Type]
+    dependencies: List[str]
+    forbidden_deps: List[str]
+
+SYSTEM_CAPABILITIES = {
+    "http_interface": CapabilityDefinition(
+        name="HTTP Interface",
+        responsibilities=["request_handling", "response_formatting", "auth"],
+        interfaces=[HTTPHandlerInterface],
+        dependencies=["business_coordination"],
+        forbidden_deps=["intelligence", "external_integration"]
+    ),
+    "business_coordination": CapabilityDefinition(
+        name="Business Coordination",
+        responsibilities=["workflow_orchestration", "transaction_management"],
+        interfaces=[BusinessCoordinatorInterface],
+        dependencies=["intelligence", "configuration"],
+        forbidden_deps=["http_interface", "external_integration"]
+    )
+    # ... other capabilities
+}
+```
+
+### **Benefits of Refined Boundaries**
+
+#### **Immediate Benefits**
+- **Prevents future overlaps**: Clear boundaries stop new duplication
+- **Enables confident refactoring**: Well-defined interfaces allow safe changes
+- **Improves testability**: Single responsibilities make testing easier
+- **Reduces cognitive load**: Developers know exactly where to implement features
+
+#### **Long-term Benefits**
+- **Self-healing architecture**: System naturally prevents boundary violations
+- **Scalable team development**: Teams can own specific layers without conflicts
+- **Technology evolution**: Layers can evolve independently within boundaries
+- **Performance optimization**: Clear separation enables targeted optimization
+
+---
+
 ## 📚 Related Documents
 
 - **[System Architecture](SYSTEM_ARCHITECTURE.md)** - Current simplified architecture
