@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import Mock, patch
 import asyncio
 
-from api.dependencies_new import (
+from api.dependencies import (
     ApplicationContainer,
     container,
     get_infrastructure_service,
@@ -40,7 +40,7 @@ class TestDependencyInjectionContainer:
         # Verify container has providers
         assert hasattr(container, 'providers')
 
-    @patch('api.dependencies_new.AzureSettings')
+    @patch('api.dependencies.AzureSettings')
     def test_azure_settings_singleton(self, mock_settings):
         """Test that AzureSettings is properly configured as singleton"""
         mock_instance = Mock()
@@ -55,8 +55,8 @@ class TestDependencyInjectionContainer:
         # Should only call constructor once
         mock_settings.assert_called_once()
 
-    @patch('api.dependencies_new.InfrastructureService')
-    @patch('api.dependencies_new.AzureSettings')
+    @patch('api.dependencies.InfrastructureService')
+    @patch('api.dependencies.AzureSettings')
     def test_infrastructure_service_singleton(self, mock_settings, mock_infrastructure):
         """Test that InfrastructureService is properly configured as singleton"""
         mock_settings_instance = Mock()
@@ -73,10 +73,10 @@ class TestDependencyInjectionContainer:
         # Should only call constructor once
         mock_infrastructure.assert_called_once_with(azure_settings=mock_settings_instance)
 
-    @patch('api.dependencies_new.QueryService')
-    @patch('api.dependencies_new.DataService')
-    @patch('api.dependencies_new.InfrastructureService')
-    @patch('api.dependencies_new.AzureSettings')
+    @patch('api.dependencies.QueryService')
+    @patch('api.dependencies.DataService')
+    @patch('api.dependencies.InfrastructureService')
+    @patch('api.dependencies.AzureSettings')
     def test_query_service_factory(self, mock_settings, mock_infrastructure, 
                                   mock_data_service, mock_query_service):
         """Test that QueryService is properly configured as factory"""
@@ -168,7 +168,7 @@ class TestComparisonWithOldSystem:
 
     def test_no_global_variables(self):
         """Verify new system doesn't use global state variables"""
-        import api.dependencies_new as new_deps
+        import api.dependencies as new_deps
         
         # Check that there are no global service variables
         global_vars = [name for name in dir(new_deps) if name.startswith('_') and 'service' in name.lower()]
@@ -182,7 +182,7 @@ class TestComparisonWithOldSystem:
         assert hasattr(container, 'providers'), "Container should have providers"
         
         # Verify no setter functions for global state
-        import api.dependencies_new as new_deps
+        import api.dependencies as new_deps
         setter_functions = [name for name in dir(new_deps) if name.startswith('set_')]
         
         # Should not have any global setter functions

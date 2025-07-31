@@ -21,11 +21,10 @@ from config.settings import settings
 from api.endpoints import health_endpoint
 from api.endpoints import query_endpoint
 from api.dependencies import (
-    set_infrastructure_service, 
-    set_data_service, 
-    set_workflow_service,
-    set_query_service, 
-    set_azure_settings
+    container, 
+    initialize_application, 
+    shutdown_application,
+    wire_container
 )
 from api.middleware import configure_middleware
 
@@ -39,50 +38,36 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager with Azure services initialization"""
+    """Application lifespan manager with dependency injection container"""
     # Startup
     logger.info("Starting Azure Universal RAG API...")
 
     try:
-        # Initialize Azure services using focused services
-        logger.info("Initializing Azure services...")
-        from services.workflow_service import WorkflowService
-        from services.query_service import QueryService
+        # Initialize application with proper dependency injection
+        logger.info("Initializing application container...")
+        await initialize_application()
         
-        # Initialize services in proper dependency order
-        infrastructure = InfrastructureService()
-        data_service = DataService(infrastructure)
-        workflow_service = WorkflowService(infrastructure)
-        query_service = QueryService()
-
-        # Validate services
-        validation = infrastructure.validate_configuration()
-        if not validation.get('valid', False):
-            logger.warning(f"Azure services validation issues: {validation}")
-            # Continue for development - don't fail completely
-
-        azure_settings = AzureSettings()
-
-        # Store in app state
-        app.state.infrastructure_service = infrastructure
-        app.state.data_service = data_service
-        app.state.workflow_service = workflow_service
-        app.state.query_service = query_service
-        app.state.azure_settings = azure_settings
-
-        # Set global dependencies for endpoints
-        set_infrastructure_service(infrastructure)
-        set_data_service(data_service)
-        set_workflow_service(workflow_service)
-        set_query_service(query_service)
-        set_azure_settings(azure_settings)
+        # Wire the container for dependency injection
+        wire_container()
+        
+        # Store container in app state for access
+        app.state.container = container
 
         logger.info("Azure Universal RAG API startup completed")
         yield
 
     except Exception as e:
-        logger.error(f"Azure services initialization failed: {e}")
+        logger.error(f"Application initialization failed: {e}")
         raise
+    
+    finally:
+        # Shutdown
+        logger.info("Shutting down Azure Universal RAG API...")
+        try:
+            await shutdown_application()
+            logger.info("Application shutdown completed")
+        except Exception as e:
+            logger.error(f"Error during shutdown: {e}")
 
 
 # Create FastAPI app with Azure services support
@@ -98,37 +83,13 @@ app = FastAPI(
 # Setup middleware from middleware.py
 configure_middleware(app)
 
-# Include routers
+# Include essential routers only
 app.include_router(health_endpoint.router)
 app.include_router(query_endpoint.router)
 
-# Import and include workflow stream router
+# Include core functionality routers
 from api.streaming.workflow_stream import router as workflow_stream_router
 app.include_router(workflow_stream_router)
-
-# Import and include knowledge graph demo router for supervisor demo
-from api.endpoints.graph_endpoint import router as graph_router
-app.include_router(graph_router)
-
-# Import and include simple demo router for supervisor demo (no async issues)
-from api.endpoints.demo_endpoint import router as demo_router
-app.include_router(demo_router)
-
-# Import and include Gremlin demo router for real-time queries
-from api.endpoints.gremlin_endpoint import router as gremlin_router
-app.include_router(gremlin_router)
-
-# Import and include GNN operations router
-from api.endpoints.gnn_endpoint import router as gnn_router
-app.include_router(gnn_router)
-
-# Import and include workflow evidence router
-from api.endpoints.workflow_endpoint import router as workflow_router
-app.include_router(workflow_router)
-
-# Import and include unified search demo endpoint (Crown Jewel Demo)
-from api.endpoints.unified_search_endpoint import router as unified_search_router
-app.include_router(unified_search_router)
 
 # Error handlers
 @app.exception_handler(HTTPException)
@@ -179,22 +140,37 @@ async def root():
 async def get_system_info():
     """Get system information and Azure services status"""
     try:
-        # Get services status
-        infrastructure = getattr(app.state, 'infrastructure_service', None)
-        azure_settings = getattr(app.state, 'azure_settings', None)
-
-        azure_status = {
-            "initialized": infrastructure is not None,
-            "location": azure_settings.azure_region if azure_settings else None,
-            "resource_prefix": azure_settings.azure_resource_prefix if azure_settings else None,
-            "services": {
-                "storage": infrastructure.storage_client is not None if infrastructure else False,
-                "cognitive_search": infrastructure.search_client is not None if infrastructure else False,
-                "cosmos_db_gremlin": infrastructure.cosmos_client is not None if infrastructure else False,
-                "openai": infrastructure.openai_client is not None if infrastructure else False,
-                "machine_learning": infrastructure.ml_client is not None if infrastructure else False
+        # Get services status from DI container
+        container = getattr(app.state, 'container', None)
+        
+        if container:
+            try:
+                infrastructure = container.infrastructure_service()
+                azure_settings = container.azure_settings()
+                
+                azure_status = {
+                    "initialized": infrastructure is not None,
+                    "location": azure_settings.azure_region if azure_settings else None,
+                    "resource_prefix": azure_settings.azure_resource_prefix if azure_settings else None,
+                    "services": {
+                        "storage": infrastructure.storage_client is not None if infrastructure else False,
+                        "cognitive_search": infrastructure.search_client is not None if infrastructure else False,
+                        "cosmos_db_gremlin": infrastructure.cosmos_client is not None if infrastructure else False,
+                        "openai": infrastructure.openai_client is not None if infrastructure else False,
+                        "machine_learning": infrastructure.ml_client is not None if infrastructure else False
+                    }
+                }
+            except Exception as e:
+                logger.warning(f"Could not get service status from container: {e}")
+                azure_status = {
+                    "initialized": False,
+                    "error": "Container initialization failed"
+                }
+        else:
+            azure_status = {
+                "initialized": False,
+                "error": "No container available"
             }
-        }
 
         return {
             "api_version": "2.0.0",
