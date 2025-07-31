@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 # NEW: Use DI container instead of direct instantiation
 from api.dependencies_new import get_infrastructure_service
-from services.infrastructure_service_async import AsyncInfrastructureService
+from services.infrastructure_service import InfrastructureService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -27,7 +27,7 @@ router = APIRouter()
            response_description="System health status and component verification",
            response_model=None)
 async def health_check(
-    infrastructure: AsyncInfrastructureService = Depends(get_infrastructure_service)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     🔍 Universal RAG System Health Check - Using DI Container
@@ -137,7 +137,7 @@ async def test_rag_system_with_di(infrastructure: AsyncInfrastructureService) ->
            description="In-depth system diagnostics for administrators",
            response_model=None)
 async def detailed_health_check(
-    infrastructure: AsyncInfrastructureService = Depends(get_infrastructure_service)
+    infrastructure: InfrastructureService = Depends(get_infrastructure_service)
 ) -> Dict[str, Any]:
     """
     🔬 Detailed Universal RAG System Diagnostics - Using DI Container
