@@ -1,6 +1,6 @@
 # Azure Universal RAG - Setup Complete! ✅
 
-**Status**: Environment Ready | **Date**: August 2, 2025  
+**Status**: Environment Ready | **Date**: August 2, 2025
 **Achievement**: Azure CLI authenticated and environment configured
 
 ## 🎉 **Setup Results**
@@ -14,7 +14,7 @@
 - **Project Structure**: All directories and scripts in place
 
 ### 🔧 **Service Principal Issue Resolved**
-The service principal creation failed due to directory permissions (normal for many Azure environments). 
+The service principal creation failed due to directory permissions (normal for many Azure environments).
 
 **Solution**: Using Azure CLI credentials instead - this is actually **better** for local development:
 - ✅ No secrets to manage

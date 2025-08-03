@@ -178,7 +178,9 @@ class UnifiedSearchClient(BaseAzureClient):
             if filters:
                 search_params["filter"] = filters
 
-            results = await asyncio.to_thread(self._search_client.search, **search_params)
+            results = await asyncio.to_thread(
+                self._search_client.search, **search_params
+            )
 
             documents = []
             for result in results:
@@ -251,7 +253,9 @@ class UnifiedSearchClient(BaseAzureClient):
             if filters:
                 search_params["filter"] = filters
 
-            results = await asyncio.to_thread(self._search_client.search, **search_params)
+            results = await asyncio.to_thread(
+                self._search_client.search, **search_params
+            )
 
             documents = []
             for result in results:
@@ -582,7 +586,9 @@ class UnifiedSearchClient(BaseAzureClient):
             # Get document count
             results = await asyncio.to_thread(
                 self._search_client.search,
-                search_text="*", include_total_count=True, top=0
+                search_text="*",
+                include_total_count=True,
+                top=0,
             )
             doc_count = getattr(results, "get_count", lambda: 0)()
 

@@ -9,7 +9,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from config.settings import azure_settings
-from infrastructure.azure_openai import UnifiedAzureOpenAIClient as AzureTextAnalyticsService
+from infrastructure.azure_openai import (
+    UnifiedAzureOpenAIClient as AzureTextAnalyticsService,
+)
 
 logger = logging.getLogger(__name__)
 

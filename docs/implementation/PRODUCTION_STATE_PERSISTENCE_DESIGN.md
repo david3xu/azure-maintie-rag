@@ -1,6 +1,6 @@
 # Production State Persistence Design
 
-**Date**: August 3, 2025  
+**Date**: August 3, 2025
 **Status**: 🚧 **DESIGN PHASE** - Production-grade state persistence for pydantic-graph workflows
 
 ## Overview
@@ -11,7 +11,7 @@ This document defines the production-grade state persistence strategy for Azure 
 
 **CRITICAL PERFORMANCE ISSUE IDENTIFIED**:
 - **Current orchestrator initialization**: 2.8s
-- **Total workflow time**: 3.2s  
+- **Total workflow time**: 3.2s
 - **SLA Status**: ❌ **FAILS** sub-3-second requirement by 200ms
 
 ## State Persistence Requirements
@@ -25,7 +25,7 @@ This document defines the production-grade state persistence strategy for Azure 
 
 ### **Production Requirements**
 - **Encryption**: All state data encrypted at rest using Azure Key Vault
-- **Performance**: State read/write operations under 50ms  
+- **Performance**: State read/write operations under 50ms
 - **Scalability**: Support 1000+ concurrent workflows
 - **Reliability**: 99.9% availability with automatic failover
 - **Compliance**: GDPR-compliant data retention policies
@@ -43,13 +43,13 @@ class ProductionStatePersistence:
     def __init__(self):
         # Tier 1: In-memory cache (Redis) - <5ms access
         self.memory_cache = AzureRedisCache()
-        
-        # Tier 2: Fast persistent storage (PostgreSQL) - <50ms access  
+
+        # Tier 2: Fast persistent storage (PostgreSQL) - <50ms access
         self.persistent_db = AzurePostgreSQLFlexible()
-        
+
         # Tier 3: Long-term archival (Azure Storage) - <500ms access
         self.archive_storage = AzureStorageAccount()
-        
+
         # Encryption service
         self.encryption = AzureKeyVaultEncryption()
 ```
@@ -63,7 +63,7 @@ class ProductionStatePersistence:
 - **TTL**: 24 hours for active workflows
 - **Size**: Up to 1GB per workflow state
 
-#### **Tier 2: PostgreSQL (Warm State)**  
+#### **Tier 2: PostgreSQL (Warm State)**
 - **Purpose**: Persistent workflow history and recovery data
 - **Technology**: Azure Database for PostgreSQL Flexible Server
 - **Data**: Complete workflow execution logs, final results
@@ -89,7 +89,7 @@ from enum import Enum
 
 class WorkflowStage(str, Enum):
     DOMAIN_ANALYSIS = "domain_analysis"
-    KNOWLEDGE_EXTRACTION = "knowledge_extraction" 
+    KNOWLEDGE_EXTRACTION = "knowledge_extraction"
     SEARCH_ORCHESTRATION = "search_orchestration"
     RESULT_SYNTHESIS = "result_synthesis"
 
@@ -98,25 +98,25 @@ class WorkflowState(BaseModel):
     workflow_id: str = Field(description="Unique workflow identifier")
     user_id: str = Field(description="User identifier for access control")
     current_stage: WorkflowStage = Field(description="Current workflow stage")
-    
+
     # Domain analysis results
     raw_data: Optional[str] = Field(default=None, description="Input corpus data")
     domain_config: Optional[Dict[str, Any]] = Field(default=None, description="Generated domain configuration")
-    
-    # Knowledge extraction results  
+
+    # Knowledge extraction results
     extracted_entities: Optional[List[Dict]] = Field(default=None, description="Extracted entities")
     extracted_relationships: Optional[List[Dict]] = Field(default=None, description="Extracted relationships")
-    
+
     # Search orchestration results
     search_results: Optional[Dict[str, Any]] = Field(default=None, description="Tri-modal search results")
     final_response: Optional[str] = Field(default=None, description="Final synthesized response")
-    
+
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     azure_services_used: List[str] = Field(default_factory=list, description="Azure services utilized")
     performance_metrics: Dict[str, float] = Field(default_factory=dict, description="Performance tracking")
-    
+
 class EncryptedState(BaseModel):
     """Encrypted state wrapper for secure storage"""
     state_id: str
@@ -140,61 +140,61 @@ import asyncpg
 
 class ProductionStateManager:
     """Production-grade state persistence with encryption and multi-tier storage"""
-    
+
     def __init__(self):
         self.credential = DefaultAzureCredential()
         self.key_vault_client = SecretClient(
             vault_url="https://kv-maintie-rag-prod.vault.azure.net/",
             credential=self.credential
         )
-        
+
         # Initialize storage tiers
         self.redis_client: Optional[Redis] = None
         self.postgres_pool: Optional[asyncpg.Pool] = None
-        
+
     async def initialize(self):
         """Initialize all storage connections"""
         # Redis connection
         redis_connection_string = await self._get_secret("redis-connection-string")
         self.redis_client = Redis.from_url(redis_connection_string)
-        
+
         # PostgreSQL connection pool
         postgres_connection_string = await self._get_secret("postgres-connection-string")
         self.postgres_pool = await asyncpg.create_pool(postgres_connection_string)
-        
+
     async def save_state(self, workflow_id: str, state: WorkflowState) -> None:
         """Save workflow state with encryption across tiers"""
         try:
             # Encrypt state data
             encrypted_state = await self._encrypt_state(state)
-            
+
             # Tier 1: Save to Redis (hot cache)
             await self.redis_client.setex(
                 f"workflow:{workflow_id}",
                 86400,  # 24 hour TTL
                 encrypted_state.model_dump_json()
             )
-            
+
             # Tier 2: Save to PostgreSQL (persistent)
             async with self.postgres_pool.acquire() as conn:
                 await conn.execute("""
                     INSERT INTO workflow_states (
-                        workflow_id, encrypted_data, encryption_key_id, 
+                        workflow_id, encrypted_data, encryption_key_id,
                         stage, created_at, updated_at
                     ) VALUES ($1, $2, $3, $4, $5, $6)
-                    ON CONFLICT (workflow_id) 
-                    DO UPDATE SET 
+                    ON CONFLICT (workflow_id)
+                    DO UPDATE SET
                         encrypted_data = $2,
                         stage = $4,
                         updated_at = $6
                 """, workflow_id, encrypted_state.encrypted_data, encrypted_state.encryption_key_id,
                      state.current_stage, state.created_at, state.updated_at)
-                     
+
         except Exception as e:
             # Log error and raise for retry logic
             logger.error(f"State save failed for workflow {workflow_id}: {e}")
             raise
-            
+
     async def load_state(self, workflow_id: str) -> Optional[WorkflowState]:
         """Load workflow state with automatic tier fallback"""
         try:
@@ -203,15 +203,15 @@ class ProductionStateManager:
             if cached_state:
                 encrypted_state = EncryptedState.model_validate_json(cached_state)
                 return await self._decrypt_state(encrypted_state)
-            
+
             # Fallback to Tier 2: PostgreSQL
             async with self.postgres_pool.acquire() as conn:
                 row = await conn.fetchrow("""
-                    SELECT encrypted_data, encryption_key_id, created_at 
-                    FROM workflow_states 
+                    SELECT encrypted_data, encryption_key_id, created_at
+                    FROM workflow_states
                     WHERE workflow_id = $1
                 """, workflow_id)
-                
+
                 if row:
                     encrypted_state = EncryptedState(
                         state_id=workflow_id,
@@ -220,27 +220,27 @@ class ProductionStateManager:
                         checksum="",  # Calculate if needed
                         created_at=row['created_at']
                     )
-                    
+
                     # Restore to Redis cache
                     decrypted_state = await self._decrypt_state(encrypted_state)
                     await self.save_state(workflow_id, decrypted_state)
                     return decrypted_state
-                    
+
             return None
-            
+
         except Exception as e:
             logger.error(f"State load failed for workflow {workflow_id}: {e}")
             return None
-    
+
     async def _encrypt_state(self, state: WorkflowState) -> EncryptedState:
         """Encrypt state using Azure Key Vault"""
         # Get encryption key from Key Vault
         encryption_key = await self._get_secret("state-encryption-key")
-        
+
         # Serialize and encrypt state
         state_json = state.model_dump_json()
         encrypted_data = self._encrypt_data(state_json.encode(), encryption_key)
-        
+
         return EncryptedState(
             state_id=state.workflow_id,
             encrypted_data=encrypted_data,
@@ -248,31 +248,31 @@ class ProductionStateManager:
             checksum=hashlib.sha256(encrypted_data).hexdigest(),
             created_at=datetime.utcnow()
         )
-    
+
     async def _decrypt_state(self, encrypted_state: EncryptedState) -> WorkflowState:
         """Decrypt state using Azure Key Vault"""
         # Get decryption key
         decryption_key = await self._get_secret(encrypted_state.encryption_key_id)
-        
+
         # Decrypt and deserialize
         decrypted_data = self._decrypt_data(encrypted_state.encrypted_data, decryption_key)
         state_dict = json.loads(decrypted_data.decode())
-        
+
         return WorkflowState.model_validate(state_dict)
-    
+
     async def _get_secret(self, secret_name: str) -> str:
         """Retrieve secret from Azure Key Vault"""
         secret = await self.key_vault_client.get_secret(secret_name)
         return secret.value
-    
+
     def _encrypt_data(self, data: bytes, key: str) -> bytes:
         """Encrypt data using AES-256"""
         # Implementation using cryptography library
         pass
-    
+
     def _decrypt_data(self, encrypted_data: bytes, key: str) -> bytes:
         """Decrypt data using AES-256"""
-        # Implementation using cryptography library  
+        # Implementation using cryptography library
         pass
 ```
 
@@ -286,17 +286,17 @@ from .persistence import ProductionStateManager, WorkflowState
 
 class ConfigExtractionGraph:
     """Production graph with state persistence"""
-    
+
     def __init__(self):
         self.state_manager = ProductionStateManager()
-        
+
     async def run_with_persistence(
-        self, 
-        workflow_id: str, 
+        self,
+        workflow_id: str,
         initial_data: str
     ) -> WorkflowState:
         """Execute graph with automatic state persistence"""
-        
+
         # Initialize or restore state
         state = await self.state_manager.load_state(workflow_id)
         if not state:
@@ -305,7 +305,7 @@ class ConfigExtractionGraph:
                 raw_data=initial_data,
                 current_stage=WorkflowStage.DOMAIN_ANALYSIS
             )
-        
+
         # Execute graph nodes with state checkpoints
         try:
             async with self.graph.iter(
@@ -316,16 +316,16 @@ class ConfigExtractionGraph:
                 async for node in run:
                     # Save state after each node completion
                     await self.state_manager.save_state(workflow_id, run.state)
-                    
+
                     # Performance tracking
                     run.state.performance_metrics[node.__class__.__name__] = run.node_execution_time
-                    
+
                     # SLA monitoring
                     if run.total_execution_time > 3.0:
                         logger.warning(f"SLA violation: {run.total_execution_time:.2f}s")
-                        
+
                 return run.result
-                
+
         except Exception as e:
             # Save error state for debugging
             state.error_details = {"error": str(e), "stage": state.current_stage}
@@ -403,11 +403,11 @@ CREATE TABLE workflow_states (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     archived_at TIMESTAMP WITH TIME ZONE,
-    
+
     -- Performance tracking
     execution_time_ms INTEGER,
     azure_services_used TEXT[],
-    
+
     -- Indexing for fast lookups
     INDEX idx_workflow_user (user_id),
     INDEX idx_workflow_stage (stage),
@@ -462,7 +462,7 @@ CREATE TABLE archived_workflows (
 3. Set up database schema and encryption keys
 4. Implement basic state manager without graph integration
 
-### **Phase 2: Graph Integration (Week 2)**  
+### **Phase 2: Graph Integration (Week 2)**
 1. Integrate state manager with pydantic-graph
 2. Implement automatic checkpointing
 3. Add performance monitoring and SLA tracking
@@ -488,7 +488,7 @@ CREATE TABLE archived_workflows (
 - **Total Workflow Time**: <2.5s (500ms improvement from baseline)
 - **Cache Hit Rate**: >95% for active workflows
 
-### **Reliability KPIs**  
+### **Reliability KPIs**
 - **System Availability**: 99.9% uptime
 - **State Persistence Success**: 99.99% success rate
 - **Automatic Recovery**: 90% of failures auto-recover without human intervention

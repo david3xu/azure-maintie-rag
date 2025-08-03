@@ -39,7 +39,7 @@ The system now implements a sophisticated **Config-Extraction Architecture** wit
 - Generates optimized `ExtractionConfiguration`
 - File: `agents/domain_intelligence_agent.py`
 
-**Stage 2: Knowledge Extraction Agent**  
+**Stage 2: Knowledge Extraction Agent**
 - Processes documents using configuration
 - Produces structured `ExtractionResults`
 - File: `agents/knowledge_extraction_agent.py`
@@ -56,7 +56,7 @@ python test_config_extraction_workflow.py
 
 # Expected output:
 # ✅ Stage 1 Complete: ExtractionConfiguration generated
-# ✅ Stage 2 Complete: Knowledge extraction completed  
+# ✅ Stage 2 Complete: Knowledge extraction completed
 # 🎉 ALL TESTS PASSED
 ```
 
@@ -69,7 +69,7 @@ from config.extraction_interface import ExtractionConfiguration, ExtractionResul
 # Stage 1: Generate configuration
 config = await domain_agent.generate_extraction_config(domain, file_path)
 
-# Stage 2: Extract knowledge using configuration  
+# Stage 2: Extract knowledge using configuration
 results = await extraction_agent.extract_knowledge_from_document(content, config)
 ```
 

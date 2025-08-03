@@ -5,7 +5,7 @@
 ## 🚀 Prerequisites
 
 - **Azure Subscription** with required services
-- **Python 3.10+** 
+- **Python 3.10+**
 - **Azure CLI** installed and authenticated
 - **Node.js 18+** (for frontend, optional)
 
@@ -99,7 +99,7 @@ asyncio.run(test())
 Before proceeding to cloud deployment, ensure:
 
 - [ ] **Environment Setup**: All Azure services connected
-- [ ] **Data Pipeline**: Azure ML docs processed successfully  
+- [ ] **Data Pipeline**: Azure ML docs processed successfully
 - [ ] **Search System**: Tri-modal search returns relevant results
 - [ ] **Performance**: All queries complete within 3 seconds
 - [ ] **Agent System**: Intelligent responses from Universal Agent
@@ -108,7 +108,7 @@ Before proceeding to cloud deployment, ensure:
 ## 📊 Performance Targets
 
 - **Query Response Time**: <3 seconds end-to-end
-- **Vector Search**: <1 second 
+- **Vector Search**: <1 second
 - **Graph Traversal**: <500ms
 - **GNN Inference**: <200ms
 - **Concurrent Users**: 100+ supported
@@ -138,7 +138,7 @@ sleep 60  # Wait for deletion to start
 rm -rf .azure
 export AZURE_LOCATION=westus2 && azd up --environment prod
 
-# Option 2: Use different environment to avoid conflicts  
+# Option 2: Use different environment to avoid conflicts
 rm -rf .azure
 export AZURE_LOCATION=westus2 && azd up --environment prod2     # New environment
 export AZURE_LOCATION=westus2 && azd up --environment staging   # Standard tier
@@ -268,7 +268,7 @@ export AZURE_LOCATION=westus2
 azd up --environment prod2  # Avoids all existing resource conflicts
 
 # OR match existing OpenAI location
-rm -rf .azure  
+rm -rf .azure
 export AZURE_LOCATION=westus  # Your OpenAI is in westus
 azd up --environment prod
 ```
@@ -384,7 +384,7 @@ python scripts/test_tri_modal_search.py
 Expected results:
 ```
 ✅ Azure OpenAI: gpt-4.1 model deployed successfully
-✅ Text Embedding: text-embedding-ada-002 deployed successfully  
+✅ Text Embedding: text-embedding-ada-002 deployed successfully
 ✅ Azure Search: Index created and searchable
 ✅ Cosmos DB: Graph database ready for knowledge storage
 ✅ All services: Connectivity verified
@@ -397,7 +397,7 @@ Expected results:
 
 ### **✅ FIXED & VALIDATED:**
 - **Bicep Template**: NO WARNINGS OR ERRORS ✅
-- **Resource Naming**: Consistent across all modules ✅  
+- **Resource Naming**: Consistent across all modules ✅
 - **Security**: Secrets properly secured ✅
 - **Reproducible**: Works for any environment ✅
 

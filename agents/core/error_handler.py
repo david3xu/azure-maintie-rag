@@ -15,41 +15,44 @@ Features:
 """
 
 import asyncio
+import functools
+import logging
 import time
 import traceback
-import logging
-from typing import Dict, Any, Optional, List, Callable, Union
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import defaultdict, deque
-import functools
+from typing import Any, Callable, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
 
 class ErrorSeverity(Enum):
     """Error severity levels"""
-    LOW = "low"           # Minor issues, graceful degradation
-    MEDIUM = "medium"     # Significant issues, some features affected
-    HIGH = "high"         # Major issues, core functionality affected
-    CRITICAL = "critical" # System-level issues, immediate attention required
+
+    LOW = "low"  # Minor issues, graceful degradation
+    MEDIUM = "medium"  # Significant issues, some features affected
+    HIGH = "high"  # Major issues, core functionality affected
+    CRITICAL = "critical"  # System-level issues, immediate attention required
 
 
 class ErrorCategory(Enum):
     """Error categories for handling strategies"""
-    AZURE_SERVICE = "azure_service"       # Azure service connectivity/auth issues
+
+    AZURE_SERVICE = "azure_service"  # Azure service connectivity/auth issues
     DOMAIN_INTELLIGENCE = "domain_intel"  # Domain detection/pattern learning issues
-    CACHE_MEMORY = "cache_memory"         # Cache or memory management issues
-    AGENT_PROCESSING = "agent_processing" # PydanticAI agent execution issues
-    DATA_PROCESSING = "data_processing"   # Data parsing/transformation issues
-    NETWORK = "network"                   # Network connectivity issues
-    CONFIGURATION = "configuration"      # Configuration or setup issues
-    UNKNOWN = "unknown"                   # Unclassified errors
+    CACHE_MEMORY = "cache_memory"  # Cache or memory management issues
+    AGENT_PROCESSING = "agent_processing"  # PydanticAI agent execution issues
+    DATA_PROCESSING = "data_processing"  # Data parsing/transformation issues
+    NETWORK = "network"  # Network connectivity issues
+    CONFIGURATION = "configuration"  # Configuration or setup issues
+    UNKNOWN = "unknown"  # Unclassified errors
 
 
 @dataclass
 class ErrorContext:
     """Comprehensive error context for analysis and recovery"""
+
     error: Exception
     severity: ErrorSeverity
     category: ErrorCategory
@@ -61,70 +64,71 @@ class ErrorContext:
     max_retries: int = 3
     recovery_strategy: Optional[str] = None
     user_message: Optional[str] = None
-    
+
     @property
     def should_retry(self) -> bool:
         """Determine if error should be retried"""
-        return (
-            self.attempt_count < self.max_retries and
-            self.category in [
-                ErrorCategory.AZURE_SERVICE,
-                ErrorCategory.NETWORK,
-                ErrorCategory.AGENT_PROCESSING
-            ]
-        )
-    
+        return self.attempt_count < self.max_retries and self.category in [
+            ErrorCategory.AZURE_SERVICE,
+            ErrorCategory.NETWORK,
+            ErrorCategory.AGENT_PROCESSING,
+        ]
+
     @property
     def backoff_delay(self) -> float:
         """Calculate exponential backoff delay"""
         base_delay = 1.0
-        return min(30.0, base_delay * (2 ** self.attempt_count))
+        return min(30.0, base_delay * (2**self.attempt_count))
 
 
 @dataclass
 class ErrorMetrics:
     """Error tracking metrics"""
+
     total_errors: int = 0
     errors_by_category: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
     errors_by_severity: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
-    errors_by_component: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
+    errors_by_component: Dict[str, int] = field(
+        default_factory=lambda: defaultdict(int)
+    )
     successful_recoveries: int = 0
     failed_recoveries: int = 0
     average_recovery_time: float = 0.0
     recent_errors: deque = field(default_factory=lambda: deque(maxlen=100))
-    
+
     def record_error(self, context: ErrorContext):
         """Record error occurrence"""
         self.total_errors += 1
         self.errors_by_category[context.category.value] += 1
         self.errors_by_severity[context.severity.value] += 1
         self.errors_by_component[context.component] += 1
-        self.recent_errors.append({
-            "timestamp": context.timestamp,
-            "category": context.category.value,
-            "severity": context.severity.value,
-            "component": context.component,
-            "operation": context.operation,
-            "message": str(context.error)
-        })
-    
+        self.recent_errors.append(
+            {
+                "timestamp": context.timestamp,
+                "category": context.category.value,
+                "severity": context.severity.value,
+                "component": context.component,
+                "operation": context.operation,
+                "message": str(context.error),
+            }
+        )
+
     def record_recovery(self, success: bool, recovery_time: float):
         """Record recovery attempt"""
         if success:
             self.successful_recoveries += 1
         else:
             self.failed_recoveries += 1
-        
+
         # Update average recovery time
         total_recoveries = self.successful_recoveries + self.failed_recoveries
         if total_recoveries == 1:
             self.average_recovery_time = recovery_time
         else:
             self.average_recovery_time = (
-                (self.average_recovery_time * (total_recoveries - 1) + recovery_time) /
-                total_recoveries
-            )
-    
+                self.average_recovery_time * (total_recoveries - 1) + recovery_time
+            ) / total_recoveries
+
     @property
     def recovery_success_rate(self) -> float:
         """Calculate recovery success rate"""
@@ -136,14 +140,14 @@ class ErrorMetrics:
 
 class CircuitBreaker:
     """Circuit breaker for external service calls"""
-    
+
     def __init__(self, failure_threshold: int = 5, timeout: float = 60.0):
         self.failure_threshold = failure_threshold
         self.timeout = timeout
         self.failure_count = 0
         self.last_failure_time = 0.0
         self.state = "closed"  # closed, open, half-open
-    
+
     def can_proceed(self) -> bool:
         """Check if operation can proceed"""
         if self.state == "closed":
@@ -155,17 +159,17 @@ class CircuitBreaker:
             return False
         else:  # half-open
             return True
-    
+
     def record_success(self):
         """Record successful operation"""
         self.failure_count = 0
         self.state = "closed"
-    
+
     def record_failure(self):
         """Record failed operation"""
         self.failure_count += 1
         self.last_failure_time = time.time()
-        
+
         if self.failure_count >= self.failure_threshold:
             self.state = "open"
 
@@ -175,53 +179,57 @@ class UnifiedErrorHandler:
     Unified error handler providing centralized error management,
     recovery strategies, and monitoring integration.
     """
-    
+
     def __init__(self):
         """Initialize unified error handler"""
         self.metrics = ErrorMetrics()
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
         self.recovery_strategies: Dict[str, Callable] = {}
         self.error_listeners: List[Callable] = []
-        
+
         # Default recovery strategies
         self._register_default_strategies()
-        
+
         logger.info("Unified error handler initialized")
-    
+
     def _register_default_strategies(self):
         """Register default error recovery strategies"""
-        self.recovery_strategies.update({
-            "azure_service_retry": self._azure_service_recovery,
-            "cache_fallback": self._cache_fallback_recovery,
-            "domain_detection_fallback": self._domain_detection_fallback,
-            "graceful_degradation": self._graceful_degradation_recovery
-        })
-    
+        self.recovery_strategies.update(
+            {
+                "azure_service_retry": self._azure_service_recovery,
+                "cache_fallback": self._cache_fallback_recovery,
+                "domain_detection_fallback": self._domain_detection_fallback,
+                "graceful_degradation": self._graceful_degradation_recovery,
+            }
+        )
+
     def register_recovery_strategy(self, name: str, strategy: Callable):
         """Register custom recovery strategy"""
         self.recovery_strategies[name] = strategy
         logger.info(f"Registered recovery strategy: {name}")
-    
+
     def add_error_listener(self, listener: Callable):
         """Add error event listener for monitoring integration"""
         self.error_listeners.append(listener)
-    
+
     def get_circuit_breaker(self, service_name: str) -> CircuitBreaker:
         """Get or create circuit breaker for service"""
         if service_name not in self.circuit_breakers:
             self.circuit_breakers[service_name] = CircuitBreaker()
         return self.circuit_breakers[service_name]
-    
-    async def handle_error(self, 
-                          error: Exception,
-                          operation: str,
-                          component: str,
-                          parameters: Optional[Dict[str, Any]] = None,
-                          severity: Optional[ErrorSeverity] = None,
-                          category: Optional[ErrorCategory] = None) -> Optional[Any]:
+
+    async def handle_error(
+        self,
+        error: Exception,
+        operation: str,
+        component: str,
+        parameters: Optional[Dict[str, Any]] = None,
+        severity: Optional[ErrorSeverity] = None,
+        category: Optional[ErrorCategory] = None,
+    ) -> Optional[Any]:
         """
         Handle error with automatic categorization, recovery, and monitoring
-        
+
         Args:
             error: The exception that occurred
             operation: Name of the operation that failed
@@ -229,7 +237,7 @@ class UnifiedErrorHandler:
             parameters: Operation parameters for context
             severity: Override automatic severity detection
             category: Override automatic category detection
-            
+
         Returns:
             Recovery result if successful, None if recovery failed
         """
@@ -240,58 +248,63 @@ class UnifiedErrorHandler:
             category=category or self._detect_category(error, component),
             operation=operation,
             component=component,
-            parameters=parameters or {}
+            parameters=parameters or {},
         )
-        
+
         # Record error metrics
         self.metrics.record_error(context)
-        
+
         # Log error with context
         self._log_error(context)
-        
+
         # Notify listeners
         await self._notify_listeners(context)
-        
+
         # Attempt recovery if appropriate
         recovery_result = None
         if context.severity != ErrorSeverity.CRITICAL:
             recovery_result = await self._attempt_recovery(context)
-        
+
         return recovery_result
-    
+
     def _detect_severity(self, error: Exception) -> ErrorSeverity:
         """Automatically detect error severity"""
         error_type = type(error).__name__
         error_message = str(error).lower()
-        
+
         # Critical errors
-        if any(term in error_message for term in ["authentication", "authorization", "credential"]):
+        if any(
+            term in error_message
+            for term in ["authentication", "authorization", "credential"]
+        ):
             return ErrorSeverity.CRITICAL
-        
+
         # High severity errors
         if any(term in error_message for term in ["timeout", "connection", "network"]):
             return ErrorSeverity.HIGH
-        
+
         # Medium severity errors
         if error_type in ["ValueError", "KeyError", "AttributeError"]:
             return ErrorSeverity.MEDIUM
-        
+
         # Default to low severity
         return ErrorSeverity.LOW
-    
+
     def _detect_category(self, error: Exception, component: str) -> ErrorCategory:
         """Automatically detect error category"""
         error_message = str(error).lower()
         component_lower = component.lower()
-        
+
         # Azure service errors
-        if any(term in error_message for term in ["azure", "credential", "authentication"]):
+        if any(
+            term in error_message for term in ["azure", "credential", "authentication"]
+        ):
             return ErrorCategory.AZURE_SERVICE
-        
+
         # Network errors
         if any(term in error_message for term in ["connection", "timeout", "network"]):
             return ErrorCategory.NETWORK
-        
+
         # Component-based categorization
         if "cache" in component_lower or "memory" in component_lower:
             return ErrorCategory.CACHE_MEMORY
@@ -301,18 +314,18 @@ class UnifiedErrorHandler:
             return ErrorCategory.AGENT_PROCESSING
         elif "config" in component_lower:
             return ErrorCategory.CONFIGURATION
-        
+
         return ErrorCategory.UNKNOWN
-    
+
     def _log_error(self, context: ErrorContext):
         """Log error with structured context"""
         log_level = {
             ErrorSeverity.LOW: logging.WARNING,
             ErrorSeverity.MEDIUM: logging.ERROR,
             ErrorSeverity.HIGH: logging.ERROR,
-            ErrorSeverity.CRITICAL: logging.CRITICAL
+            ErrorSeverity.CRITICAL: logging.CRITICAL,
         }.get(context.severity, logging.ERROR)
-        
+
         logger.log(
             log_level,
             f"Error in {context.component}.{context.operation}: {context.error}",
@@ -323,10 +336,10 @@ class UnifiedErrorHandler:
                 "operation": context.operation,
                 "parameters": context.parameters,
                 "attempt_count": context.attempt_count,
-                "traceback": traceback.format_exc()
-            }
+                "traceback": traceback.format_exc(),
+            },
         )
-    
+
     async def _notify_listeners(self, context: ErrorContext):
         """Notify error listeners for monitoring integration"""
         for listener in self.error_listeners:
@@ -337,39 +350,41 @@ class UnifiedErrorHandler:
                     listener(context)
             except Exception as e:
                 logger.warning(f"Error listener failed: {e}")
-    
+
     async def _attempt_recovery(self, context: ErrorContext) -> Optional[Any]:
         """Attempt error recovery using appropriate strategy"""
         recovery_start = time.time()
-        
+
         try:
             # Determine recovery strategy
             strategy_name = self._select_recovery_strategy(context)
             if not strategy_name or strategy_name not in self.recovery_strategies:
                 return None
-            
+
             # Set recovery strategy in context
             context.recovery_strategy = strategy_name
-            
+
             # Execute recovery strategy
             strategy = self.recovery_strategies[strategy_name]
             recovery_result = await strategy(context)
-            
+
             # Record successful recovery
             recovery_time = time.time() - recovery_start
             self.metrics.record_recovery(True, recovery_time)
-            
-            logger.info(f"Recovery successful for {context.operation} using {strategy_name}")
+
+            logger.info(
+                f"Recovery successful for {context.operation} using {strategy_name}"
+            )
             return recovery_result
-            
+
         except Exception as recovery_error:
             # Record failed recovery
             recovery_time = time.time() - recovery_start
             self.metrics.record_recovery(False, recovery_time)
-            
+
             logger.error(f"Recovery failed for {context.operation}: {recovery_error}")
             return None
-    
+
     def _select_recovery_strategy(self, context: ErrorContext) -> Optional[str]:
         """Select appropriate recovery strategy based on error context"""
         if context.category == ErrorCategory.AZURE_SERVICE:
@@ -378,77 +393,84 @@ class UnifiedErrorHandler:
             return "cache_fallback"
         elif context.category == ErrorCategory.DOMAIN_INTELLIGENCE:
             return "domain_detection_fallback"
-        elif context.category in [ErrorCategory.NETWORK, ErrorCategory.AGENT_PROCESSING]:
+        elif context.category in [
+            ErrorCategory.NETWORK,
+            ErrorCategory.AGENT_PROCESSING,
+        ]:
             return "azure_service_retry"  # Use retry strategy
         else:
             return "graceful_degradation"
-    
+
     # Default recovery strategies
-    
+
     async def _azure_service_recovery(self, context: ErrorContext) -> Optional[Any]:
         """Recovery strategy for Azure service errors"""
         if not context.should_retry:
             return None
-        
+
         # Check circuit breaker
         circuit_breaker = self.get_circuit_breaker(context.component)
         if not circuit_breaker.can_proceed():
             logger.warning(f"Circuit breaker open for {context.component}")
             return None
-        
+
         # Wait for backoff delay
         await asyncio.sleep(context.backoff_delay)
-        
+
         # Increment attempt count
         context.attempt_count += 1
-        
+
         logger.info(f"Retrying {context.operation} (attempt {context.attempt_count})")
         return {"retry": True, "attempt": context.attempt_count}
-    
+
     async def _cache_fallback_recovery(self, context: ErrorContext) -> Optional[Any]:
         """Recovery strategy for cache/memory errors"""
         logger.info(f"Using fallback for cache error in {context.operation}")
-        
+
         # Provide fallback cache behavior
         return {
             "fallback": True,
             "strategy": "bypass_cache",
-            "message": "Cache temporarily unavailable, proceeding without cache"
+            "message": "Cache temporarily unavailable, proceeding without cache",
         }
-    
+
     async def _domain_detection_fallback(self, context: ErrorContext) -> Optional[Any]:
         """Recovery strategy for domain intelligence errors"""
         logger.info(f"Using fallback domain detection for {context.operation}")
-        
+
         # Fallback to general domain
         return {
             "domain": "general",
             "confidence": 0.3,
             "fallback": True,
-            "message": "Using general domain due to detection error"
+            "message": "Using general domain due to detection error",
         }
-    
-    async def _graceful_degradation_recovery(self, context: ErrorContext) -> Optional[Any]:
+
+    async def _graceful_degradation_recovery(
+        self, context: ErrorContext
+    ) -> Optional[Any]:
         """Recovery strategy for graceful degradation"""
         logger.info(f"Graceful degradation for {context.operation}")
-        
+
         return {
             "degraded": True,
             "message": "Operating in degraded mode due to error",
-            "reduced_functionality": True
+            "reduced_functionality": True,
         }
-    
+
     # Decorator for automatic error handling
-    
-    def handle_errors(self, 
-                     operation: str = None,
-                     component: str = None,
-                     severity: ErrorSeverity = None,
-                     category: ErrorCategory = None,
-                     return_on_error: Any = None):
+
+    def handle_errors(
+        self,
+        operation: str = None,
+        component: str = None,
+        severity: ErrorSeverity = None,
+        category: ErrorCategory = None,
+        return_on_error: Any = None,
+    ):
         """
         Decorator for automatic error handling
-        
+
         Usage:
             @error_handler.handle_errors(
                 operation="search_documents",
@@ -459,6 +481,7 @@ class UnifiedErrorHandler:
                 # Function implementation
                 pass
         """
+
         def decorator(func):
             @functools.wraps(func)
             async def wrapper(*args, **kwargs):
@@ -468,22 +491,23 @@ class UnifiedErrorHandler:
                     recovery_result = await self.handle_error(
                         error=e,
                         operation=operation or func.__name__,
-                        component=component or func.__module__.split('.')[-1],
+                        component=component or func.__module__.split(".")[-1],
                         parameters={"args": args, "kwargs": kwargs},
                         severity=severity,
-                        category=category
+                        category=category,
                     )
-                    
+
                     if recovery_result is not None:
                         return recovery_result
                     else:
                         return return_on_error
-            
+
             return wrapper
+
         return decorator
-    
+
     # Statistics and monitoring
-    
+
     def get_error_stats(self) -> Dict[str, Any]:
         """Get comprehensive error statistics"""
         return {
@@ -495,42 +519,44 @@ class UnifiedErrorHandler:
                 "successful_recoveries": self.metrics.successful_recoveries,
                 "failed_recoveries": self.metrics.failed_recoveries,
                 "success_rate_percent": self.metrics.recovery_success_rate,
-                "average_recovery_time_ms": self.metrics.average_recovery_time * 1000
+                "average_recovery_time_ms": self.metrics.average_recovery_time * 1000,
             },
             "circuit_breaker_status": {
                 name: {"state": cb.state, "failure_count": cb.failure_count}
                 for name, cb in self.circuit_breakers.items()
             },
-            "recent_errors": list(self.metrics.recent_errors)[-10:]  # Last 10 errors
+            "recent_errors": list(self.metrics.recent_errors)[-10:],  # Last 10 errors
         }
-    
+
     def get_health_status(self) -> Dict[str, Any]:
         """Get error handler health status"""
-        recent_error_count = len([
-            error for error in self.metrics.recent_errors
-            if time.time() - error["timestamp"] < 3600  # Last hour
-        ])
-        
+        recent_error_count = len(
+            [
+                error
+                for error in self.metrics.recent_errors
+                if time.time() - error["timestamp"] < 3600  # Last hour
+            ]
+        )
+
         critical_errors = self.metrics.errors_by_severity.get("critical", 0)
         recovery_rate = self.metrics.recovery_success_rate
-        
+
         if critical_errors > 0 or recent_error_count > 50:
             status = "critical"
         elif recent_error_count > 20 or recovery_rate < 50:
             status = "warning"
         else:
             status = "healthy"
-        
+
         return {
             "status": status,
             "recent_errors_last_hour": recent_error_count,
             "critical_errors_total": critical_errors,
             "recovery_success_rate": recovery_rate,
-            "active_circuit_breakers": len([
-                cb for cb in self.circuit_breakers.values() 
-                if cb.state != "closed"
-            ]),
-            "error_handler_operational": True
+            "active_circuit_breakers": len(
+                [cb for cb in self.circuit_breakers.values() if cb.state != "closed"]
+            ),
+            "error_handler_operational": True,
         }
 
 
@@ -548,7 +574,10 @@ def get_error_handler() -> UnifiedErrorHandler:
 
 # Convenience functions for common error handling patterns
 
-async def handle_azure_service_error(error: Exception, service_name: str, operation: str) -> Optional[Any]:
+
+async def handle_azure_service_error(
+    error: Exception, service_name: str, operation: str
+) -> Optional[Any]:
     """Handle Azure service errors with appropriate recovery"""
     handler = get_error_handler()
     return await handler.handle_error(
@@ -556,11 +585,13 @@ async def handle_azure_service_error(error: Exception, service_name: str, operat
         operation=operation,
         component=service_name,
         category=ErrorCategory.AZURE_SERVICE,
-        severity=ErrorSeverity.HIGH
+        severity=ErrorSeverity.HIGH,
     )
 
 
-async def handle_domain_intelligence_error(error: Exception, operation: str) -> Optional[Any]:
+async def handle_domain_intelligence_error(
+    error: Exception, operation: str
+) -> Optional[Any]:
     """Handle domain intelligence errors with fallback"""
     handler = get_error_handler()
     return await handler.handle_error(
@@ -568,7 +599,7 @@ async def handle_domain_intelligence_error(error: Exception, operation: str) -> 
         operation=operation,
         component="domain_intelligence",
         category=ErrorCategory.DOMAIN_INTELLIGENCE,
-        severity=ErrorSeverity.MEDIUM
+        severity=ErrorSeverity.MEDIUM,
     )
 
 
@@ -580,7 +611,7 @@ async def handle_cache_error(error: Exception, operation: str) -> Optional[Any]:
         operation=operation,
         component="cache_manager",
         category=ErrorCategory.CACHE_MEMORY,
-        severity=ErrorSeverity.LOW
+        severity=ErrorSeverity.LOW,
     )
 
 
@@ -592,7 +623,7 @@ def azure_service_errors(service_name: str, return_on_error: Any = None):
         component=service_name,
         category=ErrorCategory.AZURE_SERVICE,
         severity=ErrorSeverity.HIGH,
-        return_on_error=return_on_error
+        return_on_error=return_on_error,
     )
 
 
@@ -603,7 +634,7 @@ def domain_intelligence_errors(return_on_error: Any = None):
         component="domain_intelligence",
         category=ErrorCategory.DOMAIN_INTELLIGENCE,
         severity=ErrorSeverity.MEDIUM,
-        return_on_error=return_on_error or {"domain": "general", "confidence": 0.3}
+        return_on_error=return_on_error or {"domain": "general", "confidence": 0.3},
     )
 
 
@@ -614,5 +645,5 @@ def cache_errors(return_on_error: Any = None):
         component="cache_manager",
         category=ErrorCategory.CACHE_MEMORY,
         severity=ErrorSeverity.LOW,
-        return_on_error=return_on_error
+        return_on_error=return_on_error,
     )

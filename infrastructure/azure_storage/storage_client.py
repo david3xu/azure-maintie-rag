@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any, BinaryIO, Dict, List, Optional
 
 import aiofiles
-
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
 
 from config.settings import azure_settings
@@ -103,7 +102,9 @@ class UnifiedStorageClient(BaseAzureClient):
             # Use async file operations as per coding standards
             async with aiofiles.open(file_path, "rb") as data:
                 content = await data.read()
-                await asyncio.to_thread(blob_client.upload_blob, content, overwrite=True)
+                await asyncio.to_thread(
+                    blob_client.upload_blob, content, overwrite=True
+                )
 
             return self.create_success_response(
                 "upload_file",

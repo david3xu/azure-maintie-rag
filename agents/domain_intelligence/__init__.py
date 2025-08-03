@@ -21,58 +21,41 @@ Key features preserved:
 - Background processing for <5ms domain detection
 """
 
-# Import consolidated intelligence components
-from .domain_analyzer import (
-    DomainAnalyzer,
-    ContentAnalysis,
-    DomainClassification
-)
-
-from .pattern_engine import (
-    PatternEngine,
-    LearnedPattern,
-    ExtractedPatterns
-)
-
 # Import background processing and config generation
 from .background_processor import (
+    BackgroundProcessingStats,
     run_startup_background_processing,
-    BackgroundProcessingStats
 )
+from .config_generator import ConfigGenerator, DomainConfig
 
-from .config_generator import (
-    DomainConfig,
-    ConfigGenerator
-)
+# Import consolidated intelligence components
+from .domain_analyzer import ContentAnalysis, DomainAnalyzer, DomainClassification
+from .pattern_engine import ExtractedPatterns, LearnedPattern, PatternEngine
 
 # Import PydanticAI tools
 from .pydantic_tools import (
-    discover_domain_tool,
     analyze_domain_patterns_tool,
-    validate_domain_confidence_tool
+    discover_domain_tool,
+    validate_domain_confidence_tool,
 )
 
 __all__ = [
     # Domain analysis
     "DomainAnalyzer",
-    "ContentAnalysis", 
+    "ContentAnalysis",
     "DomainClassification",
-    
     # Pattern learning
     "PatternEngine",
     "LearnedPattern",
     "ExtractedPatterns",
-    
     # Background processing
     "run_startup_background_processing",
     "BackgroundProcessingStats",
-    
     # Config generation
     "DomainConfig",
     "ConfigGenerator",
-    
     # PydanticAI Tools
     "discover_domain_tool",
     "analyze_domain_patterns_tool",
-    "validate_domain_confidence_tool"
+    "validate_domain_confidence_tool",
 ]

@@ -277,6 +277,6 @@ The Azure Universal RAG system's **core dataflow is fully functional and product
 
 ---
 
-*Last Updated: 2025-08-02*  
-*Testing Environment: Azure Universal RAG with PydanticAI Universal Agent*  
+*Last Updated: 2025-08-02*
+*Testing Environment: Azure Universal RAG with PydanticAI Universal Agent*
 *Results: Real execution with live Azure services*

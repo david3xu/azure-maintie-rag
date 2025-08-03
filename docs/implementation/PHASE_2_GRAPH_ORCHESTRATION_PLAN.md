@@ -1,7 +1,7 @@
 # Phase 2: Graph-Based Orchestration Implementation Plan
 
 **Date**: August 3, 2025
-**Duration**: 2 weeks  
+**Duration**: 2 weeks
 **Priority**: High
 **Status**: Ready for Implementation (Following Phase 1 completion)
 
@@ -17,7 +17,7 @@ Phase 2 implements the officially recommended PydanticAI graph-based orchestrati
 ```
 agents/orchestration/
 ├── config_extraction_orchestrator.py    # 306 lines - Config-Extraction workflow
-├── search_orchestrator.py               # 640 lines - Search coordination  
+├── search_orchestrator.py               # 640 lines - Search coordination
 ├── unified_orchestrator.py              # 1,696 lines - Complete workflow hub
 ├── workflow_orchestrator.py             # 739 lines - High-level workflow management
 ├── pydantic_integration.py              # 512 lines - PydanticAI patterns
@@ -32,7 +32,7 @@ agents/orchestration/
 ```
 agents/workflows/
 ├── config_extraction_graph.py           # Single graph for Config-Extraction
-├── search_workflow_graph.py             # Single graph for search workflows  
+├── search_workflow_graph.py             # Single graph for search workflows
 ├── state_persistence.py                 # Production state management
 ├── graph_monitoring.py                  # Built-in performance tracking
 └── fault_recovery.py                    # Automatic retry and recovery
@@ -62,7 +62,7 @@ from typing import Optional, Dict, Any
 import asyncio
 import time
 
-@dataclass 
+@dataclass
 class WorkflowState:
     """Base state for all workflow graphs"""
     workflow_id: str
@@ -70,7 +70,7 @@ class WorkflowState:
     domain: Optional[str] = None
     start_time: float = 0.0
     performance_metrics: Dict[str, Any] = None
-    
+
     def __post_init__(self):
         if self.start_time == 0.0:
             self.start_time = time.time()
@@ -87,7 +87,7 @@ class ConfigExtractionState(WorkflowState):
     extracted_knowledge: Optional[Dict] = None
     validation_results: Optional[Dict] = None
 
-@dataclass  
+@dataclass
 class SearchWorkflowState(WorkflowState):
     """State for search workflow execution"""
     search_context: Optional[Dict] = None
@@ -111,11 +111,11 @@ from config.settings import azure_settings
 
 class ProductionStatePersistence(BaseStatePersistence):
     """Production-grade state persistence with PostgreSQL backend"""
-    
+
     def __init__(self):
         self.pool: Optional[asyncpg.Pool] = None
         self.encryption_key = azure_settings.state_encryption_key
-        
+
     async def initialize(self):
         """Initialize PostgreSQL connection pool"""
         self.pool = await asyncpg.create_pool(
@@ -127,56 +127,56 @@ class ProductionStatePersistence(BaseStatePersistence):
             min_size=1,
             max_size=10
         )
-        
+
         # Create tables if not exist
         await self._create_tables()
-    
+
     async def save_state(self, workflow_id: str, state: WorkflowState) -> None:
         """Save encrypted workflow state to PostgreSQL"""
         if not self.pool:
             await self.initialize()
-            
+
         encrypted_state = self._encrypt_state(state)
-        
+
         async with self.pool.acquire() as conn:
             await conn.execute("""
                 INSERT INTO workflow_states (workflow_id, state_data, updated_at)
                 VALUES ($1, $2, NOW())
-                ON CONFLICT (workflow_id) 
+                ON CONFLICT (workflow_id)
                 DO UPDATE SET state_data = $2, updated_at = NOW()
             """, workflow_id, encrypted_state)
-    
+
     async def load_state(self, workflow_id: str) -> Optional[WorkflowState]:
         """Load and decrypt workflow state from PostgreSQL"""
         if not self.pool:
             await self.initialize()
-            
+
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow("""
-                SELECT state_data FROM workflow_states 
+                SELECT state_data FROM workflow_states
                 WHERE workflow_id = $1
             """, workflow_id)
-            
+
         if row:
             return self._decrypt_state(row['state_data'])
         return None
-    
+
     async def delete_state(self, workflow_id: str) -> None:
         """Delete workflow state (cleanup after completion)"""
         if not self.pool:
             await self.initialize()
-            
+
         async with self.pool.acquire() as conn:
             await conn.execute("""
                 DELETE FROM workflow_states WHERE workflow_id = $1
             """, workflow_id)
-    
+
     def _encrypt_state(self, state: WorkflowState) -> str:
         """Encrypt state data using Azure Key Vault keys"""
         # Implement encryption using Azure Key Vault
         # This is a placeholder - implement actual encryption
         return json.dumps(state.__dict__)
-    
+
     def _decrypt_state(self, encrypted_data: str) -> WorkflowState:
         """Decrypt state data from storage"""
         # Implement decryption using Azure Key Vault
@@ -194,16 +194,16 @@ class ProductionStatePersistence(BaseStatePersistence):
 # agents/workflows/config_extraction_graph.py
 from pydantic_graph import Graph, BaseNode, GraphRunContext, End
 from ..domain_intelligence.agent import domain_agent
-from ..knowledge_extraction.agent import knowledge_agent  
+from ..knowledge_extraction.agent import knowledge_agent
 from ..universal_search.agent import search_agent
 
 class AnalyzeDomainNode(BaseNode[ConfigExtractionState]):
     """First stage: Statistical + LLM domain analysis"""
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> 'GenerateConfigNode':
         """Execute hybrid domain analysis preserving competitive advantage"""
         logger.info(f"Starting domain analysis for workflow {ctx.state.workflow_id}")
-        
+
         try:
             # Statistical Analysis (preserving hybrid intelligence)
             statistical_result = await domain_agent.run(
@@ -213,40 +213,40 @@ class AnalyzeDomainNode(BaseNode[ConfigExtractionState]):
                 usage=ctx.usage
             )
             ctx.state.statistical_analysis = statistical_result.output
-            
+
             # Semantic Pattern Analysis (preserving LLM component)
             semantic_result = await domain_agent.run(
-                "generate_semantic_patterns", 
+                "generate_semantic_patterns",
                 content_sample=ctx.state.raw_data[:1000],
                 deps=ctx.deps,
                 usage=ctx.usage
             )
             ctx.state.semantic_patterns = semantic_result.output
-            
+
             # Update performance metrics
             ctx.state.performance_metrics["domain_analysis_time"] = time.time() - ctx.state.start_time
-            
+
             logger.info(f"Domain analysis completed for {ctx.state.workflow_id}")
             return GenerateConfigNode()
-            
+
         except Exception as e:
             logger.error(f"Domain analysis failed for {ctx.state.workflow_id}: {e}")
             return DomainAnalysisErrorNode(str(e))
 
 class GenerateConfigNode(BaseNode[ConfigExtractionState]):
     """Second stage: Generate extraction configuration"""
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> 'ExtractKnowledgeNode':
         """Generate ExtractionConfiguration from domain patterns"""
         logger.info(f"Generating extraction config for {ctx.state.workflow_id}")
-        
+
         try:
             # Combine statistical and semantic patterns
             combined_patterns = {
                 "statistical": ctx.state.statistical_analysis,
                 "semantic": ctx.state.semantic_patterns
             }
-            
+
             # Generate configuration (preserving zero-config automation)
             config_result = await domain_agent.run(
                 "create_extraction_config",
@@ -255,24 +255,24 @@ class GenerateConfigNode(BaseNode[ConfigExtractionState]):
                 usage=ctx.usage
             )
             ctx.state.extraction_config = config_result.output
-            
+
             # Update performance metrics
             ctx.state.performance_metrics["config_generation_time"] = time.time() - ctx.state.start_time
-            
+
             logger.info(f"Extraction config generated for {ctx.state.workflow_id}")
             return ExtractKnowledgeNode()
-            
+
         except Exception as e:
             logger.error(f"Config generation failed for {ctx.state.workflow_id}: {e}")
             return ConfigGenerationErrorNode(str(e))
 
 class ExtractKnowledgeNode(BaseNode[ConfigExtractionState]):
     """Third stage: Knowledge extraction using generated config"""
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> 'ValidateResultsNode':
         """Extract knowledge using configuration (preserving multi-strategy extraction)"""
         logger.info(f"Starting knowledge extraction for {ctx.state.workflow_id}")
-        
+
         try:
             # Multi-strategy entity extraction (preserving competitive advantage)
             entity_result = await knowledge_agent.run(
@@ -282,7 +282,7 @@ class ExtractKnowledgeNode(BaseNode[ConfigExtractionState]):
                 deps=ctx.deps,
                 usage=ctx.usage
             )
-            
+
             # Contextual relationship extraction (preserving advanced features)
             relationship_result = await knowledge_agent.run(
                 "extract_relationships_contextual",
@@ -291,30 +291,30 @@ class ExtractKnowledgeNode(BaseNode[ConfigExtractionState]):
                 deps=ctx.deps,
                 usage=ctx.usage
             )
-            
+
             # Combine extraction results
             ctx.state.extracted_knowledge = {
                 "entities": entity_result.output,
                 "relationships": relationship_result.output
             }
-            
+
             # Update performance metrics
             ctx.state.performance_metrics["extraction_time"] = time.time() - ctx.state.start_time
-            
+
             logger.info(f"Knowledge extraction completed for {ctx.state.workflow_id}")
             return ValidateResultsNode()
-            
+
         except Exception as e:
             logger.error(f"Knowledge extraction failed for {ctx.state.workflow_id}: {e}")
             return ExtractionErrorNode(str(e))
 
 class ValidateResultsNode(BaseNode[ConfigExtractionState]):
     """Fourth stage: Quality validation and storage"""
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> 'CompleteWorkflowNode':
         """Validate extraction quality and store results"""
         logger.info(f"Validating results for {ctx.state.workflow_id}")
-        
+
         try:
             # Quality validation (preserving enterprise validation framework)
             validation_result = await knowledge_agent.run(
@@ -324,7 +324,7 @@ class ValidateResultsNode(BaseNode[ConfigExtractionState]):
                 usage=ctx.usage
             )
             ctx.state.validation_results = validation_result.output
-            
+
             # Store knowledge graph (preserving Azure Cosmos DB integration)
             if validation_result.output.get("quality_score", 0) > 0.7:
                 storage_result = await knowledge_agent.run(
@@ -334,25 +334,25 @@ class ValidateResultsNode(BaseNode[ConfigExtractionState]):
                     usage=ctx.usage
                 )
                 ctx.state.performance_metrics["storage_time"] = time.time() - ctx.state.start_time
-            
+
             logger.info(f"Results validation completed for {ctx.state.workflow_id}")
             return CompleteWorkflowNode()
-            
+
         except Exception as e:
             logger.error(f"Results validation failed for {ctx.state.workflow_id}: {e}")
             return ValidationErrorNode(str(e))
 
 class CompleteWorkflowNode(BaseNode[ConfigExtractionState]):
     """Final stage: Workflow completion and metrics"""
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> End[Dict[str, Any]]:
         """Complete workflow and return final results"""
         total_time = time.time() - ctx.state.start_time
-        
+
         # ✅ DATA-DRIVEN SLA - Learn SLA targets from performance data
         optimal_sla = await self._get_learned_sla_target(ctx.state.domain)
         sla_met = total_time < optimal_sla
-        
+
         final_results = {
             "workflow_id": ctx.state.workflow_id,
             "domain": ctx.state.domain,
@@ -372,7 +372,7 @@ class CompleteWorkflowNode(BaseNode[ConfigExtractionState]):
                 "enterprise_validation": True
             }
         }
-        
+
         logger.info(f"Config-Extraction workflow completed: {ctx.state.workflow_id} in {total_time:.2f}s")
         return End(final_results)
 
@@ -380,28 +380,28 @@ class CompleteWorkflowNode(BaseNode[ConfigExtractionState]):
 class DomainAnalysisErrorNode(BaseNode[ConfigExtractionState]):
     def __init__(self, error_message: str):
         self.error_message = error_message
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> End[Dict[str, Any]]:
         return End({"error": f"Domain analysis failed: {self.error_message}"})
 
 class ConfigGenerationErrorNode(BaseNode[ConfigExtractionState]):
     def __init__(self, error_message: str):
         self.error_message = error_message
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> End[Dict[str, Any]]:
         return End({"error": f"Config generation failed: {self.error_message}"})
 
 class ExtractionErrorNode(BaseNode[ConfigExtractionState]):
     def __init__(self, error_message: str):
         self.error_message = error_message
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> End[Dict[str, Any]]:
         return End({"error": f"Knowledge extraction failed: {self.error_message}"})
 
 class ValidationErrorNode(BaseNode[ConfigExtractionState]):
     def __init__(self, error_message: str):
         self.error_message = error_message
-    
+
     async def run(self, ctx: GraphRunContext[ConfigExtractionState]) -> End[Dict[str, Any]]:
         return End({"error": f"Results validation failed: {self.error_message}"})
 
@@ -409,7 +409,7 @@ class ValidationErrorNode(BaseNode[ConfigExtractionState]):
 config_extraction_graph = Graph(
     nodes=[
         AnalyzeDomainNode,
-        GenerateConfigNode, 
+        GenerateConfigNode,
         ExtractKnowledgeNode,
         ValidateResultsNode,
         CompleteWorkflowNode,
@@ -428,30 +428,30 @@ config_extraction_graph = Graph(
 
 **2. Search Workflow Graph**
 ```python
-# agents/workflows/search_workflow_graph.py  
+# agents/workflows/search_workflow_graph.py
 class PrepareSearchNode(BaseNode[SearchWorkflowState]):
     """Prepare search context and strategy"""
-    
+
     async def run(self, ctx: GraphRunContext[SearchWorkflowState]) -> 'ExecuteTriModalSearchNode':
         """Prepare search context based on query characteristics"""
         logger.info(f"Preparing search for workflow {ctx.state.workflow_id}")
-        
+
         # Analyze query to determine optimal search strategy
         ctx.state.search_context = {
             "query_complexity": len(ctx.state.query.split()),
             "domain_context": ctx.state.domain,
             "search_modalities": ["vector", "graph", "gnn"]  # Preserve tri-modal unity
         }
-        
+
         return ExecuteTriModalSearchNode()
 
 class ExecuteTriModalSearchNode(BaseNode[SearchWorkflowState]):
     """Execute tri-modal search preserving competitive advantage"""
-    
+
     async def run(self, ctx: GraphRunContext[SearchWorkflowState]) -> 'SynthesizeResultsNode':
         """Execute Vector + Graph + GNN search in parallel (preserving tri-modal unity)"""
         logger.info(f"Executing tri-modal search for {ctx.state.workflow_id}")
-        
+
         try:
             # Execute all three search modalities in parallel (competitive advantage)
             search_tasks = {
@@ -463,7 +463,7 @@ class ExecuteTriModalSearchNode(BaseNode[SearchWorkflowState]):
                     usage=ctx.usage
                 ),
                 "graph": search_agent.run(
-                    "execute_graph_search", 
+                    "execute_graph_search",
                     query=ctx.state.query,
                     graph_context=ctx.state.search_context,
                     deps=ctx.deps,
@@ -477,7 +477,7 @@ class ExecuteTriModalSearchNode(BaseNode[SearchWorkflowState]):
                     usage=ctx.usage
                 )
             }
-            
+
             # Await all search results
             search_results = {}
             for modality, task in search_tasks.items():
@@ -487,34 +487,34 @@ class ExecuteTriModalSearchNode(BaseNode[SearchWorkflowState]):
                 except Exception as e:
                     logger.error(f"{modality} search failed: {e}")
                     search_results[modality] = None
-            
+
             # Store results in state
             ctx.state.vector_results = search_results.get("vector")
-            ctx.state.graph_results = search_results.get("graph") 
+            ctx.state.graph_results = search_results.get("graph")
             ctx.state.gnn_results = search_results.get("gnn")
-            
+
             logger.info(f"Tri-modal search completed for {ctx.state.workflow_id}")
             return SynthesizeResultsNode()
-            
+
         except Exception as e:
             logger.error(f"Tri-modal search failed for {ctx.state.workflow_id}: {e}")
             return SearchErrorNode(str(e))
 
 class SynthesizeResultsNode(BaseNode[SearchWorkflowState]):
     """Synthesize tri-modal results into final response"""
-    
+
     async def run(self, ctx: GraphRunContext[SearchWorkflowState]) -> 'CompleteSearchNode':
         """Synthesize and rank tri-modal search results"""
         logger.info(f"Synthesizing results for {ctx.state.workflow_id}")
-        
+
         try:
             # Combine tri-modal results (preserving intelligent fusion)
             tri_modal_results = {
                 "vector_results": ctx.state.vector_results,
-                "graph_results": ctx.state.graph_results, 
+                "graph_results": ctx.state.graph_results,
                 "gnn_results": ctx.state.gnn_results
             }
-            
+
             # Intelligent result synthesis (preserving competitive advantage)
             synthesis_result = await search_agent.run(
                 "synthesize_search_results",
@@ -523,25 +523,25 @@ class SynthesizeResultsNode(BaseNode[SearchWorkflowState]):
                 usage=ctx.usage
             )
             ctx.state.synthesized_results = synthesis_result.output
-            
+
             logger.info(f"Results synthesis completed for {ctx.state.workflow_id}")
             return CompleteSearchNode()
-            
+
         except Exception as e:
             logger.error(f"Results synthesis failed for {ctx.state.workflow_id}: {e}")
             return SynthesisErrorNode(str(e))
 
 class CompleteSearchNode(BaseNode[SearchWorkflowState]):
     """Complete search workflow with performance validation"""
-    
+
     async def run(self, ctx: GraphRunContext[SearchWorkflowState]) -> End[Dict[str, Any]]:
         """Complete search workflow and validate SLA compliance"""
         total_time = time.time() - ctx.state.start_time
-        
+
         # ✅ DATA-DRIVEN SLA - Learn SLA targets from query complexity and performance data
         adaptive_sla = await self._calculate_adaptive_sla_target(ctx.state.query, ctx.state.domain)
         sla_met = total_time < adaptive_sla
-        
+
         final_results = {
             "workflow_id": ctx.state.workflow_id,
             "query": ctx.state.query,
@@ -563,7 +563,7 @@ class CompleteSearchNode(BaseNode[SearchWorkflowState]):
                 "intelligent_result_synthesis": True
             }
         }
-        
+
         logger.info(f"Search workflow completed: {ctx.state.workflow_id} in {total_time:.2f}s")
         return End(final_results)
 
@@ -571,14 +571,14 @@ class CompleteSearchNode(BaseNode[SearchWorkflowState]):
 class SearchErrorNode(BaseNode[SearchWorkflowState]):
     def __init__(self, error_message: str):
         self.error_message = error_message
-    
+
     async def run(self, ctx: GraphRunContext[SearchWorkflowState]) -> End[Dict[str, Any]]:
         return End({"error": f"Search execution failed: {self.error_message}"})
 
 class SynthesisErrorNode(BaseNode[SearchWorkflowState]):
     def __init__(self, error_message: str):
         self.error_message = error_message
-    
+
     async def run(self, ctx: GraphRunContext[SearchWorkflowState]) -> End[Dict[str, Any]]:
         return End({"error": f"Result synthesis failed: {self.error_message}"})
 
@@ -587,7 +587,7 @@ search_workflow_graph = Graph(
     nodes=[
         PrepareSearchNode,
         ExecuteTriModalSearchNode,
-        SynthesizeResultsNode, 
+        SynthesizeResultsNode,
         CompleteSearchNode,
         SearchErrorNode,
         SynthesisErrorNode
@@ -623,7 +623,7 @@ class WorkflowMetrics:
     sla_compliance: bool = False
     error_count: int = 0
     azure_service_calls: Dict[str, int] = None
-    
+
     def __post_init__(self):
         if self.node_executions is None:
             self.node_executions = {}
@@ -632,14 +632,14 @@ class WorkflowMetrics:
 
 class GraphMonitor:
     """Production-grade graph monitoring and observability"""
-    
+
     def __init__(self):
         self.active_workflows: Dict[str, WorkflowMetrics] = {}
         self.completed_workflows: Dict[str, WorkflowMetrics] = {}
-        
+
     async def start_workflow_monitoring(
-        self, 
-        workflow_id: str, 
+        self,
+        workflow_id: str,
         workflow_type: str
     ) -> WorkflowMetrics:
         """Start monitoring a workflow execution"""
@@ -648,9 +648,9 @@ class GraphMonitor:
             workflow_type=workflow_type,
             start_time=time.time()
         )
-        
+
         self.active_workflows[workflow_id] = metrics
-        
+
         # Log workflow start with Logfire
         logfire.info(
             "Workflow started",
@@ -658,9 +658,9 @@ class GraphMonitor:
             workflow_type=workflow_type,
             start_time=metrics.start_time
         )
-        
+
         return metrics
-    
+
     async def record_node_execution(
         self,
         workflow_id: str,
@@ -671,7 +671,7 @@ class GraphMonitor:
         if workflow_id in self.active_workflows:
             metrics = self.active_workflows[workflow_id]
             metrics.node_executions[node_name] = execution_time
-            
+
             # Log node execution with Logfire
             logfire.info(
                 "Node executed",
@@ -679,7 +679,7 @@ class GraphMonitor:
                 node_name=node_name,
                 execution_time=execution_time
             )
-    
+
     async def record_azure_service_call(
         self,
         workflow_id: str,
@@ -689,7 +689,7 @@ class GraphMonitor:
         if workflow_id in self.active_workflows:
             metrics = self.active_workflows[workflow_id]
             metrics.azure_service_calls[service_name] = metrics.azure_service_calls.get(service_name, 0) + 1
-    
+
     async def complete_workflow_monitoring(
         self,
         workflow_id: str,
@@ -698,21 +698,21 @@ class GraphMonitor:
         """Complete workflow monitoring and calculate final metrics"""
         if workflow_id not in self.active_workflows:
             return None
-            
+
         metrics = self.active_workflows[workflow_id]
         metrics.end_time = time.time()
-        
+
         # Calculate total execution time
         total_time = metrics.end_time - metrics.start_time
-        
+
         # ✅ DATA-DRIVEN SLA - Learn optimal SLA targets from performance analytics
         learned_sla_target = await self._get_learned_sla_target_from_analytics()
         metrics.sla_compliance = total_time < learned_sla_target
-        
+
         # Move to completed workflows
         self.completed_workflows[workflow_id] = metrics
         del self.active_workflows[workflow_id]
-        
+
         # Log workflow completion with comprehensive metrics
         logfire.info(
             "Workflow completed",
@@ -724,7 +724,7 @@ class GraphMonitor:
             azure_service_calls=sum(metrics.azure_service_calls.values()),
             competitive_advantages=final_results.get("competitive_advantages_preserved", {})
         )
-        
+
         # Alert on SLA violations
         if not metrics.sla_compliance:
             logfire.warning(
@@ -733,20 +733,20 @@ class GraphMonitor:
                 execution_time=total_time,
                 target_time=3.0
             )
-        
+
         return metrics
-    
+
     async def get_performance_dashboard(self) -> Dict[str, Any]:
         """Get comprehensive performance dashboard data"""
         total_workflows = len(self.completed_workflows)
-        
+
         if total_workflows == 0:
             return {"message": "No completed workflows"}
-        
+
         # Calculate aggregate metrics
         total_execution_times = [m.end_time - m.start_time for m in self.completed_workflows.values()]
         sla_compliant_workflows = [m for m in self.completed_workflows.values() if m.sla_compliance]
-        
+
         return {
             "total_workflows": total_workflows,
             "active_workflows": len(self.active_workflows),
@@ -757,7 +757,7 @@ class GraphMonitor:
             "azure_service_usage": self._aggregate_azure_usage(),
             "competitive_advantages_status": self._check_competitive_advantages()
         }
-    
+
     def _aggregate_azure_usage(self) -> Dict[str, int]:
         """Aggregate Azure service usage across all workflows"""
         aggregated = {}
@@ -765,24 +765,24 @@ class GraphMonitor:
             for service, count in metrics.azure_service_calls.items():
                 aggregated[service] = aggregated.get(service, 0) + count
         return aggregated
-    
+
     def _check_competitive_advantages(self) -> Dict[str, float]:
         """Check preservation of competitive advantages across workflows"""
         if not self.completed_workflows:
             return {}
-            
+
         advantages = [
             "tri_modal_search_unity",
-            "hybrid_domain_intelligence", 
+            "hybrid_domain_intelligence",
             "zero_config_automation",
             "sub_3s_performance"
         ]
-        
+
         advantage_scores = {}
         for advantage in advantages:
             preserved_count = 0
             total_count = len(self.completed_workflows)
-            
+
             for metrics in self.completed_workflows.values():
                 if advantage == "sub_3s_performance":
                     if metrics.sla_compliance:
@@ -790,9 +790,9 @@ class GraphMonitor:
                 else:
                     # Would check specific competitive advantage preservation
                     preserved_count += 1  # Placeholder
-            
+
             advantage_scores[advantage] = (preserved_count / total_count) * 100
-        
+
         return advantage_scores
 
 # Global graph monitor instance
@@ -830,7 +830,7 @@ class RetryConfig:
 
 class CircuitBreaker:
     """Circuit breaker for Azure service failures"""
-    
+
     def __init__(self, service_name: str, historical_data: Optional[Dict] = None):
         # ✅ DATA-DRIVEN - Learn thresholds from service reliability patterns
         self.failure_threshold = await self._learn_failure_threshold(service_name, historical_data)
@@ -838,7 +838,7 @@ class CircuitBreaker:
         self.failure_count = 0
         self.last_failure_time = 0.0
         self.state = "closed"  # closed, open, half-open
-    
+
     async def call(self, func: Callable, *args, **kwargs):
         """Execute function with circuit breaker protection"""
         if self.state == "open":
@@ -846,28 +846,28 @@ class CircuitBreaker:
                 self.state = "half-open"
             else:
                 raise Exception("Circuit breaker is OPEN - service unavailable")
-        
+
         try:
             result = await func(*args, **kwargs)
-            
+
             if self.state == "half-open":
                 self.state = "closed"
                 self.failure_count = 0
-            
+
             return result
-            
+
         except Exception as e:
             self.failure_count += 1
             self.last_failure_time = time.time()
-            
+
             if self.failure_count >= self.failure_threshold:
                 self.state = "open"
-            
+
             raise e
 
 class FaultRecoveryManager:
     """Manages fault recovery for graph workflows"""
-    
+
     def __init__(self):
         self.circuit_breakers: Dict[str, CircuitBreaker] = {}
         # ✅ DATA-DRIVEN - Learn retry configurations from service reliability data
@@ -876,13 +876,13 @@ class FaultRecoveryManager:
             error_pattern_analysis=await self._analyze_failure_patterns(),
             success_rate_targets={"azure_openai": 0.99, "azure_search": 0.95, "azure_cosmos": 0.98, "azure_ml": 0.90}
         )
-    
+
     def get_circuit_breaker(self, service_name: str) -> CircuitBreaker:
         """Get or create circuit breaker for service"""
         if service_name not in self.circuit_breakers:
             self.circuit_breakers[service_name] = CircuitBreaker()
         return self.circuit_breakers[service_name]
-    
+
     async def execute_with_retry(
         self,
         func: Callable,
@@ -893,14 +893,14 @@ class FaultRecoveryManager:
         """Execute function with retry logic and circuit breaker"""
         config = self.retry_configs.get(service_name, RetryConfig())
         circuit_breaker = self.get_circuit_breaker(service_name)
-        
+
         last_exception = None
-        
+
         for attempt in range(config.max_attempts):
             try:
                 # Execute with circuit breaker protection
                 result = await circuit_breaker.call(func, *args, **kwargs)
-                
+
                 # Log successful recovery if this wasn't the first attempt
                 if attempt > 0:
                     logfire.info(
@@ -909,12 +909,12 @@ class FaultRecoveryManager:
                         attempt=attempt + 1,
                         total_attempts=config.max_attempts
                     )
-                
+
                 return result
-                
+
             except Exception as e:
                 last_exception = e
-                
+
                 # Log retry attempt
                 logfire.warning(
                     "Service call failed, retrying",
@@ -923,12 +923,12 @@ class FaultRecoveryManager:
                     total_attempts=config.max_attempts,
                     error=str(e)
                 )
-                
+
                 # Don't delay on the last attempt
                 if attempt < config.max_attempts - 1:
                     delay = self._calculate_delay(config, attempt)
                     await asyncio.sleep(delay)
-        
+
         # All attempts failed
         logfire.error(
             "Service call failed after all retries",
@@ -936,9 +936,9 @@ class FaultRecoveryManager:
             total_attempts=config.max_attempts,
             final_error=str(last_exception)
         )
-        
+
         raise last_exception
-    
+
     def _calculate_delay(self, config: RetryConfig, attempt: int) -> float:
         """Calculate delay based on retry strategy"""
         if config.strategy == RetryStrategy.EXPONENTIAL_BACKOFF:
@@ -947,20 +947,20 @@ class FaultRecoveryManager:
             delay = config.base_delay * (attempt + 1)
         else:  # IMMEDIATE_RETRY
             delay = 0.0
-        
+
         # Apply maximum delay cap
         delay = min(delay, config.max_delay)
-        
+
         # Add jitter to prevent thundering herd
         if config.jitter:
             delay = delay + random.uniform(0, delay * 0.1)
-        
+
         return delay
-    
+
     async def get_service_health_status(self) -> Dict[str, Dict[str, Any]]:
         """Get health status of all monitored services"""
         status = {}
-        
+
         for service_name, circuit_breaker in self.circuit_breakers.items():
             status[service_name] = {
                 "state": circuit_breaker.state,
@@ -968,7 +968,7 @@ class FaultRecoveryManager:
                 "last_failure_time": circuit_breaker.last_failure_time,
                 "healthy": circuit_breaker.state == "closed"
             }
-        
+
         return status
 
 # Global fault recovery manager
@@ -992,10 +992,10 @@ from .fault_recovery import fault_recovery
 
 class GraphOrchestrator:
     """Unified orchestrator using graph-based workflows"""
-    
+
     def __init__(self):
         self.persistence = ProductionStatePersistence()
-        
+
     async def execute_config_extraction_workflow(
         self,
         raw_data: str,
@@ -1003,11 +1003,11 @@ class GraphOrchestrator:
         workflow_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Execute Config-Extraction workflow using graph"""
-        
+
         # Generate workflow ID if not provided
         if workflow_id is None:
             workflow_id = f"config_extraction_{uuid.uuid4().hex[:8]}"
-        
+
         # Create initial state
         initial_state = ConfigExtractionState(
             workflow_id=workflow_id,
@@ -1015,41 +1015,41 @@ class GraphOrchestrator:
             domain=domain,
             raw_data=raw_data
         )
-        
+
         # Start monitoring
         await graph_monitor.start_workflow_monitoring(workflow_id, "config_extraction")
-        
+
         try:
             # Execute graph with state persistence
             async with config_extraction_graph.iter(
                 initial_state=initial_state,
                 persistence=self.persistence
             ) as run:
-                
+
                 async for node in run:
                     # Record node execution for monitoring
                     node_start_time = time.time()
-                    
+
                     # Execute node (graph handles this automatically)
                     # This loop just provides monitoring hooks
-                    
+
                     node_execution_time = time.time() - node_start_time
                     await graph_monitor.record_node_execution(
-                        workflow_id, 
-                        node.__class__.__name__, 
+                        workflow_id,
+                        node.__class__.__name__,
                         node_execution_time
                     )
-                    
+
                     # Check if this is the end node
                     if hasattr(node, 'result'):
                         final_results = node.result
                         break
-                
+
                 # Complete monitoring
                 await graph_monitor.complete_workflow_monitoring(workflow_id, final_results)
-                
+
                 return final_results
-                
+
         except Exception as e:
             # Log error and return failure result
             logfire.error(
@@ -1057,13 +1057,13 @@ class GraphOrchestrator:
                 workflow_id=workflow_id,
                 error=str(e)
             )
-            
+
             return {
                 "workflow_id": workflow_id,
                 "error": str(e),
                 "status": "failed"
             }
-    
+
     async def execute_search_workflow(
         self,
         query: str,
@@ -1071,52 +1071,52 @@ class GraphOrchestrator:
         workflow_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """Execute search workflow using graph"""
-        
+
         # Generate workflow ID if not provided
         if workflow_id is None:
             workflow_id = f"search_{uuid.uuid4().hex[:8]}"
-        
+
         # Create initial state
         initial_state = SearchWorkflowState(
             workflow_id=workflow_id,
             query=query,
             domain=domain
         )
-        
+
         # Start monitoring
         await graph_monitor.start_workflow_monitoring(workflow_id, "search")
-        
+
         try:
             # Execute graph with state persistence
             async with search_workflow_graph.iter(
                 initial_state=initial_state,
                 persistence=self.persistence
             ) as run:
-                
+
                 async for node in run:
                     # Record node execution for monitoring
                     node_start_time = time.time()
-                    
+
                     # Node execution happens automatically
                     # This provides monitoring and error handling
-                    
+
                     node_execution_time = time.time() - node_start_time
                     await graph_monitor.record_node_execution(
                         workflow_id,
                         node.__class__.__name__,
                         node_execution_time
                     )
-                    
+
                     # Check if this is the end node
                     if hasattr(node, 'result'):
                         final_results = node.result
                         break
-                
+
                 # Complete monitoring
                 await graph_monitor.complete_workflow_monitoring(workflow_id, final_results)
-                
+
                 return final_results
-                
+
         except Exception as e:
             # Log error and return failure result
             logfire.error(
@@ -1124,35 +1124,35 @@ class GraphOrchestrator:
                 workflow_id=workflow_id,
                 error=str(e)
             )
-            
+
             return {
                 "workflow_id": workflow_id,
                 "error": str(e),
                 "status": "failed"
             }
-    
+
     async def get_workflow_status(self, workflow_id: str) -> Optional[Dict[str, Any]]:
         """Get current status of a workflow"""
         # Try to load state from persistence
         state = await self.persistence.load_state(workflow_id)
-        
+
         if state is None:
             return None
-        
+
         return {
             "workflow_id": workflow_id,
             "status": "running" if workflow_id in graph_monitor.active_workflows else "completed",
             "current_state": state.__dict__,
             "metrics": graph_monitor.active_workflows.get(workflow_id, {})
         }
-    
+
     async def resume_workflow(self, workflow_id: str) -> Dict[str, Any]:
         """Resume a workflow from persisted state"""
         state = await self.persistence.load_state(workflow_id)
-        
+
         if state is None:
             return {"error": f"No persisted state found for workflow {workflow_id}"}
-        
+
         # Determine workflow type and resume appropriately
         if isinstance(state, ConfigExtractionState):
             return await self.execute_config_extraction_workflow(
@@ -1188,12 +1188,12 @@ from agents.workflows.graph_monitoring import graph_monitor
 
 class TestGraphWorkflows:
     """Comprehensive testing of graph-based workflows"""
-    
+
     async def test_config_extraction_workflow_complete(self):
         """Test complete Config-Extraction workflow"""
         # Test data
         raw_data = "Sample domain data for testing configuration extraction workflow"
-        
+
         # Execute workflow
         start_time = time.time()
         result = await graph_orchestrator.execute_config_extraction_workflow(
@@ -1201,28 +1201,28 @@ class TestGraphWorkflows:
             domain="test_domain"
         )
         execution_time = time.time() - start_time
-        
+
         # Validate results
         assert result is not None
         assert "workflow_id" in result
         assert "extraction_config" in result
         assert "extracted_knowledge" in result
         assert "competitive_advantages_preserved" in result
-        
+
         # Validate competitive advantages preserved
         advantages = result["competitive_advantages_preserved"]
         assert advantages["hybrid_domain_intelligence"] is True
         assert advantages["multi_strategy_extraction"] is True
         assert advantages["zero_config_automation"] is True
-        
+
         # Validate performance SLA
         assert execution_time < 3.0, f"Workflow took {execution_time}s, exceeds 3s SLA"
         assert result["performance_metrics"]["sla_compliance"] is True
-    
+
     async def test_search_workflow_tri_modal(self):
         """Test tri-modal search workflow"""
         query = "test query for tri-modal search validation"
-        
+
         # Execute workflow
         start_time = time.time()
         result = await graph_orchestrator.execute_search_workflow(
@@ -1230,53 +1230,53 @@ class TestGraphWorkflows:
             domain="test_domain"
         )
         execution_time = time.time() - start_time
-        
+
         # Validate results
         assert result is not None
         assert "workflow_id" in result
         assert "search_results" in result
         assert "competitive_advantages_preserved" in result
-        
+
         # Validate tri-modal search execution
         advantages = result["competitive_advantages_preserved"]
         assert advantages["tri_modal_search_unity"] is True
         assert advantages["sub_3s_performance"] is True
-        
+
         # Validate tri-modal coverage
         tri_modal_coverage = result["performance_metrics"]["tri_modal_coverage"]
         assert tri_modal_coverage["vector_available"] is True
         assert tri_modal_coverage["graph_available"] is True
         assert tri_modal_coverage["gnn_available"] is True
-        
+
         # Validate performance SLA
         assert execution_time < 3.0, f"Search took {execution_time}s, exceeds 3s SLA"
-    
+
     async def test_state_persistence_and_recovery(self):
         """Test workflow state persistence and recovery"""
         raw_data = "Test data for state persistence validation"
-        
+
         # Start workflow
         workflow_id = "test_persistence_workflow"
-        
+
         # This test would simulate workflow interruption and recovery
         # Implementation depends on specific state persistence mechanisms
-        
+
         # Validate state can be persisted and recovered
         status = await graph_orchestrator.get_workflow_status(workflow_id)
-        
+
         # Test resumption capability (if workflow was interrupted)
         if status and status["status"] == "running":
             resumed_result = await graph_orchestrator.resume_workflow(workflow_id)
             assert resumed_result is not None
-    
+
     async def test_fault_recovery_mechanisms(self):
         """Test fault recovery and circuit breaker functionality"""
         from agents.workflows.fault_recovery import fault_recovery
-        
+
         # Test circuit breaker behavior
         async def failing_service():
             raise Exception("Simulated service failure")
-        
+
         # This should trigger circuit breaker after threshold
         with pytest.raises(Exception):
             for i in range(6):  # Exceed failure threshold
@@ -1287,11 +1287,11 @@ class TestGraphWorkflows:
                     )
                 except:
                     continue
-        
+
         # Validate circuit breaker state
         health_status = await fault_recovery.get_service_health_status()
         assert health_status["test_service"]["state"] == "open"
-    
+
     async def test_performance_monitoring(self):
         """Test graph monitoring and performance tracking"""
         # Execute multiple workflows to generate metrics
@@ -1302,54 +1302,54 @@ class TestGraphWorkflows:
                 domain="test_domain"
             )
             workflows.append(workflow_result)
-        
+
         # Get performance dashboard
         dashboard = await graph_monitor.get_performance_dashboard()
-        
+
         # Validate metrics
         assert dashboard["total_workflows"] >= 5
         assert "sla_compliance_rate" in dashboard
         assert "average_execution_time" in dashboard
         assert "competitive_advantages_status" in dashboard
-        
+
         # Validate competitive advantage preservation rates
         advantages = dashboard["competitive_advantages_status"]
         assert advantages["sub_3s_performance"] >= 80.0  # At least 80% compliance
 
 class TestCompetitiveAdvantagePreservation:
     """Specific tests for competitive advantage preservation"""
-    
+
     async def test_hybrid_domain_intelligence_preservation(self):
         """Ensure hybrid LLM+Statistical analysis preserved in graph"""
         result = await graph_orchestrator.execute_config_extraction_workflow(
             raw_data="Test corpus for hybrid analysis validation",
             domain="test_domain"
         )
-        
+
         # Validate both statistical and semantic analysis occurred
         extraction_config = result["extraction_config"]
         assert extraction_config is not None
-        
+
         # This would validate that both LLM and statistical analysis were used
         # Implementation depends on specific configuration structure
-        
+
     async def test_tri_modal_search_unity_preservation(self):
         """Ensure Vector+Graph+GNN coordination preserved"""
         result = await graph_orchestrator.execute_search_workflow(
             query="test query for tri-modal validation",
             domain="test_domain"
         )
-        
+
         # Validate all three search modalities were executed
         tri_modal_coverage = result["performance_metrics"]["tri_modal_coverage"]
         assert tri_modal_coverage["vector_available"] is True
-        assert tri_modal_coverage["graph_available"] is True 
+        assert tri_modal_coverage["graph_available"] is True
         assert tri_modal_coverage["gnn_available"] is True
-        
+
         # Validate intelligent result synthesis occurred
         advantages = result["competitive_advantages_preserved"]
         assert advantages["intelligent_result_synthesis"] is True
-    
+
     async def test_sub_3_second_performance_guarantee(self):
         """Validate sub-3-second response time maintained"""
         queries = [
@@ -1357,12 +1357,12 @@ class TestCompetitiveAdvantagePreservation:
             "more complex test query with additional context",
             "complex multi-domain query requiring extensive processing"
         ]
-        
+
         for query in queries:
             start_time = time.time()
             result = await graph_orchestrator.execute_search_workflow(query)
             execution_time = time.time() - start_time
-            
+
             # Validate SLA compliance
             assert execution_time < 3.0, f"Query '{query}' took {execution_time}s"
             assert result["performance_metrics"]["sla_compliance"] is True
@@ -1376,48 +1376,48 @@ class TestCompetitiveAdvantagePreservation:
 ```python
 class PerformanceAnalyticsManager:
     """Learn all performance parameters from actual operational data"""
-    
+
     async def _calculate_adaptive_sla_target(self, query: str, domain: str) -> float:
         """Calculate adaptive SLA targets based on query complexity and historical data"""
         # Analyze query complexity
         query_complexity = self._analyze_query_complexity(query)
-        
+
         # Load historical performance data for similar queries
         historical_data = await self._load_performance_history_by_complexity(query_complexity, domain)
-        
+
         if not historical_data:
             return 3.0  # Default fallback
-        
+
         # Calculate SLA based on query characteristics
         base_sla = np.percentile(historical_data["response_times"], 90)
         complexity_adjustment = query_complexity * 0.1  # 100ms per complexity unit
-        
+
         return min(base_sla + complexity_adjustment, 5.0)  # Cap at 5s maximum
-    
+
     async def _get_learned_sla_target_from_analytics(self) -> float:
         """Learn optimal SLA targets from comprehensive performance analytics"""
         all_performance_data = await self._load_all_performance_data()
-        
+
         if not all_performance_data:
             return 3.0  # Default fallback
-        
+
         # Use 95th percentile of all successful operations as SLA target
         successful_operations = [t for t in all_performance_data["response_times"] if t < 10.0]
         return np.percentile(successful_operations, 95)
-    
+
     def _analyze_query_complexity(self, query: str) -> float:
         """Analyze query complexity for adaptive SLA calculation"""
         # Word count factor
         word_count = len(query.split())
         complexity = word_count / 10.0  # Base complexity
-        
+
         # Domain-specific complexity indicators
         if any(term in query.lower() for term in ["relationship", "entity", "graph"]):
             complexity += 0.5  # Graph operations are more complex
-        
+
         if any(term in query.lower() for term in ["statistical", "analysis", "pattern"]):
             complexity += 0.3  # Statistical operations add complexity
-        
+
         return min(complexity, 3.0)  # Cap complexity score
 ```
 
@@ -1425,17 +1425,17 @@ class PerformanceAnalyticsManager:
 ```python
 class ServiceReliabilityAnalytics:
     """Learn service patterns and optimal recovery strategies from operational data"""
-    
+
     async def _learn_failure_threshold(self, service_name: str, historical_data: Dict) -> int:
         """Learn optimal failure threshold from service reliability patterns"""
         if not historical_data:
             # Default thresholds based on service type
             defaults = {"azure_openai": 3, "azure_search": 2, "azure_cosmos": 5, "azure_ml": 2}
             return defaults.get(service_name, 3)
-        
+
         # Calculate threshold based on failure frequency
         failure_rate = historical_data.get("failure_rate", 0.01)
-        
+
         # Higher failure rates need lower thresholds for faster circuit breaking
         if failure_rate > 0.05:  # >5% failure rate
             return 2
@@ -1443,40 +1443,40 @@ class ServiceReliabilityAnalytics:
             return 3
         else:
             return 5  # Low failure rate, more tolerance
-    
+
     async def _learn_recovery_timeout(self, service_name: str, historical_data: Dict) -> float:
         """Learn optimal recovery timeout from service recovery patterns"""
         if not historical_data:
             # Default timeouts based on service characteristics
             defaults = {"azure_openai": 30.0, "azure_search": 15.0, "azure_cosmos": 45.0, "azure_ml": 120.0}
             return defaults.get(service_name, 60.0)
-        
+
         # Use median recovery time as base timeout
         recovery_times = historical_data.get("recovery_times", [60.0])
         median_recovery = np.median(recovery_times)
-        
+
         # Add buffer based on variance
         recovery_variance = np.var(recovery_times)
         buffer = min(recovery_variance * 0.1, 30.0)  # Cap buffer at 30s
-        
+
         return median_recovery + buffer
-    
+
     async def _generate_adaptive_retry_configs(
-        self, 
+        self,
         service_reliability_analytics: Dict,
         error_pattern_analysis: Dict,
         success_rate_targets: Dict[str, float]
     ) -> Dict[str, RetryConfig]:
         """Generate retry configurations from service reliability analytics"""
         retry_configs = {}
-        
+
         for service_name, target_success_rate in success_rate_targets.items():
             service_data = service_reliability_analytics.get(service_name, {})
             error_patterns = error_pattern_analysis.get(service_name, {})
-            
+
             # Calculate retry parameters based on service behavior
             current_success_rate = service_data.get("success_rate", 0.95)
-            
+
             if current_success_rate >= target_success_rate:
                 # Service is reliable, fewer retries needed
                 max_attempts = 2
@@ -1489,20 +1489,20 @@ class ServiceReliabilityAnalytics:
                 # Lower reliability, more aggressive retry
                 max_attempts = 4
                 base_delay = 2.0
-            
+
             # Adjust based on error patterns
             if error_patterns.get("timeout_rate", 0) > 0.1:  # High timeout rate
                 base_delay *= 1.5  # Longer delays for timeout-prone services
-            
+
             retry_configs[service_name] = RetryConfig(
                 max_attempts=max_attempts,
                 base_delay=base_delay,
                 max_delay=min(base_delay * 8, 60.0),  # Exponential backoff with cap
                 strategy=RetryStrategy.EXPONENTIAL_BACKOFF
             )
-        
+
         return retry_configs
-    
+
     async def _load_service_analytics(self) -> Dict:
         """Load comprehensive service analytics from monitoring data"""
         # This would integrate with Azure Application Insights or similar
@@ -1533,7 +1533,7 @@ class ServiceReliabilityAnalytics:
                 "timeout_rate": 0.08
             }
         }
-    
+
     async def _analyze_failure_patterns(self) -> Dict:
         """Analyze failure patterns for each service"""
         # This would analyze actual failure logs
@@ -1553,7 +1553,7 @@ class ServiceReliabilityAnalytics:
 - [ ] **Fault recovery functional** - Circuit breakers and retry logic operational
 - [ ] **Performance monitoring active** - Logfire integration providing comprehensive metrics
 
-### Competitive Advantage KPIs  
+### Competitive Advantage KPIs
 - [ ] **Tri-modal search unity preserved** - Vector+Graph+GNN coordination maintained
 - [ ] **Hybrid domain intelligence preserved** - LLM+Statistical analysis functionality maintained
 - [ ] **Sub-3-second SLA maintained** - 100% compliance with performance guarantee

@@ -28,7 +28,7 @@ from ..domain_intelligence.agent import (
     domain_agent,
 )
 
-# Config-Extraction Orchestrator import  
+# Config-Extraction Orchestrator import
 # Temporarily commented out due to import issues
 # from ..orchestration.config_extraction_orchestrator import ConfigExtractionOrchestrator
 
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 def _get_default_search_types() -> List[str]:
     """
     Get default search types preserving tri-modal competitive advantage.
-    
+
     Uses data-driven approach without hardcoded fallbacks - gets configuration
     from Azure services or returns optimal tri-modal defaults.
     """
@@ -95,16 +95,17 @@ class AgentResponse(BaseModel):
 
 # Create the Universal Agent using PydanticAI with Azure OpenAI
 try:
-    from pydantic_ai.providers.azure import AzureProvider
-    from pydantic_ai.models.openai import OpenAIModel
     import os
-    
+
+    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.providers.azure import AzureProvider
+
     # Configure Azure OpenAI provider - always use production endpoint
-    azure_endpoint = 'https://oai-maintie-rag-prod-fymhwfec3ra2w.openai.azure.com/'
-    api_key = os.getenv('AZURE_OPENAI_API_KEY') or os.getenv('OPENAI_API_KEY')
-    api_version = '2024-08-01-preview'
-    deployment_name = 'gpt-4o-mini'  # Use production deployment
-    
+    azure_endpoint = "https://oai-maintie-rag-prod-fymhwfec3ra2w.openai.azure.com/"
+    api_key = os.getenv("AZURE_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+    api_version = "2024-08-01-preview"
+    deployment_name = "gpt-4o-mini"  # Use production deployment
+
     if azure_endpoint:
         # Use Azure OpenAI with API key - Correct PydanticAI syntax
         azure_model = OpenAIModel(
@@ -115,7 +116,7 @@ try:
                 api_key=api_key,
             ),
         )
-        
+
         universal_agent = Agent(
             azure_model,
             name="universal-agent",
@@ -138,7 +139,7 @@ try:
         )
         logger.error(error_msg)
         raise RuntimeError(error_msg)
-        
+
 except ImportError as e:
     # PHASE 0 REQUIREMENT: No statistical-only fallback - raise error instead
     error_msg = (
@@ -159,6 +160,7 @@ except Exception as e:
 
 
 # Add PydanticAI tools to Universal Agent (works with real agent or mock)
+
 
 @universal_agent.tool
 async def detect_domain(
@@ -219,22 +221,22 @@ async def tri_modal_search(
         # Step 1: Use Config-Extraction workflow to get optimized search configuration
         # This replaces direct search implementation with proper orchestration
         from pathlib import Path
-        
+
         # Create a temporary query document for domain analysis
         query_doc_path = Path(f"/tmp/query_{hash(request.query)}.txt")
         query_doc_path.write_text(request.query)
-        
+
         try:
             # Use Config-Extraction orchestrator to get domain-optimized configuration
             domain_path = Path(f"data/raw/{request.domain}")
             if not domain_path.exists():
                 domain_path = Path(f"data/raw/{request.domain}")
-                
+
             # Get the global orchestrator instance
             # orchestrator = ConfigExtractionOrchestrator()  # Temporarily commented out
             orchestrator = None  # Placeholder until imports are fixed
             config_result = await orchestrator.process_domain_documents(domain_path)
-            
+
             extraction_config = config_result.get("extraction_config")
             if extraction_config:
                 # Step 2: Use extraction configuration to optimize search parameters
@@ -244,7 +246,7 @@ async def tri_modal_search(
             else:
                 # Fallback to basic search if configuration generation fails
                 search_results = await _execute_basic_tri_modal_search(ctx, request)
-                
+
         finally:
             # Cleanup temporary file
             if query_doc_path.exists():
@@ -255,9 +257,13 @@ async def tri_modal_search(
         return TriModalSearchResult(
             query=request.query,
             domain=request.domain,
-            vector_results=search_results.get("vector_results", [])[:request.max_results],
-            graph_results=search_results.get("graph_results", [])[:request.max_results],
-            gnn_results=search_results.get("gnn_results", [])[:request.max_results],
+            vector_results=search_results.get("vector_results", [])[
+                : request.max_results
+            ],
+            graph_results=search_results.get("graph_results", [])[
+                : request.max_results
+            ],
+            gnn_results=search_results.get("gnn_results", [])[: request.max_results],
             synthesis_score=search_results.get("synthesis_score", 0.0),
             execution_time=execution_time,
         )
@@ -314,50 +320,54 @@ async def discover_available_domains(
         )
 
 
-
-
 # Config-Extraction integrated helper functions
 
 
 async def _execute_optimized_search_with_config(
-    ctx: RunContext[AzureServiceContainer], 
-    request: TriModalSearchRequest, 
-    extraction_config
+    ctx: RunContext[AzureServiceContainer],
+    request: TriModalSearchRequest,
+    extraction_config,
 ) -> Dict[str, Any]:
     """
     Execute optimized tri-modal search using extraction configuration parameters.
-    
+
     Uses the configuration from Config-Extraction orchestrator to optimize search parameters
     instead of using hardcoded values.
     """
     try:
         # Use configuration parameters to optimize search
         search_tasks = []
-        
+
         if "vector" in request.search_types:
             search_tasks.append(
-                _execute_vector_search_with_config(ctx, request.query, request.domain, extraction_config)
+                _execute_vector_search_with_config(
+                    ctx, request.query, request.domain, extraction_config
+                )
             )
         if "graph" in request.search_types:
             search_tasks.append(
-                _execute_graph_search_with_config(ctx, request.query, request.domain, extraction_config)
+                _execute_graph_search_with_config(
+                    ctx, request.query, request.domain, extraction_config
+                )
             )
         if "gnn" in request.search_types:
             search_tasks.append(
-                _execute_gnn_search_with_config(ctx, request.query, request.domain, extraction_config)
+                _execute_gnn_search_with_config(
+                    ctx, request.query, request.domain, extraction_config
+                )
             )
-        
+
         # Execute searches concurrently
         search_results = await asyncio.gather(*search_tasks, return_exceptions=True)
-        
+
         # Process results
         vector_results, graph_results, gnn_results = [], [], []
-        
+
         for i, result in enumerate(search_results):
             if isinstance(result, Exception):
                 logger.error(f"Search {request.search_types[i]} failed: {result}")
                 continue
-                
+
             search_type = request.search_types[i]
             if search_type == "vector":
                 vector_results = result.get("results", [])
@@ -365,157 +375,163 @@ async def _execute_optimized_search_with_config(
                 graph_results = result.get("results", [])
             elif search_type == "gnn":
                 gnn_results = result.get("results", [])
-        
+
         # Calculate synthesis score
-        synthesis_score = _calculate_synthesis_score(vector_results, graph_results, gnn_results)
-        
+        synthesis_score = _calculate_synthesis_score(
+            vector_results, graph_results, gnn_results
+        )
+
         return {
             "vector_results": vector_results,
-            "graph_results": graph_results, 
+            "graph_results": graph_results,
             "gnn_results": gnn_results,
-            "synthesis_score": synthesis_score
+            "synthesis_score": synthesis_score,
         }
-        
+
     except Exception as e:
         logger.error(f"Optimized search with config failed: {e}")
         return await _execute_basic_tri_modal_search(ctx, request)
 
 
 async def _execute_basic_tri_modal_search(
-    ctx: RunContext[AzureServiceContainer], 
-    request: TriModalSearchRequest
+    ctx: RunContext[AzureServiceContainer], request: TriModalSearchRequest
 ) -> Dict[str, Any]:
     """Fallback basic tri-modal search when Config-Extraction workflow fails"""
     try:
-        from .consolidated_tools import TriModalSearchRequest as ToolRequest, execute_tri_modal_search
-        
+        from .consolidated_tools import TriModalSearchRequest as ToolRequest
+        from .consolidated_tools import execute_tri_modal_search
+
         tool_request = ToolRequest(
             query=request.query,
             search_types=request.search_types,
             domain=request.domain,
-            max_results=request.max_results
+            max_results=request.max_results,
         )
-        
+
         result = await execute_tri_modal_search(ctx, tool_request)
-        
+
         # Group results by type
-        vector_results = [r for r in result.search_results if r.get("source") == "vector"]
+        vector_results = [
+            r for r in result.search_results if r.get("source") == "vector"
+        ]
         graph_results = [r for r in result.search_results if r.get("source") == "graph"]
         gnn_results = [r for r in result.search_results if r.get("source") == "gnn"]
-        
+
         return {
             "vector_results": vector_results,
             "graph_results": graph_results,
             "gnn_results": gnn_results,
-            "synthesis_score": sum(result.confidence_scores.values()) / len(result.confidence_scores) if result.confidence_scores else 0.0
+            "synthesis_score": sum(result.confidence_scores.values())
+            / len(result.confidence_scores)
+            if result.confidence_scores
+            else 0.0,
         }
-        
+
     except Exception as e:
         logger.error(f"Basic tri-modal search failed: {e}")
         return {
             "vector_results": [],
             "graph_results": [],
             "gnn_results": [],
-            "synthesis_score": 0.0
+            "synthesis_score": 0.0,
         }
 
 
 async def _execute_vector_search_with_config(
-    ctx: RunContext[AzureServiceContainer], 
-    query: str, 
-    domain: str, 
-    extraction_config
+    ctx: RunContext[AzureServiceContainer], query: str, domain: str, extraction_config
 ) -> Dict[str, Any]:
     """Execute vector search optimized with extraction configuration"""
     try:
         from .consolidated_tools import VectorSearchRequest, execute_vector_search
-        
+
         # Use config parameters to optimize search
         request = VectorSearchRequest(
             query=query,
-            top_k=min(extraction_config.max_entities_per_chunk, 15),  # Use config parameter
+            top_k=min(
+                extraction_config.max_entities_per_chunk, 15
+            ),  # Use config parameter
             domain=domain,
             include_metadata=True,
-            confidence_threshold=extraction_config.entity_confidence_threshold  # Use config threshold
+            confidence_threshold=extraction_config.entity_confidence_threshold,  # Use config threshold
         )
-        
+
         result = await execute_vector_search(ctx, request)
         return {
             "type": "vector",
             "results": result.documents,
             "scores": result.scores,
-            "metadata": result.metadata
+            "metadata": result.metadata,
         }
-        
+
     except Exception as e:
         logger.error(f"Vector search with config failed: {e}")
         return {"type": "vector", "results": [], "error": str(e)}
 
 
 async def _execute_graph_search_with_config(
-    ctx: RunContext[AzureServiceContainer], 
-    query: str, 
-    domain: str, 
-    extraction_config
+    ctx: RunContext[AzureServiceContainer], query: str, domain: str, extraction_config
 ) -> Dict[str, Any]:
     """Execute graph search optimized with extraction configuration"""
     try:
         from .consolidated_tools import GraphSearchRequest, execute_graph_search
-        
+
         # Use relationship patterns from extraction config instead of hardcoded values
-        relationship_types = [pattern.split()[1] for pattern in extraction_config.relationship_patterns 
-                            if len(pattern.split()) >= 3][:5]  # Extract relation types from patterns
-        
+        relationship_types = [
+            pattern.split()[1]
+            for pattern in extraction_config.relationship_patterns
+            if len(pattern.split()) >= 3
+        ][
+            :5
+        ]  # Extract relation types from patterns
+
         if not relationship_types:
             relationship_types = ["related_to"]  # Minimal fallback
-        
+
         request = GraphSearchRequest(
             query=query,
             max_depth=3,
             domain=domain,
-            relationship_types=relationship_types  # Use config-derived relationship types
+            relationship_types=relationship_types,  # Use config-derived relationship types
         )
-        
+
         result = await execute_graph_search(ctx, request)
         return {
             "type": "graph",
             "results": result.entities,
             "relationships": result.relationships,
-            "paths": result.paths
+            "paths": result.paths,
         }
-        
+
     except Exception as e:
         logger.error(f"Graph search with config failed: {e}")
         return {"type": "graph", "results": [], "error": str(e)}
 
 
 async def _execute_gnn_search_with_config(
-    ctx: RunContext[AzureServiceContainer], 
-    query: str, 
-    domain: str, 
-    extraction_config
+    ctx: RunContext[AzureServiceContainer], query: str, domain: str, extraction_config
 ) -> Dict[str, Any]:
     """Execute GNN search optimized with extraction configuration"""
     try:
-        from .consolidated_tools import TriModalSearchRequest as ToolRequest, execute_tri_modal_search
-        
+        from .consolidated_tools import TriModalSearchRequest as ToolRequest
+        from .consolidated_tools import execute_tri_modal_search
+
         # Use config parameters for GNN optimization
         request = ToolRequest(
             query=query,
             search_types=["gnn"],
             domain=domain,
-            max_results=extraction_config.max_entities_per_chunk  # Use config parameter
+            max_results=extraction_config.max_entities_per_chunk,  # Use config parameter
         )
-        
+
         result = await execute_tri_modal_search(ctx, request)
         gnn_results = [r for r in result.search_results if r.get("source") == "gnn"]
-        
+
         return {
             "type": "gnn",
             "results": gnn_results,
-            "confidence": result.confidence_scores
+            "confidence": result.confidence_scores,
         }
-        
+
     except Exception as e:
         logger.error(f"GNN search with config failed: {e}")
         return {"type": "gnn", "results": [], "error": str(e)}
@@ -552,10 +568,12 @@ class UniversalAgentOrchestrator:
         self.azure_services: Optional[AzureServiceContainer] = None
         self.background_processed = False
         self.startup_stats = None
-        
+
         # Initialize Config-Extraction orchestrator for proper workflow delegation
         # self.config_extraction_orchestrator = ConfigExtractionOrchestrator()  # Temporarily commented out
-        self.config_extraction_orchestrator = None  # Placeholder until imports are fixed
+        self.config_extraction_orchestrator = (
+            None  # Placeholder until imports are fixed
+        )
 
     async def initialize(self, run_background_processing: bool = True) -> bool:
         """Initialize Universal Agent with Azure services and background processing"""

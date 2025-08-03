@@ -5,7 +5,7 @@
 ## Core Principles
 
 1. **Data-Driven Everything** - Learn from actual data, never hardcode assumptions
-2. **Zero Fake Data** - Real processing results, no placeholders or mock responses  
+2. **Zero Fake Data** - Real processing results, no placeholders or mock responses
 3. **Universal Design** - Works with any domain without configuration
 4. **Production-Ready** - Complete implementations with comprehensive error handling
 5. **Performance-First** - Async operations, <3s response times, proper monitoring
@@ -80,7 +80,7 @@ async def process_document(self, path: str) -> ProcessingResult:
 # FORBIDDEN - Silent failure with no error handling
 async def process_data(self, data: Any):
     try:
-        return await self.real_processing(data) 
+        return await self.real_processing(data)
     except:
         return None  # Hides errors, returns fake success
 ```
@@ -90,7 +90,7 @@ async def process_data(self, data: Any):
 Before merging any code, verify:
 
 - [ ] **Data-driven**: No hardcoded values, learns from actual data
-- [ ] **No fake data**: Real processing results, no placeholders or mock data  
+- [ ] **No fake data**: Real processing results, no placeholders or mock data
 - [ ] **Production-ready**: Complete implementation, comprehensive error handling
 - [ ] **Domain-agnostic**: Works universally without domain-specific assumptions
 - [ ] **Performance**: Async operations, <3s response time, proper monitoring
@@ -205,9 +205,9 @@ class DomainIntelligenceAgent:
     async def analyze_domain_corpus(self, domain_path: Path) -> ExtractionConfiguration:
         # 1. ONLY statistical analysis - no hardcoded patterns
         corpus_stats = await self._calculate_frequency_distributions(domain_path)
-        entity_clusters = await self._cluster_using_entropy(corpus_stats)  
+        entity_clusters = await self._cluster_using_entropy(corpus_stats)
         optimal_threshold = self._calculate_confidence_percentiles(entity_clusters)
-        
+
         # 2. Generate configuration from PURE DATA (no hardcoded values)
         return ExtractionConfiguration(
             entity_confidence_threshold=optimal_threshold,
@@ -221,7 +221,7 @@ class KnowledgeExtractionAgent:
         # 1. NEVER generate config - only USE provided config
         entities = await self.extraction_tools.extract_entities(document, config)
         relationships = await self.extraction_tools.extract_relationships(document, config)
-        
+
         # 2. Return results (NO configuration decisions)
         return ExtractedKnowledge(entities=entities, relationships=relationships)
 ```
@@ -235,7 +235,7 @@ class DomainIntelligenceAgent:
         # ❌ This is extraction, not configuration
         if "programming" in content:
             return hardcoded_programming_config  # Hardcoded!
-        
+
 # FORBIDDEN - Knowledge Extraction generating config
 class KnowledgeExtractionAgent:
     def extract_knowledge(self, document: str):
@@ -260,10 +260,10 @@ def discover_entity_patterns(corpus: List[str]) -> EntityPatterns:
     word_frequencies = calculate_frequency_distribution(corpus)
     entropy_scores = calculate_information_entropy(word_frequencies)
     entity_clusters = kmeans_clustering(entropy_scores, n_clusters="auto")
-    
+
     # Data-driven thresholds
     confidence_threshold = np.percentile(entity_clusters.confidence_scores, 95)
-    
+
     return EntityPatterns(
         clusters=entity_clusters,
         threshold=confidence_threshold,
@@ -291,17 +291,17 @@ def discover_entity_patterns(content: str) -> EntityPatterns:
 class KnowledgeExtractionAgent:
     @agent.tool
     async def extract_entities_with_config(
-        ctx: RunContext[AzureServiceContainer], 
-        document: str, 
+        ctx: RunContext[AzureServiceContainer],
+        document: str,
         config: ExtractionConfiguration
     ) -> List[Entity]:
         # Tool implementation co-located with agent
         return await ctx.deps.nlp_service.extract_entities(
-            document, 
+            document,
             confidence_threshold=config.entity_confidence_threshold,
             expected_types=config.expected_entity_types
         )
-    
+
     async def process_document(self, document: str, config: ExtractionConfiguration) -> ExtractedKnowledge:
         # Agent coordinates tools - no direct implementation
         entities = await self.extract_entities_with_config(document, config)
@@ -323,10 +323,10 @@ class UniversalAgent:
     async def process_query(self, query: str) -> QueryResult:
         # Stage 1: Configuration generation
         config = await self.config_extraction_orchestrator.generate_config(query)
-        
+
         # Stage 2: Knowledge extraction using config
         knowledge = await self.config_extraction_orchestrator.extract_knowledge(query, config)
-        
+
         return self._generate_response(knowledge)
 
 # ❌ FORBIDDEN - Direct agent-to-agent communication
@@ -364,29 +364,29 @@ class SearchState:
 class SearchNode(BaseNode[SearchState]):
     async def run(self, ctx: GraphRunContext[SearchState]) -> 'ResultNode | TimeoutNode | ErrorNode':
         start_time = time.time()
-        
+
         try:
             # Execute search with SLA monitoring
             result = await self._execute_tri_modal_search(
                 query=ctx.state.query,
                 domain=ctx.state.domain
             )
-            
+
             # Check SLA compliance
             elapsed = time.time() - start_time
             if elapsed > ctx.state.max_duration:
                 return TimeoutNode(f"Search exceeded SLA: {elapsed:.2f}s > {ctx.state.max_duration}s")
-            
+
             return ResultNode(result=result, elapsed_time=elapsed)
-            
+
         except Exception as e:
             return ErrorNode(error=str(e), recovery_strategy="fallback_search")
 
-@dataclass  
+@dataclass
 class ResultNode(BaseNode[SearchState]):
     result: Any
     elapsed_time: float
-    
+
     async def run(self, ctx: GraphRunContext[SearchState]) -> None:
         # Workflow completed successfully
         await self._persist_success_metrics(ctx.state, self.result, self.elapsed_time)
@@ -394,7 +394,7 @@ class ResultNode(BaseNode[SearchState]):
 @dataclass
 class TimeoutNode(BaseNode[SearchState]):
     reason: str
-    
+
     async def run(self, ctx: GraphRunContext[SearchState]) -> 'FallbackSearchNode':
         # SLA violation - trigger fallback
         await self._log_sla_violation(ctx.state, self.reason)
@@ -404,7 +404,7 @@ class TimeoutNode(BaseNode[SearchState]):
 class ErrorNode(BaseNode[SearchState]):
     error: str
     recovery_strategy: str
-    
+
     async def run(self, ctx: GraphRunContext[SearchState]) -> 'RetryNode | FallbackSearchNode':
         # Determine recovery path based on error type
         if "timeout" in self.error.lower():
@@ -433,37 +433,37 @@ class AzureServiceContainer:
         self.credential = DefaultAzureCredential()
         self.azure_services = None
         self.health_status = {}
-        
+
     async def initialize_services(self) -> Dict[str, bool]:
         """Initialize all Azure services with health monitoring"""
         self.azure_services = ConsolidatedAzureServices(credential=self.credential)
-        
+
         # Initialize with comprehensive health checks
         service_status = await self.azure_services.initialize_all_services()
-        
+
         # Validate critical services for SLA compliance
         critical_services = ["ai_foundry", "search", "cosmos"]
         critical_available = sum(
             service_status.get(service, False) for service in critical_services
         )
-        
+
         if critical_available < 2:  # At least 2 of 3 critical services
             raise RuntimeError(f"Insufficient critical services available: {critical_available}/3")
-        
+
         return service_status
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """Perform comprehensive health check with circuit breaker"""
         if not self.azure_services:
             return {"status": "not_initialized", "healthy_services": 0}
-        
+
         health_result = await self.azure_services.health_check()
-        
+
         # Update circuit breaker status based on health
         self._update_circuit_breakers(health_result)
-        
+
         return health_result
-    
+
     def _update_circuit_breakers(self, health_result: Dict[str, Any]):
         """Update circuit breaker state based on service health"""
         for service_name, status in health_result.get("service_health", {}).items():
@@ -471,7 +471,7 @@ class AzureServiceContainer:
                 # Open circuit breaker for unhealthy services
                 self.health_status[f"{service_name}_circuit_breaker"] = "open"
             else:
-                # Close circuit breaker for healthy services  
+                # Close circuit breaker for healthy services
                 self.health_status[f"{service_name}_circuit_breaker"] = "closed"
 
 # ❌ FORBIDDEN - Hardcoded service initialization
@@ -508,29 +508,29 @@ class PerformanceMetrics:
     end_time: Optional[float] = None
     stage_timings: Dict[str, float] = field(default_factory=dict)
     sla_target: float = 3.0
-    
+
     @property
     def total_duration(self) -> float:
         if self.end_time:
             return self.end_time - self.start_time
         return time.time() - self.start_time
-    
+
     @property
     def sla_compliance(self) -> bool:
         return self.total_duration <= self.sla_target
-    
+
     def record_stage(self, stage_name: str, duration: float):
         """Record timing for individual workflow stage"""
         self.stage_timings[stage_name] = duration
-        
+
         # Alert if stage exceeds budget
         stage_budgets = {
             "domain_analysis": 0.5,    # 500ms budget
-            "config_generation": 0.3,  # 300ms budget  
+            "config_generation": 0.3,  # 300ms budget
             "knowledge_extraction": 1.5, # 1.5s budget
             "search_orchestration": 0.7  # 700ms budget
         }
-        
+
         budget = stage_budgets.get(stage_name, 1.0)
         if duration > budget:
             logger.warning(
@@ -541,40 +541,40 @@ class PerformanceMonitor:
     def __init__(self):
         self.active_operations: Dict[str, PerformanceMetrics] = {}
         self.sla_violations: List[Dict[str, Any]] = []
-        
+
     async def monitor_operation(self, operation_name: str, sla_target: float = 3.0):
         """Context manager for operation performance monitoring"""
-        
+
         class OperationMonitor:
             def __init__(self, parent: PerformanceMonitor, name: str, target: float):
                 self.parent = parent
-                self.metrics = PerformanceMetrics(operation_name=name, 
+                self.metrics = PerformanceMetrics(operation_name=name,
                                                 start_time=time.time(),
                                                 sla_target=target)
-                
+
             async def __aenter__(self):
                 self.parent.active_operations[self.metrics.operation_name] = self.metrics
                 return self.metrics
-                
+
             async def __aexit__(self, exc_type, exc_val, exc_tb):
                 self.metrics.end_time = time.time()
-                
+
                 # Check SLA compliance
                 if not self.metrics.sla_compliance:
                     self.parent._record_sla_violation(self.metrics)
-                
+
                 # Clean up active operation
                 self.parent.active_operations.pop(self.metrics.operation_name, None)
-                
+
                 # Log performance summary
                 logger.info(
                     f"🎯 Operation '{self.metrics.operation_name}' completed in "
                     f"{self.metrics.total_duration:.3f}s (SLA: {self.metrics.sla_target}s, "
                     f"Compliant: {self.metrics.sla_compliance})"
                 )
-        
+
         return OperationMonitor(self, operation_name, sla_target)
-    
+
     def _record_sla_violation(self, metrics: PerformanceMetrics):
         """Record SLA violation for analysis"""
         violation = {
@@ -585,9 +585,9 @@ class PerformanceMonitor:
             "stage_timings": metrics.stage_timings,
             "timestamp": time.time()
         }
-        
+
         self.sla_violations.append(violation)
-        
+
         logger.error(
             f"🚨 SLA VIOLATION: {metrics.operation_name} took {metrics.total_duration:.3f}s "
             f"(target: {metrics.sla_target}s, violation: +{violation['violation_amount']:.3f}s)"
@@ -597,24 +597,24 @@ class PerformanceMonitor:
 class UniversalAgent:
     def __init__(self):
         self.performance_monitor = PerformanceMonitor()
-    
+
     async def process_query(self, query: str) -> QueryResult:
         async with self.performance_monitor.monitor_operation("query_processing", sla_target=3.0) as metrics:
             # Stage 1: Domain analysis
             stage_start = time.time()
             config = await self._generate_config(query)
             metrics.record_stage("config_generation", time.time() - stage_start)
-            
-            # Stage 2: Knowledge extraction  
+
+            # Stage 2: Knowledge extraction
             stage_start = time.time()
             knowledge = await self._extract_knowledge(query, config)
             metrics.record_stage("knowledge_extraction", time.time() - stage_start)
-            
+
             # Stage 3: Search orchestration
             stage_start = time.time()
             result = await self._orchestrate_search(knowledge)
             metrics.record_stage("search_orchestration", time.time() - stage_start)
-            
+
             return result
 ```
 

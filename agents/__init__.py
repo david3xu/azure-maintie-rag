@@ -38,10 +38,6 @@ from .core import (
     get_cache_manager,
     get_memory_manager,
 )
-from .domain_intelligence.agent import (  # Agent tools
-    DomainDetectionResult,
-    get_domain_agent,
-)
 
 # Import consolidated intelligence
 from .domain_intelligence import (
@@ -52,6 +48,10 @@ from .domain_intelligence import (
     LearnedPattern,
     PatternEngine,
 )
+from .domain_intelligence.agent import (  # Agent tools
+    DomainDetectionResult,
+    get_domain_agent,
+)
 
 # Import structured models
 from .models import ConfidenceLevel
@@ -61,8 +61,9 @@ from .models import QueryRequest, SearchDocument, SearchResultType, TriModalSear
 # Import simplified interface
 # Note: simple_universal_agent temporarily commented out during restructuring
 # from .universal_search.simple_universal_agent import AgentResponse
-# from .universal_search.simple_universal_agent import QueryRequest as SimpleQueryRequest  
+# from .universal_search.simple_universal_agent import QueryRequest as SimpleQueryRequest
 # from .universal_search.simple_universal_agent import SimplifiedUniversalAgent, get_universal_agent
+
 
 # Temporary placeholder classes for compatibility
 class AgentResponse:
@@ -71,20 +72,12 @@ class AgentResponse:
         self.result = result
         self.execution_time = execution_time
 
+
 class SimpleQueryRequest:
     def __init__(self, query: str, domain: str = None):
         self.query = query
         self.domain = domain
 
-# Import consolidated tools
-from .universal_search.consolidated_tools import (
-    SearchRequest,
-    ToolResponse,
-    execute_domain_intelligence,
-    execute_search_chain,
-    execute_tri_modal_search,
-    get_tool_manager,
-)
 
 # Import main agent interfaces
 from .universal_search.agent import (  # PydanticAI tools
@@ -94,6 +87,16 @@ from .universal_search.agent import (  # PydanticAI tools
     process_intelligent_query,
     tri_modal_search,
     universal_agent,
+)
+
+# Import consolidated tools
+from .universal_search.consolidated_tools import (
+    SearchRequest,
+    ToolResponse,
+    execute_domain_intelligence,
+    execute_search_chain,
+    execute_tri_modal_search,
+    get_tool_manager,
 )
 
 # Legacy compatibility imports (for backward compatibility during transition)

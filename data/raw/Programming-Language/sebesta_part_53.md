@@ -11,34 +11,34 @@ w.DegreeDays = degreeDaysToday;
 . . .
 oldDegreeDays = w.DegreeDays;
 In the class Weather, the property DegreeDays is defined. This property pro-
-vides a getter method and a setter method for access to the private data member, 
-degreeDays. In the client code following the class definition, degreeDays is 
-treated as if it were a public-member variable, although access to it is available 
-through the property only. Notice the use of the implicit variable value in the 
-setter method. This is the mechanism by which the new value of the property 
+vides a getter method and a setter method for access to the private data member,
+degreeDays. In the client code following the class definition, degreeDays is
+treated as if it were a public-member variable, although access to it is available
+through the property only. Notice the use of the implicit variable value in the
+setter method. This is the mechanism by which the new value of the property
 is referenced.
-The stack example is not shown here in C#. The only difference between 
-the Java version in Section 11.4.4.1 and the C# version is the output method 
-calls and the use of bool instead of boolean for the return type of the empty 
+The stack example is not shown here in C#. The only difference between
+the Java version in Section 11.4.4.1 and the C# version is the output method
+calls and the use of bool instead of boolean for the return type of the empty
 method.
 11.4.6 Abstract Data Types in Ruby
-Ruby provides support for abstract data types through its classes. In terms of 
-capabilities, Ruby classes are similar to those in C++ and Java. 
+Ruby provides support for abstract data types through its classes. In terms of
+capabilities, Ruby classes are similar to those in C++ and Java.
 11.4.6.1 Encapsulation
-In Ruby, a class is defined in a compound statement opened with the class 
-reserved word and closed with end. The names of instance variables have 
+In Ruby, a class is defined in a compound statement opened with the class
+reserved word and closed with end. The names of instance variables have
 a special syntactic formthey must begin with at signs (@). Instance meth-
-ods have the same syntax as functions in Ruby: They begin with the def 
-reserved word and end with end. Class methods are distinguished from 
-instance methods by having the class name appended to the beginning of 
-their names with a period separator. For example, in a class named Stack, 
-a class method’s name would begin with Stack. Constructors in Ruby are 
-named initialize. Because the constructor cannot be overloaded, there 
+ods have the same syntax as functions in Ruby: They begin with the def
+reserved word and end with end. Class methods are distinguished from
+instance methods by having the class name appended to the beginning of
+their names with a period separator. For example, in a class named Stack,
+a class method’s name would begin with Stack. Constructors in Ruby are
+named initialize. Because the constructor cannot be overloaded, there
 only can be one per class.
-Classes in Ruby are dynamic in the sense that members can be added at 
-any time. This is done by simply including additional class definitions that 
-specify the new members. Moreover, even predefined classes of the language, 
-such as String, can be extended. For example, consider the following class 
+Classes in Ruby are dynamic in the sense that members can be added at
+any time. This is done by simply including additional class definitions that
+specify the new members. Moreover, even predefined classes of the language,
+such as String, can be extended. For example, consider the following class
 definition:
 \n500     Chapter 11     Abstract Data Types and Encapsulation Constructs
 class myClass
@@ -46,29 +46,29 @@ class myClass
     . . .
   end
 end
-This class could be extended by adding a second method, meth2, with a second 
+This class could be extended by adding a second method, meth2, with a second
 class definition:
 class myClass
   def meth2
     . . .
   end
 end
-Methods can also be removed from a class. This is done by providing 
-another class definition in which the method to be removed is sent to the 
-method remove_method as a parameter. The dynamic classes of Ruby are 
+Methods can also be removed from a class. This is done by providing
+another class definition in which the method to be removed is sent to the
+method remove_method as a parameter. The dynamic classes of Ruby are
 another example of a language designer trading readability (and as a conse-
-quence, reliability) for flexibility. Allowing dynamic changes to classes clearly 
-adds flexibility to the language, while harming readability. To determine the 
-behavior of a class at a particular point in a program, one must find all of its 
+quence, reliability) for flexibility. Allowing dynamic changes to classes clearly
+adds flexibility to the language, while harming readability. To determine the
+behavior of a class at a particular point in a program, one must find all of its
 definitions in the program and consider all of them.
 11.4.6.2 Information Hiding
-Access control for methods in Ruby is dynamic, so access violations are detected 
-only during execution. The default method access is public, but it can also be 
-protected or private. There are two ways to specify the access control, both of 
-which use functions with the same names as the access levels, private and 
-public. One way is to call the appropriate function without parameters. This 
-resets the default access for subsequently defined methods in the class. For 
-example, 
+Access control for methods in Ruby is dynamic, so access violations are detected
+only during execution. The default method access is public, but it can also be
+protected or private. There are two ways to specify the access control, both of
+which use functions with the same names as the access levels, private and
+public. One way is to call the appropriate function without parameters. This
+resets the default access for subsequently defined methods in the class. For
+example,
 class MyClass
   def meth1
   . . .
@@ -81,8 +81,8 @@ private
   . . .
 end  # of class MyClass
 \n 11.4 Language Examples     501
-The alternative is to call the access control functions with the names of 
-the specific methods as parameters. For example, the following is semantically 
+The alternative is to call the access control functions with the names of
+the specific methods as parameters. For example, the following is semantically
 equivalent to the previous class definition:
 class MyClass
   def meth1
@@ -94,11 +94,11 @@ class MyClass
   end
   private :meth7, . . .
    end  # of class MyClass
-In Ruby, all data members of a class are private, and that cannot be changed. 
-So, data members can be accessed only by the methods of the class, some of 
-which may be accessor methods. In Ruby, instance data that are accessible 
-through accessor methods are called attributes. 
-For an instance variable named @sum, the getter and setter methods would 
+In Ruby, all data members of a class are private, and that cannot be changed.
+So, data members can be accessed only by the methods of the class, some of
+which may be accessor methods. In Ruby, instance data that are accessible
+through accessor methods are called attributes.
+For an instance variable named @sum, the getter and setter methods would
 be as follows:
 def sum
   @sum
@@ -106,12 +106,12 @@ end
 def sum=(new_sum)
   @sum = new_sum
 end
-Notice that getters are given the name of the instance variable minus the @. The 
-names of setter methods are the same as those of the corresponding getters, 
+Notice that getters are given the name of the instance variable minus the @. The
+names of setter methods are the same as those of the corresponding getters,
 except they have an equal sign (=) attached.
-Getters and setters can be implicitly generated by the Ruby system by 
-including calls to attr_reader and attr_writer, respectively, in the class 
-definition. The parameters to these are the symbols of the attribute’s names, 
+Getters and setters can be implicitly generated by the Ruby system by
+including calls to attr_reader and attr_writer, respectively, in the class
+definition. The parameters to these are the symbols of the attribute’s names,
 as is illustrated in the following:
 attr_reader :sum, :total
 attr_writer :sum
@@ -121,14 +121,14 @@ Following is the stack example written in Ruby:
 #             100, implemented in an array
 \n502     Chapter 11     Abstract Data Types and Encapsulation Constructs
 class StackClass
- 
+
 # Constructor
   def initialize
     @stackRef = Array.new(100)
     @maxLen = 100
     @topIndex = -1
   end
- 
+
 # push method
   def push(number)
     if @topIndex == @maxLen
@@ -138,7 +138,7 @@ class StackClass
       @stackRef[@topIndex] = number
     end
   end
- 
+
 # pop method
   def pop
     if empty
@@ -147,7 +147,7 @@ class StackClass
       @topIndex = @topIndex - 1
     end
   end
- 
+
 # top method
   def top
     if empty
@@ -156,13 +156,13 @@ class StackClass
       @stackRef[@topIndex]
     end
   end
- 
+
 # empty method
   def empty
     @topIndex == -1
   end
 end  # of Stack class
- 
+
 # Test code for StackClass
 myStack = StackClass.new
 myStack.push(42)
@@ -172,46 +172,46 @@ puts "Top element is (should be 29): #{myStack.top}"
 myStack.pop
 puts "Top element is (should be 42): #{myStack.top}"
 myStack.pop
- 
-# The following pop should produce an 
+
+# The following pop should produce an
 #  error message - stack is empty
-myStack.pop  
-Recall that the notation #{variable} converts the value of the variable to a 
-string, which is then inserted into the string in which it appears. This class 
-defines a stack structure that can store objects of any type. 
+myStack.pop
+Recall that the notation #{variable} converts the value of the variable to a
+string, which is then inserted into the string in which it appears. This class
+defines a stack structure that can store objects of any type.
 11.4.6.4 Evaluation
-Recall that in Ruby, everything is an object and arrays are actually arrays of 
-references to objects. That clearly makes this stack more flexible than the 
-similar examples in Ada, C++, and Java. Furthermore, simply by passing the 
-desired maximum length to the constructor, objects of this class could have 
-any given maximum length. Of course, because arrays in Ruby have dynamic 
-length, the class could be modified to implement stack objects that are not 
+Recall that in Ruby, everything is an object and arrays are actually arrays of
+references to objects. That clearly makes this stack more flexible than the
+similar examples in Ada, C++, and Java. Furthermore, simply by passing the
+desired maximum length to the constructor, objects of this class could have
+any given maximum length. Of course, because arrays in Ruby have dynamic
+length, the class could be modified to implement stack objects that are not
 restricted to any length, except that imposed by the machine’s memory capac-
-ity. Because the names of class and instance variables have different forms, 
-Ruby has a slight readability advantage over the other languages discussed 
+ity. Because the names of class and instance variables have different forms,
+Ruby has a slight readability advantage over the other languages discussed
 in this section.
 11.5 Parameterized Abstract Data Types
 It is often convenient to be able to parameterize abstract data types. For exam-
-ple, we should be able to design a stack abstract data type that can store any 
+ple, we should be able to design a stack abstract data type that can store any
 scalar type elements rather than be required to write a separate stack abstrac-
-tion for every different scalar type. Note that this is only an issue for static 
-typed languages. In a dynamic typed language like Ruby, any stack implicitly 
-can store any type elements. In fact, different elements of the stack could be 
-of different types. In the following four subsections, the capabilities of Ada, 
-C++, Java 5.0, and C# 2005 to construct parameterized abstract data types are 
+tion for every different scalar type. Note that this is only an issue for static
+typed languages. In a dynamic typed language like Ruby, any stack implicitly
+can store any type elements. In fact, different elements of the stack could be
+of different types. In the following four subsections, the capabilities of Ada,
+C++, Java 5.0, and C# 2005 to construct parameterized abstract data types are
 discussed.
 11.5.1 Ada
 Generic procedures in Ada were discussed and illustrated in Chapter 9. Pack-
-ages can also be generic, so we can construct generic, or parameterized, abstract 
+ages can also be generic, so we can construct generic, or parameterized, abstract
 data types.
 \n504     Chapter 11     Abstract Data Types and Encapsulation Constructs
-The Ada stack abstract data type example shown in Section 11.4.1 suffers 
-two restrictions: (1) Stacks of its type can store only integer type elements, and 
-(2) the stacks can have only up to 100 elements. Both of these restrictions can 
-be eliminated by using a generic package, which can be instantiated for other 
-element types and any desirable size. (This is a generic instantiation, which is 
+The Ada stack abstract data type example shown in Section 11.4.1 suffers
+two restrictions: (1) Stacks of its type can store only integer type elements, and
+(2) the stacks can have only up to 100 elements. Both of these restrictions can
+be eliminated by using a generic package, which can be instantiated for other
+element types and any desirable size. (This is a generic instantiation, which is
 very different from the instantiation of a class to create an object.) The follow-
-ing package specification describes the interface of a generic stack abstract data 
+ing package specification describes the interface of a generic stack abstract data
 type with these features:
 generic
   Max_Size : Positive;  -- A generic parameter for stack
@@ -227,7 +227,7 @@ package Generic_Stack is
   procedure Pop(Stk : in out Stack_Type);
   function Top(Stk : in Stack_Type) return Element_Type;
 -- The hidden part
-private 
+private
   type List_Type is array (1..Max_Size) of Element_Type;
   type Stack_Type is
     record
@@ -235,21 +235,21 @@ private
     Topsub : Integer range 0..Max_Size := 0;
     end record;
   end Generic_Stack;
-The body package for Generic_Stack is the same as the body package for 
+The body package for Generic_Stack is the same as the body package for
 Stack_Pack in the Section 11.4.1.3 except that the type of the Element for-
 mal parameter in Push and Top is Element_Type instead of Integer.
-The following statement instantiates Generic_Stack for a stack of 100 
+The following statement instantiates Generic_Stack for a stack of 100
 Integer type elements:
 package Integer_Stack is new Generic_Stack(100, Integer);
-One could also build an abstract data type for a stack of length 500 for Float 
+One could also build an abstract data type for a stack of length 500 for Float
 elements, as in
 package Float_Stack is new Generic_Stack(500, Float);
-These instantiations build two different source code versions of the 
+These instantiations build two different source code versions of the
 Generic_Stack package at compile time.
 \n 11.5 Parameterized Abstract Data Types     505
 11.5.2 C++
-C++ also supports parameterized abstract data types. To make the example C++ 
-stack class of Section 11.4.2.4 generic in the stack size, only the constructor 
+C++ also supports parameterized abstract data types. To make the example C++
+stack class of Section 11.4.2.4 generic in the stack size, only the constructor
 function needs to be changed, as in the following:
 Stack(int size) {
   stackPtr = new int [size];
@@ -258,10 +258,10 @@ Stack(int size) {
 }
 The declaration for a stack object now may appear as follows:
 Stack stk(150);
-The class definition for Stack can include both constructors, so users can 
+The class definition for Stack can include both constructors, so users can
 use the default-size stack or specify some other size.
-The element type of the stack can be made generic by making the class 
-a templated class. Then, the element type can be a template parameter. The 
+The element type of the stack can be made generic by making the class
+a templated class. Then, the element type can be a template parameter. The
 definition of the templated class for a stack type is as follows:
 #include <iostream.h>
 template <typename Type>  // Type is the template parameter
@@ -303,27 +303,27 @@ class Stack {
     }
     int empty() {return (topSub == -1);}
 }
-As in Ada, C++ templated classes are instantiated to become typed classes 
-at compile time. For example, an instance of the templated Stack class, as well 
+As in Ada, C++ templated classes are instantiated to become typed classes
+at compile time. For example, an instance of the templated Stack class, as well
 as an instance of the typed class, can be created with the following declaration:
 Stack<int> myIntStack;
-However, if an instance of the templated Stack class has already been 
+However, if an instance of the templated Stack class has already been
 created for the int type, the typed class need not be created.
 11.5.3 Java 5.0
-Java 5.0 supports a form of parameterized abstract data types in which the generic 
-parameters must be classes. Recall that these were briefly discussed in Chapter 9. 
-The most common generic types are collection types, such as LinkedList 
+Java 5.0 supports a form of parameterized abstract data types in which the generic
+parameters must be classes. Recall that these were briefly discussed in Chapter 9.
+The most common generic types are collection types, such as LinkedList
 and ArrayList, which were in the Java class library before support for gener-
-ics was added. The original collection types stored Object class instances, so 
-they could store any objects (but not primitive types). Therefore, the collection 
-types have always been able to store multiple types (as long as they are classes). 
-There were three issues with this: First, every time an object was removed from 
-the collection, it had to be cast to the appropriate type. Second, there was no 
-error checking when elements were added to the collection. This meant that 
+ics was added. The original collection types stored Object class instances, so
+they could store any objects (but not primitive types). Therefore, the collection
+types have always been able to store multiple types (as long as they are classes).
+There were three issues with this: First, every time an object was removed from
+the collection, it had to be cast to the appropriate type. Second, there was no
+error checking when elements were added to the collection. This meant that
 once the collection was created, objects of any class could be added to the col-
-lection, even if the collection was meant to store only Integer objects. Third, 
-the collection types could not store primitive types. So, to store int values in 
-an ArrayList, the value first had to be put in an Integer class instance. For 
+lection, even if the collection was meant to store only Integer objects. Third,
+the collection types could not store primitive types. So, to store int values in
+an ArrayList, the value first had to be put in an Integer class instance. For
 example, consider the following code:
 //* Create an ArrayList object
 ArrayList myArray = new ArrayList();
@@ -331,52 +331,52 @@ ArrayList myArray = new ArrayList();
 myArray.add(0, new Integer(47));
 \n 11.5 Parameterized Abstract Data Types     507
 //* Get first object
-Integer myInt = (Integer)myArray.get(0); 
-In Java 5.0, the collection classes, the most commonly used of which is 
-ArrayList, became a generic class. Such classes are instantiated by calling 
-new on the class constructor and passing it the generic parameter in pointed 
-brackets. For example, the ArrayList class can be instantiated to store 
+Integer myInt = (Integer)myArray.get(0);
+In Java 5.0, the collection classes, the most commonly used of which is
+ArrayList, became a generic class. Such classes are instantiated by calling
+new on the class constructor and passing it the generic parameter in pointed
+brackets. For example, the ArrayList class can be instantiated to store
 Integer objects with the following statement:
-ArrayList <Integer> myArray = new ArrayList <Integer>();  
-This new class overcomes two of the problems with pre-Java 5.0 collections. 
-Only Integer objects can be put into the myArray collection. Furthermore, 
+ArrayList <Integer> myArray = new ArrayList <Integer>();
+This new class overcomes two of the problems with pre-Java 5.0 collections.
+Only Integer objects can be put into the myArray collection. Furthermore,
 there is no need to cast an object being removed from the collection.
 Java 5.0 also includes interfaces for collections for lists, queues, and sets.
-Users also can define generic classes in Java 5.0. For example, we could 
+Users also can define generic classes in Java 5.0. For example, we could
 have the following:
 public class MyClass<T> {
   . . .
 }
 This class could be instantiated with the following:
 MyClass<String> myString;
-There are some drawbacks to these user-defined generic classes. For 
-one thing, they cannot store primitives. Second, the elements cannot be 
-indexed. Elements must be added to user-defined generic collections with 
-the add method. Next, we implement the generic stack example using an 
-Array List. Note that the last element of an ArrayList is found using 
-the size method, which returns the number of elements in the structure. 
+There are some drawbacks to these user-defined generic classes. For
+one thing, they cannot store primitives. Second, the elements cannot be
+indexed. Elements must be added to user-defined generic collections with
+the add method. Next, we implement the generic stack example using an
+Array List. Note that the last element of an ArrayList is found using
+the size method, which returns the number of elements in the structure.
 Elements are deleted from the structure with the remove method. Follow-
 ing is the generic class:
 import java.util.*;
 public class Stack2<T> {
- 
+
   private ArrayList<T> stackRef;
   private int maxLen;
   public Stack2() {  // A constructor
-    stackRef = new ArrayList<T> (); 
+    stackRef = new ArrayList<T> ();
     maxLen = 99;
   }
   public void push(T newValue) {
     if (stackRef.size() == maxLen)
 \n508     Chapter 11     Abstract Data Types and Encapsulation Constructs
       System.out.println("Error in push—stack is full");
-    else 
+    else
       stackRef.add(newValue);
   }
   public void pop() {
     if (empty())
       System.out.println("Error in pop—stack is empty");
-    else 
+    else
       stackRef.remove(stackRef.size() - 1);
   }
   public T top() {
@@ -384,28 +384,28 @@ public class Stack2<T> {
       System.out.println("Error in top—stack is empty");
       return null;
     }
-    else 
+    else
       return (stackRef.get(stackRef.size() - 1));
   }
   public boolean empty() {return (stackRef.isEmpty());}
 This class could be instantiated for the String type with the following:
 Stack2<String> myStack = new Stack2<String>();
 Recall from Chapter 9, that Java 5.0 supports wildcard classes. For exam-
-ple, Collection<?> is a wildcard class for all collection classes. This allows 
-a method to be written that can accept any collection type as a parameter. 
-Because a collection can itself be generic, the Collection<?> class is in a 
+ple, Collection<?> is a wildcard class for all collection classes. This allows
+a method to be written that can accept any collection type as a parameter.
+Because a collection can itself be generic, the Collection<?> class is in a
 sense a generic of a generic class.
-Some care must be taken with objects of the wildcard type. For example, 
-because the components of a particular object of this type have a type, other 
+Some care must be taken with objects of the wildcard type. For example,
+because the components of a particular object of this type have a type, other
 type objects cannot be added to the collection. For example, consider
 Collection<?> c = new ArrayList<String>();
-It would be illegal to use the add method to put something into this collection 
-unless its type were String. 
-A generic class can easily be defined in Java 5.0 that will work only for a 
-restricted set of types. For example, a class can declare a variable of the generic 
-type and call a method such as compareTo through that variable. If the class 
-is instantiated for a type that does not include a compareTo method, the 
-class cannot be used. To prevent a generic class from being instantiated for a 
-type that does not support compareTo, it could be defined with the following 
+It would be illegal to use the add method to put something into this collection
+unless its type were String.
+A generic class can easily be defined in Java 5.0 that will work only for a
+restricted set of types. For example, a class can declare a variable of the generic
+type and call a method such as compareTo through that variable. If the class
+is instantiated for a type that does not include a compareTo method, the
+class cannot be used. To prevent a generic class from being instantiated for a
+type that does not support compareTo, it could be defined with the following
 generic parameter:
 <T extends Comparable>

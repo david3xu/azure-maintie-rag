@@ -1,14 +1,14 @@
 # Agent 1: Unified Data-Driven Schema Implementation
 
-**Date**: August 3, 2025  
-**Purpose**: Consolidated implementation guide combining schema design, analysis, and config structure  
+**Date**: August 3, 2025
+**Purpose**: Consolidated implementation guide combining schema design, analysis, and config structure
 **Requirement**: Zero hardcoded values, 100% learned from raw text data via subdirectory analysis
 
 ## Related Documents
 
 This document consolidates and references:
 - `AGENT_1_DATA_DRIVEN_SCHEMA.md` - Detailed schema components and requirements
-- `AGENT_1_COMPLETE_ANALYSIS.md` - Agent 1 implementation gaps and update plan  
+- `AGENT_1_COMPLETE_ANALYSIS.md` - Agent 1 implementation gaps and update plan
 - `CONFIG_STRUCTURE_ENHANCEMENT_PLAN.md` - Enhanced config directory structure
 
 ## Executive Summary
@@ -28,7 +28,7 @@ data/raw/Programming-Language/ → programming_language domain (82 files)
 async def analyze_corpus_statistics() -> StatisticalAnalysis:
     """Token frequencies, n-grams, document structures"""
 
-# ✅ WORKING: LLM semantic pattern extraction  
+# ✅ WORKING: LLM semantic pattern extraction
 @domain_agent.tool
 async def generate_semantic_patterns() -> SemanticPatterns:
     """Entity types, relationships, domain classification"""
@@ -75,19 +75,19 @@ elif any(term in entity for term in ["function", "method"]):  # ❌
 ```python
 class CompleteStatisticalAnalysis(BaseModel):
     """Enhanced statistical analysis with mathematical learning foundation"""
-    
+
     # ✅ CURRENT: Basic analysis (keep existing)
     token_frequencies: Dict[str, int]
     n_gram_patterns: Dict[str, int]
     vocabulary_size: int
     average_document_length: float
     technical_term_density: float
-    
+
     # ❌ NEW: Mathematical foundation for threshold learning
     validation_data_analysis: ValidationDataAnalysis
     coherence_analysis: ContentCoherenceAnalysis
     clustering_analysis: EntityClusteringAnalysis
-    
+
     @computed_field
     @property
     def learned_entity_confidence_threshold(self) -> float:
@@ -96,7 +96,7 @@ class CompleteStatisticalAnalysis(BaseModel):
             return self.validation_data_analysis.optimal_f1_threshold
         # Fallback: use statistical analysis to estimate
         return max(0.6, min(0.9, self.technical_term_density + 0.2))
-    
+
     @computed_field
     @property
     def learned_chunk_size(self) -> int:
@@ -105,7 +105,7 @@ class CompleteStatisticalAnalysis(BaseModel):
             return self.coherence_analysis.optimal_chunk_size
         # Fallback: optimize based on document structure
         return self._calculate_coherence_optimized_chunk_size()
-    
+
     @computed_field
     @property
     def learned_chunk_overlap(self) -> int:
@@ -121,16 +121,16 @@ class CompleteStatisticalAnalysis(BaseModel):
 ```python
 class PerformanceLearningResult(BaseModel):
     """Learn performance parameters from operational and simulated data"""
-    
+
     # Historical/simulated performance data
     processing_times_by_chunk_size: Dict[int, List[float]]
     memory_usage_by_entity_count: Dict[int, List[float]]
     accuracy_by_threshold: Dict[float, List[float]]
-    
+
     # SLA learning from response time distribution
     response_time_percentiles: Dict[str, float]  # p50, p90, p95, p99
     sla_compliance_history: List[Dict[str, Any]]
-    
+
     @computed_field
     @property
     def learned_sla_target(self) -> float:
@@ -140,7 +140,7 @@ class PerformanceLearningResult(BaseModel):
             return self.response_time_percentiles["p95"] * 1.1
         # Fallback: estimate from processing complexity
         return self._estimate_sla_from_complexity()
-    
+
     @computed_field
     @property
     def learned_cache_ttl(self) -> int:
@@ -156,19 +156,19 @@ class PerformanceLearningResult(BaseModel):
 ```python
 class EntityClassificationLearner(BaseModel):
     """Learn entity classification patterns from clustering analysis"""
-    
+
     # Content-based clustering results
     token_embeddings: Dict[str, List[float]]  # token -> embedding vector
     clustering_results: Dict[str, List[str]]  # cluster_id -> tokens
     pattern_confidence_scores: Dict[str, float]  # pattern -> confidence
     cooccurrence_matrix: Dict[str, Dict[str, float]]  # word -> related_words
-    
+
     @computed_field
     @property
     def learned_classification_rules(self) -> Dict[str, List[str]]:
         """Generate classification rules from statistical clustering"""
         rules = {}
-        
+
         for cluster_id, tokens in self.clustering_results.items():
             # Extract high-confidence patterns from each cluster
             cluster_patterns = []
@@ -176,14 +176,14 @@ class EntityClassificationLearner(BaseModel):
                 confidence = self.pattern_confidence_scores.get(token, 0.0)
                 if confidence > 0.8:  # High confidence threshold
                     cluster_patterns.append(token)
-            
+
             if cluster_patterns:
                 # Name cluster based on most frequent pattern characteristics
                 cluster_name = self._generate_cluster_name(cluster_patterns)
                 rules[cluster_name] = cluster_patterns[:10]  # Top 10 patterns
-        
+
         return rules
-    
+
     def _generate_cluster_name(self, patterns: List[str]) -> str:
         """Generate meaningful cluster name from pattern analysis"""
         # Analyze pattern characteristics to generate semantic name
@@ -202,54 +202,54 @@ class EntityClassificationLearner(BaseModel):
 ```python
 class Agent1CompleteConfigurationGenerator:
     """Complete self-contained configuration generator for Agent 1"""
-    
+
     def __init__(self):
         self.statistical_learner = StatisticalLearningEngine()
         self.performance_learner = PerformanceLearningEngine()
         self.classification_learner = EntityClassificationLearningEngine()
-    
+
     async def generate_complete_domain_configuration(
-        self, 
+        self,
         domain_path: str  # e.g., "data/raw/Programming-Language"
     ) -> CompleteDataDrivenConfiguration:
         """Generate 100% data-driven configuration from domain directory analysis"""
-        
+
         # Step 1: Enhanced statistical analysis with learning
         statistical_analysis = await self.statistical_learner.analyze_corpus_with_learning(domain_path)
-        
+
         # Step 2: Performance parameter learning
         performance_learning = await self.performance_learner.learn_optimal_parameters(statistical_analysis)
-        
+
         # Step 3: Entity classification pattern learning
         classification_learning = await self.classification_learner.learn_classification_patterns(domain_path)
-        
+
         # Step 4: Generate complete configuration with zero hardcoded values
         return CompleteDataDrivenConfiguration(
             # Domain identification (from directory name)
             domain_name=Path(domain_path).name.lower().replace('-', '_'),
             source_directory=domain_path,
-            
+
             # Document processing parameters (100% learned)
             chunk_size=statistical_analysis.learned_chunk_size,
             chunk_overlap=statistical_analysis.learned_chunk_overlap,
-            
+
             # Quality thresholds (100% learned from F1-optimization)
             entity_confidence_threshold=statistical_analysis.learned_entity_confidence_threshold,
             relationship_confidence_threshold=statistical_analysis.learned_entity_confidence_threshold * 0.9,
-            
+
             # Entity classification (100% learned from clustering)
             entity_classification_rules=classification_learning.learned_classification_rules,
             entity_types=list(classification_learning.learned_classification_rules.keys()),
-            
+
             # Performance parameters (100% learned)
             response_time_sla=performance_learning.learned_sla_target,
             cache_ttl=performance_learning.learned_cache_ttl,
             parallel_processing_threshold=statistical_analysis.learned_chunk_size * 2,
-            
+
             # Processing optimization (100% learned)
             memory_optimization_level=performance_learning.learned_memory_optimization,
             batch_size=performance_learning.learned_optimal_batch_size,
-            
+
             # Validation and metadata
             generation_timestamp=datetime.now(),
             source_analysis_summary=f"Learned from {statistical_analysis.total_documents} documents",
@@ -281,7 +281,7 @@ config/
 ├── __init__.py                  # ✅ Keep
 ├── legacy/                      # NEW: Archive current files with hardcoded values
 │   ├── models.py               # Move current models.py here
-│   ├── main.py                 # Move current main.py here  
+│   ├── main.py                 # Move current main.py here
 │   └── unified_data_driven_config.yaml  # Move current config here
 ├── schema/                      # NEW: Data-driven schema definitions
 │   ├── __init__.py
@@ -361,7 +361,7 @@ mv config/unified_data_driven_config.yaml config/legacy/
 class CompleteStatisticalAnalysis(BaseModel):
     # Implementation as defined above
 
-# config/schema/performance_learning.py  
+# config/schema/performance_learning.py
 class PerformanceLearningResult(BaseModel):
     # Implementation as defined above
 
@@ -382,24 +382,24 @@ class Agent1CompleteConfigurationGenerator:
 # agents/domain_intelligence/agent.py - NEW TOOLS
 @domain_agent.tool
 async def generate_complete_learned_config(
-    ctx: RunContext[DomainDeps], 
+    ctx: RunContext[DomainDeps],
     domain_directory: str  # e.g., "data/raw/Programming-Language"
 ) -> CompleteDataDrivenConfiguration:
     """Generate 100% learned configuration with zero hardcoded values"""
-    
+
     from config.generators.agent1_generator import Agent1CompleteConfigurationGenerator
-    
+
     generator = Agent1CompleteConfigurationGenerator()
     complete_config = await generator.generate_complete_domain_configuration(domain_directory)
-    
+
     # Validate zero hardcoded values
     from config.schema.validation import HardcodedValueValidator
     validator = HardcodedValueValidator()
     validation_result = validator.validate_configuration(complete_config)
-    
+
     if not validation_result.is_valid:
         raise ValueError(f"Hardcoded values detected: {validation_result.violations}")
-    
+
     return complete_config
 ```
 
@@ -421,7 +421,7 @@ assert config.entity_confidence_threshold != 0.7  # Not default hardcoded value
 
 **BEFORE Phase 1 Day 1:**
 1. ✅ **Complete config structure enhancement** (Phase 0: Days 1-5)
-2. ✅ **Implement Agent 1 learning engines** 
+2. ✅ **Implement Agent 1 learning engines**
 3. ✅ **Validate zero hardcoded values**
 4. ✅ **Test subdirectory-based domain discovery with enhanced learning**
 
@@ -429,21 +429,21 @@ assert config.entity_confidence_threshold != 0.7  # Not default hardcoded value
 ```python
 # agents/domain_intelligence/toolsets.py - UPDATED
 class DomainIntelligenceToolset(Toolset):
-    
+
     @tool
     async def create_extraction_config(
-        self, 
-        ctx: RunContext[DomainDeps], 
+        self,
+        ctx: RunContext[DomainDeps],
         domain_directory: str  # Use subdirectory path directly
     ) -> ExtractionConfiguration:
         """Create 100% learned extraction config from domain directory"""
-        
+
         # Generate complete learned configuration
         complete_config = await ctx.agent.run(
-            "generate_complete_learned_config", 
+            "generate_complete_learned_config",
             domain_directory=domain_directory
         )
-        
+
         # Convert to extraction configuration format
         return ExtractionConfiguration(
             domain_name=complete_config.domain_name,
@@ -466,20 +466,20 @@ class DomainIntelligenceToolset(Toolset):
 ```python
 # Automated validation that NO hardcoded values exist
 class ConfigValidationSuite:
-    
+
     def test_zero_hardcoded_values(self):
         """Verify NO hardcoded values in any configuration"""
         config = generate_config_for_domain("data/raw/Programming-Language")
-        
+
         # Test that common hardcoded values are not present
         assert config.chunk_size != 1000, "chunk_size appears hardcoded"
         assert config.entity_confidence_threshold != 0.7, "threshold appears hardcoded"
         assert config.cache_ttl != 3600, "cache_ttl appears hardcoded"
-        
+
         # Test that values are learned and reasonable
         assert 500 <= config.chunk_size <= 2000, "chunk_size should be learned within reasonable bounds"
         assert 0.5 <= config.entity_confidence_threshold <= 0.9, "threshold should be optimized"
-        
+
         # Test that entity classification rules are learned, not hardcoded
         rules = config.entity_classification_rules
         hardcoded_patterns = ["api", "endpoint", "function", "method"]

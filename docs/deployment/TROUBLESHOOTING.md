@@ -146,7 +146,7 @@ azd up --environment prod
 ### **Best Regions for Azure Universal RAG**
 
 1. **West US 2** ⭐ - Best overall availability
-2. **West US 3** - Good alternative  
+2. **West US 3** - Good alternative
 3. **Central US** - Reliable for most services
 4. **East US 2** - Good but sometimes capacity constrained
 5. **North Central US** - Good OpenAI availability
@@ -223,7 +223,7 @@ When deployment succeeds, you should see:
 
 **Supported Environment Names**:
 - `prod` / `production` - Premium tier (2+ replicas, premium storage)
-- `staging` - Standard tier (1-5 replicas, standard storage)  
+- `staging` - Standard tier (1-5 replicas, standard storage)
 - `development` - Basic tier (1-3 replicas, basic storage)
 - `test` - Basic tier (same as development)
 

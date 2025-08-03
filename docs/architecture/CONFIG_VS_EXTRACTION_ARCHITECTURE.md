@@ -49,19 +49,19 @@ graph TD
     B --> C[Domain Analysis]
     C --> D[Generate Domain Config]
     D --> E[Extraction Parameters]
-    
+
     A --> F[Knowledge Extraction Pipeline]
     E --> F
     D --> F
-    
+
     F --> G[Process Documents]
     G --> H[Extract Entities & Relations]
     H --> I[Structured Knowledge]
-    
+
     I --> J[Vector Index]
-    I --> K[Knowledge Graph] 
+    I --> K[Knowledge Graph]
     I --> L[GNN Training Data]
-    
+
     J --> M[Tri-Modal Search]
     K --> M
     L --> M
@@ -101,25 +101,25 @@ for document in domain_documents:
 @dataclass
 class ExtractionConfiguration:
     """Configuration passed from Config System to Extraction Pipeline"""
-    
+
     # Entity extraction parameters
     entity_confidence_threshold: float
     expected_entity_types: List[str]
     entity_extraction_focus: str
-    
-    # Relationship extraction parameters  
+
+    # Relationship extraction parameters
     relationship_patterns: List[str]
     relationship_confidence_threshold: float
-    
+
     # Processing parameters
     chunk_size: int
     chunk_overlap: int
     processing_strategy: str
-    
+
     # Domain-specific vocabulary
     technical_vocabulary: List[str]
     key_concepts: List[str]
-    
+
     # Quality thresholds
     minimum_quality_score: float
     validation_criteria: Dict[str, Any]
@@ -127,19 +127,19 @@ class ExtractionConfiguration:
 
 ### Extraction Output (Feedback to Config)
 ```python
-@dataclass 
+@dataclass
 class ExtractionResults:
     """Results from Extraction Pipeline that can improve Config System"""
-    
+
     # Quality metrics
     extraction_accuracy: float
     entity_precision: float
     relationship_recall: float
-    
+
     # Performance metrics
     processing_time: float
     memory_usage: float
-    
+
     # Discovery insights
     new_entity_types_found: List[str]
     unexpected_patterns: List[str]
@@ -175,10 +175,10 @@ class ExtractionResults:
 # config/main.py
 def generate_domain_config(domain_path: str) -> DomainConfiguration:
     """Generate extraction configuration for domain"""
-    
+
     # Analyze domain-wide patterns
     patterns = analyze_corpus_patterns(domain_path)
-    
+
     # Generate optimal extraction parameters
     return DomainConfiguration(
         extraction_parameters=optimize_extraction_params(patterns),
@@ -192,20 +192,20 @@ def generate_domain_config(domain_path: str) -> DomainConfiguration:
 # scripts/dataflow/02_knowledge_extraction.py
 def extract_knowledge(document: str, config: DomainConfiguration) -> KnowledgeResults:
     """Extract knowledge using domain-optimized configuration"""
-    
+
     # Use configuration parameters
     entities = extract_entities(
-        document, 
+        document,
         confidence_threshold=config.extraction_parameters.entity_confidence,
         expected_types=config.extraction_parameters.entity_types_focus
     )
-    
+
     relationships = extract_relationships(
         document,
         patterns=config.extraction_parameters.relationship_patterns,
         confidence_threshold=config.extraction_parameters.relationship_confidence
     )
-    
+
     return KnowledgeResults(entities=entities, relationships=relationships)
 ```
 
@@ -249,7 +249,7 @@ The Config vs Extraction Architecture has been **fully implemented** and validat
 - **File**: `agents/config_extraction_orchestrator.py`
 - **Class**: `ConfigExtractionOrchestrator`
 - **Purpose**: Orchestrates the complete two-stage workflow
-- **Workflow**: 
+- **Workflow**:
   - Stage 1: Domain Intelligence Agent → ExtractionConfiguration
   - Stage 2: Knowledge Extraction Agent → ExtractionResults
 - **Status**: ✅ Implemented and validated
@@ -311,7 +311,7 @@ Overall Result: 🎉 ALL TESTS PASSED
 
 This architecture ensures:
 - **No Overlap**: Clear boundaries prevent duplication
-- **Optimal Performance**: Each component focuses on its strengths  
+- **Optimal Performance**: Each component focuses on its strengths
 - **Continuous Improvement**: Feedback loops enhance system intelligence
 - **Enterprise Scalability**: Clean separation enables independent scaling
 
@@ -426,43 +426,43 @@ graph TB
         DIA --> PE[pattern_engine.py]
         DIA --> CG[config_generator.py]
         DIA --> CM[cache_manager.py]
-        
+
         DA --> |"Statistical Analysis"| STATS[Pure Math: entropy, frequency, clustering]
         PE --> |"Pattern Learning"| LEARN[Dynamic pattern discovery from data]
         CG --> |"Config Generation"| CONF[ExtractionConfiguration objects]
         CM --> |"Performance Cache"| CACHE[Domain pattern cache]
     end
-    
+
     subgraph "Extraction Pipeline (Knowledge Extraction)"
         KEA[Knowledge Extraction Agent]
         KEA --> ET[extraction_tools.py]
         KEA --> CT[consolidated_tools.py]
         KEA --> EH[error_handler.py]
-        
+
         ET --> |"Entity Extraction"| ENT[Extract entities using config]
         CT --> |"Tool Coordination"| TOOLS[Use provided extraction config]
         EH --> |"Error Recovery"| ERR[Handle extraction failures]
     end
-    
+
     subgraph "Orchestration Layer"
         CEO[Config-Extraction Orchestrator]
         CEO --> |"Stage 1"| DIA
         CEO --> |"Stage 2"| KEA
         CEO --> EI[extraction_interface.py]
-        
+
         EI --> |"Interface Contract"| IC[ExtractionConfiguration ↔ ExtractionResults]
     end
-    
+
     subgraph "Supporting Infrastructure"
         AS[azure_services.py]
         MM[memory_manager.py]
-        
+
         KEA --> AS
         KEA --> MM
         DIA --> AS
         DIA --> MM
     end
-    
+
     subgraph "STRICT BOUNDARIES"
         BOUNDARY1[Domain Intelligence NEVER extracts entities]
         BOUNDARY2[Knowledge Extraction NEVER generates config]
@@ -489,10 +489,10 @@ graph TB
 def generate_extraction_config(domain: str, file_path: str) -> ExtractionConfiguration:
     # 1. Statistical analysis of ALL documents in domain
     stats = analyze_corpus_statistics(domain_path)
-    
-    # 2. Mathematical clustering and pattern discovery  
+
+    # 2. Mathematical clustering and pattern discovery
     patterns = discover_patterns_mathematically(stats)
-    
+
     # 3. Generate optimized configuration
     return ExtractionConfiguration(
         entity_confidence_threshold=calculate_optimal_threshold(patterns),
@@ -521,14 +521,14 @@ def generate_extraction_config(domain: str, file_path: str) -> ExtractionConfigu
 # CORRECT: Use provided config → Extract knowledge
 def extract_knowledge_from_document(content: str, config: ExtractionConfiguration) -> ExtractedKnowledge:
     # 1. Use CONFIG parameters (never generate them)
-    entities = extract_entities(content, 
+    entities = extract_entities(content,
         confidence_threshold=config.entity_confidence_threshold,
         expected_types=config.expected_entity_types)
-    
+
     # 2. Extract relationships using CONFIG patterns
     relationships = extract_relationships(content,
         patterns=config.relationship_patterns)
-    
+
     # 3. Return structured results
     return ExtractedKnowledge(entities=entities, relationships=relationships)
 ```
@@ -562,13 +562,13 @@ class DomainIntelligenceAgent:
     def analyze_domain_corpus(self, domain_path: Path) -> ExtractionConfiguration:
         # 1. Pure statistical analysis
         corpus_stats = self._calculate_corpus_statistics(domain_path)
-        
+
         # 2. Mathematical clustering
         entity_clusters = self._cluster_potential_entities(corpus_stats)
-        
+
         # 3. Optimize parameters mathematically
         optimal_threshold = self._calculate_optimal_threshold(entity_clusters)
-        
+
         # 4. Generate configuration (NO extraction)
         return ExtractionConfiguration(
             entity_confidence_threshold=optimal_threshold,
@@ -582,7 +582,7 @@ class KnowledgeExtractionAgent:
         # 1. Use provided configuration (NEVER generate it)
         entities = self._extract_entities_with_config(document, config)
         relationships = self._extract_relationships_with_config(document, config)
-        
+
         # 2. Return extraction results (NO configuration decisions)
         return ExtractedKnowledge(entities=entities, relationships=relationships)
 ```
@@ -598,7 +598,7 @@ Based on complete directory analysis, the Azure Universal RAG system has **4 mai
 
 **Direct Code Files Used**:
 - `intelligence/domain_analyzer.py` - Content analysis and domain classification
-- `intelligence/pattern_engine.py` - Pattern extraction and learning 
+- `intelligence/pattern_engine.py` - Pattern extraction and learning
 - `intelligence/config_generator.py` - Configuration generation
 - `core/cache_manager.py` - Domain pattern caching
 - `config/extraction_interface.py` - ExtractionConfiguration interface
@@ -665,7 +665,7 @@ Based on complete directory analysis, the Azure Universal RAG system has **4 mai
 
 #### **Search Files - NOT INTEGRATED**:
 - `search/vector_search.py` - Independent implementation, not used by agents
-- `search/graph_search.py` - Independent implementation, not used by agents  
+- `search/graph_search.py` - Independent implementation, not used by agents
 - `search/gnn_search.py` - Independent implementation, not used by agents
 - `search/orchestrator.py` - Should coordinate all search, not integrated
 
@@ -683,7 +683,7 @@ ROOT CAUSE: No clear separation between statistical analysis vs pattern matching
 
 #### **2. Tool Architecture Violations**
 ```
-PROBLEM: Agents implement logic instead of delegating to tools  
+PROBLEM: Agents implement logic instead of delegating to tools
 EVIDENCE: Knowledge Extraction Agent has own extraction methods
 ROOT CAUSE: Tool delegation pattern not followed consistently
 ```
@@ -719,9 +719,9 @@ class DomainIntelligenceAgent:
     def analyze_domain_corpus(self, domain_path: Path) -> ExtractionConfiguration:
         # 1. Mathematical analysis ONLY
         corpus_stats = self._calculate_frequency_distributions(domain_path)
-        entity_clusters = self._cluster_using_entropy(corpus_stats)  
+        entity_clusters = self._cluster_using_entropy(corpus_stats)
         optimal_threshold = self._calculate_confidence_percentiles(entity_clusters)
-        
+
         # 2. Generate configuration (NO hardcoded values)
         return ExtractionConfiguration(
             entity_confidence_threshold=optimal_threshold,
@@ -735,7 +735,7 @@ class KnowledgeExtractionAgent:
         # 1. Delegate to tools (NEVER implement extraction directly)
         entities = await self.extraction_tools.extract_entities(document, config)
         relationships = await self.extraction_tools.extract_relationships(document, config)
-        
+
         # 2. Return results (NO configuration decisions)
         return ExtractedKnowledge(entities=entities, relationships=relationships)
 ```

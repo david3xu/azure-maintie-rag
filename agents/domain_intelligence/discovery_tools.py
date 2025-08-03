@@ -30,16 +30,8 @@ from pydantic_ai import RunContext
 from ..core.cache_manager import UnifiedCacheManager
 
 # Import our consolidated domain intelligence components
-from .domain_analyzer import (
-    ContentAnalysis,
-    DomainAnalyzer,
-    DomainClassification,
-)
-from .pattern_engine import (
-    ExtractedPatterns,
-    LearnedPattern,
-    PatternEngine,
-)
+from .domain_analyzer import ContentAnalysis, DomainAnalyzer, DomainClassification
+from .pattern_engine import ExtractedPatterns, LearnedPattern, PatternEngine
 
 # Import our Azure service container
 try:
@@ -219,10 +211,10 @@ async def execute_domain_detection(
     try:
         # Use statistical-only domain detection when infrastructure not available
         from .agent import detect_domain_from_query_statistical
-        
+
         # Execute statistical domain detection (preserves core competitive advantage)
         detection_result = await detect_domain_from_query_statistical(request.query)
-        
+
         execution_time_ms = (time.time() - start_time) * 1000
 
         # Format response with proper validation
@@ -238,13 +230,13 @@ async def execute_domain_detection(
             adaptation_recommendations={
                 "strategy": request.adaptation_strategy,
                 "recommended_tools": ["tri_modal_search", "analyze_content"],
-                "optimization_level": "balanced"
+                "optimization_level": "balanced",
             },
             analysis_details={
                 "reasoning": detection_result.reasoning,
                 "matched_patterns": detection_result.matched_patterns,
                 "statistical_analysis": True,
-                "zero_config_adaptation": True  # Our competitive advantage
+                "zero_config_adaptation": True,  # Our competitive advantage
             },
             correlation_id=correlation_id,
         )
@@ -256,7 +248,7 @@ async def execute_domain_detection(
                 "detected_domain": detection_result.domain,
                 "confidence": detection_result.confidence,
                 "detection_time_ms": execution_time_ms,
-                "zero_config_success": True
+                "zero_config_success": True,
             },
         )
 
@@ -311,12 +303,10 @@ async def execute_agent_adaptation(
         detection_data = request.detection_result
         detected_domain = detection_data.get("detected_domain", "general")
         confidence = detection_data.get("confidence", 0.5)
-        
+
         # Generate adapted configuration based on domain
         adapted_config = await _generate_domain_adapted_config(
-            detected_domain, 
-            request.base_agent_config,
-            request.adaptation_goals
+            detected_domain, request.base_agent_config, request.adaptation_goals
         )
 
         # Analyze changes made
@@ -332,7 +322,7 @@ async def execute_agent_adaptation(
             "expected_response_time_improvement": "10-30% faster for domain-specific queries",
             "expected_accuracy_improvement": "15-25% higher confidence scores",
             "expected_capabilities": f"Enhanced {detected_domain}-specific reasoning and search",
-            "zero_config_advantage": "Automatic optimization without manual configuration"
+            "zero_config_advantage": "Automatic optimization without manual configuration",
         }
 
         execution_time = time.time() - start_time
@@ -345,7 +335,7 @@ async def execute_agent_adaptation(
                 "confidence": confidence,
                 "metadata": {
                     "adaptation_strategy": "zero_config_statistical",
-                    "competitive_advantage": "dynamic_adaptation"
+                    "competitive_advantage": "dynamic_adaptation",
                 },
             },
             changes_made=changes_made,
@@ -361,7 +351,7 @@ async def execute_agent_adaptation(
                 "domain": detected_domain,
                 "changes_count": len(changes_made),
                 "execution_time": execution_time,
-                "zero_config_adaptation": True
+                "zero_config_adaptation": True,
             },
         )
 
@@ -417,14 +407,12 @@ async def execute_pattern_learning(
     try:
         # Execute statistical pattern learning
         session_id = f"learning_session_{correlation_id}"
-        
+
         # Analyze patterns in the text examples
         learned_patterns = await _analyze_text_patterns(
-            request.text_examples,
-            request.learning_mode,
-            request.domain_context
+            request.text_examples, request.learning_mode, request.domain_context
         )
-        
+
         execution_time = time.time() - start_time
 
         # Extract results
@@ -450,7 +438,7 @@ async def execute_pattern_learning(
                 if request.text_examples
                 else 0.0,
                 "statistical_learning": True,
-                "competitive_advantage": "continuous_learning"
+                "competitive_advantage": "continuous_learning",
             },
             correlation_id=correlation_id,
         )
@@ -486,6 +474,7 @@ async def execute_pattern_learning(
 
 # Helper functions
 
+
 def _get_confidence_level(confidence: float) -> str:
     """Convert confidence score to level"""
     if confidence >= 0.9:
@@ -501,81 +490,83 @@ def _get_confidence_level(confidence: float) -> str:
 
 
 async def _generate_domain_adapted_config(
-    domain: str, 
-    base_config: Dict[str, Any],
-    adaptation_goals: List[str]
+    domain: str, base_config: Dict[str, Any], adaptation_goals: List[str]
 ) -> Dict[str, Any]:
     """Generate domain-adapted configuration"""
     adapted_config = base_config.copy()
-    
+
     # Domain-specific optimizations
     domain_optimizations = {
         "technical": {
             "search_types": ["vector", "graph", "gnn"],
             "confidence_threshold": 0.7,
             "max_results": 15,
-            "technical_focus": True
+            "technical_focus": True,
         },
         "maintenance": {
             "search_types": ["vector", "graph"],
             "confidence_threshold": 0.75,
             "max_results": 12,
-            "procedural_focus": True
+            "procedural_focus": True,
         },
         "process": {
             "search_types": ["graph", "vector"],
             "confidence_threshold": 0.8,
             "max_results": 10,
-            "workflow_focus": True
+            "workflow_focus": True,
         },
         "safety": {
             "search_types": ["vector", "graph"],
             "confidence_threshold": 0.85,
             "max_results": 8,
-            "safety_priority": True
-        }
+            "safety_priority": True,
+        },
     }
-    
+
     # Apply domain-specific optimizations
     if domain in domain_optimizations:
         adapted_config.update(domain_optimizations[domain])
-    
+
     # Apply adaptation goals
     for goal in adaptation_goals:
         if goal == "improve_accuracy":
-            adapted_config["confidence_threshold"] = min(0.9, adapted_config.get("confidence_threshold", 0.7) + 0.1)
+            adapted_config["confidence_threshold"] = min(
+                0.9, adapted_config.get("confidence_threshold", 0.7) + 0.1
+            )
         elif goal == "optimize_performance":
             adapted_config["max_concurrent_requests"] = 5
             adapted_config["enable_caching"] = True
         elif goal == "enhance_search":
             adapted_config["search_depth"] = "comprehensive"
-    
+
     return adapted_config
 
 
 async def _analyze_text_patterns(
-    text_examples: List[str],
-    learning_mode: str,
-    domain_context: Optional[str]
+    text_examples: List[str], learning_mode: str, domain_context: Optional[str]
 ) -> Dict[str, Any]:
     """Analyze patterns in text examples using statistical methods"""
-    
+
     # Simple pattern analysis
     all_text = " ".join(text_examples)
     words = all_text.lower().split()
-    
+
     # Find common patterns
     word_freq = {}
     for word in words:
         word_freq[word] = word_freq.get(word, 0) + 1
-    
+
     # Extract top patterns
     common_patterns = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:10]
-    
+
     # Generate mock learning results
-    new_patterns = [{"pattern": pattern, "frequency": freq} for pattern, freq in common_patterns[:5]]
-    evolved_patterns = [{"pattern": pattern, "frequency": freq} for pattern, freq in common_patterns[5:]]
-    
+    new_patterns = [
+        {"pattern": pattern, "frequency": freq} for pattern, freq in common_patterns[:5]
+    ]
+    evolved_patterns = [
+        {"pattern": pattern, "frequency": freq} for pattern, freq in common_patterns[5:]
+    ]
+
     return {
         "new_patterns": new_patterns,
         "evolved_patterns": evolved_patterns,
@@ -583,8 +574,8 @@ async def _analyze_text_patterns(
         "learning_metadata": {
             "mode": learning_mode,
             "domain": domain_context,
-            "statistical_analysis": True
-        }
+            "statistical_analysis": True,
+        },
     }
 
 
@@ -611,6 +602,7 @@ async def test_discovery_tools():
     class MockContext:
         class MockDeps:
             pass
+
         deps = MockDeps()
 
     # Test domain detection
@@ -621,9 +613,15 @@ async def test_discovery_tools():
     )
 
     try:
-        detection_result = await execute_domain_detection(MockContext(), detection_request)
-        print(f"✅ Domain detection: {detection_result.detected_domain} (confidence: {detection_result.confidence:.2f})")
-        print(f"✅ Zero-config adaptation: {detection_result.analysis_details.get('zero_config_adaptation', False)}")
+        detection_result = await execute_domain_detection(
+            MockContext(), detection_request
+        )
+        print(
+            f"✅ Domain detection: {detection_result.detected_domain} (confidence: {detection_result.confidence:.2f})"
+        )
+        print(
+            f"✅ Zero-config adaptation: {detection_result.analysis_details.get('zero_config_adaptation', False)}"
+        )
     except Exception as e:
         print(f"⚠️ Domain detection test requires infrastructure: {e}")
 
@@ -642,7 +640,9 @@ async def test_discovery_tools():
     )
 
     try:
-        adaptation_result = await execute_agent_adaptation(MockContext(), adaptation_request)
+        adaptation_result = await execute_agent_adaptation(
+            MockContext(), adaptation_request
+        )
         print(f"✅ Agent adaptation: {len(adaptation_result.changes_made)} changes made")
         print(f"✅ Adaptation confidence: {adaptation_result.adaptation_confidence:.2f}")
     except Exception as e:
@@ -660,9 +660,15 @@ async def test_discovery_tools():
     )
 
     try:
-        learning_result = await execute_pattern_learning(MockContext(), learning_request)
-        print(f"✅ Pattern learning: {learning_result.new_patterns_learned} new patterns learned")
-        print(f"✅ Learning insights: {learning_result.learning_insights.get('competitive_advantage', 'N/A')}")
+        learning_result = await execute_pattern_learning(
+            MockContext(), learning_request
+        )
+        print(
+            f"✅ Pattern learning: {learning_result.new_patterns_learned} new patterns learned"
+        )
+        print(
+            f"✅ Learning insights: {learning_result.learning_insights.get('competitive_advantage', 'N/A')}"
+        )
     except Exception as e:
         print(f"⚠️ Pattern learning test requires infrastructure: {e}")
 
@@ -671,4 +677,5 @@ async def test_discovery_tools():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(test_discovery_tools())

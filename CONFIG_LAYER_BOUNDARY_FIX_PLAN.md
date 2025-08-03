@@ -6,10 +6,10 @@
 
 ```
 config/ (MIXED RESPONSIBILITIES - WRONG!)
-├── settings.py              # ✅ Infrastructure Layer 
+├── settings.py              # ✅ Infrastructure Layer
 ├── azure_settings.py        # ✅ Infrastructure Layer
 ├── models.py               # ❌ Should be Services Layer
-├── extraction_interface.py # ❌ Should be Services Layer  
+├── extraction_interface.py # ❌ Should be Services Layer
 ├── generated/domains/       # ❌ Should be Agent 1 domain
 └── agents/                 # ❌ Should be Agent domain
 ```
@@ -30,7 +30,7 @@ config/
 └── timeouts.py         # Infrastructure timeouts
 ```
 
-### Services Layer (services/)  
+### Services Layer (services/)
 **Purpose**: Business logic models and interfaces
 ```
 services/
@@ -49,7 +49,7 @@ services/
 agents/domain_intelligence/
 ├── generated_configs/       # Agent 1 learned configurations
 │   ├── programming_language_config.yaml
-│   └── medical_config.yaml  
+│   └── medical_config.yaml
 ├── models.py               # Agent 1's self-contained models
 └── config_generator.py     # Agent 1's configuration generation logic
 ```
@@ -60,7 +60,7 @@ agents/domain_intelligence/
 - Move `config/models.py` → `services/models/domain_models.py`
 - Move `config/extraction_interface.py` → `services/interfaces/extraction_interface.py`
 
-### Step 2: Move Agent 1 Generated Configs to Agent Domain  
+### Step 2: Move Agent 1 Generated Configs to Agent Domain
 - Move `config/generated/domains/` → `agents/domain_intelligence/generated_configs/`
 - Move `config/agents/` → `agents/domain_intelligence/agent_configs/`
 

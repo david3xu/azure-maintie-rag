@@ -19,14 +19,14 @@ Features:
 """
 
 import asyncio
-import logging
-import time
-import statistics
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Callable
-from dataclasses import dataclass, field
-from enum import Enum
 import json
+import logging
+import statistics
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class PerformanceCategory(Enum):
     """Performance monitoring categories"""
+
     COMPETITIVE_ADVANTAGE = "competitive_advantage"
     SYSTEM_PERFORMANCE = "system_performance"
     SLA_COMPLIANCE = "sla_compliance"
@@ -44,6 +45,7 @@ class PerformanceCategory(Enum):
 
 class AlertSeverity(Enum):
     """Alert severity levels"""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -53,6 +55,7 @@ class AlertSeverity(Enum):
 @dataclass
 class PerformanceMetric:
     """Individual performance metric"""
+
     name: str
     category: PerformanceCategory
     current_value: float
@@ -67,6 +70,7 @@ class PerformanceMetric:
 @dataclass
 class PerformanceAlert:
     """Performance alert"""
+
     metric_name: str
     severity: AlertSeverity
     current_value: float
@@ -81,47 +85,47 @@ class CompetitiveAdvantageMonitor:
     """
     Monitor performance of all competitive advantages:
     1. Tri-Modal Search Unity (Vector + Graph + GNN)
-    2. Hybrid Domain Intelligence (LLM + Statistical) 
+    2. Hybrid Domain Intelligence (LLM + Statistical)
     3. Configuration-Extraction Pipeline
     4. Zero-Config Domain Adaptation
     5. Enterprise Infrastructure
     """
-    
+
     def __init__(self):
         self.metrics_history: Dict[str, List[PerformanceMetric]] = {}
         self.active_alerts: List[PerformanceAlert] = []
         self.baseline_metrics: Dict[str, float] = {}
         self.monitoring_enabled = True
-        
+
         # SLA thresholds (sub-3-second requirement)
         self.sla_thresholds = {
             "tri_modal_search_time": 3.0,
             "domain_analysis_time": 1.0,
             "config_generation_time": 2.0,
             "knowledge_extraction_time": 5.0,
-            "overall_response_time": 3.0
+            "overall_response_time": 3.0,
         }
-        
+
         # Competitive advantage baselines (from our implementation)
         self.competitive_baselines = {
             "tri_modal_search_confidence": 0.85,
             "domain_detection_accuracy": 0.80,
             "extraction_pipeline_success_rate": 0.95,
             "zero_config_adaptation_rate": 0.90,
-            "enterprise_availability": 0.99
+            "enterprise_availability": 0.99,
         }
-        
+
         logger.info("Competitive advantage monitor initialized with SLA thresholds")
-    
+
     async def track_tri_modal_search_performance(
-        self, 
+        self,
         search_time: float,
         confidence: float,
         modalities_used: List[str],
-        correlation_id: Optional[str] = None
+        correlation_id: Optional[str] = None,
     ):
         """Track tri-modal search competitive advantage performance"""
-        
+
         # Track search execution time (critical SLA)
         await self._record_metric(
             "tri_modal_search_time",
@@ -134,10 +138,10 @@ class CompetitiveAdvantageMonitor:
                 "modalities_used": modalities_used,
                 "modality_count": len(modalities_used),
                 "correlation_id": correlation_id,
-                "competitive_advantage": "tri_modal_search_unity"
-            }
+                "competitive_advantage": "tri_modal_search_unity",
+            },
         )
-        
+
         # Track search confidence (quality metric)
         await self._record_metric(
             "tri_modal_search_confidence",
@@ -149,10 +153,10 @@ class CompetitiveAdvantageMonitor:
             {
                 "modalities_used": modalities_used,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "tri_modal_search_unity"
-            }
+                "competitive_advantage": "tri_modal_search_unity",
+            },
         )
-        
+
         # Check for parallel execution (competitive advantage validation)
         parallel_execution = len(modalities_used) >= 2
         await self._record_metric(
@@ -165,19 +169,19 @@ class CompetitiveAdvantageMonitor:
             {
                 "parallel_execution": parallel_execution,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "tri_modal_search_unity"
-            }
+                "competitive_advantage": "tri_modal_search_unity",
+            },
         )
-    
+
     async def track_domain_intelligence_performance(
         self,
         analysis_time: float,
         detection_accuracy: float,
         hybrid_analysis_used: bool,
-        correlation_id: Optional[str] = None
+        correlation_id: Optional[str] = None,
     ):
         """Track hybrid domain intelligence competitive advantage performance"""
-        
+
         # Track domain analysis time
         await self._record_metric(
             "domain_analysis_time",
@@ -189,10 +193,10 @@ class CompetitiveAdvantageMonitor:
             {
                 "hybrid_analysis_used": hybrid_analysis_used,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "hybrid_domain_intelligence"
-            }
+                "competitive_advantage": "hybrid_domain_intelligence",
+            },
         )
-        
+
         # Track detection accuracy
         await self._record_metric(
             "domain_detection_accuracy",
@@ -204,10 +208,10 @@ class CompetitiveAdvantageMonitor:
             {
                 "hybrid_analysis_used": hybrid_analysis_used,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "hybrid_domain_intelligence"
-            }
+                "competitive_advantage": "hybrid_domain_intelligence",
+            },
         )
-        
+
         # Track hybrid analysis utilization (competitive advantage validation)
         await self._record_metric(
             "hybrid_analysis_utilization",
@@ -219,20 +223,20 @@ class CompetitiveAdvantageMonitor:
             {
                 "hybrid_analysis_used": hybrid_analysis_used,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "hybrid_domain_intelligence"
-            }
+                "competitive_advantage": "hybrid_domain_intelligence",
+            },
         )
-    
+
     async def track_config_extraction_pipeline_performance(
         self,
         config_generation_time: float,
         extraction_time: float,
         pipeline_success: bool,
         automation_achieved: bool,
-        correlation_id: Optional[str] = None
+        correlation_id: Optional[str] = None,
     ):
         """Track configuration-extraction pipeline competitive advantage performance"""
-        
+
         # Track configuration generation time (Stage 1)
         await self._record_metric(
             "config_generation_time",
@@ -245,10 +249,10 @@ class CompetitiveAdvantageMonitor:
                 "stage": "domain_to_config",
                 "automation_achieved": automation_achieved,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "config_extraction_pipeline"
-            }
+                "competitive_advantage": "config_extraction_pipeline",
+            },
         )
-        
+
         # Track knowledge extraction time (Stage 2)
         await self._record_metric(
             "knowledge_extraction_time",
@@ -260,10 +264,10 @@ class CompetitiveAdvantageMonitor:
             {
                 "stage": "config_to_extraction",
                 "correlation_id": correlation_id,
-                "competitive_advantage": "config_extraction_pipeline"
-            }
+                "competitive_advantage": "config_extraction_pipeline",
+            },
         )
-        
+
         # Track pipeline success rate
         await self._record_metric(
             "extraction_pipeline_success_rate",
@@ -276,10 +280,10 @@ class CompetitiveAdvantageMonitor:
                 "pipeline_success": pipeline_success,
                 "automation_achieved": automation_achieved,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "config_extraction_pipeline"
-            }
+                "competitive_advantage": "config_extraction_pipeline",
+            },
         )
-        
+
         # Track automation achievement (key competitive advantage)
         await self._record_metric(
             "config_extraction_automation",
@@ -291,19 +295,19 @@ class CompetitiveAdvantageMonitor:
             {
                 "automation_achieved": automation_achieved,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "config_extraction_pipeline"
-            }
+                "competitive_advantage": "config_extraction_pipeline",
+            },
         )
-    
+
     async def track_zero_config_adaptation_performance(
         self,
         adaptation_time: float,
         adaptation_success: bool,
         manual_intervention_required: bool,
-        correlation_id: Optional[str] = None
+        correlation_id: Optional[str] = None,
     ):
         """Track zero-config domain adaptation competitive advantage performance"""
-        
+
         # Track adaptation time
         await self._record_metric(
             "zero_config_adaptation_time",
@@ -316,10 +320,10 @@ class CompetitiveAdvantageMonitor:
                 "adaptation_success": adaptation_success,
                 "manual_intervention_required": manual_intervention_required,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "zero_config_adaptation"
-            }
+                "competitive_advantage": "zero_config_adaptation",
+            },
         )
-        
+
         # Track adaptation success rate
         await self._record_metric(
             "zero_config_adaptation_rate",
@@ -331,10 +335,10 @@ class CompetitiveAdvantageMonitor:
             {
                 "adaptation_success": adaptation_success,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "zero_config_adaptation"
-            }
+                "competitive_advantage": "zero_config_adaptation",
+            },
         )
-        
+
         # Track manual intervention avoidance (key competitive advantage)
         await self._record_metric(
             "zero_config_manual_intervention_avoidance",
@@ -346,20 +350,20 @@ class CompetitiveAdvantageMonitor:
             {
                 "manual_intervention_required": manual_intervention_required,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "zero_config_adaptation"
-            }
+                "competitive_advantage": "zero_config_adaptation",
+            },
         )
-    
+
     async def track_enterprise_infrastructure_performance(
         self,
         availability: float,
         response_time: float,
         error_rate: float,
         azure_services_health: Dict[str, bool],
-        correlation_id: Optional[str] = None
+        correlation_id: Optional[str] = None,
     ):
         """Track enterprise infrastructure competitive advantage performance"""
-        
+
         # Track system availability
         await self._record_metric(
             "enterprise_availability",
@@ -371,10 +375,10 @@ class CompetitiveAdvantageMonitor:
             {
                 "azure_services_health": azure_services_health,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "enterprise_infrastructure"
-            }
+                "competitive_advantage": "enterprise_infrastructure",
+            },
         )
-        
+
         # Track overall response time (critical SLA)
         await self._record_metric(
             "overall_response_time",
@@ -386,10 +390,10 @@ class CompetitiveAdvantageMonitor:
             {
                 "azure_services_health": azure_services_health,
                 "correlation_id": correlation_id,
-                "sla_requirement": "sub_3_second"
-            }
+                "sla_requirement": "sub_3_second",
+            },
         )
-        
+
         # Track error rate
         await self._record_metric(
             "enterprise_error_rate",
@@ -401,15 +405,19 @@ class CompetitiveAdvantageMonitor:
             {
                 "azure_services_health": azure_services_health,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "enterprise_infrastructure"
-            }
+                "competitive_advantage": "enterprise_infrastructure",
+            },
         )
-        
+
         # Track Azure services health
-        healthy_services = sum(1 for healthy in azure_services_health.values() if healthy)
+        healthy_services = sum(
+            1 for healthy in azure_services_health.values() if healthy
+        )
         total_services = len(azure_services_health)
-        service_health_ratio = healthy_services / total_services if total_services > 0 else 0.0
-        
+        service_health_ratio = (
+            healthy_services / total_services if total_services > 0 else 0.0
+        )
+
         await self._record_metric(
             "azure_services_health_ratio",
             PerformanceCategory.INFRASTRUCTURE,
@@ -422,10 +430,10 @@ class CompetitiveAdvantageMonitor:
                 "total_services": total_services,
                 "azure_services_health": azure_services_health,
                 "correlation_id": correlation_id,
-                "competitive_advantage": "enterprise_infrastructure"
-            }
+                "competitive_advantage": "enterprise_infrastructure",
+            },
         )
-    
+
     async def _record_metric(
         self,
         name: str,
@@ -434,13 +442,13 @@ class CompetitiveAdvantageMonitor:
         critical_threshold: float,
         warning_threshold: float,
         unit: str,
-        metadata: Dict[str, Any]
+        metadata: Dict[str, Any],
     ):
         """Record a performance metric and check for alerts"""
-        
+
         if not self.monitoring_enabled:
             return
-        
+
         # Create metric
         metric = PerformanceMetric(
             name=name,
@@ -450,22 +458,22 @@ class CompetitiveAdvantageMonitor:
             threshold_warning=warning_threshold,
             threshold_critical=critical_threshold,
             unit=unit,
-            metadata=metadata
+            metadata=metadata,
         )
-        
+
         # Store in history
         if name not in self.metrics_history:
             self.metrics_history[name] = []
-        
+
         self.metrics_history[name].append(metric)
-        
+
         # Keep only last 1000 metrics per name
         if len(self.metrics_history[name]) > 1000:
             self.metrics_history[name] = self.metrics_history[name][-1000:]
-        
+
         # Check for alerts
         await self._check_metric_alerts(metric)
-        
+
         # Log metric for observability
         logger.info(
             f"Performance metric recorded: {name}",
@@ -475,15 +483,15 @@ class CompetitiveAdvantageMonitor:
                 "metric_unit": unit,
                 "metric_category": category.value,
                 "correlation_id": metadata.get("correlation_id"),
-                "competitive_advantage": metadata.get("competitive_advantage")
-            }
+                "competitive_advantage": metadata.get("competitive_advantage"),
+            },
         )
-    
+
     async def _check_metric_alerts(self, metric: PerformanceMetric):
         """Check if metric violates thresholds and generate alerts"""
-        
+
         alerts_to_create = []
-        
+
         # Check critical threshold
         if self._is_threshold_violated(metric, metric.threshold_critical, "critical"):
             alert = PerformanceAlert(
@@ -493,10 +501,10 @@ class CompetitiveAdvantageMonitor:
                 threshold_value=metric.threshold_critical,
                 message=f"CRITICAL: {metric.name} ({metric.current_value} {metric.unit}) exceeded critical threshold ({metric.threshold_critical} {metric.unit})",
                 correlation_id=metric.metadata.get("correlation_id"),
-                component=metric.metadata.get("competitive_advantage", "system")
+                component=metric.metadata.get("competitive_advantage", "system"),
             )
             alerts_to_create.append(alert)
-        
+
         # Check warning threshold
         elif self._is_threshold_violated(metric, metric.threshold_warning, "warning"):
             alert = PerformanceAlert(
@@ -506,39 +514,41 @@ class CompetitiveAdvantageMonitor:
                 threshold_value=metric.threshold_warning,
                 message=f"WARNING: {metric.name} ({metric.current_value} {metric.unit}) exceeded warning threshold ({metric.threshold_warning} {metric.unit})",
                 correlation_id=metric.metadata.get("correlation_id"),
-                component=metric.metadata.get("competitive_advantage", "system")
+                component=metric.metadata.get("competitive_advantage", "system"),
             )
             alerts_to_create.append(alert)
-        
+
         # Process alerts
         for alert in alerts_to_create:
             await self._handle_alert(alert)
-    
-    def _is_threshold_violated(self, metric: PerformanceMetric, threshold: float, threshold_type: str) -> bool:
+
+    def _is_threshold_violated(
+        self, metric: PerformanceMetric, threshold: float, threshold_type: str
+    ) -> bool:
         """Check if metric violates threshold based on metric type"""
-        
+
         # For response times and error rates, higher values are worse
         if metric.unit in ["seconds", "milliseconds", "percentage", "error_rate"]:
             return metric.current_value > threshold
-        
+
         # For confidence scores, success rates, availability, higher values are better
         elif metric.unit in ["confidence_score", "accuracy_score", "boolean", "ratio"]:
             return metric.current_value < threshold
-        
+
         # Default: treat as higher-is-worse
         else:
             return metric.current_value > threshold
-    
+
     async def _handle_alert(self, alert: PerformanceAlert):
         """Handle performance alert"""
-        
+
         # Add to active alerts
         self.active_alerts.append(alert)
-        
+
         # Keep only last 100 alerts
         if len(self.active_alerts) > 100:
             self.active_alerts = self.active_alerts[-100:]
-        
+
         # Log alert
         logger.warning(
             f"Performance alert: {alert.severity.value.upper()}",
@@ -549,23 +559,25 @@ class CompetitiveAdvantageMonitor:
                 "current_value": alert.current_value,
                 "threshold_value": alert.threshold_value,
                 "correlation_id": alert.correlation_id,
-                "component": alert.component
-            }
+                "component": alert.component,
+            },
         )
-        
+
         # For critical alerts on competitive advantages, escalate
         if alert.severity == AlertSeverity.CRITICAL and alert.component in [
             "tri_modal_search_unity",
-            "hybrid_domain_intelligence", 
+            "hybrid_domain_intelligence",
             "config_extraction_pipeline",
             "zero_config_adaptation",
-            "enterprise_infrastructure"
+            "enterprise_infrastructure",
         ]:
             await self._escalate_critical_competitive_advantage_alert(alert)
-    
-    async def _escalate_critical_competitive_advantage_alert(self, alert: PerformanceAlert):
+
+    async def _escalate_critical_competitive_advantage_alert(
+        self, alert: PerformanceAlert
+    ):
         """Escalate critical alerts affecting competitive advantages"""
-        
+
         logger.critical(
             f"🚨 CRITICAL COMPETITIVE ADVANTAGE ALERT: {alert.component}",
             extra={
@@ -576,22 +588,22 @@ class CompetitiveAdvantageMonitor:
                 "threshold_value": alert.threshold_value,
                 "alert_message": alert.message,
                 "correlation_id": alert.correlation_id,
-                "escalation_required": True
-            }
+                "escalation_required": True,
+            },
         )
-        
+
         # In a production environment, this would:
         # 1. Send notifications to operations team
         # 2. Create incident tickets
         # 3. Trigger automated remediation if available
         # 4. Update monitoring dashboards
-    
+
     def get_performance_summary(self) -> Dict[str, Any]:
         """Get comprehensive performance summary"""
-        
+
         current_time = datetime.now()
         last_hour = current_time - timedelta(hours=1)
-        
+
         summary = {
             "timestamp": current_time.isoformat(),
             "monitoring_enabled": self.monitoring_enabled,
@@ -599,28 +611,52 @@ class CompetitiveAdvantageMonitor:
             "sla_compliance": {},
             "active_alerts": {
                 "total": len(self.active_alerts),
-                "critical": len([a for a in self.active_alerts if a.severity == AlertSeverity.CRITICAL]),
-                "warning": len([a for a in self.active_alerts if a.severity == AlertSeverity.WARNING])
+                "critical": len(
+                    [
+                        a
+                        for a in self.active_alerts
+                        if a.severity == AlertSeverity.CRITICAL
+                    ]
+                ),
+                "warning": len(
+                    [
+                        a
+                        for a in self.active_alerts
+                        if a.severity == AlertSeverity.WARNING
+                    ]
+                ),
             },
-            "recent_performance": {}
+            "recent_performance": {},
         }
-        
+
         # Analyze competitive advantage performance
         competitive_metrics = [
-            "tri_modal_search_time", "tri_modal_search_confidence", "tri_modal_parallel_execution",
-            "domain_analysis_time", "domain_detection_accuracy", "hybrid_analysis_utilization",
-            "config_generation_time", "knowledge_extraction_time", "extraction_pipeline_success_rate", "config_extraction_automation",
-            "zero_config_adaptation_time", "zero_config_adaptation_rate", "zero_config_manual_intervention_avoidance",
-            "enterprise_availability", "enterprise_error_rate", "azure_services_health_ratio"
+            "tri_modal_search_time",
+            "tri_modal_search_confidence",
+            "tri_modal_parallel_execution",
+            "domain_analysis_time",
+            "domain_detection_accuracy",
+            "hybrid_analysis_utilization",
+            "config_generation_time",
+            "knowledge_extraction_time",
+            "extraction_pipeline_success_rate",
+            "config_extraction_automation",
+            "zero_config_adaptation_time",
+            "zero_config_adaptation_rate",
+            "zero_config_manual_intervention_avoidance",
+            "enterprise_availability",
+            "enterprise_error_rate",
+            "azure_services_health_ratio",
         ]
-        
+
         for metric_name in competitive_metrics:
             if metric_name in self.metrics_history:
                 recent_metrics = [
-                    m for m in self.metrics_history[metric_name]
+                    m
+                    for m in self.metrics_history[metric_name]
                     if m.timestamp >= last_hour
                 ]
-                
+
                 if recent_metrics:
                     values = [m.current_value for m in recent_metrics]
                     summary["recent_performance"][metric_name] = {
@@ -629,51 +665,63 @@ class CompetitiveAdvantageMonitor:
                         "min": min(values),
                         "max": max(values),
                         "latest": values[-1],
-                        "std_dev": statistics.stdev(values) if len(values) > 1 else 0.0
+                        "std_dev": statistics.stdev(values) if len(values) > 1 else 0.0,
                     }
-        
+
         # SLA compliance summary
-        sla_metrics = ["tri_modal_search_time", "overall_response_time", "domain_analysis_time", "config_generation_time"]
+        sla_metrics = [
+            "tri_modal_search_time",
+            "overall_response_time",
+            "domain_analysis_time",
+            "config_generation_time",
+        ]
         sla_violations = 0
         sla_checks = 0
-        
+
         for metric_name in sla_metrics:
             if metric_name in self.metrics_history:
                 recent_metrics = [
-                    m for m in self.metrics_history[metric_name]
+                    m
+                    for m in self.metrics_history[metric_name]
                     if m.timestamp >= last_hour
                 ]
-                
+
                 for metric in recent_metrics:
                     sla_checks += 1
-                    if self._is_threshold_violated(metric, metric.threshold_critical, "critical"):
+                    if self._is_threshold_violated(
+                        metric, metric.threshold_critical, "critical"
+                    ):
                         sla_violations += 1
-        
+
         summary["sla_compliance"] = {
             "checks_last_hour": sla_checks,
             "violations_last_hour": sla_violations,
-            "compliance_rate": 1.0 - (sla_violations / sla_checks) if sla_checks > 0 else 1.0,
-            "sub_3s_target_met": sla_violations == 0
+            "compliance_rate": 1.0 - (sla_violations / sla_checks)
+            if sla_checks > 0
+            else 1.0,
+            "sub_3s_target_met": sla_violations == 0,
         }
-        
+
         return summary
-    
+
     def enable_monitoring(self):
         """Enable performance monitoring"""
         self.monitoring_enabled = True
         logger.info("Performance monitoring enabled")
-    
+
     def disable_monitoring(self):
         """Disable performance monitoring"""
         self.monitoring_enabled = False
         logger.info("Performance monitoring disabled")
-    
+
     def clear_alerts(self):
         """Clear all active alerts"""
         self.active_alerts.clear()
         logger.info("All performance alerts cleared")
-    
-    def get_alerts(self, severity: Optional[AlertSeverity] = None) -> List[PerformanceAlert]:
+
+    def get_alerts(
+        self, severity: Optional[AlertSeverity] = None
+    ) -> List[PerformanceAlert]:
         """Get active alerts, optionally filtered by severity"""
         if severity is None:
             return self.active_alerts.copy()
@@ -700,7 +748,7 @@ __all__ = [
     "PerformanceAlert",
     "PerformanceCategory",
     "AlertSeverity",
-    "get_performance_monitor"
+    "get_performance_monitor",
 ]
 
 
@@ -708,46 +756,46 @@ __all__ = [
 async def test_performance_monitor():
     """Test performance monitoring functionality"""
     print("Testing Performance Monitor (Phase 3: Performance Enhancement)...")
-    
+
     monitor = get_performance_monitor()
-    
+
     # Test tri-modal search monitoring
     await monitor.track_tri_modal_search_performance(
         search_time=1.2,
         confidence=0.87,
         modalities_used=["vector", "graph", "gnn"],
-        correlation_id="test_123"
+        correlation_id="test_123",
     )
     print("✅ Tri-modal search performance tracking")
-    
+
     # Test domain intelligence monitoring
     await monitor.track_domain_intelligence_performance(
         analysis_time=0.5,
         detection_accuracy=0.82,
         hybrid_analysis_used=True,
-        correlation_id="test_123"
+        correlation_id="test_123",
     )
     print("✅ Domain intelligence performance tracking")
-    
+
     # Test config-extraction pipeline monitoring
     await monitor.track_config_extraction_pipeline_performance(
         config_generation_time=1.8,
         extraction_time=3.2,
         pipeline_success=True,
         automation_achieved=True,
-        correlation_id="test_123"
+        correlation_id="test_123",
     )
     print("✅ Configuration-extraction pipeline performance tracking")
-    
+
     # Test zero-config adaptation monitoring
     await monitor.track_zero_config_adaptation_performance(
         adaptation_time=0.8,
         adaptation_success=True,
         manual_intervention_required=False,
-        correlation_id="test_123"
+        correlation_id="test_123",
     )
     print("✅ Zero-config adaptation performance tracking")
-    
+
     # Test enterprise infrastructure monitoring
     await monitor.track_enterprise_infrastructure_performance(
         availability=0.995,
@@ -757,21 +805,24 @@ async def test_performance_monitor():
             "cognitive_search": True,
             "cosmos_db": True,
             "azure_ml": True,
-            "storage": True
+            "storage": True,
         },
-        correlation_id="test_123"
+        correlation_id="test_123",
     )
     print("✅ Enterprise infrastructure performance tracking")
-    
+
     # Get performance summary
     summary = monitor.get_performance_summary()
-    print(f"✅ Performance summary generated: {len(summary['recent_performance'])} metrics")
+    print(
+        f"✅ Performance summary generated: {len(summary['recent_performance'])} metrics"
+    )
     print(f"✅ SLA compliance rate: {summary['sla_compliance']['compliance_rate']:.1%}")
     print(f"✅ Active alerts: {summary['active_alerts']['total']}")
-    
+
     print("Performance monitoring system operational! 🎯")
 
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(test_performance_monitor())

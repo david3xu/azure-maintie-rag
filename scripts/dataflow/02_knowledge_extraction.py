@@ -36,7 +36,7 @@ class KnowledgeExtractionStage:
     async def execute(self, source_path: str) -> Dict[str, Any]:
         """
         Execute knowledge extraction stage using Universal Agent
-        
+
         Data-driven approach - extracts knowledge without predetermined schemas
 
         Args:
@@ -68,7 +68,7 @@ class KnowledgeExtractionStage:
 
             # Find all .md files recursively (data-driven discovery)
             md_files = list(source_directory.glob("**/*.md"))
-            
+
             if not md_files:
                 raise ValueError(f"No .md files found in {source_path}")
 
@@ -83,7 +83,7 @@ class KnowledgeExtractionStage:
             for file_path in md_files:
                 try:
                     print(f"🧠 Extracting knowledge from: {file_path.name}")
-                    
+
                     # Read file content
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
@@ -95,16 +95,16 @@ class KnowledgeExtractionStage:
 
                     if knowledge_result.get("success", False):
                         extracted_knowledge.append(knowledge_result)
-                        
+
                         # Aggregate metrics
                         entities = knowledge_result.get("entities", [])
                         relationships = knowledge_result.get("relationships", [])
                         domains = knowledge_result.get("domains", [])
-                        
+
                         total_entities += len(entities)
                         total_relationships += len(relationships)
                         discovered_domains.update(domains)
-                        
+
                         print(f"✅ Extracted: {len(entities)} entities, {len(relationships)} relationships")
                     else:
                         print(f"⚠️ Partial extraction from: {file_path.name}")
@@ -170,22 +170,22 @@ class KnowledgeExtractionStage:
             # This is data-driven - agent determines the knowledge structure
             query = f"""
             Extract structured knowledge from this document content:
-            
+
             Filename: {filename}
             Content length: {len(content)} characters
-            
+
             Please extract:
             1. Key entities (people, organizations, technologies, concepts, etc.)
             2. Relationships between entities
             3. Domain categories this content belongs to
             4. Important facts and definitions
-            
+
             Provide the response in a structured format with:
             - entities: list of important entities found
             - relationships: list of relationships between entities
             - domains: list of knowledge domains/categories
             - key_facts: list of important facts or definitions
-            
+
             Content to analyze:
             {content[:3000]}...
             """
@@ -193,12 +193,12 @@ class KnowledgeExtractionStage:
             # Run agent analysis
             agent_response = await universal_agent.run(query)
             agent_output = str(agent_response.output) if hasattr(agent_response, 'output') else str(agent_response)
-            
+
             # Parse agent response for structured knowledge
             knowledge = await self._parse_agent_knowledge_response(agent_output, filename, content)
-            
+
             print(f"🧠 Knowledge extraction completed for {filename}")
-            
+
             return {
                 "success": True,
                 "filename": filename,
@@ -234,16 +234,16 @@ class KnowledgeExtractionStage:
             relationships = []
             domains = []
             key_facts = []
-            
+
             # Simple parsing - look for common patterns in agent responses
             lines = agent_output.split('\n')
             current_section = None
-            
+
             for line in lines:
                 line = line.strip()
                 if not line:
                     continue
-                    
+
                 # Detect sections
                 if 'entities' in line.lower() or 'entity' in line.lower():
                     current_section = 'entities'
@@ -270,7 +270,7 @@ class KnowledgeExtractionStage:
                 # Use basic heuristics to extract some knowledge
                 entities = await self._extract_basic_entities(content, filename)
                 domains = ["technology", "documentation"]  # Basic domains
-                
+
             return {
                 "entities": entities[:20],  # Limit to top 20 entities
                 "relationships": relationships[:15],  # Limit to top 15 relationships
@@ -295,22 +295,22 @@ class KnowledgeExtractionStage:
         try:
             # Simple entity extraction - look for capitalized words/phrases
             import re
-            
+
             # Find capitalized words (potential entities)
             capitalized_words = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', content)
-            
+
             # Find technical terms (words with specific patterns)
             technical_terms = re.findall(r'\b[A-Z]{2,}\b', content)  # Acronyms
-            
+
             # Combine and deduplicate
             entities = list(set(capitalized_words + technical_terms))
-            
+
             # Filter out common words
             common_words = {'The', 'This', 'That', 'Azure', 'Microsoft', 'API', 'You', 'We', 'They'}
             entities = [e for e in entities if e not in common_words and len(e) > 2]
-            
+
             return entities[:15]  # Return top 15 entities
-            
+
         except Exception as e:
             logger.warning(f"Basic entity extraction failed for {filename}: {e}")
             return ["Document", filename.replace('.md', '')]
@@ -320,7 +320,7 @@ class KnowledgeExtractionStage:
         try:
             # Ensure directory exists
             output_file.parent.mkdir(parents=True, exist_ok=True)
-            
+
             # Prepare summary data
             summary_data = {
                 "timestamp": asyncio.get_event_loop().time(),
@@ -328,13 +328,13 @@ class KnowledgeExtractionStage:
                 "extraction_method": "universal_agent_data_driven",
                 "extracted_knowledge": extracted_knowledge
             }
-            
+
             # Save to file
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(summary_data, f, indent=2, ensure_ascii=False)
-                
+
             print(f"💾 Knowledge saved to: {output_file}")
-            
+
         except Exception as e:
             logger.error(f"Failed to save extracted knowledge: {e}")
             print(f"⚠️ Warning: Could not save knowledge to {output_file}")

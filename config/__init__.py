@@ -15,7 +15,4 @@ from .azure_settings import Settings
 from .settings import azure_settings
 
 __version__ = "1.0.0"
-__all__ = [
-    "Settings",
-    "azure_settings"
-]
+__all__ = ["Settings", "azure_settings"]
