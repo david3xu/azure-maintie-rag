@@ -32,12 +32,12 @@ from .config_generator import ConfigGenerator, DomainConfig
 from .domain_analyzer import ContentAnalysis, DomainAnalyzer, DomainClassification
 from .pattern_engine import ExtractedPatterns, LearnedPattern, PatternEngine
 
-# Import PydanticAI tools
-from .pydantic_tools import (
-    analyze_domain_patterns_tool,
-    discover_domain_tool,
-    validate_domain_confidence_tool,
-)
+# PydanticAI tools moved to toolsets.py following target architecture
+# from .pydantic_tools import (
+#     analyze_domain_patterns_tool,
+#     discover_domain_tool,
+#     validate_domain_confidence_tool,
+# )
 
 __all__ = [
     # Domain analysis
@@ -54,8 +54,8 @@ __all__ = [
     # Config generation
     "DomainConfig",
     "ConfigGenerator",
-    # PydanticAI Tools
-    "discover_domain_tool",
-    "analyze_domain_patterns_tool",
-    "validate_domain_confidence_tool",
+    # PydanticAI Tools moved to toolsets.py following target architecture
+    # "discover_domain_tool",
+    # "analyze_domain_patterns_tool", 
+    # "validate_domain_confidence_tool",
 ]

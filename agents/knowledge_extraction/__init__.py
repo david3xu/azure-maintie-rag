@@ -1,48 +1,42 @@
 """
-Knowledge Extraction Agent - Enterprise Entity and Relationship Extraction
+Knowledge Extraction Agent - Following Target Architecture
 
-This agent provides advanced knowledge extraction capabilities including:
-- Multi-strategy entity extraction (pattern-based, NLP-based, hybrid)
-- Advanced relationship extraction and validation
-- Knowledge graph construction and optimization
-- Quality assessment and validation
-- PydanticAI Tools: Enterprise integration for PydanticAI agents
+This agent provides advanced knowledge extraction capabilities with:
+- Lazy initialization pattern
+- FunctionToolset integration  
+- Azure OpenAI integration with environment variables
+- Multi-strategy entity and relationship extraction
+- Quality validation and knowledge graph construction
 
-Key Features:
-- Multiple extraction strategies for enhanced accuracy
-- Confidence scoring and validation frameworks
-- Performance optimization and caching
-- Domain-aware extraction adaptation
-- Enterprise-grade monitoring and observability
-
-Competitive Advantages:
-- Multi-strategy extraction approach
-- Advanced confidence scoring
-- Real-time quality assessment
-- Enterprise-grade scalability
+Target Architecture Implementation:
+- PydanticAI-compliant toolset pattern
+- Self-contained with agent co-location
+- No import-time side effects
 """
 
-# Import processors
-from .processors.entity_processor import EntityProcessor
-from .processors.relationship_processor import RelationshipProcessor
-from .processors.validation_processor import ValidationProcessor
+# Import main agent functions (lazy initialization)
+from .agent import (
+    get_knowledge_extraction_agent,
+    extract_knowledge_from_document,
+    extract_knowledge_from_documents,
+    test_knowledge_extraction_agent,
+)
 
-# Import PydanticAI tools
-from .pydantic_tools import (
-    build_knowledge_graph_tool,
-    extract_entities_tool,
-    extract_relationships_tool,
-    validate_extraction_quality_tool,
+# Import toolset for direct access if needed
+from .toolsets import (
+    KnowledgeExtractionToolset,
+    KnowledgeExtractionDeps,
+    knowledge_extraction_toolset,
 )
 
 __all__ = [
-    # Processors
-    "EntityProcessor",
-    "RelationshipProcessor",
-    "ValidationProcessor",
-    # PydanticAI Tools
-    "extract_entities_tool",
-    "extract_relationships_tool",
-    "build_knowledge_graph_tool",
-    "validate_extraction_quality_tool",
+    # Main agent interfaces
+    "get_knowledge_extraction_agent",
+    "extract_knowledge_from_document", 
+    "extract_knowledge_from_documents",
+    "test_knowledge_extraction_agent",
+    # Toolset classes
+    "KnowledgeExtractionToolset",
+    "KnowledgeExtractionDeps", 
+    "knowledge_extraction_toolset",
 ]
