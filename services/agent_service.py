@@ -27,15 +27,16 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
+
 # Define the missing interface
 class ServicesToAgentsInterface(ABC):
     """Abstract interface for services-to-agents interactions"""
-    
+
     @abstractmethod
     async def process_agent_request(self, request: Any) -> Any:
         """Process agent request"""
         pass
-    
+
     @abstractmethod
     async def get_agent_health(self) -> Dict[str, Any]:
         """Get agent health status"""
@@ -57,10 +58,9 @@ class AzureServiceContainerInterface(ABC):
 
 # Import concrete implementations
 try:
-    from agents import (
+    from agents import (  # SimplifiedUniversalAgent,  # Temporarily disabled during restructuring
         AzureServiceContainer,
         SimpleQueryRequest,
-        # SimplifiedUniversalAgent,  # Temporarily disabled during restructuring
         create_azure_service_container,
         get_universal_agent_orchestrator_orchestrator,
     )
@@ -142,34 +142,42 @@ class AgentCoordinationContext:
     retry_count: int = 0
     max_retries: int = 2
 
+
 @dataclass
 class AgentRequest:
     """Agent request model"""
+
     request_type: AgentRequestType
     query: str
     domain: Optional[str] = None
     context: Dict[str, Any] = None
     correlation_id: str = None
 
-@dataclass 
+
+@dataclass
 class AgentResponse:
     """Agent response model"""
+
     success: bool
     result: Any = None
     error: Optional[str] = None
     execution_time: float = 0.0
 
+
 class OperationStatus(Enum):
     """Operation status enumeration"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+
 @dataclass
 class OperationResult:
     """Operation result model"""
+
     success: bool
     data: Any = None
     error: Optional[str] = None

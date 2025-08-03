@@ -28,14 +28,6 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from agents import SimpleQueryRequest, get_universal_agent_orchestrator
 from agents.universal_search.consolidated_tools import EnhancedPerformanceTracker
 
-# Modern orchestration imports
-from .agent_service import (
-    AgentRequest,
-    AgentResponse,
-    OperationResult,
-    OperationStatus,
-)
-
 # Legacy workflow tracking imports
 from config.azure_settings import azure_settings
 from infrastructure.utilities.azure_cost_tracker import AzureServiceCostTracker
@@ -43,6 +35,9 @@ from infrastructure.utilities.workflow_evidence_collector import (
     AzureDataWorkflowEvidenceCollector,
     DataWorkflowEvidence,
 )
+
+# Modern orchestration imports
+from .agent_service import AgentRequest, AgentResponse, OperationResult, OperationStatus
 
 logger = logging.getLogger(__name__)
 

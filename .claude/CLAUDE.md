@@ -215,7 +215,7 @@ class AnalyzeDomainNode(BaseNode[ConfigExtractionState]):
 from agents.orchestration.config_extraction_orchestrator import ConfigOrchestrator  # Old pattern
 ```
 
-### Service Dependencies  
+### Service Dependencies
 ```python
 # ✅ CORRECT - Dependency injection
 @router.post("/api/v1/query")
@@ -247,21 +247,21 @@ async def process_tri_modal_search(query: str):
 # ✅ CORRECT - Agent 1 generates 100% learned configurations
 @domain_agent.tool
 async def create_fully_learned_extraction_config(
-    ctx: RunContext[DomainDeps], 
+    ctx: RunContext[DomainDeps],
     corpus_path: str  # e.g., "data/raw/Programming-Language"
 ) -> ExtractionConfiguration:
     """Generate configuration from subdirectory analysis with zero hardcoded values"""
-    
+
     # Learn from actual corpus content
     stats = await analyze_corpus_statistics(ctx, corpus_path)
     patterns = await generate_semantic_patterns(ctx, sample_content)
-    
+
     # Learn critical parameters from data
     entity_threshold = await _learn_entity_threshold(stats, patterns)  # From complexity
-    chunk_size = await _learn_optimal_chunk_size(stats)                # From doc characteristics  
+    chunk_size = await _learn_optimal_chunk_size(stats)                # From doc characteristics
     classification_rules = await _learn_classification_rules(stats)    # From token analysis
     response_sla = await _estimate_response_sla(stats)                 # From complexity
-    
+
     return ExtractionConfiguration(
         domain_name=Path(corpus_path).name.lower().replace('-', '_'),
         entity_confidence_threshold=entity_threshold,  # ✅ LEARNED
@@ -313,7 +313,7 @@ API Layer → Services Layer → Infrastructure Layer → Azure Services
 # Agent 1: Domain Intelligence Agent
 from agents.domain_intelligence.agent import domain_agent
 
-# Agent 2: Knowledge Extraction Agent  
+# Agent 2: Knowledge Extraction Agent
 from agents.knowledge_extraction.agent import extraction_agent
 
 # Agent 3: Universal Search Agent
@@ -354,7 +354,7 @@ USE_MANAGED_IDENTITY=false  # Set to true in production
 OPENAI_API_TYPE=azure
 
 # Development settings (CRITICAL: Must match azd environment)
-AZURE_ENV_NAME=prod                   # ⚠️ Must match `azd env list` output 
+AZURE_ENV_NAME=prod                   # ⚠️ Must match `azd env list` output
 ENVIRONMENT=development
 PYTHONPATH=/workspace/azure-maintie-rag
 ```
@@ -406,7 +406,7 @@ from agents.domain_intelligence.detailed_models import DomainDeps
 
 async def test_learning():
     deps = DomainDeps()
-    message = '''Use the create_fully_learned_extraction_config tool to analyze 
+    message = '''Use the create_fully_learned_extraction_config tool to analyze
                  the Programming-Language corpus and generate learned configuration.
                  Corpus path: data/raw/Programming-Language'''
     result = await domain_agent.run(message, deps=deps)
@@ -495,7 +495,7 @@ if env_file.exists():
             if line and not line.startswith('#') and '=' in line:
                 key, value = line.split('=', 1)
                 os.environ[key] = value
-                
+
 # Test Agent 1 Azure OpenAI connection
 from agents.domain_intelligence.agent import domain_agent
 print(f'✅ Agent 1 Model: {type(domain_agent.model).__name__ if domain_agent.model else \"❌ NO MODEL\"}')

@@ -1,0 +1,48 @@
+cache_enabled: true
+cache_ttl: 3600
+data_quality: excellent
+description: Data-driven configuration for programming_language domain
+domain_name: programming_language_config
+entity_count: 0
+entity_types: {}
+expected_response_time: 3.0
+extraction_confidence_threshold: 0.7
+generated_from_data: true
+generation_timestamp: '2025-08-02T13:07:11.603625'
+key_concepts:
+- Machine Learning
+- Data Science
+- MLOps
+- AutoML
+- Model Training
+- Model Deployment
+- Data Processing
+- Cloud Computing
+- AI/ML Pipeline
+- Model Management
+primary_entities: []
+query_expansion_terms: []
+recommended_chunk_size: 1000
+recommended_overlap: 200
+relationship_patterns:
+- Azure Machine Learning -> provides -> MLOps capabilities
+- Data Scientists -> use -> Azure Machine Learning
+- Azure ML -> supports -> Python SDK
+relationship_types:
+- provides
+- use
+- supports
+source_files:
+- Programming-Language/sebesta_part_28.md
+technical_vocabulary:
+- REST API
+- Python SDK
+- Azure CLI
+- JSON
+- YAML
+- Docker
+- Kubernetes
+- Git
+- CI/CD
+- DevOps
+version: 1.0.0

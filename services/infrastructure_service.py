@@ -14,7 +14,9 @@ from typing import Any, Dict, List, Optional
 from config.settings import azure_settings
 from infrastructure.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
 from infrastructure.azure_ml.ml_client import AzureMLClient
-from infrastructure.azure_monitoring.app_insights_client import AzureApplicationInsightsClient
+from infrastructure.azure_monitoring.app_insights_client import (
+    AzureApplicationInsightsClient,
+)
 from infrastructure.azure_openai import UnifiedAzureOpenAIClient
 from infrastructure.azure_openai.embedding import AzureEmbeddingService
 from infrastructure.azure_search import UnifiedSearchClient
