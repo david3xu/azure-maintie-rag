@@ -1,0 +1,76 @@
+# Context-Aware Entity Extraction Template
+# Uses context engineering instead of constraining prompt engineering
+# Provides rich context to guide LLM behavior naturally
+
+system:
+You are an expert maintenance engineer analyzing equipment maintenance records. Your expertise helps identify all meaningful entities that maintenance teams need to track and understand.
+
+user:
+## Context: Maintenance Knowledge Extraction
+
+**Your Role**: You're helping build an intelligent maintenance knowledge system that will help technicians quickly find solutions to equipment problems.
+
+**Domain Knowledge**: You understand that maintenance records contain:
+- **Equipment**: Primary systems (air conditioner, compressor, engine, pump)
+- **Components**: Parts within equipment (thermostat, valve, hose, bearing, filter)
+- **Problems**: Issues that occur (not working, unserviceable, blown, cracked, leaking)
+- **Locations**: Where issues occur (left hand, near side, position, on, off)
+- **Actions**: What needs to be done (replace, repair, check, service, analyse)
+- **Conditions**: States and measurements (pressure, temperature, worn, seized)
+
+**Quality Standards**: Extract entities that would help a maintenance technician understand:
+1. What equipment is involved?
+2. What specific components are affected?
+3. What problems are occurring?
+4. Where the problems are located?
+5. What actions are needed?
+
+## Maintenance Records to Analyze:
+
+{% for text in texts %}
+**Record {{ loop.index }}**: {{ text }}
+{% endfor %}
+
+## Required Output Format:
+
+For each maintenance record, extract all meaningful entities with their context. Return a JSON array where each object represents an entity found in the text:
+
+```json
+[
+  {
+    "entity_id": "entity_1",
+    "text": "air conditioner",
+    "entity_type": "equipment",
+    "confidence": 0.95,
+    "context": "air conditioner thermostat not working",
+    "source_record": 1,
+    "semantic_role": "primary_system",
+    "maintenance_relevance": "equipment requiring service"
+  },
+  {
+    "entity_id": "entity_2",
+    "text": "thermostat",
+    "entity_type": "component",
+    "confidence": 0.90,
+    "context": "air conditioner thermostat not working",
+    "source_record": 1,
+    "semantic_role": "component",
+    "maintenance_relevance": "component with problem"
+  }
+]
+```
+
+**Guidelines for Quality Extraction**:
+- Extract entities exactly as they appear in the maintenance records
+- Assign confidence scores based on how clearly the entity is mentioned
+- Provide the full context where the entity appears
+- Choose entity types that make sense for maintenance work
+- Focus on entities that would be useful for finding similar problems or solutions
+- Include both concrete objects (equipment, parts) and abstract concepts (problems, conditions)
+
+**Entity Type Guidelines**:
+- Use specific, descriptive types (e.g., "cooling_equipment" instead of just "equipment")
+- Create types that reflect maintenance categories technicians would recognize
+- Be consistent within similar entities (all air conditioning components should have similar type patterns)
+
+Extract all meaningful entities from each record - don't limit yourself to a fixed number. Quality and completeness are more important than brevity.

@@ -28,8 +28,11 @@ from agents import (  # Simplified PydanticAI agent
     get_universal_agent_orchestrator,
 )
 from agents.universal_search.consolidated_tools import EnhancedPerformanceTracker
+from infrastructure.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
+from infrastructure.azure_openai import UnifiedAzureOpenAIClient
+from infrastructure.azure_search import UnifiedSearchClient
 
-# Legacy enhanced query processing imports 
+# Legacy enhanced query processing imports
 # AgentRequest now defined in agent_service.py
 from .agent_service import (
     AgentRequest,
@@ -38,9 +41,6 @@ from .agent_service import (
     OperationStatus,
     ServicesToAgentsInterface,
 )
-from infrastructure.azure_cosmos.cosmos_gremlin_client import AzureCosmosGremlinClient
-from infrastructure.azure_openai import UnifiedAzureOpenAIClient
-from infrastructure.azure_search import UnifiedSearchClient
 
 # from agents.capabilities.graph_intelligence import GraphService  # Disabled - capabilities module removed
 from .cache_service import SimpleCacheService

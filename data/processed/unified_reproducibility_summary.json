@@ -1,0 +1,20 @@
+{
+  "pipeline_type": "unified_data_driven",
+  "schema_version": "1.0.0",
+  "pipeline_start": "data/raw",
+  "processed_data_cleaned": true,
+  "unified_config_file": "config/unified_data_driven_config.yaml",
+  "domain_configs_generated": 1,
+  "extractions_count": 1,
+  "suitable_extractions": 0,
+  "overall_readiness": {
+    "prompt_flow_ready": false,
+    "domain_coverage": 1,
+    "data_quality_score": 1.0,
+    "competitive_score": 0.775,
+    "production_ready": false,
+    "reproducible_pipeline": true
+  },
+  "reproducible": true,
+  "timestamp": "2025-08-02T13:07:11.615452"
+}
