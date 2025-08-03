@@ -16,7 +16,7 @@ from .gnn_search import GNNSearchEngine
 from .graph_search import GraphSearchEngine
 
 # Import main orchestrator
-from .orchestrator import ModalityResult, SearchResult, TriModalOrchestrator
+from ..workflows.tri_modal_orchestrator import ModalityResult, SearchResult, TriModalOrchestrator
 
 # PydanticAI tools moved to toolsets.py following target architecture
 # from .pydantic_tools import (

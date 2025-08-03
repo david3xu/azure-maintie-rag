@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
-from agents.domain_intelligence.detailed_models import DomainDeps
+from agents.models.domain_models import DomainDeps
 from agents.domain_intelligence.toolsets import domain_intelligence_toolset
 
 
