@@ -19,7 +19,7 @@ azd up
 
 When prompted:
 - **Environment**: Choose `development` (not local)
-- **Subscription**: Microsoft Azure Sponsorship (ccc6af52-5928-4dbe-8ceb-fa794974a30f) 
+- **Subscription**: Microsoft Azure Sponsorship (ccc6af52-5928-4dbe-8ceb-fa794974a30f)
 - **Location**: East US 2 (eastus2)
 
 ## 🎯 **Why This Fixes It**
@@ -40,7 +40,7 @@ After the fix, azd will:
 
 - **Azure OpenAI**: GPT-4 and text-embedding-ada-002
 - **Azure Cognitive Search**: With maintie-index
-- **Azure Cosmos DB**: Gremlin API for knowledge graphs  
+- **Azure Cosmos DB**: Gremlin API for knowledge graphs
 - **Azure Storage**: For document storage
 - **Azure ML Workspace**: For GNN training
 - **Azure Container Apps**: For backend hosting

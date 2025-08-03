@@ -18,13 +18,13 @@ async def test_config_extraction_workflow():
     """Test the complete Config-Extraction workflow"""
     print("🚀 Testing Config-Extraction Orchestration Workflow")
     print("=" * 60)
-    
+
     # Create temporary test domain directory
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         domain_dir = temp_path / "test_programming"
         domain_dir.mkdir()
-        
+
         # Create test documents
         doc1 = domain_dir / "functions.md"
         doc1.write_text("""
@@ -40,7 +40,7 @@ def calculate_sum(a, b):
 class Calculator:
     def add(self, x, y):
         return x + y
-    
+
     def multiply(self, x, y):
         return x * y
 
@@ -64,7 +64,7 @@ for item in items:
 while running:
     continue_execution()
 """)
-        
+
         doc2 = domain_dir / "algorithms.md"
         doc2.write_text("""
 # Programming Algorithms
@@ -92,21 +92,21 @@ Algorithms are step-by-step procedures for solving problems.
 - Space Complexity: Memory usage analysis
 - Big O Notation: Asymptotic behavior description
 """)
-        
+
         print(f"📁 Created test domain directory: {domain_dir}")
         print(f"📄 Created {len(list(domain_dir.glob('*.md')))} test documents")
         print()
-        
+
         try:
             # Test the complete workflow
             print("🔄 Stage 1: Testing Domain Intelligence Agent...")
             orchestrator = ConfigExtractionOrchestrator()
-            
+
             # Test configuration generation
             extraction_config = await orchestrator._generate_extraction_configuration(
                 "test_programming", domain_dir, force_regenerate=True
             )
-            
+
             if extraction_config:
                 print("✅ Stage 1 Complete: ExtractionConfiguration generated")
                 print(f"   Domain: {extraction_config.domain_name}")
@@ -119,14 +119,14 @@ Algorithms are step-by-step procedures for solving problems.
             else:
                 print("❌ Stage 1 Failed: Could not generate ExtractionConfiguration")
                 return False
-            
+
             print("🔄 Stage 2: Testing Knowledge Extraction Agent...")
-            
+
             # Test knowledge extraction
             extraction_results = await orchestrator._extract_knowledge_with_config(
                 domain_dir, extraction_config
             )
-            
+
             if extraction_results:
                 print("✅ Stage 2 Complete: Knowledge extraction completed")
                 print(f"   Documents processed: {extraction_results.documents_processed}")
@@ -138,14 +138,14 @@ Algorithms are step-by-step procedures for solving problems.
             else:
                 print("❌ Stage 2 Failed: Knowledge extraction failed")
                 return False
-            
+
             print("🔄 Testing Complete Workflow...")
-            
+
             # Test the complete process using convenience function
             complete_results = await process_domain_with_config_extraction(
                 domain_dir, force_regenerate_config=True
             )
-            
+
             if complete_results and complete_results.get("workflow_status") == "completed":
                 print("🎉 Complete Workflow Test PASSED")
                 print(f"   Domain: {complete_results['domain_name']}")
@@ -157,7 +157,7 @@ Algorithms are step-by-step procedures for solving problems.
             else:
                 print("❌ Complete Workflow Test FAILED")
                 return False
-                
+
         except Exception as e:
             print(f"❌ Test Error: {e}")
             import traceback
@@ -168,9 +168,9 @@ async def test_error_handling():
     """Test error handling in the orchestration workflow"""
     print("\n🔧 Testing Error Handling")
     print("=" * 40)
-    
+
     orchestrator = ConfigExtractionOrchestrator()
-    
+
     # Test with non-existent domain
     try:
         result = await orchestrator.process_domain_documents(
@@ -180,15 +180,15 @@ async def test_error_handling():
         return False
     except Exception as e:
         print(f"✅ Correctly handled non-existent path: {type(e).__name__}")
-    
+
     # Test with empty domain directory
     with tempfile.TemporaryDirectory() as temp_dir:
         empty_dir = Path(temp_dir) / "empty_domain"
         empty_dir.mkdir()
-        
+
         try:
             extraction_results = await orchestrator._extract_knowledge_with_config(
-                empty_dir, 
+                empty_dir,
                 # Create minimal config for testing
                 type('MockConfig', (), {
                     'domain_name': 'empty_test',
@@ -208,16 +208,16 @@ async def test_error_handling():
                     'max_relationships_per_chunk': 30
                 })()
             )
-            
-            if (extraction_results and 
-                extraction_results.documents_processed == 0 and 
+
+            if (extraction_results and
+                extraction_results.documents_processed == 0 and
                 extraction_results.total_entities_extracted == 0):
                 print("✅ Correctly handled empty domain directory")
                 return True
             else:
                 print("❌ Empty domain handling failed")
                 return False
-                
+
         except Exception as e:
             print(f"⚠️ Unexpected error with empty domain: {e}")
             return False
@@ -226,29 +226,29 @@ async def main():
     """Run all tests"""
     print("Config-Extraction Orchestration Integration Test")
     print("=" * 60)
-    
+
     # Test main workflow
     workflow_success = await test_config_extraction_workflow()
-    
+
     # Test error handling
     error_handling_success = await test_error_handling()
-    
+
     print("\n" + "=" * 60)
     print("TEST SUMMARY")
     print("=" * 60)
     print(f"Main Workflow: {'✅ PASSED' if workflow_success else '❌ FAILED'}")
     print(f"Error Handling: {'✅ PASSED' if error_handling_success else '❌ FAILED'}")
-    
+
     overall_success = workflow_success and error_handling_success
     print(f"\nOverall Result: {'🎉 ALL TESTS PASSED' if overall_success else '❌ SOME TESTS FAILED'}")
-    
+
     if overall_success:
         print("\n✅ Config-Extraction Architecture Implementation VALIDATED")
         print("   The two-stage workflow is working correctly:")
         print("   1. Domain Intelligence Agent → ExtractionConfiguration")
         print("   2. Knowledge Extraction Agent → ExtractionResults")
         print("   Architecture from CONFIG_VS_EXTRACTION_ARCHITECTURE.md is implemented!")
-    
+
     return overall_success
 
 if __name__ == "__main__":

@@ -26,8 +26,11 @@ def get_azd_environment() -> str:
     except Exception as e:
         # Log the environment detection failure but continue with safe fallback
         import logging
+
         logger = logging.getLogger(__name__)
-        logger.debug(f"Environment detection via azd failed: {e}. Using development fallback.")
+        logger.debug(
+            f"Environment detection via azd failed: {e}. Using development fallback."
+        )
         pass
     return "development"  # fallback
 

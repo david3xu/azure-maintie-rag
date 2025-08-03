@@ -25,43 +25,43 @@ def load_env():
 async def test_azure_openai():
     """Test Azure OpenAI connection using .env configuration"""
     print("🔍 Testing Azure OpenAI Connection with .env configuration...")
-    
+
     # Load .env file
     load_env()
-    
+
     # Display configuration (without key)
     print(f"✅ Endpoint: {os.environ.get('AZURE_OPENAI_ENDPOINT')}")
     print(f"✅ API Version: {os.environ.get('AZURE_OPENAI_API_VERSION')}")
     print(f"✅ Model Deployment: {os.environ.get('OPENAI_MODEL_DEPLOYMENT')}")
-    
+
     try:
         # Test with pydantic-ai
         from pydantic_ai.providers.azure import AzureProvider
-        
+
         azure_provider = AzureProvider(
             azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
             api_version=os.environ["AZURE_OPENAI_API_VERSION"],
             api_key=os.environ["AZURE_OPENAI_API_KEY"]
         )
-        
+
         print("✅ Azure OpenAI provider created successfully")
-        
+
         # Test with the configured model deployment
         from pydantic_ai import Agent
-        
+
         model_name = os.environ.get("OPENAI_MODEL_DEPLOYMENT", "gpt-4.1")
         agent = Agent(
             model=f"azure:{model_name}",
             name='test-agent',
             system_prompt="You are a helpful assistant for testing Azure OpenAI connectivity."
         )
-        
+
         print(f"✅ PydanticAI agent created with model: {model_name}")
-        
+
         # Test a simple query
         result = await agent.run("Respond with exactly: 'Azure OpenAI connection successful!'")
         print(f"✅ Test query successful: {result.data}")
-        
+
         # Test embedding model if available
         try:
             embedding_model = os.environ.get("EMBEDDING_MODEL_DEPLOYMENT")
@@ -69,9 +69,9 @@ async def test_azure_openai():
                 print(f"✅ Embedding model available: {embedding_model}")
         except Exception as e:
             print(f"⚠️ Embedding model test skipped: {e}")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ Azure OpenAI test failed: {e}")
         import traceback
@@ -81,20 +81,20 @@ async def test_azure_openai():
 async def test_domain_agent_with_azure():
     """Test domain agent with Azure OpenAI"""
     print("\n🎯 Testing Domain Agent with Azure OpenAI...")
-    
+
     try:
         # Import domain agent
         from agents.domain_intelligence.agent import get_domain_agent
-        
+
         agent = get_domain_agent()
         print("✅ Domain Intelligence Agent loaded with Azure OpenAI")
-        
+
         # Test a simple domain detection
         result = await agent.run("What domain is this query about: 'Aircraft hydraulic system maintenance procedures'?")
         print(f"✅ Domain detection test: {result.data}")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ Domain agent test failed: {e}")
         return False
@@ -103,13 +103,13 @@ if __name__ == "__main__":
     async def main():
         # Test basic Azure OpenAI connectivity
         openai_success = await test_azure_openai()
-        
+
         if openai_success:
             print("\n🎉 Azure OpenAI connection working!")
-            
+
             # Test domain agent
             agent_success = await test_domain_agent_with_azure()
-            
+
             if agent_success:
                 print("\n🚀 Domain Intelligence Agent working with Azure OpenAI!")
                 return True
@@ -119,6 +119,6 @@ if __name__ == "__main__":
         else:
             print("\n❌ Azure OpenAI connection failed!")
             return False
-    
+
     success = asyncio.run(main())
     exit(0 if success else 1)

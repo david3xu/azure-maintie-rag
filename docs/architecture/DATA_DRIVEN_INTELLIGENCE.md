@@ -86,7 +86,7 @@ def generate_infrastructure(domain_config):
 
 **Maintenance Domain**: Learns equipment types, failure modes, procedures from maintenance logs
 
-**Medical Domain**: Discovers symptoms, treatments, drug interactions from medical literature  
+**Medical Domain**: Discovers symptoms, treatments, drug interactions from medical literature
 
 **Legal Domain**: Extracts case types, legal concepts, precedent relationships from legal documents
 

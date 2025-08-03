@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class AzureEmbeddingService(BaseAzureClient):
     """Core service for Azure OpenAI embeddings with caching for performance"""
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._embedding_cache = {}  # Simple in-memory cache for repeated texts
@@ -82,10 +82,7 @@ class AzureEmbeddingService(BaseAzureClient):
                 logger.debug(f"Cache hit for text (length: {len(text)})")
                 return self.create_success_response(
                     "generate_embedding",
-                    {
-                        **cached_result,
-                        "cache_hit": True
-                    },
+                    {**cached_result, "cache_hit": True},
                 )
 
             response = await asyncio.to_thread(
@@ -103,9 +100,9 @@ class AzureEmbeddingService(BaseAzureClient):
                 "tokens_used": response.usage.total_tokens
                 if hasattr(response, "usage")
                 else None,
-                "cache_hit": False
+                "cache_hit": False,
             }
-            
+
             # Store in cache (limit cache size to prevent memory issues)
             if len(self._embedding_cache) < 1000:  # Limit cache size
                 self._embedding_cache[cache_key] = {

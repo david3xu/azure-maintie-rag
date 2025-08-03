@@ -36,7 +36,7 @@ class DataIngestionStage:
     async def execute(self, source_path: str) -> Dict[str, Any]:
         """
         Execute data ingestion stage using Universal Agent
-        
+
         Data-driven approach - no predetermined domain knowledge
 
         Args:
@@ -76,7 +76,7 @@ class DataIngestionStage:
 
             # Find all .md files recursively (data-driven discovery)
             md_files = list(source_directory.glob("**/*.md"))
-            
+
             if not md_files:
                 raise ValueError(f"No .md files found in {source_path}")
 
@@ -89,11 +89,11 @@ class DataIngestionStage:
             for file_path in md_files:
                 try:
                     print(f"📝 Processing: {file_path.name}")
-                    
+
                     # Read file content
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
-                    
+
                     content_size = len(content.encode('utf-8'))
                     total_content_size += content_size
 
@@ -175,12 +175,12 @@ class DataIngestionStage:
             try:
                 query = f"""
                 Process this document content for data ingestion:
-                
+
                 Filename: {filename}
                 Content length: {len(content)} characters
-                
+
                 Please analyze the content structure and suggest optimal processing strategy.
-                
+
                 Content preview:
                 {content[:1000]}...
                 """
@@ -189,11 +189,11 @@ class DataIngestionStage:
                 agent_response = await universal_agent.run(query)
                 agent_analysis = str(agent_response.output) if hasattr(agent_response, 'output') else str(agent_response)
                 print(f"🤖 Agent analysis completed for {filename}")
-                
+
             except Exception as agent_error:
                 print(f"🤖 Agent analysis failed for {filename}, proceeding with basic processing...")
                 agent_analysis = f"Agent failed: {str(agent_error)[:100]}"
-            
+
             # Perform storage and indexing operations regardless of agent success
             print(f"💾 Processing storage and indexing for {filename}...")
             storage_success = await self._upload_to_storage(filename, content)
@@ -234,11 +234,11 @@ class DataIngestionStage:
 
             # Generate blob name without domain bias
             blob_name = f"raw-data/{filename}"
-            
+
             # Upload to storage
             # Note: Actual implementation would use the storage client API
             print(f"📦 Uploading {blob_name} to Azure Storage...")
-            
+
             # For now, simulate successful upload
             # In production: await self.infrastructure.storage_client.upload_blob(blob_name, content)
             return True
@@ -256,11 +256,11 @@ class DataIngestionStage:
 
             # Create document ID without domain bias
             document_id = f"doc_{filename.replace('.md', '').replace('-', '_')}"
-            
+
             # Index in search
             # Note: Actual implementation would use the search client API
             print(f"🔍 Indexing {document_id} in Azure Search...")
-            
+
             # For now, simulate successful indexing
             # In production: await self.infrastructure.search_client.index_document(document_id, content)
             return True

@@ -31,7 +31,7 @@ az ad sp create-for-rbac --name "azure-universal-rag-local" \
 
 # Set environment variables
 export AZURE_CLIENT_ID="your-client-id"
-export AZURE_CLIENT_SECRET="your-client-secret" 
+export AZURE_CLIENT_SECRET="your-client-secret"
 export AZURE_TENANT_ID="your-tenant-id"
 export AZURE_SUBSCRIPTION_ID="your-subscription-id"
 ```
@@ -65,7 +65,7 @@ python scripts/test_data_pipeline_simple.py
 **Manual Testing Steps:**
 - Process `data/raw/azure-ml/azure-machine-learning-azureml-api-2.md`
 - Test: Document ingestion → Azure Storage Blob
-- Test: Vector embedding generation → Azure OpenAI  
+- Test: Vector embedding generation → Azure OpenAI
 - Test: Document indexing → Azure Cognitive Search
 
 #### **1.3 Knowledge Graph Construction**
@@ -165,7 +165,7 @@ export AZURE_LOCATION=westus2 && azd up --environment prod  # Use 'prod' to avoi
 
 # Alternative environments if soft-delete conflicts occur:
 export AZURE_LOCATION=westus2 && azd up --environment production  # Premium tier (same as 'prod')
-export AZURE_LOCATION=westus2 && azd up --environment staging     # Standard tier  
+export AZURE_LOCATION=westus2 && azd up --environment staging     # Standard tier
 export AZURE_LOCATION=westus2 && azd up --environment test        # Basic tier
 
 # Alternative regions if capacity issues persist:
@@ -259,7 +259,7 @@ python scripts/prepare_cloud_deployment.py
 - Day 3-4: Data pipeline testing with real Azure ML docs
 - Day 5: Knowledge graph construction and validation
 
-### **Week 2: Search & Agents** 
+### **Week 2: Search & Agents**
 - Day 1-2: Tri-modal search validation
 - Day 3-4: Agent system integration testing
 - Day 5: Performance and scale testing
@@ -319,7 +319,7 @@ python tests/test_runner.py
 ## 🎯 Key Performance Targets
 
 - **Query Response Time**: <3 seconds end-to-end
-- **Vector Search**: <1 second 
+- **Vector Search**: <1 second
 - **Graph Traversal**: <500ms
 - **GNN Inference**: <200ms
 - **Concurrent Users**: 100+ supported
@@ -333,7 +333,7 @@ python tests/test_runner.py
 
 **All testing frameworks implemented and ready for execution:**
 - ✅ **Environment Setup**: Automated Azure configuration
-- ✅ **Data Pipeline**: Real Azure ML docs processing  
+- ✅ **Data Pipeline**: Real Azure ML docs processing
 - ✅ **Tri-Modal Search**: Vector + Graph + GNN integration
 - ✅ **Agent System**: Universal agent with real Azure services
 - ✅ **Cloud Deployment**: Readiness assessment and preparation

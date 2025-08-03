@@ -30,13 +30,13 @@ azd up --environment staging --location eastus
 ## 📋 What's Been Fixed
 
 ### 1. Azure.yaml Configuration ✅
-- **Fixed**: Updated `project: .` (was `project: ./backend`)  
+- **Fixed**: Updated `project: .` (was `project: ./backend`)
 - **Fixed**: Updated prepackage hook for new structure
 - **Status**: Ready for `azd up`
 
 ### 2. Directory Structure ✅
 - **Backend code**: Moved from `backend/` to root level
-- **API entry point**: `api/main.py` 
+- **API entry point**: `api/main.py`
 - **Dockerfile**: Updated for new structure
 - **Infrastructure**: Bicep templates in `infra/`
 
@@ -56,7 +56,7 @@ python3 scripts/deployment/test_azure_services_status.py
 
 **Tests These Services:**
 - Azure OpenAI (GPT-4, embeddings)
-- Azure Cognitive Search  
+- Azure Cognitive Search
 - Azure Cosmos DB (Gremlin)
 - Azure Storage Account
 - Azure Key Vault
@@ -89,7 +89,7 @@ All-in-one deployment management:
 Commands:
   status          Test Azure services connectivity
   deploy          Deploy with azd up + validation
-  cleanup         Interactive cleanup (dry-run by default)  
+  cleanup         Interactive cleanup (dry-run by default)
   force-cleanup   Force cleanup without prompts
   validate        Validate deployment configuration
   logs            Show deployment logs
@@ -101,11 +101,11 @@ Commands:
 ```
 infra/
 ├── main.bicep                 # Main deployment template
-├── main.parameters.json       # Deployment parameters  
+├── main.parameters.json       # Deployment parameters
 └── modules/
     ├── ai-services.bicep      # Azure OpenAI
     ├── core-services.bicep    # Search, Storage, KeyVault
-    ├── data-services.bicep    # Cosmos DB, ML Workspace  
+    ├── data-services.bicep    # Cosmos DB, ML Workspace
     └── hosting-services.bicep # Container Apps
 ```
 
@@ -221,7 +221,7 @@ azd down --force --purge
 - **Cause**: Old azure.yaml with `project: ./backend`
 - **Fix**: Updated to `project: .` ✅
 
-#### 2. "Dockerfile not found"  
+#### 2. "Dockerfile not found"
 - **Cause**: Looking in wrong directory
 - **Fix**: Dockerfile in root directory ✅
 
@@ -294,7 +294,7 @@ python3 -c "from api.main import app; print('✅ API imports working')"
 ## 🎯 Next Steps
 
 1. **Deploy**: Run `azd up` to deploy infrastructure
-2. **Test**: Use status scripts to validate deployment  
+2. **Test**: Use status scripts to validate deployment
 3. **Monitor**: Set up alerts and monitoring dashboards
 4. **Scale**: Configure auto-scaling based on usage
 5. **Secure**: Review and harden security settings

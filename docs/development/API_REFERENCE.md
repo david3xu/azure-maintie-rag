@@ -29,7 +29,7 @@ Content-Type: application/json
 
 {
   "query": "How do I troubleshoot network connectivity issues?",
-  "domain": "general", 
+  "domain": "general",
   "context": {},
   "session_id": "optional-session-id"
 }
@@ -71,7 +71,7 @@ POST /api/v1/query/universal
 Content-Type: application/json
 
 {
-  "query": "Medical device troubleshooting procedures", 
+  "query": "Medical device troubleshooting procedures",
   "domain": "medical",
   "max_results": 10,
   "include_explanations": true
@@ -139,7 +139,7 @@ GET /api/v1/health
   "simplified_architecture": true,
   "competitive_advantages": {
     "tri_modal_search": "enabled",
-    "zero_config_discovery": "enabled", 
+    "zero_config_discovery": "enabled",
     "sub_3s_response": "maintained",
     "data_driven_intelligence": "active"
   },
@@ -191,7 +191,7 @@ GET /api/v1/domains/list
       "azure_services": ["blob_storage", "cognitive_search", "cosmos_db"]
     },
     {
-      "name": "medical", 
+      "name": "medical",
       "status": "active",
       "last_modified": "2025-01-31T12:00:00Z"
     }
@@ -229,7 +229,7 @@ interface QueryRequest {
   context?: Record<string, any>;    // Optional: Additional context
 }
 
-// Agent Response  
+// Agent Response
 interface AgentResponse {
   success: boolean;                 // Operation success
   query: string;                    // Original query
@@ -346,7 +346,7 @@ class AzureUniversalRAGClient:
     def __init__(self, base_url: str, api_key: str):
         self.base_url = base_url
         self.headers = {"Authorization": f"Bearer {api_key}"}
-    
+
     async def query(self, query: str, domain: str = None) -> dict:
         """Process intelligent query"""
         async with aiohttp.ClientSession() as session:
@@ -380,7 +380,7 @@ class AzureUniversalRAGClient {
       headers: this.headers,
       body: JSON.stringify({ query, domain })
     });
-    
+
     return await response.json();
   }
 }
@@ -406,7 +406,7 @@ Every API response includes performance metrics:
     "domain_discovery_time": 0.01,   // Domain detection time
     "search_breakdown": {
       "vector_search": 0.05,
-      "graph_search": 0.08, 
+      "graph_search": 0.08,
       "gnn_search": 0.03
     }
   }

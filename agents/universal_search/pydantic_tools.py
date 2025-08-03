@@ -110,7 +110,7 @@ async def execute_tri_modal_search(
 ) -> TriModalSearchResponse:
     """
     🎯 COMPETITIVE ADVANTAGE: Execute our proprietary tri-modal search (Vector + Graph + GNN)
-    
+
     This tool preserves our core competitive advantage while leveraging PydanticAI's
     validation and execution framework.
 
@@ -138,7 +138,7 @@ async def execute_tri_modal_search(
     try:
         # Use the existing orchestrator from this agent's directory
         from .orchestrator import TriModalOrchestrator
-        
+
         orchestrator = TriModalOrchestrator()
 
         # Execute search through existing tri-modal coordination
@@ -336,74 +336,78 @@ async def search_with_tri_modal_tool(
     max_results: int = 10,
 ) -> TriModalSearchResponse:
     """Legacy compatibility wrapper for existing code"""
-    request = TriModalSearchRequest(
-        query=query,
-        domain=domain,
-        max_results=max_results
-    )
+    request = TriModalSearchRequest(query=query, domain=domain, max_results=max_results)
     return await execute_tri_modal_search(ctx, request)
 
 
 class PerformanceValidationRequest(BaseModel):
     """Request model for search performance validation"""
-    
-    search_result: TriModalSearchResponse = Field(..., description="Search result to validate")
+
+    search_result: TriModalSearchResponse = Field(
+        ..., description="Search result to validate"
+    )
     expected_performance: Dict[str, float] = Field(
         default_factory=lambda: {"max_response_time": 3.0, "min_confidence": 0.7},
-        description="Expected performance metrics"
+        description="Expected performance metrics",
     )
 
 
 class PerformanceValidationResponse(BaseModel):
     """Response model for performance validation"""
-    
-    performance_met: bool = Field(..., description="Whether performance requirements were met")
+
+    performance_met: bool = Field(
+        ..., description="Whether performance requirements were met"
+    )
     metrics: Dict[str, float] = Field(..., description="Actual performance metrics")
-    validation_details: Dict[str, Any] = Field(..., description="Detailed validation results")
+    validation_details: Dict[str, Any] = Field(
+        ..., description="Detailed validation results"
+    )
 
 
 async def validate_search_performance(
-    ctx: RunContext[AzureServiceContainer],
-    request: PerformanceValidationRequest
+    ctx: RunContext[AzureServiceContainer], request: PerformanceValidationRequest
 ) -> PerformanceValidationResponse:
     """
     Validate search performance against SLA requirements.
-    
+
     This tool ensures our tri-modal search meets the sub-3-second SLA
     and quality thresholds for competitive advantage.
     """
-    
+
     correlation_id = str(uuid.uuid4())
-    
+
     logger.info(
         "Search performance validation initiated",
         extra={
             "correlation_id": correlation_id,
             "execution_time": request.search_result.execution_time,
-            "confidence": request.search_result.confidence
-        }
+            "confidence": request.search_result.confidence,
+        },
     )
-    
+
     try:
         # Extract performance metrics from search result
         actual_metrics = {
             "response_time": request.search_result.execution_time,
             "confidence": request.search_result.confidence,
-            "modalities_used": len(request.search_result.modality_contributions)
+            "modalities_used": len(request.search_result.modality_contributions),
         }
-        
+
         # Validate against expected performance
         expected = request.expected_performance
-        
+
         validation_results = {
-            "response_time_ok": actual_metrics["response_time"] <= expected.get("max_response_time", 3.0),
-            "confidence_ok": actual_metrics["confidence"] >= expected.get("min_confidence", 0.7),
-            "tri_modal_unity": actual_metrics["modalities_used"] >= 2  # At least 2 modalities for competitive advantage
+            "response_time_ok": actual_metrics["response_time"]
+            <= expected.get("max_response_time", 3.0),
+            "confidence_ok": actual_metrics["confidence"]
+            >= expected.get("min_confidence", 0.7),
+            "tri_modal_unity": actual_metrics["modalities_used"]
+            >= 2,  # At least 2 modalities for competitive advantage
         }
-        
+
         # Overall performance check
         performance_met = all(validation_results.values())
-        
+
         validation_details = {
             "correlation_id": correlation_id,
             "sla_compliance": validation_results["response_time_ok"],
@@ -413,34 +417,31 @@ async def validate_search_performance(
             "target_response_time": expected.get("max_response_time", 3.0),
             "actual_confidence": actual_metrics["confidence"],
             "target_confidence": expected.get("min_confidence", 0.7),
-            "modalities_executed": actual_metrics["modalities_used"]
+            "modalities_executed": actual_metrics["modalities_used"],
         }
-        
+
         response = PerformanceValidationResponse(
             performance_met=performance_met,
             metrics=actual_metrics,
-            validation_details=validation_details
+            validation_details=validation_details,
         )
-        
+
         logger.info(
             "Search performance validation completed",
             extra={
                 "correlation_id": correlation_id,
                 "performance_met": performance_met,
                 "response_time": actual_metrics["response_time"],
-                "confidence": actual_metrics["confidence"]
-            }
+                "confidence": actual_metrics["confidence"],
+            },
         )
-        
+
         return response
-        
+
     except Exception as e:
         logger.error(
             "Search performance validation failed",
-            extra={
-                "correlation_id": correlation_id,
-                "error": str(e)
-            }
+            extra={"correlation_id": correlation_id, "error": str(e)},
         )
         raise RuntimeError(f"Performance validation failed: {str(e)}") from e
 
@@ -448,12 +449,12 @@ async def validate_search_performance(
 # Export functions for PydanticAI agent registration
 __all__ = [
     "execute_tri_modal_search",
-    "execute_vector_search", 
+    "execute_vector_search",
     "execute_graph_search",
     "validate_search_performance",  # Performance validation function
     "search_with_tri_modal_tool",  # Legacy compatibility
     "TriModalSearchRequest",
-    "TriModalSearchResponse", 
+    "TriModalSearchResponse",
     "VectorSearchRequest",
     "GraphSearchRequest",
     "PerformanceValidationRequest",
@@ -465,28 +466,31 @@ __all__ = [
 async def test_search_tools():
     """Test search tools functionality"""
     print("Testing PydanticAI Search Tools (Co-located)...")
-    
+
     # Create mock context with all required services
     class MockContext:
         class MockDeps:
             azure_search = None
             azure_cosmos = None
-            
+
         deps = MockDeps()
-    
+
     # Test tri-modal search
     request = TriModalSearchRequest(
-        query="test machine learning algorithms", 
-        domain="technical"
+        query="test machine learning algorithms", domain="technical"
     )
-    
+
     try:
         result = await execute_tri_modal_search(MockContext(), request)
-        print(f"✅ Tri-modal search: {result.confidence} confidence, {result.execution_time:.2f}s")
-        print(f"✅ Tool co-location: {result.metadata.get('tool_colocation_complete', False)}")
+        print(
+            f"✅ Tri-modal search: {result.confidence} confidence, {result.execution_time:.2f}s"
+        )
+        print(
+            f"✅ Tool co-location: {result.metadata.get('tool_colocation_complete', False)}"
+        )
     except Exception as e:
         print(f"⚠️ Tri-modal search test requires infrastructure: {e}")
-    
+
     # Test vector search
     vector_request = VectorSearchRequest(query="neural networks")
     try:
@@ -494,10 +498,11 @@ async def test_search_tools():
         print(f"✅ Vector search: {vector_result['execution_time']:.2f}s")
     except Exception as e:
         print(f"⚠️ Vector search test requires infrastructure: {e}")
-    
+
     print("Search tools co-location complete! 🎯")
 
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(test_search_tools())

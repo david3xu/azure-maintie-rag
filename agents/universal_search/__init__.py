@@ -18,16 +18,16 @@ from .graph_search import GraphSearchEngine
 # Import main orchestrator
 from .orchestrator import ModalityResult, SearchResult, TriModalOrchestrator
 
-# Import individual search engines
-from .vector_search import VectorSearchEngine
-
 # Import PydanticAI tools
 from .pydantic_tools import (
+    execute_graph_search,
     execute_tri_modal_search,
     execute_vector_search,
-    execute_graph_search,
-    search_with_tri_modal_tool
+    search_with_tri_modal_tool,
 )
+
+# Import individual search engines
+from .vector_search import VectorSearchEngine
 
 __all__ = [
     # Main orchestrator
@@ -40,7 +40,7 @@ __all__ = [
     "GNNSearchEngine",
     # PydanticAI Tools
     "execute_tri_modal_search",
-    "execute_vector_search", 
+    "execute_vector_search",
     "execute_graph_search",
     "search_with_tri_modal_tool",
 ]

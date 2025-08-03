@@ -1,7 +1,7 @@
 # Config Structure Enhancement Plan
 
-**Date**: August 3, 2025  
-**Purpose**: Detailed plan for enhancing `/config` directory structure to support Agent 1's data-driven schema  
+**Date**: August 3, 2025
+**Purpose**: Detailed plan for enhancing `/config` directory structure to support Agent 1's data-driven schema
 **Requirement**: Zero hardcoded values, complete learning-based configuration generation
 
 ## Current vs Enhanced Structure
@@ -95,7 +95,7 @@ config/
 │       └── {additional_domains}_unified.yaml   # ✅ Generated from domain discovery
 │
 ├── azure_settings.py           # ✅ Keep - Azure environment settings
-├── settings.py                  # ✅ Keep - General application settings  
+├── settings.py                  # ✅ Keep - General application settings
 ├── timeouts.py                  # ✅ Keep - System timeout configurations
 ├── extraction_interface.py     # ✅ Keep - Extraction pipeline interfaces
 ├── legacy_models.py            # ✅ Keep - Backward compatibility models
@@ -118,7 +118,7 @@ config/
 ```bash
 mkdir -p config/legacy
 mv config/models.py config/legacy/models_hardcoded.py
-mv config/main.py config/legacy/main_basic.py  
+mv config/main.py config/legacy/main_basic.py
 mv config/unified_data_driven_config.yaml config/legacy/unified_config_v1.yaml
 ```
 
@@ -144,12 +144,12 @@ from abc import ABC, abstractmethod
 
 class DataDrivenBaseSchema(BaseModel):
     """Base class for all data-driven schemas with hardcoded value detection"""
-    
+
     generated_timestamp: datetime = Field(default_factory=datetime.now)
     source_analysis: str = Field(..., description="Description of data source analysis")
     learning_confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in learned parameters")
     zero_hardcoded_validated: bool = Field(default=False, description="Validated for zero hardcoded values")
-    
+
     @computed_field
     @property
     def is_production_ready(self) -> bool:
@@ -159,7 +159,7 @@ class DataDrivenBaseSchema(BaseModel):
             self.zero_hardcoded_validated and
             self._validate_required_fields()
         )
-    
+
     @abstractmethod
     def _validate_required_fields(self) -> bool:
         """Validate that all required fields are properly learned"""
@@ -175,53 +175,53 @@ from pydantic import Field, computed_field
 
 class ValidationDataAnalysis(DataDrivenBaseSchema):
     """Results from validation data analysis for threshold optimization"""
-    
+
     precision_by_threshold: Dict[float, float] = Field(..., description="Precision scores by threshold")
     recall_by_threshold: Dict[float, float] = Field(..., description="Recall scores by threshold")
     f1_scores_by_threshold: Dict[float, float] = Field(..., description="F1 scores by threshold")
-    
+
     @computed_field
     @property
     def optimal_f1_threshold(self) -> float:
         """Find threshold that maximizes F1 score"""
         if not self.f1_scores_by_threshold:
             raise ValueError("No F1 scores available for threshold optimization")
-        
+
         return max(self.f1_scores_by_threshold.items(), key=lambda x: x[1])[0]
-    
+
     def _validate_required_fields(self) -> bool:
         return len(self.f1_scores_by_threshold) >= 5  # At least 5 thresholds tested
 
 class ContentCoherenceAnalysis(DataDrivenBaseSchema):
     """Results from content coherence analysis for chunking optimization"""
-    
+
     coherence_scores_by_chunk_size: Dict[int, float] = Field(..., description="Coherence scores by chunk size")
     sentence_boundary_analysis: Dict[str, Any] = Field(..., description="Sentence boundary statistics")
     concept_continuity_scores: Dict[int, float] = Field(..., description="Concept continuity by overlap")
-    
+
     @computed_field
     @property
     def optimal_chunk_size(self) -> int:
         """Find chunk size that maximizes content coherence"""
         if not self.coherence_scores_by_chunk_size:
             raise ValueError("No coherence scores available for chunk size optimization")
-        
+
         return max(self.coherence_scores_by_chunk_size.items(), key=lambda x: x[1])[0]
-    
+
     @computed_field
     @property
     def optimal_overlap(self) -> int:
         """Find overlap that maximizes concept continuity"""
         if not self.concept_continuity_scores:
             return max(50, int(self.sentence_boundary_analysis.get("avg_sentence_length", 25) * 2))
-        
+
         return max(self.concept_continuity_scores.items(), key=lambda x: x[1])[0]
-    
+
     def _validate_required_fields(self) -> bool:
         return len(self.coherence_scores_by_chunk_size) >= 3  # At least 3 chunk sizes tested
 ```
 
-**Step 3: Performance Learning Schema**  
+**Step 3: Performance Learning Schema**
 ```python
 # config/schema/performance_learning.py
 from .base import DataDrivenBaseSchema
@@ -230,12 +230,12 @@ from pydantic import Field, computed_field
 
 class PerformanceLearningResult(DataDrivenBaseSchema):
     """Results from performance learning analysis"""
-    
+
     processing_times_by_chunk_size: Dict[int, List[float]] = Field(..., description="Processing times by chunk size")
     memory_usage_by_entity_count: Dict[int, List[float]] = Field(..., description="Memory usage by entity count")
     response_time_percentiles: Dict[str, float] = Field(..., description="Response time percentiles")
     cache_effectiveness_analysis: Dict[str, Any] = Field(default_factory=dict, description="Cache effectiveness data")
-    
+
     @computed_field
     @property
     def learned_sla_target(self) -> float:
@@ -246,27 +246,27 @@ class PerformanceLearningResult(DataDrivenBaseSchema):
             all_times = []
             for times_list in self.processing_times_by_chunk_size.values():
                 all_times.extend(times_list)
-            
+
             if all_times:
                 all_times.sort()
                 p95_idx = int(len(all_times) * 0.95)
                 p95_time = all_times[p95_idx]
             else:
                 raise ValueError("No performance data available for SLA learning")
-        
+
         # Add 10% reliability buffer
         return p95_time * 1.1
-    
+
     @computed_field
     @property
     def learned_cache_ttl(self) -> int:
         """Learn optimal cache TTL from effectiveness analysis"""
         if self.cache_effectiveness_analysis:
             return self.cache_effectiveness_analysis.get("optimal_ttl", 3600)
-        
+
         # Estimate based on data change frequency
         return 3600  # 1 hour for stable domains
-    
+
     def _validate_required_fields(self) -> bool:
         return len(self.processing_times_by_chunk_size) >= 3  # At least 3 chunk sizes tested
 ```
@@ -283,33 +283,33 @@ from ..schema.statistical_analysis import ValidationDataAnalysis, ContentCoheren
 
 class StatisticalLearningEngine:
     """Engine for learning statistical parameters from corpus analysis"""
-    
+
     async def analyze_corpus_with_learning(self, domain_path: str) -> CompleteStatisticalAnalysis:
         """Perform complete statistical analysis with learning"""
-        
+
         domain_path_obj = Path(domain_path)
-        
+
         # Step 1: Basic statistical analysis (use existing Agent 1 implementation)
         basic_stats = await self._perform_basic_statistical_analysis(domain_path_obj)
-        
+
         # Step 2: Generate validation data for threshold learning
         validation_analysis = await self._perform_threshold_optimization(domain_path_obj)
-        
+
         # Step 3: Perform coherence analysis for chunking optimization
         coherence_analysis = await self._perform_coherence_analysis(domain_path_obj)
-        
+
         # Step 4: Perform entity clustering for classification learning
         clustering_analysis = await self._perform_entity_clustering(domain_path_obj)
-        
+
         return CompleteStatisticalAnalysis(
             # Basic statistics (from existing implementation)
             **basic_stats,
-            
+
             # Enhanced learning results
             validation_data_analysis=validation_analysis,
             coherence_analysis=coherence_analysis,
             clustering_analysis=clustering_analysis,
-            
+
             # Metadata
             source_analysis=f"Complete learning analysis of {domain_path}",
             learning_confidence=self._calculate_learning_confidence(validation_analysis, coherence_analysis),
@@ -327,51 +327,51 @@ from .classification_learning import EntityClassificationLearningEngine
 
 class Agent1CompleteConfigurationGenerator:
     """Complete configuration generator for Agent 1 with zero hardcoded values"""
-    
+
     def __init__(self):
         self.statistical_learner = StatisticalLearningEngine()
         self.performance_learner = PerformanceLearningEngine()
         self.classification_learner = EntityClassificationLearningEngine()
-    
+
     async def generate_complete_domain_configuration(
-        self, 
+        self,
         domain_path: str  # e.g., "data/raw/Programming-Language"
     ) -> CompleteDataDrivenConfiguration:
         """Generate 100% data-driven configuration from domain directory"""
-        
+
         # Parallel execution of learning engines
         statistical_task = self.statistical_learner.analyze_corpus_with_learning(domain_path)
         performance_task = self.performance_learner.learn_optimal_parameters(domain_path)
         classification_task = self.classification_learner.learn_classification_patterns(domain_path)
-        
+
         statistical_analysis, performance_learning, classification_learning = await asyncio.gather(
             statistical_task, performance_task, classification_task
         )
-        
+
         # Generate complete configuration
         domain_name = Path(domain_path).name.lower().replace('-', '_')
-        
+
         return CompleteDataDrivenConfiguration(
             # Domain identification
             domain_name=domain_name,
             source_directory=domain_path,
-            
+
             # Document processing (100% learned)
             chunk_size=statistical_analysis.learned_chunk_size,
             chunk_overlap=statistical_analysis.learned_chunk_overlap,
-            
+
             # Quality thresholds (100% learned)
             entity_confidence_threshold=statistical_analysis.learned_entity_confidence_threshold,
             relationship_confidence_threshold=statistical_analysis.learned_relationship_confidence_threshold,
-            
+
             # Entity classification (100% learned)
             entity_classification_rules=classification_learning.learned_classification_rules,
             entity_types=list(classification_learning.learned_classification_rules.keys()),
-            
+
             # Performance parameters (100% learned)
             response_time_sla=performance_learning.learned_sla_target,
             cache_ttl=performance_learning.learned_cache_ttl,
-            
+
             # Validation
             source_analysis=f"Learned from complete analysis of {domain_path}",
             learning_confidence=self._calculate_overall_confidence(
@@ -394,42 +394,42 @@ from .schema.unified_config import CompleteDataDrivenConfiguration
 
 class EnhancedConfigurationManager:
     """Enhanced configuration manager with learning-based generation"""
-    
+
     def __init__(self):
         self.agent1_generator = Agent1CompleteConfigurationGenerator()
         self.validator = HardcodedValueValidator()
         self._config_cache: Dict[str, CompleteDataDrivenConfiguration] = {}
-    
+
     async def generate_domain_configuration(
-        self, 
+        self,
         domain_path: str,
         force_regenerate: bool = False
     ) -> CompleteDataDrivenConfiguration:
         """Generate complete data-driven configuration for domain"""
-        
+
         domain_name = Path(domain_path).name.lower().replace('-', '_')
-        
+
         # Check cache unless forced regeneration
         if not force_regenerate and domain_name in self._config_cache:
             return self._config_cache[domain_name]
-        
+
         # Generate complete configuration
         config = await self.agent1_generator.generate_complete_domain_configuration(domain_path)
-        
+
         # Validate zero hardcoded values
         validation_result = self.validator.validate_configuration(config)
         if not validation_result.is_valid:
             raise ValueError(f"Generated configuration contains hardcoded values: {validation_result.violations}")
-        
+
         # Cache and return
         self._config_cache[domain_name] = config
         return config
-    
+
     def discover_available_domains(self, raw_data_path: str = "data/raw") -> List[str]:
         """Discover domains from subdirectory structure"""
         raw_path = Path(raw_data_path)
         domains = []
-        
+
         for item in raw_path.iterdir():
             if item.is_dir() and not item.name.startswith('.'):
                 # Check if directory contains data files
@@ -437,15 +437,15 @@ class EnhancedConfigurationManager:
                 if data_files:
                     domain_name = item.name.replace('-', '_').lower()
                     domains.append(domain_name)
-                    
+
                     # ✅ Create domain-specific directory structure dynamically
                     domain_config_path = Path(f"config/generated/domains/{domain_name}")
                     domain_models_path = Path(f"config/generated/learned_models/statistical_models")
-                    
+
                     # Ensure directories exist for discovered domains
                     domain_config_path.mkdir(parents=True, exist_ok=True)
                     domain_models_path.mkdir(parents=True, exist_ok=True)
-        
+
         return domains
 
 # Global configuration manager instance
@@ -475,7 +475,7 @@ class ValidationResult(BaseModel):
 
 class HardcodedValueValidator:
     """Validator to ensure zero hardcoded values in configurations"""
-    
+
     KNOWN_HARDCODED_VALUES = {
         'chunk_size': [1000, 1200, 800],
         'chunk_overlap': [200, 250],
@@ -484,24 +484,24 @@ class HardcodedValueValidator:
         'cache_ttl': [3600],
         'response_time_sla': [3.0]
     }
-    
+
     KNOWN_HARDCODED_PATTERNS = [
         "api", "endpoint", "function", "method", "class", "object"
     ]
-    
+
     def validate_configuration(self, config: Any) -> ValidationResult:
         """Validate that configuration contains zero hardcoded values"""
-        
+
         violations = []
         warnings = []
-        
+
         # Check for hardcoded numerical values
         for field_name, hardcoded_values in self.KNOWN_HARDCODED_VALUES.items():
             if hasattr(config, field_name):
                 field_value = getattr(config, field_name)
                 if field_value in hardcoded_values:
                     violations.append(f"{field_name}={field_value} appears to be hardcoded")
-        
+
         # Check for hardcoded classification patterns
         if hasattr(config, 'entity_classification_rules'):
             rules = config.entity_classification_rules
@@ -509,17 +509,17 @@ class HardcodedValueValidator:
                 for pattern in patterns:
                     if pattern.lower() in self.KNOWN_HARDCODED_PATTERNS:
                         violations.append(f"Classification rule '{rule_type}' contains hardcoded pattern: {pattern}")
-        
+
         # Check for learning confidence
         if hasattr(config, 'learning_confidence'):
             if config.learning_confidence < 0.7:
                 warnings.append(f"Low learning confidence: {config.learning_confidence}")
-        
+
         # Check for zero hardcoded validation flag
         if hasattr(config, 'zero_hardcoded_validated'):
             if not config.zero_hardcoded_validated:
                 warnings.append("Configuration not validated for zero hardcoded values")
-        
+
         return ValidationResult(
             is_valid=len(violations) == 0,
             violations=violations,
@@ -534,7 +534,7 @@ class HardcodedValueValidator:
 
 **✅ Structure Enhancement Complete:**
 - [ ] Legacy files archived in `/config/legacy`
-- [ ] New schema modules implemented in `/config/schema`  
+- [ ] New schema modules implemented in `/config/schema`
 - [ ] Learning generators implemented in `/config/generators`
 - [ ] Enhanced directory structure created
 

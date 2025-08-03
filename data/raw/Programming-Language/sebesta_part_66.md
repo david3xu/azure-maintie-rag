@@ -7,138 +7,138 @@
  14.6 Event Handling with Java
  14.7 Event Handling in C#
 14
-Exception Handling  
+Exception Handling
 and Event Handling
 \n![Image](images/page651_image1.png)
-\n630     Chapter 14  Exception Handling and Event Handling 
+\n630     Chapter 14  Exception Handling and Event Handling
 T
-his chapter discusses programming language support for two related parts of 
-many contemporary programs: exception handling and event handling. Both 
-exceptions and events can occur at times that cannot be predetermined, 
-and both are best handled with special language constructs and processes. Some of 
-these constructs and processes—for example, propagation—are similar for exception 
+his chapter discusses programming language support for two related parts of
+many contemporary programs: exception handling and event handling. Both
+exceptions and events can occur at times that cannot be predetermined,
+and both are best handled with special language constructs and processes. Some of
+these constructs and processes—for example, propagation—are similar for exception
 handling and event handling.
-We first describe the fundamental concepts of exception handling, including 
-hardware- and software-detectable exceptions, exception handlers, and the raising 
-of exceptions. Then, the design issues for exception handling are introduced and 
-discussed, including the binding of exceptions to exception handlers, continuation, 
-default handlers, and exception disabling. This section is followed by a description 
+We first describe the fundamental concepts of exception handling, including
+hardware- and software-detectable exceptions, exception handlers, and the raising
+of exceptions. Then, the design issues for exception handling are introduced and
+discussed, including the binding of exceptions to exception handlers, continuation,
+default handlers, and exception disabling. This section is followed by a description
 and an evaluation of the exception-handling facilities of three programming lan-
 guages: Ada, C++, and Java.
-The latter part of this chapter is about event handling. We first present an 
-introduction to the basic concepts of event handling. This is followed by discussions 
+The latter part of this chapter is about event handling. We first present an
+introduction to the basic concepts of event handling. This is followed by discussions
 of the event-handling approaches of Java and C#.
 14.1 Introduction to Exception Handling
-Most computer hardware systems are capable of detecting certain run-time 
+Most computer hardware systems are capable of detecting certain run-time
 error conditions, such as floating-point overflow. Early programming lan-
-guages were designed and implemented in such a way that the user program 
-could neither detect nor attempt to deal with such errors. In these languages, 
-the occurrence of such an error simply causes the program to be terminated 
-and control to be transferred to the operating system. The typical operating 
-system reaction to a run-time error is to display a diagnostic message, which 
-may be meaningful and therefore useful, or highly cryptic. After displaying the 
-message, the program is terminated. 
+guages were designed and implemented in such a way that the user program
+could neither detect nor attempt to deal with such errors. In these languages,
+the occurrence of such an error simply causes the program to be terminated
+and control to be transferred to the operating system. The typical operating
+system reaction to a run-time error is to display a diagnostic message, which
+may be meaningful and therefore useful, or highly cryptic. After displaying the
+message, the program is terminated.
 In the case of input and output operations, however, the situation is some-
-what different. For example, a Fortran Read statement can intercept input 
-errors and end-of-file conditions, both of which are detected by the input 
-device hardware. In both cases, the Read statement can specify the label of 
-some statement in the user program that deals with the condition. In the case 
-of the end-of-file, it is clear that the condition is not always considered an error. 
-In most cases, it is nothing more than a signal that one kind of processing is 
-completed and another kind must begin. In spite of the obvious difference 
-between end-of-file and events that are always errors, such as a failed input 
-process, Fortran handles both situations with the same mechanism. Consider 
+what different. For example, a Fortran Read statement can intercept input
+errors and end-of-file conditions, both of which are detected by the input
+device hardware. In both cases, the Read statement can specify the label of
+some statement in the user program that deals with the condition. In the case
+of the end-of-file, it is clear that the condition is not always considered an error.
+In most cases, it is nothing more than a signal that one kind of processing is
+completed and another kind must begin. In spite of the obvious difference
+between end-of-file and events that are always errors, such as a failed input
+process, Fortran handles both situations with the same mechanism. Consider
 the following Fortran Read statement:
 Read(Unit=5, Fmt=1000, Err=100, End=999) Weight
-The Err clause specifies that control is to be transferred to the statement 
+The Err clause specifies that control is to be transferred to the statement
 labeled 100 if an error occurs in the read operation. The End clause speci-
-fies that control is to be transferred to the statement labeled 999 if the read 
+fies that control is to be transferred to the statement labeled 999 if the read
 \n 14.1 Introduction to Exception Handling     631
-operation encounters the end of the file. So, Fortran uses simple branches for 
+operation encounters the end of the file. So, Fortran uses simple branches for
 both input errors and end-of-file.
-There is a category of serious errors that are not detectable by hardware 
-but can be detected by code generated by the compiler. For example, array 
-subscript range errors are almost never detected by hardware,1 but they lead to 
+There is a category of serious errors that are not detectable by hardware
+but can be detected by code generated by the compiler. For example, array
+subscript range errors are almost never detected by hardware,1 but they lead to
 serious errors that often are not noticed until later in the program execution.
-Detection of subscript range errors is sometimes required by the language 
+Detection of subscript range errors is sometimes required by the language
 design. For example, Java compilers usually generate code to check the cor-
-rectness of every subscript expression (they do not generate such code when 
-it can be determined at compile time that a subscript expression cannot have 
-an out-of-range value, for example, if the subscript is a literal). In C, subscript 
-ranges are not checked because the cost of such checking was (and still is) not 
-believed to be worth the benefit of detecting such errors. In some compilers 
-for some languages, subscript range checking can be selected (if not turned on 
-by default) or turned off (if it is on by default) as desired in the program or in 
-the command that executes the compiler. 
-The designers of most contemporary languages have included mechanisms 
-that allow programs to react in a standard way to certain run-time errors, as well as 
+rectness of every subscript expression (they do not generate such code when
+it can be determined at compile time that a subscript expression cannot have
+an out-of-range value, for example, if the subscript is a literal). In C, subscript
+ranges are not checked because the cost of such checking was (and still is) not
+believed to be worth the benefit of detecting such errors. In some compilers
+for some languages, subscript range checking can be selected (if not turned on
+by default) or turned off (if it is on by default) as desired in the program or in
+the command that executes the compiler.
+The designers of most contemporary languages have included mechanisms
+that allow programs to react in a standard way to certain run-time errors, as well as
 other program-detected unusual events. Programs may also be notified when cer-
-tain events are detected by hardware or system software, so that they also can react 
-to these events. These mechanisms are collectively called exception handling. 
+tain events are detected by hardware or system software, so that they also can react
+to these events. These mechanisms are collectively called exception handling.
 Perhaps the most plausible reason some languages do not include excep-
 tion handling is the complexity it adds to the language.
 14.1.1 Basic Concepts
-We consider both the errors detected by hardware, such as disk read errors, and 
-unusual conditions, such as end-of-file (which is also detected by hardware), 
-to be exceptions. We further extend the concept of an exception to include 
-errors or unusual conditions that are software-detectable (by either a software 
-interpreter or the user code itself ). Accordingly, we define exception to be 
-any unusual event, erroneous or not, that is detectable by either hardware or 
+We consider both the errors detected by hardware, such as disk read errors, and
+unusual conditions, such as end-of-file (which is also detected by hardware),
+to be exceptions. We further extend the concept of an exception to include
+errors or unusual conditions that are software-detectable (by either a software
+interpreter or the user code itself ). Accordingly, we define exception to be
+any unusual event, erroneous or not, that is detectable by either hardware or
 software and that may require special processing.
-The special processing that may be required when an exception is detected 
+The special processing that may be required when an exception is detected
 is called exception handling. This processing is done by a code unit or seg-
-ment called an exception handler. An exception is raised when its associated 
-event occurs. In some C-based languages, exceptions are said to be thrown, 
-rather than raised.2 Different kinds of exceptions require different exception 
-handlers. Detection of end-of-file nearly always requires some specific program 
-action. But, clearly, that action would not also be appropriate for an array index 
-range error exception. In some cases, the only action is the generation of an 
+ment called an exception handler. An exception is raised when its associated
+event occurs. In some C-based languages, exceptions are said to be thrown,
+rather than raised.2 Different kinds of exceptions require different exception
+handlers. Detection of end-of-file nearly always requires some specific program
+action. But, clearly, that action would not also be appropriate for an array index
+range error exception. In some cases, the only action is the generation of an
 error message and an orderly termination of the program.
- 
+
 1. In the 1970s, there were some computers that did detect subscript range errors in hardware.
- 
-2. C++ was the first C-based language that included exception handling. The word throw was 
+
+2. C++ was the first C-based language that included exception handling. The word throw was
 used, rather than raise, because the standard C library includes a function named raise.
-\n632     Chapter 14  Exception Handling and Event Handling 
-In some situations, it may be desirable to ignore certain hardware-detectable 
-exceptions—for example, division by zero—for a time. This action would be 
-done by disabling the exception. A disabled exception could be enabled again 
-at a later time. 
+\n632     Chapter 14  Exception Handling and Event Handling
+In some situations, it may be desirable to ignore certain hardware-detectable
+exceptions—for example, division by zero—for a time. This action would be
+done by disabling the exception. A disabled exception could be enabled again
+at a later time.
 The absence of separate or specific exception-handling facilities in a lan-
 guage does not preclude the handling of user-defined, software-detected excep-
-tions. Such an exception detected within a program unit is often handled by the 
-unit’s caller, or invoker. One possible design is to send an auxiliary parameter, 
-which is used as a status variable. The status variable is assigned a value in 
-the called subprogram according to the correctness and/or normalness of its 
-computation. Immediately upon return from the called unit, the caller tests 
-the status variable. If the value indicates that an exception has occurred, the 
-handler, which may reside in the calling unit, can be enacted. Many of the C 
-standard library functions use a variant of this approach: The return values are 
+tions. Such an exception detected within a program unit is often handled by the
+unit’s caller, or invoker. One possible design is to send an auxiliary parameter,
+which is used as a status variable. The status variable is assigned a value in
+the called subprogram according to the correctness and/or normalness of its
+computation. Immediately upon return from the called unit, the caller tests
+the status variable. If the value indicates that an exception has occurred, the
+handler, which may reside in the calling unit, can be enacted. Many of the C
+standard library functions use a variant of this approach: The return values are
 used as error indicators.
-Another possibility is to pass a label parameter to the subprogram. Of 
-course, this approach is possible only in languages that allow labels to be used 
-as parameters. Passing a label allows the called unit to return to a different 
-point in the caller if an exception has occurred. As in the first alternative, the 
-handler is often a segment of the calling unit’s code. This is a common use of 
+Another possibility is to pass a label parameter to the subprogram. Of
+course, this approach is possible only in languages that allow labels to be used
+as parameters. Passing a label allows the called unit to return to a different
+point in the caller if an exception has occurred. As in the first alternative, the
+handler is often a segment of the calling unit’s code. This is a common use of
 label parameters in Fortran.
-A third possibility is to have the handler defined as a separate subprogram 
-whose name is passed as a parameter to the called unit. In this case, the handler 
-subprogram is provided by the caller, but the called unit calls the handler when 
-an exception is raised. One problem with this approach is that one is required 
-to send a handler subprogram with every call to every subprogram that takes a 
-handler subprogram as a parameter, whether it is needed or not. Furthermore, 
+A third possibility is to have the handler defined as a separate subprogram
+whose name is passed as a parameter to the called unit. In this case, the handler
+subprogram is provided by the caller, but the called unit calls the handler when
+an exception is raised. One problem with this approach is that one is required
+to send a handler subprogram with every call to every subprogram that takes a
+handler subprogram as a parameter, whether it is needed or not. Furthermore,
 to deal with several different kinds of exceptions, several different handler rou-
 tines would need to be passed, complicating the code.
-If it is desirable to handle an exception in the unit in which it is detected, 
-the handler is included as a segment of code in that unit. 
-There are some definite advantages to having exception handling built into 
-a language. First, without exception handling, the code required to detect error 
+If it is desirable to handle an exception in the unit in which it is detected,
+the handler is included as a segment of code in that unit.
+There are some definite advantages to having exception handling built into
+a language. First, without exception handling, the code required to detect error
 conditions can considerably clutter a program. For example, suppose a subpro-
-gram includes expressions that contain 10 references to elements of a matrix 
+gram includes expressions that contain 10 references to elements of a matrix
 named mat, and any one of them could have an index out-of-range error. Fur-
-ther suppose that the language does not require index range checking. Without 
-built-in index range checking, every one of these operations may need to be 
-preceded by code to detect a possible index range error. For example, consider 
+ther suppose that the language does not require index range checking. Without
+built-in index range checking, every one of these operations may need to be
+preceded by code to detect a possible index range error. For example, consider
 the following reference to an element of mat, which has 10 rows and 20 columns:
 if (row >= 0 && row < 10 && col >= 0 && col < 20)
   sum += mat[row][col];
@@ -147,30 +147,30 @@ else
                       row + " col = " + col);
 \n 14.1 Introduction to Exception Handling     633
 The presence of exception handling in the language would permit the com-
-piler to insert machine code for such checks before every array element access, 
+piler to insert machine code for such checks before every array element access,
 greatly shortening and simplifying the source program.
-Another advantage of language support for exception handling results from 
-exception propagation. Exception propagation allows an exception raised in 
-one program unit to be handled in some other unit in its dynamic or static 
-ancestry. This allows a single exception handler to be used for any number of 
+Another advantage of language support for exception handling results from
+exception propagation. Exception propagation allows an exception raised in
+one program unit to be handled in some other unit in its dynamic or static
+ancestry. This allows a single exception handler to be used for any number of
 different program units. This reuse can result in significant savings in develop-
 ment cost, program size, and program complexity.
 A language that supports exception handling encourages its users to con-
-sider all of the events that could occur during program execution and how they 
+sider all of the events that could occur during program execution and how they
 can be handled. This approach is far better than not considering such possi-
-bilities and simply hoping nothing will go wrong. This advantage is related to 
-requiring a multiple-selector construct to include actions for all possible values 
+bilities and simply hoping nothing will go wrong. This advantage is related to
+requiring a multiple-selector construct to include actions for all possible values
 of the control expression, as is required by Ada.
-Finally, there are programs in which dealing with nonerroneous but 
-unusual situations can be simplified with exception handling, and in which 
+Finally, there are programs in which dealing with nonerroneous but
+unusual situations can be simplified with exception handling, and in which
 program structure can become overly convoluted without it.
 14.1.2 Design Issues
-We now explore some of the design issues for an exception-handling system 
-when it is part of a programming language. Such a system might allow both 
-predefined and user-defined exceptions and exception handlers. Note that 
-predefined exceptions are implicitly raised, whereas user-defined exceptions 
+We now explore some of the design issues for an exception-handling system
+when it is part of a programming language. Such a system might allow both
+predefined and user-defined exceptions and exception handlers. Note that
+predefined exceptions are implicitly raised, whereas user-defined exceptions
 must be explicitly raised by user code. Consider the following skeletal subpro-
-gram that includes an exception-handling mechanism for an implicitly raised 
+gram that includes an exception-handling mechanism for an implicitly raised
 exception:
 void example() {
   . . .
@@ -184,110 +184,110 @@ void example() {
   }
   . . .
 }
-The exception of division by zero, which is implicitly raised, causes control to 
+The exception of division by zero, which is implicitly raised, causes control to
 transfer to the appropriate handler, which is then executed.
 The first design issue for exception handling is how an exception occur-
-rence is bound to an exception handler. This issue occurs on two different 
-\n634     Chapter 14  Exception Handling and Event Handling 
-levels. On the unit level, there is the question of how the same exception being 
-raised at different points in a unit can be bound to different handlers within 
-the unit. For example, in the example subprogram, there is a handler for a 
+rence is bound to an exception handler. This issue occurs on two different
+\n634     Chapter 14  Exception Handling and Event Handling
+levels. On the unit level, there is the question of how the same exception being
+raised at different points in a unit can be bound to different handlers within
+the unit. For example, in the example subprogram, there is a handler for a
 division-by-zero exception that appears to be written to deal with an occur-
-rence of division by zero in a particular statement (the one shown). But suppose 
-the function includes several other expressions with division operators. For 
-those operators, this handler would probably not be appropriate. So, it should 
-be possible to bind the exceptions that can be raised by particular statements 
-to particular handlers, even though the same exception can be raised by many 
+rence of division by zero in a particular statement (the one shown). But suppose
+the function includes several other expressions with division operators. For
+those operators, this handler would probably not be appropriate. So, it should
+be possible to bind the exceptions that can be raised by particular statements
+to particular handlers, even though the same exception can be raised by many
 different statements.
-At a higher level, the binding question arises when there is no exception 
+At a higher level, the binding question arises when there is no exception
 handler local to the unit in which the exception is raised. In this case, the lan-
-guage designer must decide whether to propagate the exception to some other 
-unit and, if so, where. How this propagation takes place and how far it goes 
-have an important impact on the writability of exception handlers. For example, 
+guage designer must decide whether to propagate the exception to some other
+unit and, if so, where. How this propagation takes place and how far it goes
+have an important impact on the writability of exception handlers. For example,
 if handlers must be local, then many handlers must be written, which compli-
-cates both the writing and reading of the program. On the other 
-hand, if exceptions are propagated, a single handler might handle 
-the same exception raised in several program units, which may 
+cates both the writing and reading of the program. On the other
+hand, if exceptions are propagated, a single handler might handle
+the same exception raised in several program units, which may
 require the handler to be more general than one would prefer.
-An issue that is related to the binding of an exception to an 
-exception handler is whether information about the exception is 
+An issue that is related to the binding of an exception to an
+exception handler is whether information about the exception is
 made available to the handler.
 After an exception handler executes, either control can trans-
-fer to somewhere in the program outside of the handler code or 
+fer to somewhere in the program outside of the handler code or
 program execution can simply terminate. We term this the ques-
-tion of control continuation after handler execution, or simply 
-continuation. Termination is obviously the simplest choice, and 
-in many error exception conditions, the best. However, in other 
+tion of control continuation after handler execution, or simply
+continuation. Termination is obviously the simplest choice, and
+in many error exception conditions, the best. However, in other
 situations, particularly those associated with unusual but not erro-
-neous events, the choice of continuing execution is best. This 
-design is called resumption. In these cases, some conventions 
-must be chosen to determine where execution should continue. 
+neous events, the choice of continuing execution is best. This
+design is called resumption. In these cases, some conventions
+must be chosen to determine where execution should continue.
 It might be the statement that raised the exception, the state-
-ment after the statement that raised the exception, or possibly 
-some other unit. The choice to return to the statement that raised 
-the exception may seem like a good one, but in the case of an 
-error exception, it is useful only if the handler somehow is able 
-to modify the values or operations that caused the exception to 
-be raised. Otherwise, the exception will simply be reraised. The 
+ment after the statement that raised the exception, or possibly
+some other unit. The choice to return to the statement that raised
+the exception may seem like a good one, but in the case of an
+error exception, it is useful only if the handler somehow is able
+to modify the values or operations that caused the exception to
+be raised. Otherwise, the exception will simply be reraised. The
 required modification for an error exception is often very dif-
-ficult to predict. Even when possible, however, it may not be a 
-sound practice. It allows the program to remove the symptom of 
+ficult to predict. Even when possible, however, it may not be a
+sound practice. It allows the program to remove the symptom of
 a problem without removing the cause.
 The two issues of binding of exceptions to handlers and con-
 tinuation are illustrated in Figure 14.1.
 history note
-PL/I (ANSI, 1976) pioneered 
-the concept of allowing user 
-programs to be directly involved 
-in exception handling. The 
-language allowed the user to 
-write exception handlers for a 
-long list of language-defined 
-exceptions. Furthermore, PL/I 
-introduced the concept of 
-user-defined exceptions, which 
-allow programs to create 
-software-detected exceptions. 
-These exceptions use the same 
-mechanisms that are used for 
-the built-in exceptions. 
-Since PL/I was designed, a 
-substantial amount of work has 
-been done to design alternative 
-methods of exception handling. 
-In particular, CLU (Liskov et al., 
-1984), Mesa (Mitchell et al., 
-1979), Ada, COMMON LISP 
-(Steele, 1990), ML (Milner 
-et al., 1990), C++, Modula-3 
-(Cardelli et al., 1989), Eiffel, 
+PL/I (ANSI, 1976) pioneered
+the concept of allowing user
+programs to be directly involved
+in exception handling. The
+language allowed the user to
+write exception handlers for a
+long list of language-defined
+exceptions. Furthermore, PL/I
+introduced the concept of
+user-defined exceptions, which
+allow programs to create
+software-detected exceptions.
+These exceptions use the same
+mechanisms that are used for
+the built-in exceptions.
+Since PL/I was designed, a
+substantial amount of work has
+been done to design alternative
+methods of exception handling.
+In particular, CLU (Liskov et al.,
+1984), Mesa (Mitchell et al.,
+1979), Ada, COMMON LISP
+(Steele, 1990), ML (Milner
+et al., 1990), C++, Modula-3
+(Cardelli et al., 1989), Eiffel,
 Java, and C# include exception-
 handling facilities.
 \n 14.1 Introduction to Exception Handling     635
 When exception handling is included, a subprogram’s execution can ter-
-minate in two ways: when its execution is complete or when it encounters an 
-exception. In some situations, it is necessary to complete some computation 
-regardless of how subprogram execution terminates. The ability to specify such 
+minate in two ways: when its execution is complete or when it encounters an
+exception. In some situations, it is necessary to complete some computation
+regardless of how subprogram execution terminates. The ability to specify such
 a computation is called finalization. The choice of whether to support finaliza-
 tion is obviously a design issue for exception handling.
 Another design issue is the following: If users are allowed to define excep-
-tions, how are these exceptions specified? The usual answer is to require that 
-they be declared in the specification parts of the program units in which they 
-can be raised. The scope of a declared exception is usually the scope of the 
-program unit that contains the declaration. 
-In the case where a language provides predefined exceptions, several other 
-design issues follow. For example, should the language run-time system provide 
-default handlers for the built-in exceptions, or should the user be required 
-to write handlers for all exceptions? Another question is whether predefined 
-exceptions can be raised explicitly by the user program. This usage can be 
-convenient if there are software-detectable situations in which the user would 
+tions, how are these exceptions specified? The usual answer is to require that
+they be declared in the specification parts of the program units in which they
+can be raised. The scope of a declared exception is usually the scope of the
+program unit that contains the declaration.
+In the case where a language provides predefined exceptions, several other
+design issues follow. For example, should the language run-time system provide
+default handlers for the built-in exceptions, or should the user be required
+to write handlers for all exceptions? Another question is whether predefined
+exceptions can be raised explicitly by the user program. This usage can be
+convenient if there are software-detectable situations in which the user would
 like to use a predefined handler.
-Another issue is whether hardware-detectable errors can be handled by 
-user programs. If not, all exceptions obviously are software detectable. A related 
-question is whether there should be any predefined exceptions. Predefined 
+Another issue is whether hardware-detectable errors can be handled by
+user programs. If not, all exceptions obviously are software detectable. A related
+question is whether there should be any predefined exceptions. Predefined
 exceptions are implicitly raised by either hardware or system software.
-Finally, there is the question of whether exceptions, either predefined or 
-user defined, can be temporarily or permanently disabled. This question is 
+Finally, there is the question of whether exceptions, either predefined or
+user defined, can be temporarily or permanently disabled. This question is
 Figure 14.1
 Exception-handling control flow
 •
@@ -316,14 +316,14 @@ epti
 on t
 o h
 andl
-er binding 
+er binding
 C
 o
 n
 t
 inuatio
 n
- 
+
 Executing code
 Exception handlers
 Exception
@@ -336,17 +336,17 @@ is raised
 …
 …
 …
-\n636     Chapter 14  Exception Handling and Event Handling 
-somewhat philosophical, particularly in the case of predefined error conditions. 
-For example, suppose a language has a predefined exception that is raised when 
-a subscript range error occurs. Many believe that subscript range errors should 
-always be detected, and therefore it should not be possible for the program to 
-disable detection of these errors. Others argue that subscript range checking is 
-too costly for production software, where, presumably, the code is sufficiently 
+\n636     Chapter 14  Exception Handling and Event Handling
+somewhat philosophical, particularly in the case of predefined error conditions.
+For example, suppose a language has a predefined exception that is raised when
+a subscript range error occurs. Many believe that subscript range errors should
+always be detected, and therefore it should not be possible for the program to
+disable detection of these errors. Others argue that subscript range checking is
+too costly for production software, where, presumably, the code is sufficiently
 error free that range errors should not occur.
 The exception-handling design issues can be summarized as follows:
-• How and where are exception handlers specified, and what is their scope? 
-• How is an exception occurrence bound to an exception handler? 
+• How and where are exception handlers specified, and what is their scope?
+• How is an exception occurrence bound to an exception handler?
 • Can information about an exception be passed to the handler?
 • Where does execution continue, if at all, after an exception handler com-
 pletes its execution? (This is the question of continuation or resumption.)
@@ -357,37 +357,37 @@ dlers for programs that do not provide their own?
 • Can predefined exceptions be explicitly raised?
 • Are hardware-detectable errors treated as exceptions that may be handled?
 • Are there any predefined exceptions?
-• Should it be possible to disable predefined exceptions? 
-We are now in a position to examine the exception-handling facilities of 
+• Should it be possible to disable predefined exceptions?
+We are now in a position to examine the exception-handling facilities of
 three contemporary programming languages.
 14.2 Exception Handling in Ada
-Exception handling in Ada is a powerful tool for constructing more reliable 
-software systems. It is based on the good parts of the exception-handling design 
+Exception handling in Ada is a powerful tool for constructing more reliable
+software systems. It is based on the good parts of the exception-handling design
 of two earlier languages with exception handling—PL/I and CLU.
 14.2.1 Exception Handlers
-Ada exception handlers are often local to the code in which the exception can 
-be raised (although they can be propagated to other program units). Because 
-this provides them with the same referencing environment, parameters for 
-handlers are not necessary and are not allowed. Therefore, if an exception is 
+Ada exception handlers are often local to the code in which the exception can
+be raised (although they can be propagated to other program units). Because
+this provides them with the same referencing environment, parameters for
+handlers are not necessary and are not allowed. Therefore, if an exception is
 handled in a unit different from the unit that raised the exception, no informa-
 tion about the exception can be passed to the handler.3
- 
+
 3. Not quite true. It is possible for the handler to retrieve the exception name, a short descrip-
 tion of the exception, and the approximate location where the exception was raised.
 \n 14.2 Exception Handling in Ada     637
 Exception handlers have the following general form, given here in EBNF:
-when exception_choice {| exception_choice} => statement_sequence 
-Recall that the braces are metasymbols that mean that what they contain may 
+when exception_choice {| exception_choice} => statement_sequence
+Recall that the braces are metasymbols that mean that what they contain may
 be left out or repeated any number of times. The exception_choice has the form
 exception_name | others
-The exception_name indicates a particular exception that this handler is meant 
-to handle. The statement sequence is the handler body. The reserved word 
-others indicates that the handler is meant to handle any exceptions not named 
+The exception_name indicates a particular exception that this handler is meant
+to handle. The statement sequence is the handler body. The reserved word
+others indicates that the handler is meant to handle any exceptions not named
 in any other local handler.
 Exception handlers can be included in blocks or in the bodies of subpro-
-grams, packages, or tasks. Regardless of the block or unit in which they appear, 
-handlers are gathered together in an exception clause, which must be placed 
-at the end of the block or unit. For example, the usual form of an exception 
+grams, packages, or tasks. Regardless of the block or unit in which they appear,
+handlers are gathered together in an exception clause, which must be placed
+at the end of the block or unit. For example, the usual form of an exception
 clause is shown in the following:
 begin
 -- the block or unit body --
@@ -398,65 +398,65 @@ exception
         -- second handler --
         -- other handlers --
 end;
-Any statement that can appear in the block or unit in which the handler appears 
+Any statement that can appear in the block or unit in which the handler appears
 is also legal in the handler.
 14.2.2 Binding Exceptions to Handlers
-When the block or unit that raises an exception includes a handler for that 
-exception, the exception is statically bound to that handler. If an exception 
-is raised in a block or unit that does not have a handler for that particular 
-exception, the exception is propagated to some other block or unit. The 
-way exceptions are propagated depends on the program entity in which the 
-exception occurs. 
-When an exception is raised in a procedure, whether in the elaboration 
-of its declarations or in the execution of its body, and the procedure has no 
-handler for it, the exception is implicitly propagated to the calling program 
-unit at the point of the call. This policy is reflective of the design philosophy 
-that exception propagation from subprograms should trace back through the 
-control path (dynamic ancestors), not through static ancestors. 
-If the calling unit to which an exception has been propagated also has 
-no handler for the exception, it is again propagated to that unit’s caller. This 
-\n638     Chapter 14  Exception Handling and Event Handling 
-continues, if necessary, to the main procedure, which is the dynamic root of 
-every Ada program. If an exception is propagated to the main procedure and a 
-handler is still not found, the program is terminated. 
-In the realm of exception handling, an Ada block is considered to be a 
+When the block or unit that raises an exception includes a handler for that
+exception, the exception is statically bound to that handler. If an exception
+is raised in a block or unit that does not have a handler for that particular
+exception, the exception is propagated to some other block or unit. The
+way exceptions are propagated depends on the program entity in which the
+exception occurs.
+When an exception is raised in a procedure, whether in the elaboration
+of its declarations or in the execution of its body, and the procedure has no
+handler for it, the exception is implicitly propagated to the calling program
+unit at the point of the call. This policy is reflective of the design philosophy
+that exception propagation from subprograms should trace back through the
+control path (dynamic ancestors), not through static ancestors.
+If the calling unit to which an exception has been propagated also has
+no handler for the exception, it is again propagated to that unit’s caller. This
+\n638     Chapter 14  Exception Handling and Event Handling
+continues, if necessary, to the main procedure, which is the dynamic root of
+every Ada program. If an exception is propagated to the main procedure and a
+handler is still not found, the program is terminated.
+In the realm of exception handling, an Ada block is considered to be a
 parameterless procedure that is “called” by its parent block when execution con-
-trol reaches the block’s first statement. When an exception is raised in a block, 
-in either its declarations or executable statements, and the block has no handler 
-for it, the exception is propagated to the next larger enclosing static scope, which 
-is the code that “called” it. The point to which the exception is propagated is 
+trol reaches the block’s first statement. When an exception is raised in a block,
+in either its declarations or executable statements, and the block has no handler
+for it, the exception is propagated to the next larger enclosing static scope, which
+is the code that “called” it. The point to which the exception is propagated is
 just after the end of the block in which it occurred, which is its “return” point.
-When an exception is raised in a package body and the package body 
+When an exception is raised in a package body and the package body
 has no handler for the exception, the exception is propagated to the declara-
-tion section of the unit containing the package declaration. If the package 
-happens to be a library unit (which is separately compiled), the program is 
-terminated. 
-If an exception occurs at the outermost level in a task body (not in a nested 
+tion section of the unit containing the package declaration. If the package
+happens to be a library unit (which is separately compiled), the program is
+terminated.
+If an exception occurs at the outermost level in a task body (not in a nested
 block) and the task contains a handler for the exception, that handler is exe-
-cuted and the task is marked as being completed. If the task does not have a 
-handler for the exception, the task is simply marked as being completed; the 
-exception is not propagated. The control mechanism of a task is too complex 
-to lend itself to a reasonable and simple answer to the question of where its 
+cuted and the task is marked as being completed. If the task does not have a
+handler for the exception, the task is simply marked as being completed; the
+exception is not propagated. The control mechanism of a task is too complex
+to lend itself to a reasonable and simple answer to the question of where its
 unhandled exceptions should be propagated.
 Exceptions can also occur during the elaboration of the declarative sec-
-tions of subprograms, blocks, packages, and tasks. When such exceptions 
-are raised in procedures, packages, and blocks, they are propagated exactly 
-as if the exception were raised in the associated code section. In the case of 
-a task, the task is marked as being completed, no further elaboration takes 
-place, and the built-in exception Tasking_Error is raised at the point of 
+tions of subprograms, blocks, packages, and tasks. When such exceptions
+are raised in procedures, packages, and blocks, they are propagated exactly
+as if the exception were raised in the associated code section. In the case of
+a task, the task is marked as being completed, no further elaboration takes
+place, and the built-in exception Tasking_Error is raised at the point of
 activation for the task.
 14.2.3 Continuation
-In Ada, the block or unit that raises an exception, along with all units to which 
-the exception was propagated but that did not handle it, is always terminated. 
-Control never returns implicitly to the raising block or unit after the exception 
-is handled. Control simply continues after the exception clause, which is always 
-at the end of a block or unit. This causes an immediate return to a higher level 
+In Ada, the block or unit that raises an exception, along with all units to which
+the exception was propagated but that did not handle it, is always terminated.
+Control never returns implicitly to the raising block or unit after the exception
+is handled. Control simply continues after the exception clause, which is always
+at the end of a block or unit. This causes an immediate return to a higher level
 of control.
-When deciding where execution would continue after exception  handler 
-execution was completed in a program unit, the Ada design team had little 
-choice, because the requirements specification for Ada (Department of 
-Defense, 1980a) clearly states that program units that raise exceptions cannot 
-be continued or resumed. However, in the case of a block, a statement can be 
-retried after it raises an exception and that exception is handled. For example, 
-suppose a statement that can raise an exception and a handler for that exception 
+When deciding where execution would continue after exception  handler
+execution was completed in a program unit, the Ada design team had little
+choice, because the requirements specification for Ada (Department of
+Defense, 1980a) clearly states that program units that raise exceptions cannot
+be continued or resumed. However, in the case of a block, a statement can be
+retried after it raises an exception and that exception is handled. For example,
+suppose a statement that can raise an exception and a handler for that exception
 are both enclosed in a block, which is itself enclosed in a loop. The following

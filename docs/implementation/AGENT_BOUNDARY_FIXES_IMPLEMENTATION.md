@@ -822,7 +822,7 @@ After reviewing the official PydanticAI graph documentation, the current directo
 from pydantic_graph import Graph, BaseNode, GraphRunContext
 
 # This IS the correct approach for complex multi-agent systems
-@dataclass 
+@dataclass
 class WorkflowState:
     query: str
     config: ExtractionConfig | None = None
@@ -837,7 +837,7 @@ class AnalyzeDomainNode(BaseNode[WorkflowState]):
 ```
 
 **PydanticAI Official Position**: For complex multi-agent workflows, graphs provide:
-- **State persistence** for long-running operations  
+- **State persistence** for long-running operations
 - **Fault recovery** with automatic resume capability
 - **Visual debugging** with mermaid diagram generation
 - **Type-safe transitions** between workflow stages
@@ -851,7 +851,7 @@ agents/orchestration/ - 5 orchestrator files (CONFIRMED ISSUE)
 ├── config_extraction_orchestrator.py    # Should be graph workflow
 ├── search_orchestrator.py               # Should be graph nodes
 ├── unified_orchestrator.py              # Contains old patterns
-├── workflow_orchestrator.py             # Should be consolidated  
+├── workflow_orchestrator.py             # Should be consolidated
 ├── pydantic_integration.py              # Should use graph delegation
 ```
 
@@ -864,7 +864,7 @@ agents/orchestration/ - 5 orchestrator files (CONFIRMED ISSUE)
 ```
 agents/tools/ - 6 tool files (IMPROVEMENT OPPORTUNITY)
 ├── config_tools.py         # Could be in domain_intelligence/toolsets.py
-├── extraction_tools.py     # Could be in knowledge_extraction/toolsets.py  
+├── extraction_tools.py     # Could be in knowledge_extraction/toolsets.py
 ├── search_tools.py         # Could be in universal_search/toolsets.py
 ├── consolidated_tools.py   # Could be shared/toolsets.py
 ```
@@ -877,7 +877,7 @@ agents/tools/ - 6 tool files (IMPROVEMENT OPPORTUNITY)
 
 ```
 agents/workflows/                    # Graph-based control flow - CORRECT ✅
-├── config_extraction_graph.py      # Single graph for workflow - CORRECT ✅ 
+├── config_extraction_graph.py      # Single graph for workflow - CORRECT ✅
 ├── search_workflow_graph.py        # Graph nodes for search - CORRECT ✅
 └── state_persistence.py            # Production state management - CORRECT ✅
 ```
@@ -1130,27 +1130,27 @@ class WorkflowState:
 
 class UnifiedWorkflowOrchestrator:
     """Consolidates multiple orchestrators into single workflow control"""
-    
+
     async def execute_config_extraction_workflow(
-        self, 
-        ctx: RunContext[WorkflowDeps], 
+        self,
+        ctx: RunContext[WorkflowDeps],
         data: str
     ) -> WorkflowResults:
         # Stage 1: Domain Analysis
         domain_result = await domain_intelligence_agent.run(
             data, deps=ctx.deps, usage=ctx.usage
         )
-        
-        # Stage 2: Knowledge Extraction  
+
+        # Stage 2: Knowledge Extraction
         extraction_result = await knowledge_extraction_agent.run(
             data, config=domain_result.output, deps=ctx.deps, usage=ctx.usage
         )
-        
+
         # Stage 3: Search Orchestration
         search_result = await universal_search_agent.run(
             data, context=extraction_result.output, deps=ctx.deps, usage=ctx.usage
         )
-        
+
         return WorkflowResults.combine(domain_result, extraction_result, search_result)
 ```
 
@@ -1167,7 +1167,7 @@ async def analyze_domain_patterns(ctx: RunContext[DomainDeps], content: str) -> 
     """Tool co-located with agent - proper PydanticAI pattern"""
     return await ctx.deps.azure_services.analyze_patterns(content)
 
-@domain_agent.tool  
+@domain_agent.tool
 async def generate_extraction_config(ctx: RunContext[DomainDeps], patterns: PatternResults) -> ExtractionConfig:
     """Generate configuration based on discovered patterns"""
     return await ctx.deps.config_generator.create_config(patterns)
@@ -1437,7 +1437,7 @@ class PerformanceToolset(Toolset):
 
 The following sophisticated features represent significant R&D investment and competitive differentiation:
 
-#### **1. Tri-Modal Search Unity System** 
+#### **1. Tri-Modal Search Unity System**
 **Location**: `/infrastructure/search/tri_modal_orchestrator.py`
 - **Unique Value**: Simultaneous Vector + Graph + GNN search execution with correlation tracking
 - **Preservation Strategy**: Maintain orchestration algorithms during boundary consolidation
@@ -1463,7 +1463,7 @@ The following sophisticated features represent significant R&D investment and co
 
 #### **5. Enterprise Infrastructure Features**
 - **Azure Cosmos DB Gremlin Integration** (1078 lines): Thread-safe async operations, managed identity
-- **Workflow Evidence Collection**: Enterprise audit trail with Azure service cost correlation  
+- **Workflow Evidence Collection**: Enterprise audit trail with Azure service cost correlation
 - **Streaming Response System**: Real-time workflow progress with service transparency
 - **Azure Prompt Flow Integration**: Production workflow DAG with multi-node processing
 
@@ -1486,7 +1486,7 @@ The following sophisticated features represent significant R&D investment and co
 ### **Phase 1: Tool Co-Location (1 week)**
 
 1. **Relocate tool files** - Move 6 tool files from `/agents/tools/` to respective agent directories
-2. **Implement Toolset classes** - Convert tool modules to PydanticAI Toolset pattern  
+2. **Implement Toolset classes** - Convert tool modules to PydanticAI Toolset pattern
 3. **Update agent imports** - Modify agents to use co-located tools with `@agent.tool` decorators
 4. **Validate preservation** - Ensure critical features remain functional after tool relocation
 
@@ -1547,7 +1547,7 @@ The following sophisticated features represent significant R&D investment and co
 
 **Critical Feature Preservation KPIs**:
 - ✅ **100% tri-modal search functionality** maintained during orchestration changes
-- ✅ **100% hybrid domain intelligence** algorithms preserved and enhanced  
+- ✅ **100% hybrid domain intelligence** algorithms preserved and enhanced
 - ✅ **100% configuration-extraction pipeline** automation maintained
 - ✅ **100% GNN training capabilities** preserved with improved Azure ML integration
 - ✅ **100% enterprise infrastructure** features maintained (cost tracking, evidence, streaming)
@@ -2026,7 +2026,7 @@ After validating against official PydanticAI documentation, the Azure Universal 
 
 **Protected Assets** (Must Preserve):
 - ✅ **Tri-Modal Search Unity** - Simultaneous Vector + Graph + GNN search execution
-- ✅ **Hybrid Domain Intelligence** - LLM + Statistical analysis with mathematical optimization  
+- ✅ **Hybrid Domain Intelligence** - LLM + Statistical analysis with mathematical optimization
 - ✅ **Configuration-Extraction Pipeline** - Zero-config domain adaptation automation
 - ✅ **GNN Training Infrastructure** - PyTorch Geometric with Azure ML integration
 - ✅ **Enterprise Features** - Cost tracking, evidence collection, streaming responses

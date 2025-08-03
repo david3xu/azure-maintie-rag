@@ -54,7 +54,7 @@ def _calculate_entity_based_scores(self, entity_candidates: List[str]) -> Dict[s
         scores['technical_content'] += 1.0
 ```
 
-### 2. Action-Based Scoring  
+### 2. Action-Based Scoring
 **Replaced with**: `_calculate_action_based_scores()` - learns action patterns from actual content
 ```python
 def _calculate_action_based_scores(self, action_patterns: List[str]) -> Dict[str, float]:
@@ -125,7 +125,7 @@ Overall Result: 🎉 ALL TESTS PASSED
 
 ### Key Methods Added
 - `_calculate_entity_based_scores()` - Data-driven entity classification
-- `_calculate_action_based_scores()` - Pattern-based action analysis  
+- `_calculate_action_based_scores()` - Pattern-based action analysis
 - `_calculate_statistical_scores()` - Statistical feature analysis
 - `_has_technical_characteristics()` - Pattern recognition for technical content
 - `_has_process_characteristics()` - Pattern recognition for procedural content

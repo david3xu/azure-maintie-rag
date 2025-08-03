@@ -77,12 +77,16 @@ class BaseAzureClient(ABC):
         self.use_managed_identity = getattr(
             azure_settings, "use_managed_identity", True
         )
-        
+
         # Allow CLI authentication in development environment
         if not self.use_managed_identity:
-            logger.info(f"{self.__class__.__name__} using Azure CLI authentication for development")
+            logger.info(
+                f"{self.__class__.__name__} using Azure CLI authentication for development"
+            )
         else:
-            logger.info(f"{self.__class__.__name__} using managed identity authentication")
+            logger.info(
+                f"{self.__class__.__name__} using managed identity authentication"
+            )
 
     @abstractmethod
     def _get_default_endpoint(self) -> str:

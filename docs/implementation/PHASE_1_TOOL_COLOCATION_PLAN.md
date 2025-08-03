@@ -17,7 +17,7 @@ Phase 1 focuses on implementing PydanticAI best practices by co-locating tools w
 ```
 agents/tools/
 ├── config_tools.py         # 4 tools for domain intelligence
-├── extraction_tools.py     # 6 tools for knowledge extraction  
+├── extraction_tools.py     # 6 tools for knowledge extraction
 ├── search_tools.py         # 5 tools for universal search
 ├── consolidated_tools.py   # 8 shared tools
 ├── discovery_tools.py      # 3 tools for domain discovery
@@ -75,51 +75,51 @@ from pydantic_ai.tools import Toolset
 
 class DomainIntelligenceToolset(Toolset):
     """Tools for domain pattern analysis and configuration generation"""
-    
+
     @tool
     async def analyze_corpus_statistics(
-        self, 
-        ctx: RunContext[DomainDeps], 
+        self,
+        ctx: RunContext[DomainDeps],
         corpus_path: str
     ) -> StatisticalAnalysis:
         """Statistical analysis of corpus content for pattern detection"""
         # Migrate from tools/config_tools.py
-        
+
     @tool
     async def generate_semantic_patterns(
-        self, 
-        ctx: RunContext[DomainDeps], 
+        self,
+        ctx: RunContext[DomainDeps],
         content_sample: str
     ) -> SemanticPatterns:
         """LLM-powered semantic pattern discovery"""
         # Migrate from tools/config_tools.py
-        
+
     @tool
     async def create_extraction_config(
-        self, 
-        ctx: RunContext[DomainDeps], 
+        self,
+        ctx: RunContext[DomainDeps],
         patterns: CombinedPatterns
     ) -> ExtractionConfiguration:
         """Generate extraction configuration from discovered patterns - FULLY DATA-DRIVEN"""
         # ✅ DATA-DRIVEN - Learn all parameters from actual corpus analysis
         entity_types = await self._discover_entity_types_from_patterns(patterns.statistical_patterns)
         relationship_types = await self._discover_relationship_types_from_patterns(patterns.semantic_patterns)
-        
+
         # Calculate optimal thresholds from validation data
         entity_threshold = await self._calculate_confidence_threshold(patterns, "entity")
         relationship_threshold = await self._calculate_confidence_threshold(patterns, "relationship")
-        
+
         return ExtractionConfiguration(
             entity_types=entity_types,
             relationship_types=relationship_types,
             entity_confidence_threshold=entity_threshold,
             relationship_confidence_threshold=relationship_threshold
         )
-        
+
     @tool
     async def validate_pattern_quality(
-        self, 
-        ctx: RunContext[DomainDeps], 
+        self,
+        ctx: RunContext[DomainDeps],
         config: ExtractionConfiguration
     ) -> QualityMetrics:
         """Validate quality of discovered patterns and configuration"""
@@ -127,8 +127,8 @@ class DomainIntelligenceToolset(Toolset):
 
     @tool
     async def discover_domain_patterns(
-        self, 
-        ctx: RunContext[DomainDeps], 
+        self,
+        ctx: RunContext[DomainDeps],
         domain_data: str
     ) -> DomainPatterns:
         """Discover domain-specific patterns from raw data"""
@@ -140,40 +140,40 @@ class DomainIntelligenceToolset(Toolset):
 # agents/knowledge_extraction/toolsets.py
 class KnowledgeExtractionToolset(Toolset):
     """Tools for multi-strategy entity and relationship extraction"""
-    
+
     @tool
     async def extract_entities_multi_strategy(
-        self, 
-        ctx: RunContext[ExtractionDeps], 
-        text: str, 
+        self,
+        ctx: RunContext[ExtractionDeps],
+        text: str,
         config: ExtractionConfig
     ) -> EntityResults:
         """Multi-strategy entity extraction with confidence scoring"""
         # Migrate from tools/extraction_tools.py
-        
+
     @tool
     async def extract_relationships_contextual(
-        self, 
-        ctx: RunContext[ExtractionDeps], 
-        text: str, 
+        self,
+        ctx: RunContext[ExtractionDeps],
+        text: str,
         entities: List[Entity]
     ) -> RelationshipResults:
         """Context-aware relationship extraction between entities"""
         # Migrate from tools/extraction_tools.py
-        
+
     @tool
     async def validate_extraction_quality(
-        self, 
-        ctx: RunContext[ExtractionDeps], 
+        self,
+        ctx: RunContext[ExtractionDeps],
         results: ExtractionResults
     ) -> ValidationResults:
         """Comprehensive quality validation of extraction results"""
         # Migrate from tools/extraction_tools.py
-        
+
     @tool
     async def store_knowledge_graph(
-        self, 
-        ctx: RunContext[ExtractionDeps], 
+        self,
+        ctx: RunContext[ExtractionDeps],
         validated_results: ValidatedResults
     ) -> StorageResults:
         """Store validated knowledge graph in Azure Cosmos DB"""
@@ -185,41 +185,41 @@ class KnowledgeExtractionToolset(Toolset):
 # agents/universal_search/toolsets.py
 class UniversalSearchToolset(Toolset):
     """Tools for tri-modal search coordination and execution"""
-    
+
     @tool
     async def execute_vector_search(
-        self, 
-        ctx: RunContext[SearchDeps], 
-        query: str, 
+        self,
+        ctx: RunContext[SearchDeps],
+        query: str,
         filters: SearchFilters
     ) -> VectorResults:
         """Execute semantic vector search via Azure Cognitive Search"""
         # Migrate from tools/search_tools.py
-        
+
     @tool
     async def execute_graph_search(
-        self, 
-        ctx: RunContext[SearchDeps], 
-        query: str, 
+        self,
+        ctx: RunContext[SearchDeps],
+        query: str,
         graph_context: GraphContext
     ) -> GraphResults:
         """Execute graph traversal search via Azure Cosmos DB"""
         # Migrate from tools/search_tools.py
-        
+
     @tool
     async def execute_gnn_search(
-        self, 
-        ctx: RunContext[SearchDeps], 
-        query: str, 
+        self,
+        ctx: RunContext[SearchDeps],
+        query: str,
         pattern_context: PatternContext
     ) -> GNNResults:
         """Execute GNN pattern prediction via Azure ML"""
         # Migrate from tools/search_tools.py
-        
+
     @tool
     async def synthesize_search_results(
-        self, 
-        ctx: RunContext[SearchDeps], 
+        self,
+        ctx: RunContext[SearchDeps],
         tri_modal_results: TriModalResults
     ) -> FinalResults:
         """Synthesize and rank tri-modal search results"""
@@ -231,30 +231,30 @@ class UniversalSearchToolset(Toolset):
 # agents/shared/toolsets.py
 class AzureServiceToolset(Toolset):
     """Common Azure service operations available to all agents"""
-    
+
     @tool
     async def get_azure_credentials(self, ctx: RunContext[SharedDeps]) -> AzureCredentials:
         """Get managed identity credentials for Azure services"""
-        
+
     @tool
     async def monitor_service_health(self, ctx: RunContext[SharedDeps]) -> ServiceHealth:
         """Monitor health status of Azure services"""
-        
+
     @tool
     async def track_usage_metrics(self, ctx: RunContext[SharedDeps]) -> UsageMetrics:
         """Track usage metrics for Azure services"""
 
 class PerformanceToolset(Toolset):
     """Performance monitoring and optimization tools"""
-    
+
     @tool
     async def measure_response_time(self, ctx: RunContext[SharedDeps]) -> ResponseMetrics:
         """Measure and validate response time SLAs"""
-        
+
     @tool
     async def optimize_cache_strategy(self, ctx: RunContext[SharedDeps]) -> CacheOptimization:
         """Optimize caching strategies for performance"""
-        
+
     @tool
     async def validate_sla_compliance(self, ctx: RunContext[SharedDeps]) -> SLAStatus:
         """Validate compliance with sub-3-second SLA"""
@@ -364,12 +364,12 @@ class TestToolColocation:
         """Validate domain intelligence tools work via toolset"""
         agent = domain_agent
         result = await agent.run(
-            "analyze_corpus_statistics", 
+            "analyze_corpus_statistics",
             corpus_path="test_data/sample_corpus",
             deps=test_domain_deps
         )
         assert result.statistical_patterns is not None
-        
+
     async def test_knowledge_extraction_toolset(self):
         """Validate knowledge extraction tools work via toolset"""
         agent = knowledge_agent
@@ -380,7 +380,7 @@ class TestToolColocation:
             deps=test_extraction_deps
         )
         assert len(result.entities) > 0
-        
+
     async def test_universal_search_toolset(self):
         """Validate universal search tools work via toolset"""
         agent = search_agent
@@ -407,7 +407,7 @@ class TestCompetitiveAdvantagePreservation:
         assert result.vector_score > 0
         assert result.graph_score > 0
         assert result.gnn_score > 0
-        
+
     async def test_hybrid_domain_intelligence(self):
         """Ensure hybrid LLM+Statistical analysis preserved"""
         result = await domain_agent.run(
@@ -417,7 +417,7 @@ class TestCompetitiveAdvantagePreservation:
         )
         assert result.statistical_patterns is not None
         assert result.semantic_patterns is not None
-        
+
     async def test_config_extraction_workflow(self):
         """Ensure configuration-extraction pipeline preserved"""
         config_result = await domain_agent.run(
@@ -425,14 +425,14 @@ class TestCompetitiveAdvantagePreservation:
             patterns=sample_patterns,
             deps=test_deps
         )
-        
+
         extraction_result = await knowledge_agent.run(
             "extract_entities_multi_strategy",
             text=sample_text,
             config=config_result.output,
             deps=test_deps
         )
-        
+
         assert extraction_result.entities is not None
 ```
 
@@ -443,24 +443,24 @@ class TestPerformancePreservation:
     async def test_sub_3_second_response(self):
         """Validate sub-3-second response time maintained"""
         start_time = time.time()
-        
+
         result = await search_agent.run(
             "execute_vector_search",
             query="performance test query",
             filters=standard_filters,
             deps=production_deps
         )
-        
+
         execution_time = time.time() - start_time
         assert execution_time < 3.0, f"Response time {execution_time}s exceeds 3s SLA"
-        
+
     async def test_azure_service_integration(self):
         """Validate Azure service integration preserved"""
         health_result = await domain_agent.run(
             "monitor_service_health",
             deps=production_deps
         )
-        
+
         assert health_result.azure_openai_status == "healthy"
         assert health_result.azure_search_status == "healthy"
         assert health_result.azure_cosmos_status == "healthy"
@@ -493,44 +493,44 @@ class TestPerformancePreservation:
 ```python
 class DataDrivenConfigurationManager:
     """Generate all configuration parameters from actual operational data"""
-    
+
     async def _discover_entity_types_from_patterns(self, statistical_patterns: Dict) -> List[str]:
         """Discover entity types from statistical corpus analysis"""
         # Use TF-IDF and clustering to identify entity-like tokens
         token_frequencies = statistical_patterns["token_frequencies"]
         tfidf_scores = self._calculate_tfidf(token_frequencies)
-        
+
         # Cluster high-value tokens to identify entity types
         entity_clusters = self._cluster_by_statistical_properties(tfidf_scores)
         return self._extract_types_from_clusters(entity_clusters)
-    
+
     async def _discover_relationship_types_from_patterns(self, semantic_patterns: Dict) -> List[str]:
         """Discover relationship types from semantic pattern analysis"""
         # Use dependency parsing and co-occurrence patterns
         dependency_patterns = semantic_patterns["dependency_patterns"]
         cooccurrence_matrix = semantic_patterns["cooccurrence_matrix"]
-        
+
         # Analyze syntactic patterns to identify relationship types
         relationship_types = self._extract_relationships_from_dependencies(dependency_patterns)
         return self._validate_relationships_with_cooccurrence(relationship_types, cooccurrence_matrix)
-    
+
     async def _calculate_confidence_threshold(self, patterns: Dict, threshold_type: str) -> float:
         """Calculate optimal confidence thresholds from validation data"""
         validation_data = patterns.get("validation_metrics", {})
-        
+
         if threshold_type == "entity":
             precision_scores = validation_data.get("entity_precision_by_threshold", [])
             recall_scores = validation_data.get("entity_recall_by_threshold", [])
         else:  # relationship
             precision_scores = validation_data.get("relationship_precision_by_threshold", [])
             recall_scores = validation_data.get("relationship_recall_by_threshold", [])
-        
+
         # Calculate F1 scores and find optimal threshold
         f1_scores = [
             2 * (p * r) / (p + r) if (p + r) > 0 else 0
             for p, r in zip(precision_scores, recall_scores)
         ]
-        
+
         optimal_idx = np.argmax(f1_scores)
         return validation_data["thresholds"][optimal_idx]
 ```
@@ -541,18 +541,18 @@ class DataDrivenConfigurationManager:
         """Learn optimal chunk size from performance analytics"""
         document_sizes = corpus_statistics["document_size_distribution"]
         processing_times = corpus_statistics["processing_time_by_chunk_size"]
-        
+
         # Find chunk size that optimizes processing speed vs accuracy
         optimal_chunk_size = self._find_performance_optimal_chunk_size(document_sizes, processing_times)
         return max(1, min(optimal_chunk_size, 10))  # Reasonable bounds
-    
+
     async def _get_learned_sla_target(self, domain: str) -> float:
         """Learn SLA targets from historical performance data"""
         historical_data = await self._load_performance_history(domain)
-        
+
         if not historical_data:
             return 3.0  # Fallback to default if no data
-        
+
         # Use 95th percentile of historical performance as SLA target
         response_times = historical_data["response_times"]
         return np.percentile(response_times, 95)

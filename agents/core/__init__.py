@@ -12,16 +12,16 @@ All services follow dependency injection patterns and layer boundary rules.
 """
 
 from .azure_services import ConsolidatedAzureServices, create_azure_service_container
-from .cache_manager import UnifiedCacheManager, get_cache_manager, cached_operation
-from .memory_manager import UnifiedMemoryManager, get_memory_manager
+from .cache_manager import UnifiedCacheManager, cached_operation, get_cache_manager
 from .error_handler import UnifiedErrorHandler
+from .memory_manager import UnifiedMemoryManager, get_memory_manager
 from .pydantic_ai_provider import (
     create_azure_pydantic_provider,
     create_azure_pydantic_provider_async,
     create_pydantic_agent,
     create_pydantic_agent_async,
     test_azure_provider_connection,
-    test_azure_provider_connection_async
+    test_azure_provider_connection_async,
 )
 
 # Backward compatibility aliases
@@ -46,5 +46,5 @@ __all__ = [
     "test_azure_provider_connection_async",
     # Backward compatibility
     "AzureServiceContainer",
-    "DomainCache"
+    "DomainCache",
 ]

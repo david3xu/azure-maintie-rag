@@ -35,11 +35,11 @@ graph TD
     C[workflow_orchestrator.py] --> B
     C --> D[search_orchestrator.py]
     E[pydantic_integration.py] --> C
-    
+
     F[API Layer] --> A
     F --> C
     F --> D
-    
+
     style A fill:#90EE90
     style B fill:#90EE90
     style C fill:#FFB6C1
@@ -49,7 +49,7 @@ graph TD
 
 **Legend:**
 - 🟢 Green: Keep (Optimal)
-- 🔴 Pink: Remove (Redundant)  
+- 🔴 Pink: Remove (Redundant)
 - 🟡 Yellow: Simplify (Partial redundancy)
 
 ---
@@ -62,7 +62,7 @@ graph TD
 ```python
 # unified_orchestrator.py maintains all search modalities
 search_modalities: List[str] = Field(
-    default_factory=lambda: ["vector", "graph", "gnn"], 
+    default_factory=lambda: ["vector", "graph", "gnn"],
     description="Search modalities to use"
 )
 
@@ -94,7 +94,7 @@ async def _execute_parallel_search(self, request, strategy, azure_services):
 timeout_seconds: float = Field(120.0, description="Total processing timeout")
 ```
 
-### ✅ Zero-Config Domain Adaptation  
+### ✅ Zero-Config Domain Adaptation
 **Status: FULLY PRESERVED**
 
 ```python
@@ -155,7 +155,7 @@ result = await self.config_extraction_orchestrator.process_domain_documents(
    - **Reason**: Functionality fully covered by `OrchestrationStrategy.WORKFLOW_ONLY`
    - **Migration**: Update imports to use unified orchestrator
 
-2. **search_orchestrator.py** (640 lines)  
+2. **search_orchestrator.py** (640 lines)
    - **Reason**: Functionality fully covered by `OrchestrationStrategy.SEARCH_ONLY`
    - **Migration**: Update imports to use unified orchestrator
 
@@ -273,7 +273,7 @@ The orchestrator consolidation analysis confirms that **significant architectura
 
 ### Key Achievement Potential
 - **47% code reduction** without functionality loss
-- **Elimination of architectural redundancy** 
+- **Elimination of architectural redundancy**
 - **Preservation of enterprise competitive advantages**
 - **Maintained sub-3-second performance guarantee**
 - **Simplified maintenance and development workflow**
@@ -284,6 +284,6 @@ This consolidation will result in a **cleaner, more maintainable codebase** that
 
 ---
 
-*Generated: 2025-08-03*  
-*Analysis Scope: Azure Universal RAG Orchestration Architecture*  
+*Generated: 2025-08-03*
+*Analysis Scope: Azure Universal RAG Orchestration Architecture*
 *Competitive Advantages Status: 100% Preserved*

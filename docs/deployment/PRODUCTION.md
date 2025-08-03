@@ -16,12 +16,12 @@ The simplified Azure Universal RAG system is production-ready with 38% code redu
 graph TB
     A[Azure Load Balancer] --> B[FastAPI Instances]
     B --> C[SimplifiedUniversalAgent]
-    
+
     C --> D[Azure OpenAI]
     C --> E[Azure Cognitive Search]
     C --> F[Azure Cosmos DB]
     C --> G[Azure Blob Storage]
-    
+
     H[React Frontend] --> A
     I[Azure Static Web Apps] --> H
 ```
@@ -169,14 +169,14 @@ class ProductionSettings:
     MAX_WORKERS = 4
     KEEP_ALIVE = 65
     TIMEOUT = 300
-    
+
     # Cache configuration
     CACHE_SIZE = 10000
     CACHE_TTL = 300
-    
+
     # Memory management
     MEMORY_LIMIT_MB = 1000
-    
+
     # Competitive advantages preserved
     TRI_MODAL_SEARCH_ENABLED = True
     ZERO_CONFIG_DISCOVERY_ENABLED = True
@@ -257,7 +257,7 @@ tc.track_metric('CacheHitRate', 0.6)
 @router.get("/health/detailed")
 async def detailed_health_check():
     """Comprehensive production health check"""
-    
+
     health_status = {
         "status": "healthy",
         "simplified_architecture": True,
@@ -270,7 +270,7 @@ async def detailed_health_check():
         "azure_services": await check_azure_services(),
         "performance_metrics": await get_performance_metrics()
     }
-    
+
     return health_status
 ```
 
@@ -296,7 +296,7 @@ stages:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: '3.11'
-    
+
     - script: |
         cd backend
         make setup
@@ -355,11 +355,11 @@ PRODUCTION_METRICS = {
     "query_response_time": {"target": 3.0, "alert_threshold": 2.5},
     "domain_discovery_time": {"target": 0.1, "alert_threshold": 0.08},
     "cache_hit_rate": {"target": 0.6, "alert_threshold": 0.5},
-    
+
     # Competitive advantages
     "tri_modal_search_accuracy": {"target": 0.9, "alert_threshold": 0.85},
     "zero_config_success_rate": {"target": 0.95, "alert_threshold": 0.9},
-    
+
     # System health
     "error_rate": {"target": 0.01, "alert_threshold": 0.05},
     "availability": {"target": 0.999, "alert_threshold": 0.995}
@@ -393,7 +393,7 @@ az monitor metrics alert create \
    ```bash
    # Check Azure service latency
    curl -w "%{time_total}" https://your-openai-endpoint.openai.azure.com/v1/chat/completions
-   
+
    # Validate cache performance
    curl https://your-app.azurewebsites.net/api/v1/agent/metrics | jq '.cache_performance'
    ```
