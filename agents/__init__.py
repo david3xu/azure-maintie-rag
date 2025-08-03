@@ -51,6 +51,7 @@ from .domain_intelligence import (
 from .domain_intelligence.agent import (  # Agent tools
     DomainDetectionResult,
     get_domain_agent,
+    get_domain_intelligence_agent,  # ✅ Lazy function
 )
 
 # Import structured models
@@ -79,25 +80,27 @@ class SimpleQueryRequest:
         self.domain = domain
 
 
-# Import main agent interfaces
+# Import main agent interfaces (lazy functions only, no instances)
 from .universal_search.agent import (  # PydanticAI tools
-    UniversalAgentOrchestrator,
-    discover_available_domains,
-    get_universal_agent_orchestrator,
-    process_intelligent_query,
-    tri_modal_search,
-    universal_agent,
+    get_universal_agent,  # ✅ Lazy function
+    # Remove direct agent instance import to avoid initialization
 )
 
-# Import consolidated tools
-from .universal_search.consolidated_tools import (
-    SearchRequest,
-    ToolResponse,
-    execute_domain_intelligence,
-    execute_search_chain,
-    execute_tri_modal_search,
-    get_tool_manager,
+from .knowledge_extraction.agent import (  # Knowledge extraction tools
+    get_knowledge_extraction_agent,  # ✅ Lazy function
+    extract_knowledge_from_document,  # Function interface
+    extract_knowledge_from_documents,  # Batch processing
 )
+
+# Consolidated tools moved to toolsets.py following target architecture
+# from .universal_search.consolidated_tools import (
+#     SearchRequest,
+#     ToolResponse,
+#     execute_domain_intelligence,
+#     execute_search_chain,
+#     execute_tri_modal_search,
+#     get_tool_manager,
+# )
 
 # Legacy compatibility imports (for backward compatibility during transition)
 try:
@@ -130,6 +133,7 @@ __all__ = [
     "discover_available_domains",
     # Domain Intelligence Agent
     "domain_agent",
+    "get_domain_intelligence_agent",
     "DomainDetectionResult",
     "DomainAnalysisResult",
     "AvailableDomainsResult",
@@ -139,6 +143,10 @@ __all__ = [
     "generate_domain_config",
     "detect_domain_from_query",
     "process_domain_documents",
+    # Knowledge Extraction Agent
+    "get_knowledge_extraction_agent",
+    "extract_knowledge_from_document",
+    "extract_knowledge_from_documents",
     # Simplified interface (recommended)
     # "SimplifiedUniversalAgent",  # Temporarily disabled during restructuring
     # "get_universal_agent",        # Temporarily disabled during restructuring
@@ -159,13 +167,13 @@ __all__ = [
     "DomainClassification",
     "ExtractedPatterns",
     "LearnedPattern",
-    # Consolidated tools
-    "execute_tri_modal_search",
-    "execute_domain_intelligence",
-    "get_tool_manager",
-    "execute_search_chain",
-    "SearchRequest",
-    "ToolResponse",
+    # Consolidated tools moved to toolsets.py following target architecture
+    # "execute_tri_modal_search",
+    # "execute_domain_intelligence",
+    # "get_tool_manager",
+    # "execute_search_chain", 
+    # "SearchRequest",
+    # "ToolResponse",
     # Structured models
     "QueryRequest",
     "TriModalSearchResult",

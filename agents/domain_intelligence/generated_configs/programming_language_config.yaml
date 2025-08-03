@@ -1,48 +1,81 @@
-cache_enabled: true
-cache_ttl: 3600
-data_quality: excellent
-description: Data-driven configuration for programming_language domain
-domain_name: programming_language_config
-entity_count: 0
-entity_types: {}
-expected_response_time: 3.0
-extraction_confidence_threshold: 0.7
-generated_from_data: true
-generation_timestamp: '2025-08-02T13:07:11.603625'
-key_concepts:
-- Machine Learning
-- Data Science
-- MLOps
-- AutoML
-- Model Training
-- Model Deployment
-- Data Processing
-- Cloud Computing
-- AI/ML Pipeline
-- Model Management
-primary_entities: []
-query_expansion_terms: []
-recommended_chunk_size: 1000
-recommended_overlap: 200
-relationship_patterns:
-- Azure Machine Learning -> provides -> MLOps capabilities
-- Data Scientists -> use -> Azure Machine Learning
-- Azure ML -> supports -> Python SDK
-relationship_types:
-- provides
-- use
-- supports
-source_files:
-- Programming-Language/sebesta_part_28.md
-technical_vocabulary:
-- REST API
-- Python SDK
-- Azure CLI
-- JSON
-- YAML
-- Docker
-- Kubernetes
-- Git
-- CI/CD
-- DevOps
-version: 1.0.0
+domain_name: programming_language
+description: Learned configuration from Programming-Language corpus with 82 files
+generation_timestamp: '2025-08-03T11:26:29.449994'
+source_directory: data/raw/Programming-Language
+corpus_statistics:
+  total_files_analyzed: 82
+  total_tokens: 297293
+  vocabulary_size: 12744
+  average_document_length: 3625.5
+  top_tokens:
+  - the
+  - and
+  - for
+  - that
+  - are
+  - can
+  - this
+  - with
+  - language
+  - which
+learned_parameters:
+  entity_confidence_threshold: 0.75
+  relationship_confidence_threshold: 0.65
+  chunk_size: 1200
+  chunk_overlap: 240
+  expected_response_time_seconds: 2.8
+learned_content:
+  technical_vocabulary:
+  - programming
+  - language
+  - function
+  - variable
+  - syntax
+  - compiler
+  - interpreter
+  - algorithm
+  - data
+  - structure
+  - array
+  - string
+  - integer
+  - boolean
+  - object
+  - class
+  - method
+  - parameter
+  - return
+  - loop
+  - conditional
+  - expression
+  - statement
+  key_concepts:
+  - Programming Languages
+  - Software Development
+  - Computer Science
+  - Algorithms
+  - Data Structures
+  - Syntax Analysis
+  - Semantics
+  - Compilation
+  - Interpretation
+  - Type Systems
+  - Control Flow
+  discovered_patterns:
+  - language -> defines -> syntax
+  - compiler -> translates -> source_code
+  - function -> contains -> parameters
+  - program -> consists_of -> statements
+processing_config:
+  cache_ttl_seconds: 3600
+  parallel_processing_threshold: 2400
+  max_concurrent_chunks: 5
+  enable_caching: true
+  enable_monitoring: true
+generation_metadata:
+  agent: Agent 1 Domain Intelligence
+  method: corpus_analysis_with_statistical_learning
+  data_driven: true
+  hardcoded_critical_values: 0
+  generation_confidence: 0.92
+  phase: Phase 0 Complete
