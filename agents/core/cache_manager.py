@@ -693,8 +693,8 @@ class UnifiedCacheManager:
         return {
             "cache_size": len(self._cache),
             "max_size": self.max_size,
-            "hit_rate": self.metrics.hit_rate_percent(),
-            "fast_lookup_rate": self.metrics.fast_lookup_percent(),
+            "hit_rate": self.metrics.hit_rate_percent,
+            "fast_lookup_rate": self.metrics.fast_lookup_percent,
             "total_requests": self.metrics.hits + self.metrics.misses,
             "pattern_index_domains": len(self.pattern_index.word_to_domains),
             "cache_types": list(

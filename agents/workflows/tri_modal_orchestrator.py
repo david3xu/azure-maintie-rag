@@ -12,11 +12,11 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from .gnn_search import GNNSearchEngine
-from .graph_search import GraphSearchEngine
+from ..universal_search.gnn_search import GNNSearchEngine
+from ..universal_search.graph_search import GraphSearchEngine
 
 # Import search modalities
-from .vector_search import VectorSearchEngine
+from ..universal_search.vector_search import VectorSearchEngine
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +54,8 @@ class TriModalOrchestrator:
     """
 
     def __init__(self, timeout: float = None):
-        from ...config.timeout_config import timeout_config
-
-        self.timeout = timeout or timeout_config.tri_modal_search
+        # Default timeout for tri-modal search
+        self.timeout = timeout or 2.5  # Default 2.5 seconds
         self.vector_engine = VectorSearchEngine()
         self.graph_engine = GraphSearchEngine()
         self.gnn_engine = GNNSearchEngine()

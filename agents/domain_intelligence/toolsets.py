@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from pydantic_ai import RunContext
 from pydantic_ai.toolsets import FunctionToolset
 
-from agents.domain_intelligence.detailed_models import (
+from agents.models.domain_models import (
     DomainDeps, 
     ExtractionConfiguration, 
     StatisticalAnalysis, 
