@@ -1,18 +1,1 @@
-{
-  "b588f853f1de213a": {
-    "pattern_id": "b588f853f1de213a",
-    "pattern_text": "Analysis",
-    "pattern_type": "entity",
-    "confidence": 0.3432968333826576,
-    "frequency": 14,
-    "domains": [
-      "algorithms_domain"
-    ],
-    "learned_from": [
-      "extraction_model_names"
-    ],
-    "first_seen": 1754174601.3384223,
-    "last_updated": 1754175083.53014,
-    "usage_count": 0
-  }
-}
+{}

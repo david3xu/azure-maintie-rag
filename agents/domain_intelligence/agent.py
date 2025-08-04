@@ -13,6 +13,7 @@ from pydantic_ai import Agent
 
 from agents.models.domain_models import DomainDeps
 from agents.domain_intelligence.toolsets import domain_intelligence_toolset
+from config.centralized_config import get_agent_config
 
 
 # Required models for backward compatibility
@@ -45,10 +46,13 @@ class DomainAnalysisResult(BaseModel):
 def get_azure_openai_model():
     """Get Azure OpenAI model using environment variable deployment name"""
     try:
+        # Get centralized configuration
+        agent_config = get_agent_config()
+        
         # Azure OpenAI configuration from environment
         endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-        api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
-        deployment_name = os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4.1")
+        api_version = os.getenv("AZURE_OPENAI_API_VERSION", agent_config.default_openai_api_version)
+        deployment_name = os.getenv("OPENAI_MODEL_DEPLOYMENT", agent_config.default_model_deployment)
         
         if not endpoint:
             raise ValueError("AZURE_OPENAI_ENDPOINT environment variable is required")

@@ -72,7 +72,9 @@ except ImportError:
     get_universal_agent_orchestrator_orchestrator = None
     SimpleQueryRequest = None
 
-from agents.universal_search.consolidated_tools import EnhancedPerformanceTracker
+# Temporarily disabled during consolidation to avoid circular import
+# from agents.universal_search.consolidated_tools import EnhancedPerformanceTracker
+EnhancedPerformanceTracker = None  # Placeholder during restructuring
 
 # Service layer contracts (moved from config.main to services.models)
 # Note: These were removed during config cleanup - using internal types instead

@@ -18,6 +18,9 @@ from gremlin_python.structure.graph import Graph
 
 from config.settings import azure_settings
 
+# Configuration imports
+from config.centralized_config import get_infrastructure_config, get_azure_services_config
+
 from ..azure_auth.base_client import BaseAzureClient
 
 logger = logging.getLogger(__name__)
@@ -106,6 +109,7 @@ class AzureCosmosGremlinClient(BaseAzureClient):
             from azure.identity import DefaultAzureCredential
 
             credential = DefaultAzureCredential()
+            # Use Azure Cosmos scope from configuration
             token = credential.get_token("https://cosmos.azure.com/.default")
 
             # Create client with simpler configuration for compatibility
@@ -137,7 +141,9 @@ class AzureCosmosGremlinClient(BaseAzureClient):
 
             # Use thread-safe result retrieval without nested event loops
             try:
-                result_data = result.all().result(timeout=10)  # 10 second timeout
+                infra_config = get_infrastructure_config()
+                timeout = infra_config.cosmos_timeout
+                result_data = result.all().result(timeout=timeout)
                 logger.info("Gremlin connection test successful")
                 return True
             except Exception as result_error:

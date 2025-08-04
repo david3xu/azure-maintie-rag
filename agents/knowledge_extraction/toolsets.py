@@ -8,6 +8,7 @@ Target Structure:
 agents/knowledge_extraction/toolsets.py  # Extraction-specific Toolset classes
 
 Replaces tools/extraction_tools.py with proper agent co-location.
+Uses unified extraction processor for consolidated entity and relationship extraction.
 """
 
 import asyncio
@@ -17,6 +18,12 @@ from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel
 from pydantic_ai import RunContext
 from pydantic_ai.toolsets import FunctionToolset
+
+# Import centralized configuration
+from config.centralized_config import (
+    get_quality_assessment_config,
+    get_confidence_calculation_config
+)
 
 # Import models and dependencies (avoid circular imports)
 # Define simplified models locally to avoid circular dependencies
@@ -30,6 +37,7 @@ class ExtractionConfiguration(BaseModel):
     key_concepts: List[str] = []
     minimum_quality_score: float = 0.6
     enable_caching: bool = True
+    validation_criteria: Dict[str, Any] = {}
 
 
 class KnowledgeExtractionDeps(BaseModel):
@@ -70,64 +78,92 @@ class KnowledgeExtractionToolset(FunctionToolset):
     - Extraction-specific Toolset class in knowledge_extraction/toolsets.py
     - Replaces scattered @extraction_agent.tool decorators
     - Self-contained with agent co-location
+    - Uses unified extraction processor for consolidated processing
     """
 
     def __init__(self):
         super().__init__()
         
-        # Register core knowledge extraction tools
+        # Initialize unified extraction processor  
+        from .processors.unified_extraction_processor import UnifiedExtractionProcessor
+        self.unified_processor = UnifiedExtractionProcessor()
+        
+        # Register unified knowledge extraction tools
+        self.add_function(self.extract_knowledge_unified, name='extract_knowledge_unified')
         self.add_function(self.extract_entities_multi_strategy, name='extract_entities_multi_strategy')
-        self.add_function(self.extract_relationships_contextual, name='extract_relationships_contextual')
+        self.add_function(self.extract_relationships_contextual, name='extract_relationships_contextual') 
         self.add_function(self.validate_extraction_quality, name='validate_extraction_quality')
-        self.add_function(self.store_knowledge_graph, name='store_knowledge_graph')
+        self.add_function(self.generate_knowledge_graph, name='generate_knowledge_graph')
+
+    async def extract_knowledge_unified(
+        self, ctx: RunContext[KnowledgeExtractionDeps], 
+        document_content: str,
+        config: ExtractionConfiguration,
+        extraction_method: str = "hybrid"
+    ) -> Dict[str, Any]:
+        """Unified knowledge extraction using consolidated processor"""
+        try:
+            # Use the unified processor for complete extraction
+            result = await self.unified_processor.extract_knowledge_complete(
+                document_content, config, extraction_method
+            )
+            
+            return {
+                "entities": result.entities,
+                "relationships": result.relationships,
+                "entity_confidence_distribution": result.entity_confidence_distribution,
+                "relationship_confidence_distribution": result.relationship_confidence_distribution,
+                "processing_time": result.processing_time,
+                "total_entities": result.total_entities,
+                "total_relationships": result.total_relationships,
+                "average_entity_confidence": result.average_entity_confidence,
+                "average_relationship_confidence": result.average_relationship_confidence,
+                "validation_passed": result.validation_passed,
+                "validation_warnings": result.validation_warnings,
+                "extraction_method": result.extraction_method,
+                "graph_density": result.graph_density,
+                "connected_components": result.connected_components,
+                "coverage_percentage": result.coverage_percentage
+            }
+            
+        except Exception as e:
+            raise RuntimeError(f"Unified knowledge extraction failed: {str(e)}")
 
     async def extract_entities_multi_strategy(
         self, ctx: RunContext[KnowledgeExtractionDeps], 
         document_content: str, 
-        config: ExtractionConfiguration
+        config: ExtractionConfiguration,
+        extraction_method: str = "hybrid"
     ) -> Dict[str, Any]:
-        """Multi-strategy entity extraction with Azure integration"""
+        """Multi-strategy entity extraction using unified processor"""
         try:
-            start_time = time.time()
-            
-            # Strategy 1: Rule-based extraction for structured patterns
-            rule_based_entities = await self._extract_entities_rule_based(document_content, config)
-            
-            # Strategy 2: Azure Cognitive Services for standard entity types
-            azure_entities = await self._extract_entities_azure_cognitive(document_content, config)
-            
-            # Strategy 3: LLM-powered extraction for domain-specific entities
-            llm_entities = await self._extract_entities_llm(document_content, config)
-            
-            # Fusion and deduplication
-            entities = await self._fuse_entity_results(
-                rule_based_entities, azure_entities, llm_entities, config
+            # Use unified processor for entity extraction only
+            entities = await self.unified_processor._extract_entities_unified(
+                document_content, config, extraction_method
             )
             
-            processing_time = time.time() - start_time
+            # Convert to dict format expected by toolset
+            entity_dicts = [self.unified_processor._entity_to_dict(e) for e in entities]
             
             return {
-                "entities": entities,
-                "processing_time": processing_time,
-                "strategies_used": ["rule_based", "azure_cognitive", "llm"],
-                "total_entities": len(entities),
-                "confidence_score": self._calculate_entity_confidence(entities)
+                "entities": entity_dicts,
+                "total_entities": len(entity_dicts),
+                "extraction_method": extraction_method,
+                "confidence_score": sum(e.confidence for e in entities) / len(entities) if entities else 0.0
             }
             
         except Exception as e:
-            # Fallback extraction
-            return await self._fallback_entity_extraction(document_content, config, str(e))
+            raise RuntimeError(f"Entity extraction failed: {str(e)}")
 
     async def extract_relationships_contextual(
         self, ctx: RunContext[KnowledgeExtractionDeps], 
         document_content: str, 
         entities: List[Dict[str, Any]], 
-        config: ExtractionConfiguration
+        config: ExtractionConfiguration,
+        extraction_method: str = "hybrid"
     ) -> Dict[str, Any]:
-        """Advanced contextual relationship extraction"""
+        """Advanced contextual relationship extraction using unified processor"""
         try:
-            start_time = time.time()
-            
             if not entities:
                 return {
                     "relationships": [],
@@ -136,39 +172,34 @@ class KnowledgeExtractionToolset(FunctionToolset):
                     "confidence_score": 0.0
                 }
             
-            # Context-aware relationship extraction
-            relationships = []
+            # Convert entity dicts to EntityMatch objects for unified processor
+            from .processors.unified_extraction_processor import EntityMatch
+            entity_matches = []
+            for e in entities:
+                entity_matches.append(EntityMatch(
+                    text=e.get("name", e.get("text", "")),
+                    entity_type=e.get("type", "unknown"),
+                    start_position=e.get("start_position", 0),
+                    end_position=e.get("end_position", 0),
+                    confidence=e.get("confidence", 0.0),
+                    extraction_method=e.get("extraction_method", "unknown"),
+                    context=e.get("context", "")
+                ))
             
-            # Find co-occurrence relationships
-            cooccurrence_rels = await self._extract_cooccurrence_relationships(
-                document_content, entities, config
-            )
-            relationships.extend(cooccurrence_rels)
-            
-            # Extract syntactic dependency relationships
-            dependency_rels = await self._extract_dependency_relationships(
-                document_content, entities, config
-            )
-            relationships.extend(dependency_rels)
-            
-            # Extract semantic relationships using LLM
-            semantic_rels = await self._extract_semantic_relationships(
-                document_content, entities, config
-            )
-            relationships.extend(semantic_rels)
-            
-            # Filter and validate relationships
-            validated_relationships = await self._validate_relationships(
-                relationships, config
+            # Use unified processor for relationship extraction
+            relationships = await self.unified_processor._extract_relationships_unified(
+                document_content, entity_matches, config, extraction_method
             )
             
-            processing_time = time.time() - start_time
+            # Convert to dict format expected by toolset
+            relationship_dicts = [self.unified_processor._relationship_to_dict(r) for r in relationships]
             
             return {
-                "relationships": validated_relationships,
-                "processing_time": processing_time,
-                "relationship_types": list(set(r.get("type", "related") for r in validated_relationships)),
-                "confidence_score": self._calculate_relationship_confidence(validated_relationships)
+                "relationships": relationship_dicts,
+                "total_relationships": len(relationship_dicts),
+                "relationship_types": list(set(r.relation_type for r in relationships)),
+                "extraction_method": extraction_method,
+                "confidence_score": sum(r.confidence for r in relationships) / len(relationships) if relationships else 0.0
             }
             
         except Exception as e:
@@ -183,325 +214,121 @@ class KnowledgeExtractionToolset(FunctionToolset):
     async def validate_extraction_quality(
         self, ctx: RunContext[KnowledgeExtractionDeps], 
         entities: List[Dict[str, Any]], 
-        relationships: List[Dict[str, Any]], 
-        config: ExtractionConfiguration
+        relationships: List[Dict[str, Any]],
+        config: ExtractionConfiguration = None
     ) -> Dict[str, Any]:
-        """Comprehensive quality validation framework"""
+        """Validate extraction quality using unified processor's validation system"""
         try:
-            validation_results = {
-                "overall_quality": 0.0,
-                "entity_quality": 0.0,
-                "relationship_quality": 0.0,
-                "coverage_score": 0.0,
-                "consistency_score": 0.0,
-                "validation_passed": False,
-                "warnings": [],
-                "recommendations": []
-            }
+            if config is None:
+                config = ExtractionConfiguration()  # Use default config
             
-            # Entity quality assessment
-            entity_quality = await self._assess_entity_quality(entities, config)
-            validation_results["entity_quality"] = entity_quality
-            
-            # Relationship quality assessment
-            relationship_quality = await self._assess_relationship_quality(relationships, config)
-            validation_results["relationship_quality"] = relationship_quality
-            
-            # Coverage assessment
-            coverage_score = await self._assess_extraction_coverage(entities, relationships, config)
-            validation_results["coverage_score"] = coverage_score
-            
-            # Consistency assessment
-            consistency_score = await self._assess_extraction_consistency(entities, relationships, config)
-            validation_results["consistency_score"] = consistency_score
-            
-            # Overall quality calculation
-            overall_quality = (
-                entity_quality * 0.4 +
-                relationship_quality * 0.3 +
-                coverage_score * 0.2 +
-                consistency_score * 0.1
+            # Use the unified processor's validator
+            validation_result = self.unified_processor.validator.validate_extraction(
+                entities, relationships,
+                config.entity_confidence_threshold,
+                config.relationship_confidence_threshold
             )
-            validation_results["overall_quality"] = overall_quality
             
-            # Validation pass/fail determination
-            validation_results["validation_passed"] = overall_quality >= config.minimum_quality_score
-            
-            # Generate warnings and recommendations
-            if entity_quality < 0.7:
-                validation_results["warnings"].append("Entity quality below threshold")
-                validation_results["recommendations"].append("Consider adjusting entity confidence threshold")
-            
-            if relationship_quality < 0.6:
-                validation_results["warnings"].append("Relationship quality below threshold")
-                validation_results["recommendations"].append("Review relationship extraction patterns")
-            
-            if coverage_score < 0.5:
-                validation_results["warnings"].append("Low extraction coverage")
-                validation_results["recommendations"].append("Expand extraction strategies")
-            
-            return validation_results
+            return {
+                "validation_passed": validation_result.is_valid,
+                "entity_count": validation_result.entity_count,
+                "relationship_count": validation_result.relationship_count,
+                "errors": validation_result.errors,
+                "warnings": validation_result.warnings,
+                "overall_quality": 1.0 if validation_result.is_valid else 0.0
+            }
             
         except Exception as e:
             return {
-                "overall_quality": 0.0,
-                "entity_quality": 0.0,
-                "relationship_quality": 0.0,
-                "coverage_score": 0.0,
-                "consistency_score": 0.0,
                 "validation_passed": False,
-                "warnings": [f"Validation error: {str(e)}"],
-                "recommendations": ["Review extraction configuration"]
+                "entity_count": 0,
+                "relationship_count": 0,
+                "errors": [f"Validation failed: {str(e)}"],
+                "warnings": [],
+                "overall_quality": 0.0
             }
 
-    async def store_knowledge_graph(
+    async def generate_knowledge_graph(
         self, ctx: RunContext[KnowledgeExtractionDeps], 
         entities: List[Dict[str, Any]], 
-        relationships: List[Dict[str, Any]], 
-        config: ExtractionConfiguration
+        relationships: List[Dict[str, Any]],
+        config: ExtractionConfiguration = None
     ) -> Dict[str, Any]:
-        """Store validated knowledge graph in Azure Cosmos DB"""
+        """Generate knowledge graph from entities and relationships using unified processor"""
         try:
-            start_time = time.time()
+            if config is None:
+                config = ExtractionConfiguration()
+            
+            # Calculate graph metrics using the unified processor
+            from .processors.unified_extraction_processor import EntityMatch, RelationshipMatch
+            
+            # Convert to unified processor format for graph metrics calculation
+            entity_matches = []
+            for e in entities:
+                entity_matches.append(EntityMatch(
+                    text=e.get("name", e.get("text", "")),
+                    entity_type=e.get("type", "unknown"),
+                    start_position=e.get("start_position", 0),
+                    end_position=e.get("end_position", 0),
+                    confidence=e.get("confidence", 0.0),
+                    extraction_method=e.get("extraction_method", "unknown"),
+                    context=e.get("context", "")
+                ))
+            
+            relationship_matches = []
+            for r in relationships:
+                relationship_matches.append(RelationshipMatch(
+                    source_entity=r.get("source", ""),
+                    relation_type=r.get("relation", r.get("type", "related")),
+                    target_entity=r.get("target", ""),
+                    confidence=r.get("confidence", 0.0),
+                    extraction_method=r.get("extraction_method", "unknown"),
+                    start_position=r.get("start_position", 0),
+                    end_position=r.get("end_position", 0),
+                    context=r.get("context", "")
+                ))
+            
+            # Calculate graph metrics
+            graph_metrics = self.unified_processor._calculate_graph_metrics(
+                relationship_matches, entity_matches
+            )
             
             # Prepare knowledge graph structure
             knowledge_graph = {
                 "domain": config.domain_name,
-                "timestamp": time.time(),
+                "timestamp": asyncio.get_event_loop().time(),
                 "nodes": self._format_entities_as_nodes(entities),
                 "edges": self._format_relationships_as_edges(relationships),
                 "metadata": {
                     "entity_count": len(entities),
                     "relationship_count": len(relationships),
+                    "graph_density": graph_metrics["density"],
+                    "connected_components": graph_metrics["components"],
                     "extraction_config": config.domain_name
                 }
             }
             
-            # TODO: Implement actual Azure Cosmos DB storage
-            # For now, return mock storage results to establish the pattern
-            storage_results = {
-                "storage_successful": True,
-                "graph_id": f"graph_{config.domain_name}_{int(time.time())}",
-                "nodes_stored": len(knowledge_graph["nodes"]),
-                "edges_stored": len(knowledge_graph["edges"]),
-                "storage_time": time.time() - start_time,
-                "cosmos_db_endpoint": "mock://cosmos.db",
-                "collection_name": f"knowledge_graphs_{config.domain_name}"
+            return {
+                "knowledge_graph": knowledge_graph,
+                "nodes_count": len(entities),
+                "edges_count": len(relationships),
+                "graph_density": graph_metrics["density"],
+                "connected_components": graph_metrics["components"],
+                "storage_ready": True
             }
-            
-            return storage_results
             
         except Exception as e:
             return {
-                "storage_successful": False,
-                "graph_id": None,
-                "nodes_stored": 0,
-                "edges_stored": 0,
-                "storage_time": 0.0,
+                "knowledge_graph": None,
+                "nodes_count": 0,
+                "edges_count": 0,
+                "graph_density": 0.0,
+                "connected_components": 0,
+                "storage_ready": False,
                 "error": str(e)
             }
 
-    # Helper methods for multi-strategy entity extraction
-    async def _extract_entities_rule_based(
-        self, content: str, config: ExtractionConfiguration
-    ) -> List[Dict[str, Any]]:
-        """Rule-based entity extraction for structured patterns"""
-        entities = []
-        
-        # Extract entities from technical vocabulary
-        for term in config.technical_vocabulary:
-            if term.lower() in content.lower():
-                entities.append({
-                    "name": term,
-                    "type": "technical_term",
-                    "confidence": 0.85,
-                    "extraction_method": "rule_based",
-                    "context": self._extract_context(content, term)
-                })
-        
-        return entities
-
-    async def _extract_entities_azure_cognitive(
-        self, content: str, config: ExtractionConfiguration
-    ) -> List[Dict[str, Any]]:
-        """Azure Cognitive Services entity extraction"""
-        # TODO: Implement actual Azure Cognitive Services integration
-        # For now, return mock entities to establish the pattern
-        mock_entities = [
-            {
-                "name": "system",
-                "type": "technology",
-                "confidence": 0.92,
-                "extraction_method": "azure_cognitive",
-                "context": "technology system"
-            },
-            {
-                "name": "process",
-                "type": "procedure",
-                "confidence": 0.88,
-                "extraction_method": "azure_cognitive", 
-                "context": "operational process"
-            }
-        ]
-        
-        return mock_entities
-
-    async def _extract_entities_llm(
-        self, content: str, config: ExtractionConfiguration
-    ) -> List[Dict[str, Any]]:
-        """LLM-powered domain-specific entity extraction"""
-        # TODO: Implement actual LLM entity extraction using Azure OpenAI
-        # For now, return mock entities to establish the pattern
-        mock_entities = [
-            {
-                "name": "component",
-                "type": "system_component", 
-                "confidence": 0.79,
-                "extraction_method": "llm",
-                "context": "system component"
-            }
-        ]
-        
-        return mock_entities
-
-    async def _fuse_entity_results(
-        self, rule_entities: List, azure_entities: List, llm_entities: List, config: ExtractionConfiguration
-    ) -> List[Dict[str, Any]]:
-        """Fuse and deduplicate entity results from multiple strategies"""
-        all_entities = rule_entities + azure_entities + llm_entities
-        
-        # Simple deduplication by name (could be enhanced with similarity matching)
-        seen_names = set()
-        fused_entities = []
-        
-        for entity in all_entities:
-            name = entity.get("name", "").lower()
-            if name not in seen_names and entity.get("confidence", 0.0) >= config.entity_confidence_threshold:
-                seen_names.add(name)
-                fused_entities.append(entity)
-        
-        return fused_entities
-
-    # Helper methods for relationship extraction
-    async def _extract_cooccurrence_relationships(
-        self, content: str, entities: List[Dict[str, Any]], config: ExtractionConfiguration
-    ) -> List[Dict[str, Any]]:
-        """Extract relationships based on entity co-occurrence"""
-        relationships = []
-        
-        # Find entities that appear in the same sentence/context
-        for i, entity1 in enumerate(entities):
-            for entity2 in entities[i+1:]:
-                if self._entities_cooccur(content, entity1["name"], entity2["name"]):
-                    relationships.append({
-                        "source": entity1["name"],
-                        "target": entity2["name"],
-                        "type": "co_occurs_with",
-                        "confidence": 0.6,
-                        "extraction_method": "cooccurrence"
-                    })
-        
-        return relationships
-
-    async def _extract_dependency_relationships(
-        self, content: str, entities: List[Dict[str, Any]], config: ExtractionConfiguration
-    ) -> List[Dict[str, Any]]:
-        """Extract syntactic dependency relationships"""
-        # TODO: Implement actual dependency parsing
-        # For now, return mock relationships
-        return [
-            {
-                "source": "system",
-                "target": "component",
-                "type": "contains",
-                "confidence": 0.8,
-                "extraction_method": "dependency_parsing"
-            }
-        ]
-
-    async def _extract_semantic_relationships(
-        self, content: str, entities: List[Dict[str, Any]], config: ExtractionConfiguration
-    ) -> List[Dict[str, Any]]:
-        """Extract semantic relationships using LLM"""
-        # TODO: Implement actual LLM relationship extraction
-        # For now, return mock relationships
-        return [
-            {
-                "source": "process",
-                "target": "procedure",
-                "type": "implements",
-                "confidence": 0.75,
-                "extraction_method": "llm_semantic"
-            }
-        ]
-
-    async def _validate_relationships(
-        self, relationships: List[Dict[str, Any]], config: ExtractionConfiguration
-    ) -> List[Dict[str, Any]]:
-        """Filter and validate relationships"""
-        validated = []
-        
-        for rel in relationships:
-            if rel.get("confidence", 0.0) >= config.relationship_confidence_threshold:
-                validated.append(rel)
-        
-        return validated
-
-    # Helper methods for quality assessment
-    async def _assess_entity_quality(
-        self, entities: List[Dict[str, Any]], config: ExtractionConfiguration
-    ) -> float:
-        """Assess entity quality"""
-        if not entities:
-            return 0.0
-        
-        total_confidence = sum(e.get("confidence", 0.0) for e in entities)
-        return total_confidence / len(entities)
-
-    async def _assess_relationship_quality(
-        self, relationships: List[Dict[str, Any]], config: ExtractionConfiguration
-    ) -> float:
-        """Assess relationship quality"""
-        if not relationships:
-            return 0.0
-        
-        total_confidence = sum(r.get("confidence", 0.0) for r in relationships)
-        return total_confidence / len(relationships)
-
-    async def _assess_extraction_coverage(
-        self, entities: List[Dict[str, Any]], relationships: List[Dict[str, Any]], config: ExtractionConfiguration
-    ) -> float:
-        """Assess extraction coverage"""
-        # Coverage based on expected entity types found
-        found_types = set(e.get("type", "unknown") for e in entities)
-        expected_types = set(config.expected_entity_types)
-        
-        if not expected_types:
-            return 1.0
-        
-        coverage = len(found_types.intersection(expected_types)) / len(expected_types)
-        return coverage
-
-    async def _assess_extraction_consistency(
-        self, entities: List[Dict[str, Any]], relationships: List[Dict[str, Any]], config: ExtractionConfiguration
-    ) -> float:
-        """Assess extraction consistency"""
-        # Simple consistency check - relationships should reference existing entities
-        if not relationships or not entities:
-            return 1.0
-        
-        entity_names = set(e.get("name", "") for e in entities)
-        valid_relationships = 0
-        
-        for rel in relationships:
-            source = rel.get("source", "")
-            target = rel.get("target", "")
-            if source in entity_names and target in entity_names:
-                valid_relationships += 1
-        
-        return valid_relationships / len(relationships) if relationships else 1.0
-
-    # Storage helper methods
+    # Helper methods for knowledge graph formatting
     def _format_entities_as_nodes(self, entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Format entities as knowledge graph nodes"""
         nodes = []
@@ -528,7 +355,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
             edges.append({
                 "source": rel.get("source", "").replace(" ", "_"),
                 "target": rel.get("target", "").replace(" ", "_"),
-                "label": rel.get("type", "related"),
+                "label": rel.get("relation", rel.get("type", "related")),
                 "confidence": rel.get("confidence", 0.0),
                 "properties": {
                     "extraction_method": rel.get("extraction_method", "unknown")
@@ -537,73 +364,20 @@ class KnowledgeExtractionToolset(FunctionToolset):
         
         return edges
 
-    # Utility methods
-    def _extract_context(self, content: str, term: str, window_size: int = 50) -> str:
-        """Extract context around a term"""
-        try:
-            index = content.lower().find(term.lower())
-            if index != -1:
-                start = max(0, index - window_size)
-                end = min(len(content), index + len(term) + window_size)
-                return content[start:end].strip()
-        except:
-            pass
-        return ""
 
-    def _entities_cooccur(self, content: str, entity1: str, entity2: str, window_size: int = 100) -> bool:
-        """Check if two entities co-occur within a window"""
-        try:
-            content_lower = content.lower()
-            pos1 = content_lower.find(entity1.lower())
-            pos2 = content_lower.find(entity2.lower())
-            
-            if pos1 != -1 and pos2 != -1:
-                return abs(pos1 - pos2) <= window_size
-        except:
-            pass
-        return False
+# Create the toolset instance lazily to avoid circular imports
+_knowledge_extraction_toolset = None
 
-    def _calculate_entity_confidence(self, entities: List[Dict[str, Any]]) -> float:
-        """Calculate overall confidence for entities"""
-        if not entities:
-            return 0.0
-        
-        total_confidence = sum(e.get("confidence", 0.0) for e in entities)
-        return total_confidence / len(entities)
+def get_knowledge_extraction_toolset() -> KnowledgeExtractionToolset:
+    """Get the Knowledge Extraction toolset with lazy initialization"""
+    global _knowledge_extraction_toolset
+    if _knowledge_extraction_toolset is None:
+        _knowledge_extraction_toolset = KnowledgeExtractionToolset()
+    return _knowledge_extraction_toolset
 
-    def _calculate_relationship_confidence(self, relationships: List[Dict[str, Any]]) -> float:
-        """Calculate overall confidence for relationships"""
-        if not relationships:
-            return 0.0
-        
-        total_confidence = sum(r.get("confidence", 0.0) for r in relationships)
-        return total_confidence / len(relationships)
-
-    async def _fallback_entity_extraction(
-        self, content: str, config: ExtractionConfiguration, error: str
-    ) -> Dict[str, Any]:
-        """Fallback entity extraction when primary methods fail"""
-        # Basic extraction from technical vocabulary
-        basic_entities = []
-        
-        for term in config.technical_vocabulary[:5]:  # Limit to avoid overload
-            if term.lower() in content.lower():
-                basic_entities.append({
-                    "name": term,
-                    "type": "technical_term",
-                    "confidence": 0.5,  # Low confidence for fallback
-                    "extraction_method": "fallback"
-                })
-        
-        return {
-            "entities": basic_entities,
-            "processing_time": 0.1,
-            "strategies_used": ["fallback"],
-            "total_entities": len(basic_entities),
-            "confidence_score": 0.5,
-            "error": error
-        }
-
-
-# Create the main toolset instance following target architecture
-knowledge_extraction_toolset = KnowledgeExtractionToolset()
+# For backward compatibility - this will be created on first access
+def __getattr__(name):
+    """Module-level lazy loading"""
+    if name == "knowledge_extraction_toolset":
+        return get_knowledge_extraction_toolset()
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

@@ -20,6 +20,9 @@ from azure.identity import DefaultAzureCredential
 from pydantic_ai import Agent
 from pydantic_ai.providers.azure import AzureProvider
 
+# Configuration imports
+from config.centralized_config import get_model_config, get_azure_services_config, get_infrastructure_config
+
 # Import ConsolidatedAzureServices for dependency injection
 from .azure_services import ConsolidatedAzureServices
 
@@ -66,8 +69,11 @@ def create_azure_pydantic_provider(
                 azure_services = asyncio.run(create_azure_service_container())
 
         # Get Azure OpenAI configuration from consolidated services
+        model_config = get_model_config()
+        azure_services_config = get_azure_services_config()
+        
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-        api_version = os.getenv("OPENAI_API_VERSION", "2024-08-01-preview")
+        api_version = os.getenv("OPENAI_API_VERSION", model_config.openai_api_version)
 
         if not azure_endpoint:
             logger.warning(
@@ -77,7 +83,7 @@ def create_azure_pydantic_provider(
 
         # Create token provider with managed identity (through ConsolidatedAzureServices)
         token_provider = get_bearer_token_provider(
-            DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+            DefaultAzureCredential(), azure_services_config.cognitive_services_scope
         )
 
         # Create Azure OpenAI client with managed identity
@@ -125,8 +131,11 @@ async def create_azure_pydantic_provider_async(
             azure_services = await create_azure_service_container()
 
         # Get Azure OpenAI configuration from consolidated services
+        model_config = get_model_config()
+        azure_services_config = get_azure_services_config()
+        
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-        api_version = os.getenv("OPENAI_API_VERSION", "2024-08-01-preview")
+        api_version = os.getenv("OPENAI_API_VERSION", model_config.openai_api_version)
 
         if not azure_endpoint:
             logger.warning(
@@ -136,7 +145,7 @@ async def create_azure_pydantic_provider_async(
 
         # Create token provider with managed identity (through ConsolidatedAzureServices)
         token_provider = get_bearer_token_provider(
-            DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+            DefaultAzureCredential(), azure_services_config.cognitive_services_scope
         )
 
         # Create Azure OpenAI client with managed identity
@@ -160,7 +169,7 @@ async def create_azure_pydantic_provider_async(
 
 
 def create_pydantic_agent(
-    model_name: str = "gpt-4o",
+    model_name: str = None,
     system_prompt: str = None,
     agent_name: str = "azure-rag-agent",
     azure_services: Optional[ConsolidatedAzureServices] = None,
@@ -177,6 +186,11 @@ def create_pydantic_agent(
     Returns:
         Configured PydanticAI agent or None if provider creation failed
     """
+    # Get default model name from configuration if not provided
+    if model_name is None:
+        model_config = get_model_config()
+        model_name = model_config.gpt4o_deployment_name
+    
     # Create Azure provider with ConsolidatedAzureServices integration
     azure_provider = create_azure_pydantic_provider(azure_services)
 
@@ -222,7 +236,7 @@ def create_pydantic_agent(
 
 
 async def create_pydantic_agent_async(
-    model_name: str = "gpt-4o",
+    model_name: str = None,
     system_prompt: str = None,
     agent_name: str = "azure-rag-agent",
     azure_services: Optional[ConsolidatedAzureServices] = None,
@@ -241,6 +255,11 @@ async def create_pydantic_agent_async(
     Returns:
         Configured PydanticAI agent or None if provider creation failed
     """
+    # Get default model name from configuration if not provided
+    if model_name is None:
+        model_config = get_model_config()
+        model_name = model_config.gpt4o_deployment_name
+    
     # Create Azure provider with ConsolidatedAzureServices integration
     azure_provider = await create_azure_pydantic_provider_async(azure_services)
 
@@ -305,9 +324,10 @@ def test_azure_provider_connection(
             logger.error("❌ Azure provider creation failed")
             return False
 
-        # Create test agent
+        # Create test agent using default model from configuration
+        model_config = get_model_config()
         agent = create_pydantic_agent(
-            model_name=os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o"),
+            model_name=os.getenv("OPENAI_MODEL_DEPLOYMENT", model_config.gpt4o_deployment_name),
             system_prompt="You are a test agent for connection validation.",
             agent_name="test-connection-agent",
             azure_services=azure_services,
@@ -347,9 +367,10 @@ async def test_azure_provider_connection_async(
             logger.error("❌ Azure provider creation failed")
             return False
 
-        # Create test agent
+        # Create test agent using default model from configuration
+        model_config = get_model_config()
         agent = await create_pydantic_agent_async(
-            model_name=os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o"),
+            model_name=os.getenv("OPENAI_MODEL_DEPLOYMENT", model_config.gpt4o_deployment_name),
             system_prompt="You are a test agent for connection validation.",
             agent_name="test-connection-agent",
             azure_services=azure_services,

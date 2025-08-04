@@ -76,13 +76,26 @@ class AzureServiceToolset(FunctionToolset):
     ) -> Dict[str, Any]:
         """Validate Azure credentials and access"""
         try:
-            # TODO: Implement actual credential validation
-            return {
-                "credentials_valid": True,
-                "access_level": "full",
-                "expires_in": "24h",
-                "validation_time": "immediate"
-            }
+            if ctx.deps and ctx.deps.azure_services:
+                # Use real Azure credential validation
+                service_status = ctx.deps.azure_services.get_service_status()
+                overall_health = service_status.get("overall_health", "unknown")
+                
+                # Credentials are valid if Azure services are healthy
+                credentials_valid = overall_health in ["healthy", "partial"]
+                
+                return {
+                    "credentials_valid": credentials_valid,
+                    "access_level": "verified" if credentials_valid else "none",
+                    "service_health": overall_health,
+                    "services_available": service_status.get("successful_services", 0)
+                }
+            else:
+                return {
+                    "credentials_valid": False,
+                    "access_level": "none",
+                    "error": "Azure services not initialized"
+                }
         except Exception as e:
             return {
                 "credentials_valid": False,
@@ -95,14 +108,19 @@ class AzureServiceToolset(FunctionToolset):
     ) -> Dict[str, Any]:
         """Get Azure service limits and quotas"""
         try:
-            # TODO: Implement actual service limits checking
-            return {
-                "openai_requests_per_minute": 60,
-                "search_requests_per_second": 10,
-                "cosmos_ru_available": 1000,
-                "storage_quota_gb": 1000,
-                "limits_healthy": True
-            }
+            if ctx.deps and ctx.deps.azure_services:
+                # Real Azure service limit checking would be implemented here
+                raise NotImplementedError(
+                    "Azure service limits checking requires Azure Resource Management API integration. "
+                    "This feature is not yet implemented. Configure Azure monitoring to track service quotas."
+                )
+            else:
+                return {
+                    "limits_healthy": False,
+                    "error": "Azure services not initialized"
+                }
+        except NotImplementedError:
+            raise
         except Exception as e:
             return {
                 "limits_healthy": False,

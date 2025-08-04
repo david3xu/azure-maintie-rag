@@ -18,6 +18,9 @@ from ..universal_search.graph_search import GraphSearchEngine
 # Import search modalities
 from ..universal_search.vector_search import VectorSearchEngine
 
+# Import centralized configuration
+from config.centralized_config import get_workflow_timeouts_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,8 +57,9 @@ class TriModalOrchestrator:
     """
 
     def __init__(self, timeout: float = None):
-        # Default timeout for tri-modal search
-        self.timeout = timeout or 2.5  # Default 2.5 seconds
+        # Default timeout for tri-modal search (from centralized configuration)
+        timeout_config = get_workflow_timeouts_config()
+        self.timeout = timeout or timeout_config.tri_modal_orchestrator_timeout
         self.vector_engine = VectorSearchEngine()
         self.graph_engine = GraphSearchEngine()
         self.gnn_engine = GNNSearchEngine()

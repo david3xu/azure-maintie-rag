@@ -10,6 +10,9 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, validator
 
+# Import centralized configuration
+from config.centralized_config import get_pattern_recognition_config
+
 
 class SearchType(str, Enum):
     """Supported search types for tri-modal search"""
@@ -78,8 +81,9 @@ class QueryRequest(BaseModel):
         if not v.strip():
             raise ValueError("Query cannot be empty or whitespace only")
 
-        # Basic SQL injection prevention
-        dangerous_patterns = ["drop table", "delete from", "insert into", "update set"]
+        # Basic SQL injection prevention (from centralized configuration)
+        pattern_config = get_pattern_recognition_config()
+        dangerous_patterns = pattern_config.dangerous_patterns
         query_lower = v.lower()
         for pattern in dangerous_patterns:
             if pattern in query_lower:

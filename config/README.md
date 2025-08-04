@@ -1,0 +1,346 @@
+# Configuration Directory - Azure Universal RAG System
+
+This directory contains all configuration files and settings for the Azure Universal RAG system. It provides a centralized location for managing system behavior, Azure service integration, and agent parameters.
+
+## 🏗️ Configuration Architecture
+
+The configuration system follows a **layered architecture** with clear separation of concerns:
+
+```
+config/
+├── centralized_config.py          # 🎯 Core: All agent parameters (1,796 lines)
+├── azure_settings.py              # ☁️  Azure service configuration  
+├── settings.py                    # ⚙️  Application-level settings
+├── timeouts.py                    # ⏱️  Infrastructure timeouts
+├── environments/                   # 🌍 Environment-specific configs
+│   ├── development.env            # Development environment
+│   └── staging.env                # Staging environment
+└── learned_domain_configs/         # 🧠 AI-generated domain configurations
+    └── README.md                   # Domain configuration documentation
+```
+
+## 📋 Configuration Files Overview
+
+### 🎯 **centralized_config.py** - Core Agent Configuration
+**Purpose**: Single source of truth for all agent parameters  
+**Size**: 1,796 lines containing 470+ configuration parameters  
+**Scope**: All three agents (Domain Intelligence, Knowledge Extraction, Universal Search)
+
+**Key Features**:
+- **47 configuration dataclasses** covering all agent subsystems
+- **Environment variable overrides** for production deployment
+- **Type-safe configuration** with Pydantic validation
+- **JSON serialization/deserialization** for persistent storage
+- **Configuration manager** with lazy loading
+
+**Configuration Sections**:
+```python
+# Core Agent Configurations
+@dataclass
+class DomainIntelligenceConfiguration:        # Domain analysis parameters
+class KnowledgeExtractionConfiguration:       # Entity/relationship extraction  
+class UniversalSearchConfiguration:           # Tri-modal search orchestration
+
+# Processing Configurations
+@dataclass  
+class EntityProcessingConfiguration:          # Entity extraction parameters
+class RelationshipProcessingConfiguration:    # Relationship extraction parameters
+class ValidationConfiguration:                # Quality assessment parameters
+
+# Infrastructure Configurations
+@dataclass
+class AzureServicesConfiguration:             # Azure service integration
+class ModelConfiguration:                     # OpenAI model parameters
+class InfrastructureConfiguration:            # Timeouts, retries, connections
+```
+
+**Usage Example**:
+```python
+from config.centralized_config import get_entity_processing_config
+
+# Get typed configuration
+config = get_entity_processing_config()
+confidence_threshold = config.high_confidence_threshold  # 0.8
+
+# Environment override: AGENT_ENTITY_CONFIDENCE=0.9
+```
+
+---
+
+### ☁️ **azure_settings.py** - Azure Service Configuration
+**Purpose**: Azure service endpoints, credentials, and resource management  
+**Scope**: Infrastructure-level Azure integration  
+
+**Key Features**:
+- **Azure OpenAI** endpoint and API key management
+- **Azure Cognitive Search** service configuration  
+- **Azure Cosmos DB** connection strings
+- **Azure ML** workspace configuration
+- **DefaultAzureCredential** integration for production
+
+**Usage Example**:
+```python
+from config.azure_settings import azure_settings
+
+# Azure OpenAI configuration
+endpoint = azure_settings.azure_openai_endpoint
+api_key = azure_settings.azure_openai_api_key
+```
+
+---
+
+### ⚙️ **settings.py** - Application Settings
+**Purpose**: Application-level configuration and feature flags  
+**Scope**: Cross-cutting application concerns  
+
+**Key Features**:
+- **Feature flags** for experimental functionality
+- **Logging configuration** and levels
+- **Performance settings** and optimization flags
+- **Security settings** and access controls
+
+---
+
+### ⏱️ **timeouts.py** - Infrastructure Timeouts
+**Purpose**: Network timeouts, retry policies, and performance limits  
+**Scope**: Infrastructure resilience and performance  
+
+**Key Features**:
+- **Service-specific timeouts** (OpenAI, Search, Cosmos, ML)
+- **Retry policies** with exponential backoff
+- **Connection pool settings**
+- **Circuit breaker configurations**
+
+---
+
+### 🌍 **environments/** - Environment-Specific Configuration
+**Purpose**: Environment-specific overrides for different deployment stages  
+**Files**: `development.env`, `staging.env`, `production.env`
+
+**Key Features**:
+- **Azure resource names** per environment
+- **Performance tuning** per environment
+- **Feature flag overrides**
+- **Security policy differences**
+
+**Usage with azd**:
+```bash
+# Switch environment and sync configuration  
+azd env select staging && make sync-env
+```
+
+---
+
+### 🧠 **learned_domain_configs/** - AI-Generated Configurations
+**Purpose**: Domain-specific configurations generated by Domain Intelligence Agent  
+**Content**: Optimized configurations for different document domains
+
+**Key Features**:
+- **Domain-adaptive parameters** (technical, academic, process, general)
+- **Performance optimization** based on document characteristics
+- **Quality thresholds** tuned for domain patterns
+- **Learning from user feedback**
+
+## 🎯 Configuration Usage Patterns
+
+### **1. Agent Development Pattern**
+```python
+# Import configuration for your agent
+from config.centralized_config import get_knowledge_extraction_agent_config
+
+class KnowledgeExtractionProcessor:
+    def __init__(self):
+        self.config = get_knowledge_extraction_agent_config()
+        
+    async def extract_entities(self, content: str):
+        # Use configuration parameters
+        if confidence > self.config.entity_confidence_threshold:
+            # Process high-confidence entity
+```
+
+### **2. Environment Override Pattern**
+```bash
+# Set environment variables for production
+export AGENT_ENTITY_CONFIDENCE=0.9
+export AGENT_MAX_WORKERS=8
+export AZURE_OPENAI_ENDPOINT="https://prod-openai.azure.com/"
+
+# Configuration automatically picks up overrides
+```
+
+### **3. Runtime Configuration Pattern**
+```python
+# Load and modify configuration at runtime
+from config.centralized_config import get_config_manager
+
+config_manager = get_config_manager()
+config_manager.config.processing.max_workers = 8
+config_manager.save_configuration()  # Persist changes
+```
+
+### **4. Testing Configuration Pattern**
+```python
+# Override configuration for testing
+from config.centralized_config import CentralizedConfiguration
+
+def test_with_custom_config():
+    test_config = CentralizedConfiguration()
+    test_config.confidence.entity_confidence_threshold = 0.5
+    # Run tests with custom configuration
+```
+
+## 🔧 Configuration Management
+
+### **Environment Variable Support**
+The system supports environment variable overrides for key parameters:
+
+```bash
+# Cache configuration
+AGENT_CACHE_TTL=7200
+AGENT_REDIS_TTL=600
+
+# Processing configuration  
+AGENT_MAX_WORKERS=8
+AGENT_CHUNK_SIZE=1500
+AGENT_TIMEOUT_SECONDS=60
+
+# Model configuration
+AZURE_OPENAI_DEPLOYMENT_GPT4O="gpt-4o"
+AZURE_OPENAI_API_VERSION="2024-08-01-preview"
+
+# Infrastructure configuration
+AGENT_OPENAI_TIMEOUT=90
+AGENT_MAX_RETRIES=5
+```
+
+### **Configuration Validation**
+All configurations use **Pydantic dataclasses** for:
+- **Type validation**: Ensures parameters are correct types
+- **Range validation**: Validates parameters are within acceptable ranges  
+- **Required field validation**: Ensures critical parameters are set
+- **Default value management**: Provides sensible defaults
+
+### **Configuration Persistence**
+Runtime configuration changes can be persisted:
+```python
+config_manager = get_config_manager()
+config_manager.config.processing.max_workers = 8
+config_manager.save_configuration()  # Saves to config/agent_config.json
+```
+
+## 🚀 Configuration Best Practices
+
+### **1. Use Typed Configuration**
+Always use the typed configuration functions:
+```python
+# ✅ Good - Type safe
+config = get_entity_processing_config()
+threshold = config.high_confidence_threshold
+
+# ❌ Bad - No type safety
+threshold = 0.8  # Hardcoded value
+```
+
+### **2. Environment-Specific Overrides**
+Use environment variables for deployment-specific values:
+```python
+# ✅ Good - Environment configurable
+AGENT_MAX_WORKERS=8  # Production
+AGENT_MAX_WORKERS=2  # Development
+
+# ❌ Bad - Hardcoded
+max_workers = 4  # Fixed for all environments
+```
+
+### **3. Configuration Documentation**
+Document the purpose and impact of configuration changes:
+```python
+@dataclass
+class ProcessingConfiguration:
+    max_workers: int = 4  # Parallel processing threads
+    # Higher values = faster processing but more CPU/memory usage
+    # Lower values = slower processing but more stable
+```
+
+### **4. Validation and Testing**
+Test configuration changes thoroughly:
+```python
+def test_configuration_impact():
+    """Test that configuration changes don't break functionality"""
+    original_config = get_processing_config()
+    # Test with modified configuration
+    # Validate results are still correct
+```
+
+## 🔍 Configuration Debugging
+
+### **View Current Configuration**
+```python
+from config.centralized_config import get_config_manager
+
+# Print all current configuration
+config_manager = get_config_manager()
+print(json.dumps(config_manager.config.to_dict(), indent=2))
+```
+
+### **Configuration Override Tracking**
+Environment variables that override defaults are logged during startup:
+```
+INFO: Configuration override: AGENT_MAX_WORKERS=8 (was 4)
+INFO: Configuration override: AGENT_ENTITY_CONFIDENCE=0.9 (was 0.7)
+```
+
+### **Configuration Validation Errors**
+Type validation errors are clearly reported:
+```
+ERROR: Invalid configuration value for processing.max_workers: 'abc' (expected int)
+ERROR: Configuration value out of range for confidence.entity_confidence_threshold: 1.5 (max 1.0)
+```
+
+## 📈 Configuration Evolution
+
+The configuration system supports evolution and migration:
+
+### **Adding New Parameters**
+1. Add parameter to appropriate dataclass with default value
+2. Update getter function if needed  
+3. Document parameter purpose and impact
+4. Add environment variable mapping if needed
+
+### **Migrating Configuration**
+The `ConfigurationManager` handles configuration migration:
+- **Backward compatibility**: Old configuration files continue to work
+- **Default value injection**: New parameters get sensible defaults
+- **Validation**: Ensures migrated configuration is valid
+
+### **Configuration Versioning**
+Configuration changes are tracked through:
+- **Git history**: All configuration changes are version controlled
+- **Environment files**: Environment-specific configuration evolution
+- **JSON persistence**: Runtime configuration changes are serialized
+
+## 🎯 Integration with Agent System
+
+The configuration system integrates seamlessly with the multi-agent architecture:
+
+### **Domain Intelligence Agent**
+- Uses domain-specific patterns and thresholds
+- Generates adaptive configurations for other agents
+- Optimizes parameters based on document characteristics
+
+### **Knowledge Extraction Agent**  
+- Configurable entity and relationship extraction parameters
+- Quality assessment thresholds
+- Performance optimization settings
+
+### **Universal Search Agent**
+- Tri-modal search orchestration parameters  
+- Vector, graph, and GNN search configuration
+- Result synthesis and confidence scoring
+
+### **Workflow Orchestration**
+- Timeout and retry configurations
+- Performance monitoring settings
+- Service health check parameters
+
+This configuration architecture provides a **robust, scalable, and maintainable** foundation for the Azure Universal RAG system, enabling easy customization for different environments, domains, and performance requirements.

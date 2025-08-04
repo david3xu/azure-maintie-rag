@@ -14,6 +14,9 @@ from openai import AzureOpenAI
 
 from config.settings import azure_settings
 
+# Configuration imports
+from config.centralized_config import get_model_config, get_infrastructure_config, get_azure_services_config
+
 from ..azure_auth.base_client import BaseAzureClient
 
 # Updated to use consolidated intelligence components
@@ -65,6 +68,10 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
 
     def _initialize_client(self):
         """Initialize Azure OpenAI client"""
+        # Get configuration
+        model_config = get_model_config()
+        azure_services_config = get_azure_services_config()
+        
         if self.use_managed_identity:
             # Use managed identity for azd deployments
             from azure.identity import DefaultAzureCredential
@@ -72,16 +79,16 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
             credential = DefaultAzureCredential()
             self._client = AzureOpenAI(
                 azure_ad_token_provider=lambda: credential.get_token(
-                    "https://cognitiveservices.azure.com/.default"
+                    azure_services_config.cognitive_services_scope
                 ).token,
-                api_version=azure_settings.openai_api_version,
+                api_version=model_config.openai_api_version,
                 azure_endpoint=self.endpoint,
             )
         else:
             # Use API key for local development
             self._client = AzureOpenAI(
                 api_key=self.key,
-                api_version=azure_settings.openai_api_version,
+                api_version=model_config.openai_api_version,
                 azure_endpoint=self.endpoint,
             )
 
@@ -97,11 +104,12 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
             self.ensure_initialized()
 
             # Simple test request to verify connectivity
+            model_config = get_model_config()
             response = await asyncio.to_thread(
                 self._client.chat.completions.create,
-                model=azure_settings.openai_deployment_name or "gpt-4o",
+                model=azure_settings.openai_deployment_name or model_config.gpt4o_deployment_name,
                 messages=[{"role": "user", "content": "Hello"}],
-                max_tokens=5,
+                max_tokens=model_config.default_max_tokens // 800,  # Small test request
             )
 
             return {
@@ -175,12 +183,14 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                         f"Extraction failed for text {i+1}: {result.get('error')}"
                     )
 
-                # Progress logging - more frequent for better visibility
-                if (i + 1) % 5 == 0 or i == 0:
+                # Progress logging using configured batch size
+                infra_config = get_infrastructure_config()
+                batch_size = infra_config.max_batch_size
+                if (i + 1) % batch_size == 0 or i == 0:
                     print(
                         f"    📊 Progress: {i + 1}/{len(texts)} texts | Entities: {len(all_entities)} | Relationships: {len(all_relationships)}"
                     )
-                elif (i + 1) % 20 == 0:
+                elif (i + 1) % (batch_size * 4) == 0:
                     elapsed = time.time() - start_time
                     remaining = (
                         (elapsed / (i + 1)) * (len(texts) - i - 1) if i > 0 else 0

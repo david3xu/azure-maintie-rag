@@ -10,6 +10,9 @@ from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field
 
+# Import centralized configuration
+from config.centralized_config import get_workflow_timeouts_config
+
 
 class WorkflowExecutionState(str, Enum):
     """Workflow execution states"""
@@ -76,9 +79,9 @@ class WorkflowNodeState(BaseModel):
     # Performance metrics
     metrics: NodeMetrics = Field(default_factory=NodeMetrics)
     
-    # Configuration
-    max_retries: int = Field(default=3, ge=0)
-    timeout_seconds: int = Field(default=300, gt=0)
+    # Configuration (using centralized values)
+    max_retries: int = Field(default=get_workflow_timeouts_config().max_node_retries, ge=0)
+    timeout_seconds: int = Field(default=get_workflow_timeouts_config().default_node_timeout_seconds, gt=0)
     
     @property
     def execution_time(self) -> float:
