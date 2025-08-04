@@ -46,7 +46,7 @@ class KnowledgeExtractionDeps(BaseModel):
     )
     validation_processor: Optional[Any] = Field(
         default=None, 
-        description="Validation and quality assessment processor"
+        description="Simple validation processor (replaced over-engineered system)"
     )
     
     # Extraction configuration

@@ -28,6 +28,9 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+# Import centralized configuration
+from config.centralized_config import get_ml_hyperparameters_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -101,8 +104,9 @@ class CachePerformanceMetrics:
         else:
             self.cache_misses += 1
 
-        # Track lookup performance
-        if lookup_time < 0.001:  # Sub-millisecond
+        # Track lookup performance (using centralized threshold)
+        ml_config = get_ml_hyperparameters_config()
+        if lookup_time < ml_config.sub_millisecond_threshold:  # Sub-millisecond
             self.fast_lookups += 1
 
         # Update average lookup time (weighted moving average)

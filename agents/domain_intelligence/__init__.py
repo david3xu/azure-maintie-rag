@@ -21,16 +21,15 @@ Key features preserved:
 - Background processing for <5ms domain detection
 """
 
-# Import background processing and config generation
-from .background_processor import (
-    BackgroundProcessingStats,
-    run_startup_background_processing,
+# Import analysis components from organized structure
+from .analyzers import (
+    UnifiedContentAnalyzer, UnifiedAnalysis, ContentQuality,
+    HybridConfigurationGenerator, ConfigurationRecommendations, LLMExtraction,
+    PatternEngine, LearnedPattern, ExtractedPatterns,
+    ConfigGenerator, DomainConfig,
+    run_startup_background_processing, BackgroundProcessingStats,
 )
-from .config_generator import ConfigGenerator, DomainConfig
-
-# Import consolidated intelligence components
-from .domain_analyzer import ContentAnalysis, DomainAnalyzer, DomainClassification
-from .pattern_engine import ExtractedPatterns, LearnedPattern, PatternEngine
+# Note: DomainAnalyzer and DomainClassification removed - use UnifiedContentAnalyzer directly
 
 # PydanticAI tools moved to toolsets.py following target architecture
 # from .pydantic_tools import (
@@ -40,10 +39,15 @@ from .pattern_engine import ExtractedPatterns, LearnedPattern, PatternEngine
 # )
 
 __all__ = [
-    # Domain analysis
-    "DomainAnalyzer",
-    "ContentAnalysis",
-    "DomainClassification",
+    # Unified content analysis (primary)
+    "UnifiedContentAnalyzer",
+    "UnifiedAnalysis", 
+    "ContentQuality",
+    # Configuration generation
+    "HybridConfigurationGenerator",
+    "ConfigurationRecommendations",
+    "LLMExtraction",
+    # Note: DomainAnalyzer and DomainClassification removed - use UnifiedContentAnalyzer
     # Pattern learning
     "PatternEngine",
     "LearnedPattern",

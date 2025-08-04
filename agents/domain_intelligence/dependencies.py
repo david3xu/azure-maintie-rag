@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from ..core.azure_services import ConsolidatedAzureServices
 from ..core.cache_manager import UnifiedCacheManager
 from ..core.memory_manager import UnifiedMemoryManager
-from .domain_analyzer import DomainAnalyzer
+from .analyzers.unified_content_analyzer import UnifiedContentAnalyzer
 from .pattern_engine import PatternEngine
 from .config_generator import ConfigGenerator
 
@@ -39,9 +39,9 @@ class DomainIntelligenceDeps(BaseModel):
     )
     
     # Domain-specific components
-    domain_analyzer: Optional[DomainAnalyzer] = Field(
+    domain_analyzer: Optional[UnifiedContentAnalyzer] = Field(
         default=None, 
-        description="Domain analysis component"
+        description="Unified content analysis component"
     )
     pattern_engine: Optional[PatternEngine] = Field(
         default=None, 

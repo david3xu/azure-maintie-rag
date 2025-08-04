@@ -1,46 +1,53 @@
 """
-Tri-Modal Search System - Vector + Graph + GNN Unified Search
+Universal Search Agent - Consolidated Tri-Modal Search System
 
-This module implements the tri-modal unity principle by providing:
-- TriModalOrchestrator: Main coordination and result synthesis
-- VectorSearchEngine: Semantic similarity search
-- GraphSearchEngine: Relational context search
-- GNNSearchEngine: Pattern prediction search
-- PydanticAI Tools: Enterprise integration for PydanticAI agents
+This module implements the consolidated tri-modal search system providing:
+- ConsolidatedSearchOrchestrator: Unified search coordination and result synthesis
+- Universal Search Agent: Simplified agent creation with consolidated orchestrator
+- Tri-modal search capabilities: Vector + Graph + GNN in single orchestrator
+- Centralized configuration management
 
-Key competitive advantage: Simultaneous execution of all modalities
-without heuristic selection, providing comprehensive unified results.
+Key advantage: Eliminates redundancy while preserving all tri-modal capabilities
+through consolidated processing and centralized configuration.
 """
 
-from .gnn_search import GNNSearchEngine
-from .graph_search import GraphSearchEngine
+# Import consolidated components
+from .orchestrators.consolidated_search_orchestrator import (
+    ConsolidatedSearchOrchestrator,
+    TriModalSearchResult,
+    SearchResult,
+    ModalityResult
+)
 
-# Import main orchestrator
-from ..workflows.tri_modal_orchestrator import ModalityResult, SearchResult, TriModalOrchestrator
+# Import consolidated agent
+from .agent import (
+    get_universal_search_agent,
+    universal_search_agent,
+    execute_universal_search,
+    QueryRequest,
+    SearchResponse
+)
 
-# PydanticAI tools moved to toolsets.py following target architecture
-# from .pydantic_tools import (
-#     execute_graph_search,
-#     execute_tri_modal_search,
-#     execute_vector_search,
-#     search_with_tri_modal_tool,
-# )
-
-# Import individual search engines
-from .vector_search import VectorSearchEngine
+# Import orchestrator workflow if available
+try:
+    from ..workflows.tri_modal_orchestrator import TriModalOrchestrator
+    WORKFLOW_ORCHESTRATOR_AVAILABLE = True
+except ImportError:
+    WORKFLOW_ORCHESTRATOR_AVAILABLE = False
+    TriModalOrchestrator = None
 
 __all__ = [
-    # Main orchestrator
-    "TriModalOrchestrator",
+    # Consolidated orchestrator
+    "ConsolidatedSearchOrchestrator",
+    "TriModalSearchResult", 
     "SearchResult",
     "ModalityResult",
-    # Individual search engines
-    "VectorSearchEngine",
-    "GraphSearchEngine",
-    "GNNSearchEngine",
-    # PydanticAI Tools moved to toolsets.py following target architecture
-    # "execute_tri_modal_search",
-    # "execute_vector_search", 
-    # "execute_graph_search",
-    # "search_with_tri_modal_tool",
+    # Consolidated agent
+    "get_universal_search_agent",
+    "universal_search_agent",
+    "execute_universal_search",
+    "QueryRequest",
+    "SearchResponse",
+    # Workflow orchestrator (if available)
+    "TriModalOrchestrator",
 ]

@@ -304,7 +304,14 @@ class WorkflowStateManager:
         return await self._load_record_from_file(file_path)
     
     async def _load_record_from_file(self, file_path: Path) -> WorkflowStateRecord:
-        """Load record from JSON file"""
+        """Load record from JSON file with path validation"""
+        # Security: Validate file path is within allowed directory
+        allowed_dir = Path(__file__).parent.parent.parent / "data" / "workflows"
+        try:
+            file_path.resolve().relative_to(allowed_dir.resolve())
+        except ValueError:
+            raise ValueError(f"Invalid file path: {file_path} - must be within workflow directory")
+        
         with open(file_path, 'r') as f:
             data = json.load(f)
         
@@ -327,8 +334,18 @@ class WorkflowStateManager:
         data["updated_at"] = record.updated_at.isoformat()
         data["state"] = record.state.value
         
+        # Security: Validate file path is within allowed directory
+        allowed_dir = Path(__file__).parent.parent.parent / "data" / "workflows"
+        try:
+            file_path.resolve().relative_to(allowed_dir.resolve())
+        except ValueError:
+            raise ValueError(f"Invalid file path: {file_path} - must be within workflow directory")
+        
         # Write to temporary file first, then rename for atomicity
         temp_path = file_path.with_suffix('.tmp')
+        
+        # Ensure directory exists
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         
         with open(temp_path, 'w') as f:
             json.dump(data, f, indent=2, default=str)

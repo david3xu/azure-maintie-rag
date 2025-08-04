@@ -30,6 +30,12 @@ from ..interfaces.agent_contracts import (
     StatisticalPattern,
 )
 
+# Import centralized configuration
+from config.centralized_config import get_capability_patterns_config
+
+# Get configuration instance (cached)
+_config = get_capability_patterns_config()
+
 # =============================================================================
 # CAPABILITY INTERFACE PROTOCOLS
 # =============================================================================
@@ -43,7 +49,7 @@ class CacheCapability(Protocol):
         ...
 
     async def set(
-        self, key: str, value: Any, ttl: int = 3600, namespace: str = "default"
+        self, key: str, value: Any, ttl: int = None, namespace: str = "default"
     ) -> bool:
         """Store value in cache"""
         ...
@@ -61,7 +67,7 @@ class StatisticalAnalysisCapability(Protocol):
     """Protocol for shared statistical analysis capabilities"""
 
     async def calculate_confidence_interval(
-        self, data: List[float], confidence_level: float = 0.95
+        self, data: List[float], confidence_level: float = None
     ) -> Dict[str, float]:
         """Calculate confidence interval for data"""
         ...
@@ -145,9 +151,11 @@ class PerformanceMonitoringCapability(Protocol):
         ...
 
     async def get_performance_insights(
-        self, component: str, time_window_hours: int = 24
+        self, component: str, time_window_hours: int = None
     ) -> Dict[str, Any]:
         """Get performance insights and recommendations"""
+        if time_window_hours is None:
+            time_window_hours = _config.default_time_window_hours
         ...
 
 
@@ -186,7 +194,7 @@ class SharedCacheCapability:
     def __init__(self, context: CapabilityContext):
         self.context = context
         self.local_cache = {}  # In-memory cache for hot data
-        self.cache_stats = {"hits": 0, "misses": 0, "azure_redis_calls": 0}
+        self.cache_stats = {"hits": _config.cache_stats_initial, "misses": _config.cache_stats_initial, "azure_redis_calls": _config.cache_stats_initial}
 
     async def get(self, key: str, namespace: str = "default") -> Optional[Any]:
         """Retrieve cached value with multi-tier lookup"""
@@ -212,8 +220,8 @@ class SharedCacheCapability:
 
                 # Warm local cache
                 self._store_local(
-                    namespaced_key, redis_value, ttl=300
-                )  # 5 min local TTL
+                    namespaced_key, redis_value, ttl=_config.local_cache_ttl_seconds
+                )  # {_config.max_local_cache_minutes} min local TTL
                 return redis_value
 
         except Exception as e:
@@ -225,10 +233,13 @@ class SharedCacheCapability:
         return None
 
     async def set(
-        self, key: str, value: Any, ttl: int = 3600, namespace: str = "default"
+        self, key: str, value: Any, ttl: int = None, namespace: str = "default"
     ) -> bool:
         """Store value in multi-tier cache"""
         namespaced_key = f"{namespace}:{key}"
+        
+        if ttl is None:
+            ttl = _config.default_ttl_seconds
 
         try:
             # Store in Azure Redis
@@ -236,7 +247,7 @@ class SharedCacheCapability:
             await azure_redis.setex(namespaced_key, ttl, value)
 
             # Store in local cache for hot access
-            local_ttl = min(300, ttl)  # Max 5 minutes local cache
+            local_ttl = min(_config.local_cache_ttl_seconds, ttl)  # Max {_config.max_local_cache_minutes} minutes local cache
             self._store_local(namespaced_key, value, local_ttl)
 
             self.cache_stats["azure_redis_calls"] += 1
@@ -251,7 +262,7 @@ class SharedCacheCapability:
     async def invalidate(self, pattern: str, namespace: str = "default") -> int:
         """Invalidate cache entries matching pattern"""
         namespaced_pattern = f"{namespace}:{pattern}"
-        invalidated_count = 0
+        invalidated_count = _config.cache_invalidated_initial
 
         try:
             # Invalidate Azure Redis entries
@@ -279,12 +290,12 @@ class SharedCacheCapability:
                 operation="cache_invalidation",
                 component="SharedCacheCapability",
             )
-            return 0
+            return _config.cache_invalidated_initial
 
     async def get_stats(self, namespace: str = "default") -> Dict[str, Any]:
         """Get cache performance statistics"""
         total_requests = self.cache_stats["hits"] + self.cache_stats["misses"]
-        hit_rate = (self.cache_stats["hits"] / max(1, total_requests)) * 100
+        hit_rate = (self.cache_stats["hits"] / max(1, total_requests)) * 100  # Simple percentage calculation
 
         return {
             "namespace": namespace,
@@ -293,9 +304,9 @@ class SharedCacheCapability:
             "azure_redis_calls": self.cache_stats["azure_redis_calls"],
             "local_cache_size": len(self.local_cache),
             "performance_tier": "high"
-            if hit_rate > 80
+            if hit_rate > _config.cache_hit_rate_excellent
             else "medium"
-            if hit_rate > 60
+            if hit_rate > _config.cache_hit_rate_good
             else "low",
         }
 
@@ -323,21 +334,24 @@ class SharedStatisticalAnalysisCapability:
         self.context = context
 
     async def calculate_confidence_interval(
-        self, data: List[float], confidence_level: float = 0.95
+        self, data: List[float], confidence_level: float = None
     ) -> Dict[str, float]:
         """Calculate confidence interval using statistical methods"""
+        if confidence_level is None:
+            confidence_level = _config.confidence_level_default
+            
         try:
             import numpy as np
             from scipy import stats
 
-            if len(data) < 2:
-                return {"lower": 0.0, "upper": 0.0, "mean": 0.0, "std_error": 0.0}
+            if len(data) < _config.min_sample_size:
+                return {"lower": _config.default_interval_bounds, "upper": _config.default_interval_bounds, "mean": _config.default_interval_bounds, "std_error": _config.default_interval_bounds}
 
             mean = np.mean(data)
             std_error = stats.sem(data)
 
             # Calculate confidence interval
-            degrees_freedom = len(data) - 1
+            degrees_freedom = len(data) - 1  # Standard degrees of freedom calculation
             confidence_interval = stats.t.interval(
                 confidence_level, degrees_freedom, loc=mean, scale=std_error
             )
@@ -357,7 +371,7 @@ class SharedStatisticalAnalysisCapability:
                 operation="confidence_interval_calculation",
                 component="SharedStatisticalAnalysisCapability",
             )
-            return {"lower": 0.0, "upper": 0.0, "mean": 0.0, "std_error": 0.0}
+            return {"lower": _config.default_interval_bounds, "upper": _config.default_interval_bounds, "mean": _config.default_interval_bounds, "std_error": _config.default_interval_bounds}
 
     async def perform_significance_test(
         self, sample1: List[float], sample2: List[float]
@@ -366,8 +380,8 @@ class SharedStatisticalAnalysisCapability:
         try:
             from scipy import stats
 
-            if len(sample1) < 2 or len(sample2) < 2:
-                return {"p_value": 1.0, "statistic": 0.0, "significant": False}
+            if len(sample1) < _config.min_sample_size or len(sample2) < _config.min_sample_size:
+                return {"p_value": 1.0, "statistic": _config.default_interval_bounds, "significant": False}
 
             # Perform t-test
             statistic, p_value = stats.ttest_ind(sample1, sample2)
@@ -382,7 +396,7 @@ class SharedStatisticalAnalysisCapability:
                 "t_test_statistic": float(statistic),
                 "mannwhitney_p_value": float(u_p_value),
                 "mannwhitney_statistic": float(u_statistic),
-                "significant": float(p_value) < 0.05,
+                "significant": float(p_value) < _config.significance_threshold,
                 "effect_size": self._calculate_effect_size(sample1, sample2),
             }
 
@@ -392,7 +406,7 @@ class SharedStatisticalAnalysisCapability:
                 operation="significance_test",
                 component="SharedStatisticalAnalysisCapability",
             )
-            return {"p_value": 1.0, "statistic": 0.0, "significant": False}
+            return {"p_value": 1.0, "statistic": _config.default_interval_bounds, "significant": False}
 
     async def learn_patterns_from_data(
         self, data: List[str], pattern_type: str
@@ -406,8 +420,8 @@ class SharedStatisticalAnalysisCapability:
                 "algorithm": "frequent_pattern_mining",
                 "data": data,
                 "pattern_type": pattern_type,
-                "min_support": 0.05,  # 5% minimum support
-                "min_confidence": 0.7,  # 70% minimum confidence
+                "min_support": _config.min_pattern_support,
+                "min_confidence": _config.min_pattern_confidence,
             }
 
             ml_result = await ml_client.submit_pattern_mining_job(pattern_learning_job)
@@ -422,10 +436,10 @@ class SharedStatisticalAnalysisCapability:
                     frequency=pattern_data["frequency"],
                     confidence=pattern_data["confidence"],
                     support=pattern_data["support"],
-                    lift=pattern_data.get("lift", 1.0),
-                    chi_square_p_value=pattern_data.get("chi_square_p", 0.05),
+                    lift=pattern_data.get("lift", _config.default_lift),
+                    chi_square_p_value=pattern_data.get("chi_square_p", _config.default_chi_square_p),
                     confidence_interval=pattern_data.get(
-                        "confidence_interval", {"lower": 0.0, "upper": 1.0}
+                        "confidence_interval", {"lower": _config.default_interval_bounds, "upper": 1.0}
                     ),
                     source_documents=pattern_data.get("source_docs", []),
                     azure_ml_features=pattern_data.get("features", {}),
@@ -451,10 +465,10 @@ class SharedStatisticalAnalysisCapability:
         for pattern in patterns:
             # Apply statistical validation criteria
             if (
-                pattern.chi_square_p_value < 0.05
-                and pattern.frequency >= 3  # Statistically significant
-                and pattern.confidence >= 0.6  # Minimum frequency
-            ):  # Minimum confidence
+                pattern.chi_square_p_value < _config.significance_threshold
+                and pattern.frequency >= _config.pattern_frequency_min
+                and pattern.confidence >= _config.pattern_confidence_min
+            ):
                 validated_patterns.append(pattern)
 
         return validated_patterns
@@ -480,7 +494,7 @@ class SharedStatisticalAnalysisCapability:
             return float(abs(effect_size))
 
         except:
-            return 0.0
+            return _config.effect_size_default
 
 
 class SharedAzureServiceOrchestrationCapability:
@@ -617,28 +631,28 @@ class SharedAzureServiceOrchestrationCapability:
 
         # Analyze Azure ML usage
         ml_usage = service_usage.get("azure_ml", {})
-        if ml_usage.get("request_count", 0) > 100:
+        if ml_usage.get("request_count", _config.performance_stats_initial) > _config.ml_request_threshold:
             optimizations["azure_ml"] = {
                 "recommendation": "batch_processing",
-                "potential_savings_percent": 25,
+                "potential_savings_percent": _config.ml_savings_percent,
                 "implementation": "Batch multiple ML inference requests",
             }
 
         # Analyze Azure Search usage
         search_usage = service_usage.get("azure_search", {})
-        if search_usage.get("query_frequency") > 1000:
+        if search_usage.get("query_frequency") > _config.search_query_threshold:
             optimizations["azure_search"] = {
                 "recommendation": "result_caching",
-                "potential_savings_percent": 30,
+                "potential_savings_percent": _config.search_savings_percent,
                 "implementation": "Cache frequent search results",
             }
 
         # Analyze Azure Cosmos usage
         cosmos_usage = service_usage.get("azure_cosmos", {})
-        if cosmos_usage.get("ru_consumption") > 10000:
+        if cosmos_usage.get("ru_consumption") > _config.cosmos_ru_threshold:
             optimizations["azure_cosmos"] = {
                 "recommendation": "query_optimization",
-                "potential_savings_percent": 20,
+                "potential_savings_percent": _config.cosmos_savings_percent,
                 "implementation": "Optimize Gremlin queries for lower RU consumption",
             }
 
@@ -650,10 +664,10 @@ class SharedAzureServiceOrchestrationCapability:
         """Track service performance metrics"""
         if service not in self.service_metrics:
             self.service_metrics[service] = {
-                "total_requests": 0,
-                "successful_requests": 0,
-                "total_execution_time": 0.0,
-                "average_execution_time": 0.0,
+                "total_requests": _config.performance_stats_initial,
+                "successful_requests": _config.performance_stats_initial,
+                "total_execution_time": _config.avg_time_initial,
+                "average_execution_time": _config.avg_time_initial,
             }
 
         metrics = self.service_metrics[service]
@@ -687,24 +701,28 @@ class SharedAzureServiceOrchestrationCapability:
         optimized_config = query_config.copy()
 
         # Optimize top_k based on typical result usage
-        if "top_k" in optimized_config and optimized_config["top_k"] > 50:
-            optimized_config["top_k"] = 50  # Reduce to improve performance
+        if "top_k" in optimized_config and optimized_config["top_k"] > _config.max_search_results:
+            optimized_config["top_k"] = _config.max_search_results
 
         return optimized_config
 
     async def _estimate_ml_cost(self, job_config: Dict[str, Any]) -> float:
         """Estimate Azure ML job cost"""
         # Simplified cost estimation - in production would use Azure pricing APIs
-        base_cost = 0.1  # Base cost per job
-        compute_factor = job_config.get("compute_nodes", 1) * 0.05
+        base_cost = _config.base_cost_ml
+        compute_factor = job_config.get("compute_nodes", 1) * _config.compute_cost_factor
         return base_cost + compute_factor
 
     async def _estimate_service_cost(
         self, service: str, config: Dict[str, Any]
     ) -> float:
         """Estimate service cost for request"""
-        base_costs = {"azure_ml": 0.1, "azure_search": 0.01, "azure_cosmos": 0.005}
-        return base_costs.get(service, 0.01)
+        base_costs = {
+            "azure_ml": _config.base_cost_ml, 
+            "azure_search": _config.base_cost_search, 
+            "azure_cosmos": _config.base_cost_cosmos
+        }
+        return base_costs.get(service, _config.base_cost_default)
 
 
 # =============================================================================
@@ -823,14 +841,18 @@ class CapabilityManager:
 # =============================================================================
 
 
-def with_cache_capability(namespace: str = "default", ttl: int = 3600):
+def with_cache_capability(namespace: str = "default", ttl: int = None):
     """Decorator to inject cache capability into agent methods"""
 
     def decorator(func):
         async def wrapper(self, *args, **kwargs):
             # Get cache capability from capability manager
+            if ttl is None:
+                ttl_value = _config.default_ttl_seconds
+            else:
+                ttl_value = ttl
             cache_contract = CacheContract(
-                cache_key_namespace=namespace, ttl_seconds=ttl
+                cache_key_namespace=namespace, ttl_seconds=ttl_value
             )
             cache_capability = await self.capability_manager.get_cache_capability(
                 cache_contract
@@ -886,7 +908,7 @@ class ExampleAgentWithSharedCapabilities:
         self.azure_services = azure_services
         self.capability_manager = capability_manager
 
-    @with_cache_capability(namespace="domain_analysis", ttl=1800)
+    @with_cache_capability(namespace="domain_analysis", ttl=None)  # Uses centralized config default
     async def analyze_domain_with_caching(
         self, cache: CacheCapability, domain_data: List[str]
     ) -> Dict[str, Any]:

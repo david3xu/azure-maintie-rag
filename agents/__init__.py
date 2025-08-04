@@ -41,9 +41,12 @@ from .core import (
 
 # Import consolidated intelligence
 from .domain_intelligence import (
-    ContentAnalysis,
-    DomainAnalyzer,
-    DomainClassification,
+    UnifiedContentAnalyzer,
+    UnifiedAnalysis,
+    ContentQuality,
+    HybridConfigurationGenerator,
+    ConfigurationRecommendations,
+    # Note: DomainAnalyzer and DomainClassification moved to compatibility module
     ExtractedPatterns,
     LearnedPattern,
     PatternEngine,
@@ -82,7 +85,7 @@ class SimpleQueryRequest:
 
 # Import main agent interfaces (lazy functions only, no instances)
 from .universal_search.agent import (  # PydanticAI tools
-    get_universal_agent,  # ✅ Lazy function
+    get_universal_search_agent,  # ✅ Lazy function (consolidated)
     # Remove direct agent instance import to avoid initialization
 )
 
@@ -149,7 +152,7 @@ __all__ = [
     "extract_knowledge_from_documents",
     # Simplified interface (recommended)
     # "SimplifiedUniversalAgent",  # Temporarily disabled during restructuring
-    # "get_universal_agent",        # Temporarily disabled during restructuring
+    "get_universal_search_agent",     # ✅ Consolidated agent function
     "SimpleQueryRequest",
     "AgentResponse",
     # Consolidated core services
@@ -160,11 +163,15 @@ __all__ = [
     "UnifiedMemoryManager",
     "get_memory_manager",
     "cached_operation",
-    # Consolidated intelligence
-    "DomainAnalyzer",
+    # Consolidated intelligence (new unified architecture)
+    "UnifiedContentAnalyzer",
+    "UnifiedAnalysis", 
+    "ContentQuality",
+    "HybridConfigurationGenerator",
+    "ConfigurationRecommendations",
+    # Note: DomainAnalyzer and DomainClassification available in .domain_intelligence.compatibility
+    # Pattern learning
     "PatternEngine",
-    "ContentAnalysis",
-    "DomainClassification",
     "ExtractedPatterns",
     "LearnedPattern",
     # Consolidated tools moved to toolsets.py following target architecture

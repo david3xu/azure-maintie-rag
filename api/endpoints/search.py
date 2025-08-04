@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 # Domain intelligence and search components
-from agents.domain_intelligence.domain_analyzer import DomainAnalyzer
+from agents.domain_intelligence import UnifiedContentAnalyzer
 from agents.universal_search.gnn_search import GNNSearchEngine
 from agents.universal_search.graph_search import GraphSearchEngine
 from agents.universal_search.vector_search import VectorSearchEngine
@@ -30,16 +30,17 @@ router = APIRouter(prefix="/api/v1", tags=["search"])
 
 # Pydantic models
 class SearchRequest(BaseModel):
-    """Search request model"""
+    """Search request model with input validation"""
 
-    query: str = Field(..., description="The search query")
+    query: str = Field(..., description="The search query", min_length=1, max_length=5000)
     search_type: str = Field(
         default="tri_modal",
         description="Type of search: vector, graph, gnn, or tri_modal",
+        pattern="^(vector|graph|gnn|tri_modal)$"
     )
-    max_results: int = Field(default=10, description="Maximum number of results")
+    max_results: int = Field(default=10, description="Maximum number of results", ge=1, le=100)
     domain: Optional[str] = Field(
-        default=None, description="Domain context (auto-detected if not provided)"
+        default=None, description="Domain context (auto-detected if not provided)", max_length=50
     )
 
 
@@ -69,9 +70,9 @@ class SearchResponse(BaseModel):
 
 
 class DomainAnalysisRequest(BaseModel):
-    """Domain analysis request model"""
+    """Domain analysis request model with input validation"""
 
-    content: str = Field(..., description="Content to analyze for domain detection")
+    content: str = Field(..., description="Content to analyze for domain detection", min_length=10, max_length=100000)
 
 
 class DomainAnalysisResponse(BaseModel):
@@ -91,7 +92,7 @@ class DomainAnalysisResponse(BaseModel):
 vector_search = VectorSearchEngine()
 graph_search = GraphSearchEngine()
 gnn_search = GNNSearchEngine()
-domain_analyzer = DomainAnalyzer()
+domain_analyzer = UnifiedContentAnalyzer()
 
 
 @router.post("/search", response_model=SearchResponse)
@@ -117,27 +118,41 @@ async def search_content(request: SearchRequest) -> Dict[str, Any]:
         if not request.domain:
             try:
                 # Use query content for lightweight domain detection
-                # Create temporary content for analysis
+                # Security: Validate and sanitize query content before processing
                 import tempfile
                 from pathlib import Path
+                import os
 
+                # Input validation and sanitization
+                query_content = request.query.strip()
+                if len(query_content) > 10000:  # Limit query size
+                    query_content = query_content[:10000]
+                
+                # Remove potentially dangerous characters
+                query_content = ''.join(char for char in query_content if char.isprintable() or char.isspace())
+
+                # Create secure temporary file with restricted permissions
                 with tempfile.NamedTemporaryFile(
-                    mode="w", suffix=".txt", delete=False
+                    mode="w", suffix=".txt", delete=False, dir=tempfile.gettempdir()
                 ) as f:
-                    f.write(request.query)
+                    # Set restrictive permissions (owner read/write only)
+                    os.chmod(f.name, 0o600)
+                    f.write(query_content)
                     temp_path = Path(f.name)
 
-                # Analyze query for domain context
-                content_analysis = domain_analyzer.analyze_raw_content(temp_path)
-                domain_classification = domain_analyzer.classify_content_domain(
-                    content_analysis
-                )
+                try:
+                    # Analyze query for domain context
+                    content_analysis = domain_analyzer.analyze_raw_content(temp_path)
+                    domain_classification = domain_analyzer.classify_content_domain(
+                        content_analysis
+                    )
 
-                detected_domain = domain_classification.domain
-                domain_confidence = domain_classification.confidence
-
-                # Clean up temp file
-                temp_path.unlink()
+                    detected_domain = domain_classification.domain
+                    domain_confidence = domain_classification.confidence
+                finally:
+                    # Ensure temp file is always cleaned up
+                    if temp_path.exists():
+                        temp_path.unlink()
 
                 logger.info(
                     f"Auto-detected domain: {detected_domain} (confidence: {domain_confidence:.3f})"
@@ -338,12 +353,24 @@ async def analyze_domain(request: DomainAnalysisRequest) -> Dict[str, Any]:
     try:
         start_time = time.time()
 
-        # Create temporary file for content analysis
+        # Create temporary file for content analysis with security measures
         import tempfile
         from pathlib import Path
+        import os
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            f.write(request.content)
+        # Input validation and sanitization
+        content = request.content.strip()
+        if len(content) > 50000:  # Limit content size for domain analysis
+            content = content[:50000]
+        
+        # Remove potentially dangerous characters
+        content = ''.join(char for char in content if char.isprintable() or char.isspace())
+
+        # Create secure temporary file with restricted permissions
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, dir=tempfile.gettempdir()) as f:
+            # Set restrictive permissions (owner read/write only)
+            os.chmod(f.name, 0o600)
+            f.write(content)
             temp_path = Path(f.name)
 
         try:
@@ -354,9 +381,6 @@ async def analyze_domain(request: DomainAnalysisRequest) -> Dict[str, Any]:
             )
 
             execution_time = time.time() - start_time
-
-            # Clean up temp file
-            temp_path.unlink()
 
             logger.info(
                 f"Domain analysis completed: {domain_classification.domain} (confidence: {domain_classification.confidence:.3f})"

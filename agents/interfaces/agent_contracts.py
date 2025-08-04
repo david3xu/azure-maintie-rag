@@ -15,6 +15,12 @@ from typing import Any, Dict, List, Literal, Optional, Union
 import numpy as np
 from pydantic import BaseModel, Field, computed_field, model_validator
 
+# Import centralized configuration
+from config.centralized_config import get_agent_contracts_config
+
+# Get configuration instance (cached)
+_config = get_agent_contracts_config()
+
 # =============================================================================
 # AZURE SERVICE DATA MODELS
 # =============================================================================
@@ -110,7 +116,8 @@ class StatisticalPattern(BaseModel):
     @property
     def is_statistically_significant(self) -> bool:
         """Determine if pattern is statistically significant"""
-        return self.chi_square_p_value < 0.05 and self.frequency >= 3
+        return (self.chi_square_p_value < _config.chi_square_significance_alpha 
+                and self.frequency >= _config.min_pattern_frequency)
 
 
 class DomainStatistics(BaseModel):
@@ -159,7 +166,11 @@ class DomainAnalysisContract(BaseModel):
         default=None, description="Azure ML experiment for pattern learning"
     )
     analysis_depth: Literal["surface", "deep", "comprehensive"] = Field(default="deep")
-    statistical_confidence_threshold: float = Field(default=0.7, ge=0.5, le=0.95)
+    statistical_confidence_threshold: float = Field(
+        default=_config.statistical_confidence_threshold_default, 
+        ge=_config.statistical_confidence_min, 
+        le=_config.statistical_confidence_max
+    )
 
     # Azure service configurations - discovered dynamically
     azure_cognitive_services_config: Dict[str, Any] = Field(
@@ -205,8 +216,16 @@ class KnowledgeExtractionContract(BaseModel):
     )
 
     # Performance requirements
-    max_execution_time_seconds: float = Field(default=300.0, gt=0.0, le=1800.0)
-    max_azure_service_cost_usd: float = Field(default=10.0, gt=0.0, le=100.0)
+    max_execution_time_seconds: float = Field(
+        default=_config.max_execution_time_seconds, 
+        gt=_config.max_execution_time_min, 
+        le=_config.max_execution_time_limit
+    )
+    max_azure_service_cost_usd: float = Field(
+        default=_config.max_azure_service_cost_usd, 
+        gt=_config.max_execution_time_min, 
+        le=_config.max_azure_service_cost_limit
+    )
 
 
 class UniversalSearchContract(BaseModel):
@@ -214,7 +233,7 @@ class UniversalSearchContract(BaseModel):
 
     # Input - user query and domain context
     user_query: str = Field(
-        ..., min_length=1, max_length=1000, description="User search query"
+        ..., min_length=_config.min_query_length, max_length=_config.max_query_length, description="User search query"
     )
     domain_context: Optional[DomainStatistics] = Field(
         default=None, description="Domain context from Domain Intelligence Agent"
@@ -240,9 +259,21 @@ class UniversalSearchContract(BaseModel):
     )
 
     # Performance and cost constraints
-    max_total_execution_time_seconds: float = Field(default=3.0, gt=0.0, le=10.0)
-    max_results_per_modality: int = Field(default=20, ge=1, le=100)
-    azure_service_cost_budget_usd: float = Field(default=1.0, gt=0.0, le=10.0)
+    max_total_execution_time_seconds: float = Field(
+        default=_config.max_total_search_time_seconds, 
+        gt=_config.max_execution_time_min, 
+        le=_config.max_search_time_limit
+    )
+    max_results_per_modality: int = Field(
+        default=_config.max_results_per_modality, 
+        ge=_config.min_query_length, 
+        le=_config.max_results_limit
+    )
+    azure_service_cost_budget_usd: float = Field(
+        default=_config.search_cost_budget_usd, 
+        gt=_config.max_execution_time_min, 
+        le=_config.search_cost_limit
+    )
 
 
 # =============================================================================
@@ -299,7 +330,7 @@ class RelationshipExtractionToolContract(ToolExecutionContract):
         ..., description="Relationship patterns from domain analysis"
     )
     graph_traversal_depth: int = Field(
-        ..., ge=1, le=5, description="Maximum graph traversal depth"
+        ..., ge=_config.graph_traversal_depth_min, le=_config.graph_traversal_depth_max, description="Maximum graph traversal depth"
     )
     azure_ml_relationship_model: str = Field(
         ..., description="Azure ML relationship extraction model"
@@ -357,9 +388,21 @@ class WorkflowExecutionContract(BaseModel):
     )
 
     # Performance contracts
-    max_total_execution_time_seconds: float = Field(default=10.0, gt=0.0, le=30.0)
-    max_total_azure_cost_usd: float = Field(default=5.0, gt=0.0, le=50.0)
-    minimum_quality_score: float = Field(default=0.8, ge=0.5, le=1.0)
+    max_total_execution_time_seconds: float = Field(
+        default=_config.workflow_max_execution_time, 
+        gt=_config.max_execution_time_min, 
+        le=_config.workflow_max_execution_limit
+    )
+    max_total_azure_cost_usd: float = Field(
+        default=_config.workflow_max_cost_usd, 
+        gt=_config.max_execution_time_min, 
+        le=_config.workflow_max_cost_limit
+    )
+    minimum_quality_score: float = Field(
+        default=_config.workflow_min_quality_score, 
+        ge=_config.workflow_quality_min, 
+        le=_config.workflow_quality_max
+    )
 
     # Error handling and recovery
     error_recovery_strategies: List[str] = Field(
@@ -428,19 +471,19 @@ class WorkflowResultContract(BaseModel):
     @model_validator(mode="after")
     def validate_performance_targets(self) -> "WorkflowResultContract":
         """Validate that performance targets were met"""
-        if self.total_execution_time_seconds > 10.0:
+        if self.total_execution_time_seconds > _config.performance_violation_threshold:
             # Log performance violation but don't fail
             import logging
 
             logging.warning(
-                f"Performance target violation: {self.total_execution_time_seconds}s > 10.0s"
+                f"Performance target violation: {self.total_execution_time_seconds}s > {_config.performance_violation_threshold}s"
             )
 
-        if self.overall_quality_score < 0.7:
+        if self.overall_quality_score < _config.quality_concern_threshold:
             import logging
 
             logging.warning(
-                f"Quality target concern: {self.overall_quality_score} < 0.7"
+                f"Quality target concern: {self.overall_quality_score} < {_config.quality_concern_threshold}"
             )
 
         return self
@@ -459,13 +502,13 @@ class CacheContract(BaseModel):
         default="json"
     )
     ttl_seconds: int = Field(
-        default=3600, ge=60, le=86400, description="Time to live in seconds"
+        default=_config.cache_ttl_default, ge=_config.cache_ttl_min, le=_config.cache_ttl_max, description="Time to live in seconds"
     )
     azure_redis_configuration: Optional[Dict[str, Any]] = Field(
         default=None, description="Azure Redis configuration"
     )
     local_cache_size_mb: int = Field(
-        default=100, ge=10, le=1000, description="Local cache size limit"
+        default=_config.local_cache_size_default_mb, ge=_config.local_cache_size_min_mb, le=_config.local_cache_size_max_mb, description="Local cache size limit"
     )
 
 
@@ -563,8 +606,8 @@ class DataDrivenExtractionConfiguration(BaseModel):
         """Verify that configuration is optimized for Azure services"""
         return (
             len(self.statistical_patterns) > 0
-            and self.azure_ml_model_metadata.model_accuracy > 0.7
-            and self.azure_service_cost_budget > 0.0
+            and self.azure_ml_model_metadata.model_accuracy > _config.min_model_accuracy
+            and self.azure_service_cost_budget > _config.max_execution_time_min
         )
 
 
@@ -621,10 +664,10 @@ class ArchitectureComplianceValidator(BaseModel):
         return (
             self.hardcoded_value_count == 0
             and len(self.agent_boundary_violations) == 0
-            and self.azure_service_coverage >= 0.95
+            and self.azure_service_coverage >= _config.azure_service_coverage_threshold
             and self.mock_service_count == 0
             and len(self.self_contained_logic_violations) == 0
-            and self.tool_delegation_coverage >= 0.90
+            and self.tool_delegation_coverage >= _config.tool_delegation_coverage_threshold
         )
 
 
