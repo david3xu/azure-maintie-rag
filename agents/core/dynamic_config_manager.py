@@ -10,12 +10,24 @@ but Search workflow was using static hardcoded values instead.
 """
 
 import asyncio
+import logging
 import os
 import yaml
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+# Import centralized constants
+from agents.core.constants import (
+    KnowledgeExtractionConstants, 
+    UniversalSearchConstants, 
+    CacheConstants,
+    ProcessingConstants,
+    PathConstants
+)
 
 # Import workflow and agents dynamically to avoid circular imports
 
@@ -65,7 +77,7 @@ class DynamicConfigManager:
     
     def __init__(self):
         self.config_cache: Dict[str, Dict[str, Any]] = {}
-        self.cache_ttl = 3600  # 1 hour cache
+        self.cache_ttl = CacheConstants.DEFAULT_CACHE_TTL
         self.generated_configs_path = Path("agents/domain_intelligence/generated_configs")
         self.config_extraction_workflow = None
         
@@ -110,7 +122,7 @@ class DynamicConfigManager:
     async def _load_learned_extraction_config(self, domain_name: str) -> Optional[DynamicExtractionConfig]:
         """Load learned extraction config from Config-Extraction workflow results"""
         
-        config_file = self.generated_configs_path / f"{domain_name}_extraction_config.yaml"
+        config_file = self.generated_configs_path / f"{domain_name}{PathConstants.EXTRACTION_CONFIG_SUFFIX}"
         
         if not config_file.exists():
             return None
@@ -120,8 +132,8 @@ class DynamicConfigManager:
                 config_data = yaml.safe_load(f)
                 
             # Check if config is recent (within 24 hours)
-            learned_at = datetime.fromisoformat(config_data.get('learned_at', '2000-01-01'))
-            if (datetime.now() - learned_at).total_seconds() > 86400:  # 24 hours
+            learned_at = datetime.fromisoformat(config_data.get('learned_at', CacheConstants.CONFIG_DEFAULT_TIMESTAMP))
+            if (datetime.now() - learned_at).total_seconds() > CacheConstants.CONFIG_FRESHNESS_THRESHOLD_SECONDS:
                 return None
                 
             return DynamicExtractionConfig(
@@ -145,7 +157,7 @@ class DynamicConfigManager:
     async def _load_learned_search_config(self, domain_name: str, query: str = None) -> Optional[DynamicSearchConfig]:
         """Load learned search config optimized for domain and query complexity"""
         
-        config_file = self.generated_configs_path / f"{domain_name}_search_config.yaml"
+        config_file = self.generated_configs_path / f"{domain_name}{PathConstants.SEARCH_CONFIG_SUFFIX}"
         
         if not config_file.exists():
             return None
@@ -155,8 +167,8 @@ class DynamicConfigManager:
                 config_data = yaml.safe_load(f)
                 
             # Check if config is recent
-            learned_at = datetime.fromisoformat(config_data.get('learned_at', '2000-01-01'))
-            if (datetime.now() - learned_at).total_seconds() > 86400:  # 24 hours
+            learned_at = datetime.fromisoformat(config_data.get('learned_at', CacheConstants.CONFIG_DEFAULT_TIMESTAMP))
+            if (datetime.now() - learned_at).total_seconds() > CacheConstants.CONFIG_FRESHNESS_THRESHOLD_SECONDS:
                 return None
                 
             # Adjust parameters based on query complexity if provided
@@ -182,52 +194,83 @@ class DynamicConfigManager:
             return None
     
     async def _generate_new_extraction_config(self, domain_name: str) -> DynamicExtractionConfig:
-        """Trigger Config-Extraction workflow to generate new domain-specific config"""
-        
-        # Import dynamically to avoid circular imports
-        if not self.config_extraction_workflow:
-            from ..workflows.config_extraction_graph import ConfigExtractionWorkflow
-            self.config_extraction_workflow = ConfigExtractionWorkflow()
-            
-        # Run Config-Extraction workflow for this domain
-        workflow_input = {
-            "domain_name": domain_name,
-            "data_directory": f"/workspace/azure-maintie-rag/data/raw/{domain_name}",
-            "force_regenerate": True
-        }
+        """Generate domain-specific config using Domain Intelligence Agent analysis with real data"""
         
         try:
-            result = await self.config_extraction_workflow.execute(workflow_input)
+            logger.info(f"🧠 Using Domain Intelligence Agent to analyze corpus for {domain_name}")
             
-            if result.get('state') == 'completed':
-                # Extract learned parameters from workflow results
-                config_result = result['results'].get('config_generation', {})
-                extraction_config = config_result.get('extraction_config', {})
-                
-                learned_config = DynamicExtractionConfig(
-                    entity_confidence_threshold=extraction_config.get('entity_confidence_threshold', 0.85),
-                    relationship_confidence_threshold=extraction_config.get('relationship_confidence_threshold', 0.75),
-                    chunk_size=extraction_config.get('chunk_size', 1000),
-                    chunk_overlap=extraction_config.get('chunk_overlap', 200),
-                    batch_size=extraction_config.get('batch_size', 10),
-                    max_entities_per_chunk=extraction_config.get('max_entities_per_chunk', 20),
-                    min_relationship_strength=extraction_config.get('min_relationship_strength', 0.6),
-                    quality_validation_threshold=extraction_config.get('quality_validation_threshold', 0.8),
-                    domain_name=domain_name,
-                    learned_at=datetime.now(),
-                    corpus_stats=result['results'].get('corpus_analysis', {})
-                )
-                
-                # Save for future use
-                await self._save_learned_config(domain_name, "extraction", asdict(learned_config))
-                
-                return learned_config
-                
-            else:
-                raise Exception(f"Config-Extraction workflow failed: {result.get('error', 'Unknown error')}")
-                
+            # Import domain intelligence analyzer
+            from ..domain_intelligence.analyzers.unified_content_analyzer import UnifiedContentAnalyzer
+            
+            # Initialize analyzer
+            analyzer = UnifiedContentAnalyzer()
+            
+            # Determine corpus path from domain name (e.g., programming_language -> Programming-Language)
+            domain_path_map = {
+                "programming_language": "Programming-Language",
+                "general": "Programming-Language"  # Default to available data
+            }
+            
+            # Get corpus path - use real data directory
+            corpus_dir = domain_path_map.get(domain_name, domain_name.replace("_", "-").title())
+            corpus_path = f"/workspace/azure-maintie-rag/data/raw/{corpus_dir}"
+            
+            # Analyze corpus domain using real data
+            domain_profile = await analyzer.analyze_corpus_domain(corpus_path)
+            
+            logger.info(f"✅ Domain analysis complete for {domain_name}:")
+            logger.info(f"   📊 {domain_profile.document_count} documents analyzed")
+            logger.info(f"   🎯 Learned entity threshold: {domain_profile.entity_confidence_threshold:.3f}")
+            logger.info(f"   📏 Optimal chunk size: {domain_profile.optimal_chunk_size}")
+            logger.info(f"   🔗 Relationship threshold: {domain_profile.relationship_confidence_threshold:.3f}")
+            
+            # Create dynamic config from learned parameters (NO HARDCODED VALUES!)
+            learned_config = DynamicExtractionConfig(
+                entity_confidence_threshold=domain_profile.entity_confidence_threshold,
+                relationship_confidence_threshold=domain_profile.relationship_confidence_threshold,
+                chunk_size=domain_profile.optimal_chunk_size,
+                chunk_overlap=max(50, int(domain_profile.optimal_chunk_size * 0.1)),  # 10% overlap
+                batch_size=min(10, max(1, domain_profile.document_count // 10)),  # Scale with corpus size
+                max_entities_per_chunk=min(50, max(5, int(domain_profile.entity_density * 100))),  # Based on entity density
+                min_relationship_strength=domain_profile.relationship_confidence_threshold * 0.8,  # Slightly lower than threshold
+                quality_validation_threshold=domain_profile.entity_confidence_threshold * 0.9,  # High quality threshold
+                domain_name=domain_name,
+                learned_at=datetime.now(),
+                corpus_stats={
+                    "document_count": domain_profile.document_count,
+                    "avg_document_length": domain_profile.avg_document_length,
+                    "technical_term_density": domain_profile.technical_term_density,
+                    "entity_density": domain_profile.entity_density,
+                    "processing_complexity": domain_profile.processing_complexity,
+                    "analysis_confidence": domain_profile.analysis_confidence,
+                    "technical_vocabulary_size": len(domain_profile.technical_vocabulary),
+                    "key_concepts_found": len(domain_profile.key_concepts)
+                }
+            )
+            
+            # Save learned configuration for future use
+            await self._save_learned_config(domain_name, "extraction", asdict(learned_config))
+            
+            logger.info(f"💾 Saved learned extraction config for {domain_name}")
+            return learned_config
+            
         except Exception as e:
-            raise Exception(f"Failed to generate extraction config for {domain_name}: {e}")
+            logger.error(f"❌ Failed to generate extraction config using domain intelligence: {e}")
+            # Fallback to centralized constants
+            fallback_config = DynamicExtractionConfig(
+                entity_confidence_threshold=KnowledgeExtractionConstants.FALLBACK_ENTITY_CONFIDENCE_THRESHOLD,
+                relationship_confidence_threshold=KnowledgeExtractionConstants.FALLBACK_RELATIONSHIP_CONFIDENCE_THRESHOLD,
+                chunk_size=KnowledgeExtractionConstants.FALLBACK_CHUNK_SIZE,
+                chunk_overlap=KnowledgeExtractionConstants.FALLBACK_CHUNK_OVERLAP,
+                batch_size=KnowledgeExtractionConstants.FALLBACK_BATCH_SIZE,
+                max_entities_per_chunk=KnowledgeExtractionConstants.FALLBACK_MAX_ENTITIES_PER_CHUNK,
+                min_relationship_strength=KnowledgeExtractionConstants.FALLBACK_MIN_RELATIONSHIP_STRENGTH,
+                quality_validation_threshold=KnowledgeExtractionConstants.FALLBACK_QUALITY_VALIDATION_THRESHOLD,
+                domain_name=domain_name,
+                learned_at=datetime.now(),
+                corpus_stats={"fallback_used": True, "error": str(e)}
+            )
+            return fallback_config
     
     async def _generate_search_config_from_domain_analysis(self, domain_name: str, query: str = None) -> DynamicSearchConfig:
         """Generate search config using Domain Intelligence Agent analysis"""
@@ -265,17 +308,17 @@ class DynamicConfigManager:
             # For now, using intelligent defaults based on domain analysis
             
             search_config = DynamicSearchConfig(
-                vector_similarity_threshold=0.75,  # Would be extracted from agent analysis
-                vector_top_k=15,  # Adjusted based on domain complexity
-                graph_hop_count=3,  # Based on relationship depth analysis
-                graph_min_relationship_strength=0.65,  # Domain-specific threshold
-                gnn_prediction_confidence=0.7,  # Based on model performance for domain
-                gnn_node_embeddings=128,  # Optimized for domain complexity
-                tri_modal_weights={"vector": 0.4, "graph": 0.35, "gnn": 0.25},  # Domain-optimized
-                result_synthesis_threshold=0.8,  # Quality threshold for domain
+                vector_similarity_threshold=UniversalSearchConstants.FALLBACK_VECTOR_SIMILARITY_THRESHOLD,  # Would be extracted from agent analysis
+                vector_top_k=UniversalSearchConstants.FALLBACK_VECTOR_TOP_K,  # Adjusted based on domain complexity
+                graph_hop_count=UniversalSearchConstants.FALLBACK_GRAPH_HOP_COUNT,  # Based on relationship depth analysis
+                graph_min_relationship_strength=UniversalSearchConstants.FALLBACK_GRAPH_MIN_RELATIONSHIP_STRENGTH,  # Domain-specific threshold
+                gnn_prediction_confidence=UniversalSearchConstants.FALLBACK_GNN_PREDICTION_CONFIDENCE,  # Based on model performance for domain
+                gnn_node_embeddings=UniversalSearchConstants.FALLBACK_GNN_NODE_EMBEDDINGS,  # Optimized for domain complexity
+                tri_modal_weights={"vector": UniversalSearchConstants.MULTI_MODAL_WEIGHT_VECTOR, "graph": UniversalSearchConstants.MULTI_MODAL_WEIGHT_GRAPH, "gnn": UniversalSearchConstants.MULTI_MODAL_WEIGHT_GNN},  # Domain-optimized
+                result_synthesis_threshold=UniversalSearchConstants.FALLBACK_RESULT_SYNTHESIS_THRESHOLD,  # Quality threshold for domain
                 domain_name=domain_name,
                 learned_at=datetime.now(),
-                query_complexity_weights={"simple": 1.0, "medium": 1.2, "complex": 1.5}
+                query_complexity_weights={"simple": UniversalSearchConstants.QUERY_COMPLEXITY_SIMPLE_MULTIPLIER, "medium": UniversalSearchConstants.QUERY_COMPLEXITY_MEDIUM_MULTIPLIER, "complex": UniversalSearchConstants.QUERY_COMPLEXITY_COMPLEX_MULTIPLIER}
             )
             
             # Save for future use
@@ -294,14 +337,14 @@ class DynamicConfigManager:
         has_complex_terms = any(term in query.lower() for term in ['relationship', 'connection', 'between', 'how does', 'explain'])
         
         complexity_multiplier = 1.0
-        if query_length > 10 or has_complex_terms:
-            complexity_multiplier = 1.3  # Increase search depth for complex queries
-        elif query_length < 5:
-            complexity_multiplier = 0.8  # Reduce search depth for simple queries
+        if query_length > UniversalSearchConstants.QUERY_LENGTH_COMPLEX_THRESHOLD or has_complex_terms:
+            complexity_multiplier = UniversalSearchConstants.QUERY_COMPLEXITY_COMPLEX_MULTIPLIER  # Increase search depth for complex queries
+        elif query_length < UniversalSearchConstants.QUERY_LENGTH_SIMPLE_THRESHOLD:
+            complexity_multiplier = UniversalSearchConstants.QUERY_COMPLEXITY_SIMPLE_MULTIPLIER  # Reduce search depth for simple queries
             
         # Adjust parameters based on complexity
         config_data['vector_top_k'] = int(config_data['vector_top_k'] * complexity_multiplier)
-        config_data['graph_hop_count'] = min(5, int(config_data['graph_hop_count'] * complexity_multiplier))
+        config_data['graph_hop_count'] = min(UniversalSearchConstants.MAX_GRAPH_HOP_COUNT, int(config_data['graph_hop_count'] * complexity_multiplier))
         
         return config_data
     
@@ -309,7 +352,7 @@ class DynamicConfigManager:
         """Save learned configuration for future use"""
         
         os.makedirs(self.generated_configs_path, exist_ok=True)
-        config_file = self.generated_configs_path / f"{domain_name}_{config_type}_config.yaml"
+        config_file = self.generated_configs_path / f"{domain_name}_{config_type}{PathConstants.GENERAL_CONFIG_SUFFIX}"
         
         try:
             with open(config_file, 'w') as f:

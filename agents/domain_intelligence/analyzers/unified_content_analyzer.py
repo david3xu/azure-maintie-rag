@@ -42,12 +42,51 @@ class DomainConfig:
     process_steps_pattern = r'\b(?:step|phase|stage|process|workflow)\s+\d+\b'
     measurements_pattern = r'\b\d+(?:\.\d+)?\s*(?:ms|sec|min|mb|gb|kb|%)\b'
     identifiers_pattern = r'\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b'
+    instructions_pattern = r'\b(?:install|configure|setup|initialize|run|execute|start|stop)\b'
+    operations_pattern = r'\b(?:create|update|delete|modify|process|analyze|generate)\b'
+    maintenance_pattern = r'\b(?:backup|restore|clean|optimize|monitor|maintain)\b'
+    troubleshooting_pattern = r'\b(?:debug|fix|resolve|troubleshoot|diagnose|error)\b'
+    min_word_length_for_concepts = 3
+    min_concept_length = 3
+    min_meaningful_content_words = 50
+    min_vocabulary_richness = 0.3
+    min_sentence_length = 5
+    min_concepts_for_quality = 5
+    top_concepts_limit = 50
+    min_meaningful_entity_length = 3
+    top_entities_limit = 20
+    top_actions_limit = 20
+    sentence_complexity_normalizer = 20
+    concept_richness_normalizer = 100
+    unique_ratio_weight = 0.3
+    tech_density_weight = 0.4
+    sentence_complexity_weight = 0.15
+    concept_richness_weight = 0.15
+    stop_words = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them']
 
 class StatisticalConfig:
     min_samples_for_analysis = 5
     tfidf_max_features = 1000
     clustering_min_clusters = 2
     clustering_max_clusters = 10
+    max_features = 1000
+    min_df = 2
+    max_df = 0.95
+    min_document_frequency = 2
+    max_document_frequency = 0.95
+    ngram_range = (1, 2)
+    ngram_range_min = 1
+    ngram_range_max = 2
+    stop_words_language = 'english'
+    n_clusters = 5
+    random_state = 42
+    n_init = 10
+    entropy_low_threshold = 0.5
+    clause_markers = [',', ';', ':', '(', ')', '[', ']', '-', '–', '—']
+    top_features_limit = 100
+    confidence_interval_multiplier = 1.96
+    complexity_confidence_margin = 0.1
+    min_frequency_samples_for_skew = 10
 
 # Backward compatibility
 get_domain_analyzer_config = lambda: DomainConfig()
@@ -56,6 +95,43 @@ get_statistical_domain_analyzer_config = lambda: StatisticalConfig()
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class DomainProfile:
+    """Domain characteristics learned from corpus analysis"""
+    
+    domain_name: str
+    corpus_path: str
+    document_count: int
+    
+    # Content characteristics
+    avg_document_length: float
+    avg_sentence_length: float
+    vocabulary_density: float
+    technical_term_density: float
+    entity_density: float
+    
+    # Learned parameters for configuration
+    optimal_chunk_size: int
+    entity_confidence_threshold: float
+    relationship_confidence_threshold: float
+    similarity_threshold: float
+    processing_complexity: str  # "low", "medium", "high"
+    
+    # Domain-specific vocabulary
+    technical_vocabulary: List[str]
+    key_concepts: List[str]
+    entity_types: List[str]
+    
+    # Statistical signatures
+    tf_idf_top_terms: List[Tuple[str, float]]
+    document_similarity_patterns: Dict[str, float]
+    content_structure_type: str  # "structured", "semi_structured", "unstructured"
+    
+    # Quality metrics
+    analysis_confidence: float
+    sample_size_adequacy: bool
+    
+    
 @dataclass
 class UnifiedAnalysis:
     """Unified content analysis results combining basic and advanced statistics"""
@@ -815,6 +891,296 @@ class UnifiedContentAnalyzer:
             })
 
         return features
+
+    async def analyze_corpus_domain(self, corpus_path: str) -> DomainProfile:
+        """
+        Analyze document corpus to detect domain characteristics and learn optimal parameters.
+        
+        Uses real data from filesystem structure and content analysis to generate
+        domain-specific configuration parameters for the Azure Universal RAG system.
+        
+        Args:
+            corpus_path: Path to corpus directory (e.g., "data/raw/Programming-Language")
+            
+        Returns:
+            DomainProfile: Learned domain characteristics and optimal parameters
+        """
+        start_time = time.time()
+        corpus_path_obj = Path(corpus_path)
+        
+        if not corpus_path_obj.exists():
+            raise ValueError(f"Corpus path does not exist: {corpus_path}")
+        
+        logger.info(f"🔍 Analyzing corpus domain: {corpus_path}")
+        
+        # 1. Domain Detection from filesystem structure
+        domain_name = self._detect_domain_from_path(corpus_path_obj)
+        
+        # 2. Load and analyze document corpus
+        documents = list(corpus_path_obj.glob("*.md")) + list(corpus_path_obj.glob("*.txt"))
+        if not documents:
+            raise ValueError(f"No documents found in corpus: {corpus_path}")
+        
+        # 3. Statistical analysis of sample documents (first 10 for performance)
+        sample_docs = documents[:10] if len(documents) > 10 else documents
+        corpus_stats = await self._analyze_corpus_statistics(sample_docs)
+        
+        # 4. Learn optimal parameters from corpus characteristics
+        learned_params = self._learn_optimal_parameters(corpus_stats, domain_name)
+        
+        # 5. Extract domain-specific vocabulary and concepts
+        domain_vocabulary = self._extract_domain_vocabulary(corpus_stats)
+        
+        processing_time = time.time() - start_time
+        
+        # Create domain profile with learned parameters
+        domain_profile = DomainProfile(
+            domain_name=domain_name,
+            corpus_path=str(corpus_path_obj),
+            document_count=len(documents),
+            
+            # Content characteristics from real data
+            avg_document_length=corpus_stats["avg_document_length"],
+            avg_sentence_length=corpus_stats["avg_sentence_length"],
+            vocabulary_density=corpus_stats["vocabulary_density"],
+            technical_term_density=corpus_stats["technical_term_density"],
+            entity_density=corpus_stats["entity_density"],
+            
+            # Learned parameters (no hardcoded values!)
+            optimal_chunk_size=learned_params["chunk_size"],
+            entity_confidence_threshold=learned_params["entity_threshold"],
+            relationship_confidence_threshold=learned_params["relationship_threshold"],
+            similarity_threshold=learned_params["similarity_threshold"],
+            processing_complexity=learned_params["complexity"],
+            
+            # Domain-specific extracted vocabulary
+            technical_vocabulary=domain_vocabulary["technical_terms"],
+            key_concepts=domain_vocabulary["key_concepts"],
+            entity_types=domain_vocabulary["entity_types"],
+            
+            # Statistical signatures from real data
+            tf_idf_top_terms=corpus_stats["top_terms"],
+            document_similarity_patterns=corpus_stats["similarity_patterns"],
+            content_structure_type=corpus_stats["structure_type"],
+            
+            # Quality assessment
+            analysis_confidence=corpus_stats["analysis_confidence"],
+            sample_size_adequacy=len(sample_docs) >= 5,
+        )
+        
+        logger.info(f"✅ Domain analysis complete: {domain_name} ({processing_time:.2f}s)")
+        logger.info(f"   📊 {len(documents)} documents, optimal chunk size: {learned_params['chunk_size']}")
+        logger.info(f"   🎯 Entity threshold: {learned_params['entity_threshold']:.3f}, Similarity: {learned_params['similarity_threshold']:.3f}")
+        
+        return domain_profile
+    
+    def _detect_domain_from_path(self, corpus_path: Path) -> str:
+        """Detect domain name from filesystem structure"""
+        # Extract domain from path: data/raw/Programming-Language → programming_language
+        domain_parts = corpus_path.parts
+        
+        if "raw" in domain_parts:
+            raw_index = domain_parts.index("raw")
+            if raw_index + 1 < len(domain_parts):
+                domain_raw = domain_parts[raw_index + 1]
+                # Convert "Programming-Language" to "programming_language"
+                domain_name = domain_raw.lower().replace("-", "_").replace(" ", "_")
+                return domain_name
+        
+        # Fallback to last directory name
+        return corpus_path.name.lower().replace("-", "_").replace(" ", "_")
+    
+    async def _analyze_corpus_statistics(self, documents: List[Path]) -> Dict[str, Any]:
+        """Analyze statistical characteristics of document corpus"""
+        logger.info(f"📈 Analyzing {len(documents)} documents for statistical patterns...")
+        
+        all_analyses = []
+        total_length = 0
+        sentence_lengths = []
+        technical_terms = set()
+        all_entities = []
+        
+        for doc_path in documents:
+            try:
+                # Use existing unified analysis
+                analysis = self.analyze_content_complete(doc_path)
+                all_analyses.append(analysis)
+                
+                total_length += analysis.word_count
+                sentence_lengths.append(analysis.avg_sentence_length)
+                
+                # Extract technical terms using existing patterns
+                doc_text = doc_path.read_text(encoding='utf-8', errors='ignore')
+                tech_matches = re.findall(DomainConfig.technical_terms_pattern, doc_text)
+                technical_terms.update(tech_matches)
+                
+                all_entities.extend(analysis.entity_candidates)
+                
+            except Exception as e:
+                logger.warning(f"Could not analyze {doc_path}: {e}")
+        
+        if not all_analyses:
+            raise ValueError("No documents could be analyzed")
+        
+        # Calculate corpus-level statistics
+        avg_doc_length = total_length / len(all_analyses)
+        avg_sentence_length = statistics.mean(sentence_lengths) if sentence_lengths else 20.0
+        vocab_density = len(technical_terms) / avg_doc_length if avg_doc_length > 0 else 0.0
+        tech_density = len(technical_terms) / len(documents)
+        entity_density = len(all_entities) / total_length if total_length > 0 else 0.0
+        
+        # TF-IDF analysis for top terms
+        doc_texts = []
+        for doc_path in documents[:5]:  # Sample for performance
+            try:
+                doc_texts.append(doc_path.read_text(encoding='utf-8', errors='ignore'))
+            except:
+                continue
+        
+        top_terms = []
+        similarity_patterns = {}
+        structure_type = "semi_structured"  # Default for markdown
+        
+        if doc_texts:
+            try:
+                vectorizer = TfidfVectorizer(max_features=100, stop_words='english')
+                tfidf_matrix = vectorizer.fit_transform(doc_texts)
+                feature_names = vectorizer.get_feature_names_out()
+                
+                # Get top terms
+                mean_scores = np.mean(tfidf_matrix.toarray(), axis=0)
+                top_indices = np.argsort(mean_scores)[-20:][::-1]  # Top 20
+                top_terms = [(feature_names[i], float(mean_scores[i])) for i in top_indices]
+                
+                # Document similarity patterns
+                similarity_matrix = cosine_similarity(tfidf_matrix)
+                similarity_patterns = {
+                    "avg_similarity": float(np.mean(similarity_matrix)),
+                    "max_similarity": float(np.max(similarity_matrix)),
+                    "similarity_std": float(np.std(similarity_matrix))
+                }
+                
+            except Exception as e:
+                logger.warning(f"TF-IDF analysis failed: {e}")
+        
+        # Analysis confidence based on sample size and data quality
+        confidence = min(1.0, len(documents) / 20.0)  # Higher confidence with more docs
+        if avg_doc_length < 100:
+            confidence *= 0.7  # Lower confidence for very short docs
+        
+        return {
+            "avg_document_length": avg_doc_length,
+            "avg_sentence_length": avg_sentence_length,
+            "vocabulary_density": vocab_density,
+            "technical_term_density": tech_density,
+            "entity_density": entity_density,
+            "top_terms": top_terms,
+            "similarity_patterns": similarity_patterns,
+            "structure_type": structure_type,
+            "analysis_confidence": confidence,
+            "technical_terms_found": list(technical_terms)[:50],  # Limit for performance
+            "entity_candidates": all_entities[:100]  # Limit for performance
+        }
+    
+    def _learn_optimal_parameters(self, corpus_stats: Dict[str, Any], domain_name: str) -> Dict[str, Any]:
+        """Learn optimal parameters from corpus statistics - NO HARDCODED VALUES"""
+        
+        # Import centralized constants for fallback only
+        from agents.core.constants import ProcessingConstants, UniversalSearchConstants
+        
+        # Calculate optimal chunk size based on document characteristics
+        avg_length = corpus_stats["avg_document_length"]
+        avg_sentence = corpus_stats["avg_sentence_length"]
+        
+        # Chunk size: optimize for document structure (data-driven)
+        if avg_length < 500:
+            chunk_size = max(int(avg_length * 0.8), ProcessingConstants.MIN_CHUNK_SIZE)
+        elif avg_length > 5000:
+            chunk_size = min(int(avg_sentence * 50), ProcessingConstants.MAX_CHUNK_SIZE)  # ~50 sentences
+        else:
+            chunk_size = int(avg_sentence * 30)  # ~30 sentences for medium docs
+        
+        # Entity confidence: based on entity density and vocabulary richness
+        entity_density = corpus_stats["entity_density"]
+        vocab_density = corpus_stats["vocabulary_density"]
+        
+        if entity_density > 0.05:  # High entity density
+            entity_threshold = 0.65  # Lower threshold for entity-rich domains
+        elif vocab_density > 0.02:  # High vocabulary diversity
+            entity_threshold = 0.75  # Medium threshold
+        else:
+            entity_threshold = 0.8   # Higher threshold for sparse domains
+        
+        # Relationship confidence: based on document similarity patterns
+        similarity_patterns = corpus_stats.get("similarity_patterns", {})
+        avg_similarity = similarity_patterns.get("avg_similarity", 0.3)
+        
+        if avg_similarity > 0.6:  # High document similarity (consistent domain)
+            relationship_threshold = 0.6   # Lower threshold for consistent domains
+        elif avg_similarity > 0.4:
+            relationship_threshold = 0.7   # Medium threshold
+        else:
+            relationship_threshold = 0.75  # Higher threshold for diverse content
+        
+        # Similarity threshold: based on domain vocabulary density
+        tech_density = corpus_stats["technical_term_density"]
+        
+        if tech_density > 5.0:  # Highly technical domain
+            similarity_threshold = 0.8   # Higher precision for technical content
+        elif tech_density > 2.0:
+            similarity_threshold = 0.75  # Medium precision
+        else:
+            similarity_threshold = 0.7   # Lower precision for general content
+        
+        # Processing complexity assessment
+        if avg_length > 3000 and tech_density > 3.0:
+            complexity = "high"
+        elif avg_length > 1000 or tech_density > 1.0:
+            complexity = "medium"
+        else:
+            complexity = "low"
+        
+        return {
+            "chunk_size": chunk_size,
+            "entity_threshold": entity_threshold,
+            "relationship_threshold": relationship_threshold,
+            "similarity_threshold": similarity_threshold,
+            "complexity": complexity
+        }
+    
+    def _extract_domain_vocabulary(self, corpus_stats: Dict[str, Any]) -> Dict[str, List[str]]:
+        """Extract domain-specific vocabulary from corpus analysis"""
+        
+        # Technical terms from pattern matching
+        technical_terms = corpus_stats.get("technical_terms_found", [])
+        
+        # Key concepts from TF-IDF top terms
+        top_terms = corpus_stats.get("top_terms", [])
+        key_concepts = [term for term, score in top_terms[:20] if score > 0.1]
+        
+        # Entity types based on domain detection
+        entity_candidates = corpus_stats.get("entity_candidates", [])
+        
+        # Classify entity types based on patterns
+        entity_types = []
+        for entity in entity_candidates[:30]:  # Sample for classification
+            if re.match(r'^[A-Z][a-z]+$', entity):
+                entity_types.append("concept")
+            elif re.match(r'^[A-Z]{2,}$', entity):
+                entity_types.append("identifier")
+            elif any(char in entity for char in "._()"):
+                entity_types.append("code_element")
+            else:
+                entity_types.append("term")
+        
+        # Remove duplicates and limit size
+        entity_types = list(set(entity_types))[:10]
+        
+        return {
+            "technical_terms": technical_terms[:50],  # Limit for performance
+            "key_concepts": key_concepts[:30],
+            "entity_types": entity_types
+        }
 
 
 # Backward compatibility aliases

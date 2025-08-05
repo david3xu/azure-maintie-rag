@@ -62,6 +62,14 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: check-hardcoded-values
+        name: Enforce zero-hardcoded-values in agents/
+        entry: python scripts/check_hardcoded_values.py
+        language: python
+        files: ^agents/.*\.py$
+        pass_filenames: false
+        description: Prevent hardcoded values in agents/ directory - enforces centralized configuration
+
       - id: prevent-large-artifacts
         name: Prevent large ML artifacts
         entry: bash -c 'find . -name "*.pth" -o -name "*.pkl" -o -name "*.h5" -o -name "*.onnx" | head -1 | grep -q . && echo "❌ Large ML artifacts detected. Use .gitignore" && exit 1 || exit 0'
