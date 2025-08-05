@@ -295,7 +295,7 @@ azure-universal-rag/
 │   ├── pydantic_ai_azure_provider.py # Azure provider for PydanticAI
 │   ├── core/                         # Core agent infrastructure
 │   │   ├── __init__.py              # Core module init
-│   │   ├── azure_services.py        # Azure services integration
+│   │   ├── azure_service_container.py        # Azure services integration
 │   │   ├── cache_manager.py         # Agent caching system
 │   │   ├── error_handler.py         # Agent error handling
 │   │   └── memory_manager.py        # Agent memory management
@@ -439,7 +439,7 @@ azure-universal-rag/
 │   │   ├── 09_response_generation.py # Response generation
 │   │   ├── 10_query_pipeline.py    # Query processing pipeline
 │   │   ├── 11_streaming_monitor.py # Streaming monitoring
-│   │   ├── setup_azure_services.py # Azure services setup
+│   │   ├── setup_azure_service_container.py # Azure services setup
 │   │   └── load_outputs.py         # Output data loading
 │   └── validate_directory_structure.py # Directory validation script
 │
@@ -463,7 +463,7 @@ azure-universal-rag/
 │   │   ├── validate_error_handling.py # Error handling validation
 │   │   └── validate_*.py           # Additional validation tests
 │   └── deployment/                  # Deployment tests
-│       ├── test_azure_services.py  # Azure service deployment tests
+│       ├── test_azure_service_container.py  # Azure service deployment tests
 │       ├── test_complete_services.py # Complete service tests
 │       └── test_deployment_services.py # Deployment validation
 │

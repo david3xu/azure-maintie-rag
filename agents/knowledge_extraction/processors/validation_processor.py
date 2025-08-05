@@ -9,8 +9,22 @@ import logging
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 
-# Import centralized configuration
-from config.centralized_config import get_confidence_calculation_config, get_quality_assessment_config
+# Clean configuration (CODING_STANDARDS compliant)
+# Simple validation thresholds
+DEFAULT_ENTITY_CONFIDENCE_THRESHOLD = 0.7
+DEFAULT_RELATIONSHIP_CONFIDENCE_THRESHOLD = 0.65
+
+# Backward compatibility
+class QualityConfig:
+    default_entity_confidence_threshold = DEFAULT_ENTITY_CONFIDENCE_THRESHOLD
+    default_relationship_confidence_threshold = DEFAULT_RELATIONSHIP_CONFIDENCE_THRESHOLD
+
+class ConfidenceConfig:
+    default_entity_confidence_threshold = DEFAULT_ENTITY_CONFIDENCE_THRESHOLD
+    default_relationship_confidence_threshold = DEFAULT_RELATIONSHIP_CONFIDENCE_THRESHOLD
+
+get_confidence_calculation_config = lambda: ConfidenceConfig()
+get_quality_assessment_config = lambda: QualityConfig()
 
 logger = logging.getLogger(__name__)
 

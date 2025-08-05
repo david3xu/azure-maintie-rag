@@ -95,6 +95,11 @@ from .knowledge_extraction.agent import (  # Knowledge extraction tools
     extract_knowledge_from_documents,  # Batch processing
 )
 
+# Import search workflow orchestrator (Single source of truth)
+from .workflows.search_workflow_graph import (
+    SearchWorkflow,
+)
+
 # Consolidated tools moved to toolsets.py following target architecture
 # from .universal_search.consolidated_tools import (
 #     SearchRequest,
@@ -155,6 +160,8 @@ __all__ = [
     "get_universal_search_agent",     # ✅ Consolidated agent function
     "SimpleQueryRequest",
     "AgentResponse",
+    # Search Workflow Orchestrator (Single source of truth)
+    "SearchWorkflow",
     # Consolidated core services
     "ConsolidatedAzureServices",
     "create_azure_service_container",

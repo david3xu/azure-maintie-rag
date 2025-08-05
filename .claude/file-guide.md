@@ -149,7 +149,7 @@ backend/tests/
 │   ├── test_services.py             # Service layer tests
 │   └── test_infrastructure.py       # Infrastructure tests
 ├── integration/
-│   ├── test_azure_services.py       # Azure integration tests
+│   ├── test_azure_service_container.py       # Azure integration tests
 │   ├── test_search_pipeline.py      # Search workflow tests
 │   └── test_gnn_integration.py      # GNN integration tests
 └── performance/

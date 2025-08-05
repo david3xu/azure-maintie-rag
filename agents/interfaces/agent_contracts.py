@@ -15,11 +15,17 @@ from typing import Any, Dict, List, Literal, Optional, Union
 import numpy as np
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-# Import centralized configuration
-from config.centralized_config import get_agent_contracts_config
-
-# Get configuration instance (cached)
-_config = get_agent_contracts_config()
+# Clean configuration constants (CODING_STANDARDS compliant)
+# Statistical and validation thresholds
+CHI_SQUARE_SIGNIFICANCE_ALPHA = 0.05
+MIN_PATTERN_FREQUENCY = 3  
+STATISTICAL_CONFIDENCE_THRESHOLD = 0.75
+STATISTICAL_CONFIDENCE_MIN = 0.0
+STATISTICAL_CONFIDENCE_MAX = 1.0
+MAX_EXECUTION_TIME_SECONDS = 300.0
+MAX_EXECUTION_TIME_MIN = 0.1
+MAX_EXECUTION_TIME_LIMIT = 600.0
+MAX_AZURE_SERVICE_COST_USD = 10.0
 
 # =============================================================================
 # AZURE SERVICE DATA MODELS
@@ -116,8 +122,8 @@ class StatisticalPattern(BaseModel):
     @property
     def is_statistically_significant(self) -> bool:
         """Determine if pattern is statistically significant"""
-        return (self.chi_square_p_value < _config.chi_square_significance_alpha 
-                and self.frequency >= _config.min_pattern_frequency)
+        return (self.chi_square_p_value < CHI_SQUARE_SIGNIFICANCE_ALPHA 
+                and self.frequency >= MIN_PATTERN_FREQUENCY)
 
 
 class DomainStatistics(BaseModel):
@@ -167,9 +173,9 @@ class DomainAnalysisContract(BaseModel):
     )
     analysis_depth: Literal["surface", "deep", "comprehensive"] = Field(default="deep")
     statistical_confidence_threshold: float = Field(
-        default=_config.statistical_confidence_threshold_default, 
-        ge=_config.statistical_confidence_min, 
-        le=_config.statistical_confidence_max
+        default=STATISTICAL_CONFIDENCE_THRESHOLD, 
+        ge=STATISTICAL_CONFIDENCE_MIN, 
+        le=STATISTICAL_CONFIDENCE_MAX
     )
 
     # Azure service configurations - discovered dynamically
@@ -217,13 +223,13 @@ class KnowledgeExtractionContract(BaseModel):
 
     # Performance requirements
     max_execution_time_seconds: float = Field(
-        default=_config.max_execution_time_seconds, 
-        gt=_config.max_execution_time_min, 
-        le=_config.max_execution_time_limit
+        default=MAX_EXECUTION_TIME_SECONDS, 
+        gt=MAX_EXECUTION_TIME_MIN, 
+        le=MAX_EXECUTION_TIME_LIMIT
     )
     max_azure_service_cost_usd: float = Field(
-        default=_config.max_azure_service_cost_usd, 
-        gt=_config.max_execution_time_min, 
+        default=MAX_AZURE_SERVICE_COST_USD, 
+        gt=MAX_EXECUTION_TIME_MIN, 
         le=_config.max_azure_service_cost_limit
     )
 

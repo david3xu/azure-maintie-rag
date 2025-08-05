@@ -21,11 +21,14 @@ from azure.core.exceptions import AzureError
 from azure.identity import DefaultAzureCredential
 from pydantic_ai.providers.azure import AzureProvider
 
-# Import centralized configuration
-from config.centralized_config import get_azure_services_config
+# Import clean configuration (CODING_STANDARDS compliant)
+from config.centralized_config import get_system_config, get_model_config_bootstrap, get_workflow_config
 
-# Get configuration instance (cached)
-_config = get_azure_services_config()
+# Get configuration instances (cleaned)
+_system_config = get_system_config()
+# Use bootstrap config during initialization to avoid circular dependencies
+_model_config = get_model_config_bootstrap()
+_workflow_config = get_workflow_config()
 
 # Import infrastructure services (respecting layer boundaries)
 try:
@@ -57,8 +60,8 @@ try:
 except ImportError:
     # Create minimal settings for testing
     class AzureSettings:
-        azure_openai_endpoint = _config.default_azure_openai_endpoint
-        openai_api_version = _config.default_openai_api_version
+        azure_openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        openai_api_version = _model_config.api_version
         azure_search_endpoint = None
         azure_cosmos_endpoint = None
         azure_storage_account = None
@@ -169,13 +172,13 @@ class ConsolidatedAzureServices:
                 logger.warning(
                     "⚠️ Azure OpenAI API version not configured, using default"
                 )
-                api_version = _config.fallback_api_version
+                api_version = _model_config.api_version
             else:
                 api_version = azure_settings.openai_api_version
 
             # Create token provider with managed identity
             token_provider = get_bearer_token_provider(
-                self.credential, _config.cognitive_services_scope
+                self.credential, "https://cognitiveservices.azure.com/.default"
             )
 
             # Create Azure OpenAI client with managed identity
@@ -331,13 +334,13 @@ class ConsolidatedAzureServices:
     async def _initialize_tri_modal_orchestrator(self) -> bool:
         """Initialize tri-modal search orchestrator"""
         try:
-            # Import the orchestrator (using absolute import to avoid relative import issues)
-            from infrastructure.search.tri_modal_orchestrator import (
-                TriModalOrchestrator,
+            # Import the consolidated orchestrator (single source of truth)
+            from agents.universal_search.orchestrators.consolidated_search_orchestrator import (
+                ConsolidatedSearchOrchestrator,
             )
 
-            # Initialize the orchestrator
-            self.tri_modal_orchestrator = TriModalOrchestrator()
+            # Initialize the consolidated orchestrator
+            self.tri_modal_orchestrator = ConsolidatedSearchOrchestrator()
 
             logger.info("🔍 Tri-modal search orchestrator initialized successfully")
             return True
@@ -365,9 +368,9 @@ class ConsolidatedAzureServices:
             "has_storage": self.storage_client is not None,
             "has_ml": self.ml_client is not None,
             "has_tri_modal_orchestrator": self.tri_modal_orchestrator is not None,
-            "overall_health": _config.overall_health_healthy
-            if sum(self.initialized_services.values()) > _config.min_healthy_services
-            else _config.overall_health_degraded,
+            "overall_health": "healthy"
+            if sum(self.initialized_services.values()) > 2
+            else "degraded",
         }
 
     async def health_check(self) -> Dict[str, Any]:
@@ -379,26 +382,26 @@ class ConsolidatedAzureServices:
         # Check each initialized service
         for service_name, is_initialized in self.initialized_services.items():
             if not is_initialized:
-                health_results[service_name] = _config.status_not_initialized
+                health_results[service_name] = "not_initialized"
                 continue
 
             try:
                 if service_name == "search" and self.search_client:
                     await self.search_client.test_connection()
-                    health_results[service_name] = _config.status_healthy
+                    health_results[service_name] = "healthy"
                 elif service_name == "cosmos" and self.cosmos_client:
                     await self.cosmos_client.test_connection()
-                    health_results[service_name] = _config.status_healthy
+                    health_results[service_name] = "healthy"
                 elif service_name == "storage" and self.storage_client:
                     await self.storage_client.test_connection()
-                    health_results[service_name] = _config.status_healthy
+                    health_results[service_name] = "healthy"
                 elif service_name == "ml" and self.ml_client:
                     await self.ml_client.test_connection()
-                    health_results[service_name] = _config.status_healthy
+                    health_results[service_name] = "healthy"
                 elif service_name == "ai_foundry" and self.ai_foundry_provider:
                     health_results[
                         service_name
-                    ] = _config.status_healthy  # Provider doesn't need connection test
+                    ] = "healthy"  # Provider doesn't need connection test
                 elif (
                     service_name == "tri_modal_orchestrator"
                     and self.tri_modal_orchestrator
@@ -407,20 +410,20 @@ class ConsolidatedAzureServices:
                     orchestrator_health = (
                         await self.tri_modal_orchestrator.health_check()
                     )
-                    if orchestrator_health.get("overall_status") == _config.overall_health_healthy:
-                        health_results[service_name] = _config.status_healthy
+                    if orchestrator_health.get("overall_status") == "healthy":
+                        health_results[service_name] = "healthy"
                     else:
-                        health_results[service_name] = _config.status_degraded
+                        health_results[service_name] = "degraded"
                 else:
-                    health_results[service_name] = _config.status_unknown
+                    health_results[service_name] = "unknown"
 
             except Exception as e:
-                health_results[service_name] = f"{_config.status_unhealthy_prefix}{str(e)}"
+                health_results[service_name] = f"unhealthy: {str(e)}"
                 logger.warning(f"⚠️ Health check failed for {service_name}: {e}")
 
         # Calculate overall health
         healthy_services = sum(
-            1 for status in health_results.values() if status == _config.status_healthy
+            1 for status in health_results.values() if status == "healthy"
         )
         total_checked = len(health_results)
 

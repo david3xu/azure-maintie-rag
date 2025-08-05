@@ -12,16 +12,15 @@ from pydantic import BaseModel
 from pydantic_ai import RunContext
 from pydantic_ai.toolsets import FunctionToolset
 
-from ..core.azure_services import ConsolidatedAzureServices
+from ..core.azure_service_container import ConsolidatedAzureServices
 from ..core.cache_manager import UnifiedCacheManager
-from ..core.performance_monitor import CompetitiveAdvantageMonitor
 
 
 class SharedDeps(BaseModel):
     """Shared dependencies for common toolsets"""
     azure_services: Optional[ConsolidatedAzureServices] = None
     cache_manager: Optional[UnifiedCacheManager] = None
-    performance_monitor: Optional[CompetitiveAdvantageMonitor] = None
+    performance_monitor: Optional[Any] = None  # Data-driven performance monitoring
     
     class Config:
         arbitrary_types_allowed = True

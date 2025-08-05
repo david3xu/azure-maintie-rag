@@ -62,10 +62,12 @@ make knowledge-extract  # Extract entities & relations
 ```bash
 pytest                  # Run all tests with automatic asyncio handling (project root)
 pytest tests/agents/    # Run agent-specific tests  
-pytest tests/agents/run_comprehensive_agent_tests.py  # Comprehensive multi-agent tests
-pytest -v --tb=short    # Verbose output with short tracebacks
 pytest tests/unit/      # Unit tests
 pytest tests/integration/ # Integration tests
+pytest tests/azure_validation/ # Azure service validation tests
+pytest -v --tb=short    # Verbose output with short tracebacks
+pytest -k "test_name"   # Run specific test pattern
+pytest --collect-only   # Show available tests without running
 ```
 
 ### Backend Development
@@ -98,7 +100,7 @@ azd env select production && azd up  # Deploy to production environment
 - **Centralized Configuration** (`agents/core/centralized_config.py`): Dynamic configuration management
 
 ### Azure Service Integration
-- **Consolidated Services** (`agents/core/azure_services.py`): Unified Azure service container with proper error handling
+- **Consolidated Services** (`agents/core/azure_service_container.py`): Unified Azure service container with proper error handling
 - **Authentication**: Uses DefaultAzureCredential for unified Azure authentication
 - **Configuration**: Environment-based settings with automatic Azure environment synchronization
 
@@ -128,8 +130,9 @@ azd env select production && azd up  # Deploy to production environment
 ### Code Quality Tools
 - **Black** formatter (line length 88, configured in pyproject.toml)
 - **isort** for import organization (black profile, first-party packages configured)
-- **ESLint** for TypeScript/React code
+- **ESLint** for TypeScript/React code (`cd frontend && npm run lint`)
 - **pytest** with asyncio auto mode and comprehensive test discovery
+- **Type checking**: `cd frontend && npx tsc --noEmit` for TypeScript validation
 
 ## Configuration Management
 
@@ -168,7 +171,7 @@ azd env select production && azd up  # Deploy to production environment
 
 ### Agent Development
 - Agents are stateless and communicate through well-defined interfaces
-- Use dependency injection for Azure service access via `agents/core/azure_services.py`
+- Use dependency injection for Azure service access via `agents/core/azure_service_container.py`
 - Follow the existing patterns in `agents/core/` and `agents/shared/`
 - Implement proper error handling and logging
 - All agent interfaces use data-driven Pydantic models to eliminate hardcoded values
@@ -181,17 +184,18 @@ azd env select production && azd up  # Deploy to production environment
 - Validate all inputs and sanitize outputs
 
 ### Testing Architecture
-- **Comprehensive Agent Tests**: `tests/agents/run_comprehensive_agent_tests.py` runs all agent tests with JSON output
-- **Individual Agent Tests**: Each agent has dedicated test files in `tests/agents/`
-- **Test Results Storage**: Results stored in `test_results/agents/` with timestamped JSON files
-- **Validation Tests**: Architecture and deployment validation in `tests/validation/`
-- **Fixture Data**: Real data fixtures in `tests/fixtures/real_data.py`
+- **Test Organization**: Tests organized by type - unit, integration, azure_validation, performance
+- **Azure Validation**: `tests/azure_validation/` for Azure service health checks
+- **Integration Tests**: `tests/integration/` for multi-service workflows
+- **Test Results Storage**: Results stored in `test_results/` with timestamped JSON files
+- **Configuration Testing**: Unit tests for configuration validation in `tests/unit/test_configuration.py`
+- **Agent Testing**: Logic tests for agent functionality in `tests/unit/test_agents_logic.py`
 
 ## File Structure Guide
 
 ```
 agents/                          # Multi-agent system (Pydantic AI)
-├── core/                        # Core infrastructure (azure_services.py, centralized_config.py)
+├── core/                        # Core infrastructure (azure_service_container.py, centralized_config.py)
 ├── domain_intelligence/         # Domain analysis agent with statistical processing
 ├── knowledge_extraction/        # Entity/relationship extraction with validation processors
 ├── universal_search/            # Tri-modal search (vector + graph + GNN)
@@ -219,13 +223,39 @@ frontend/                       # React 19 + TypeScript UI
 └── src/types/                  # TypeScript type definitions
 
 tests/                          # Comprehensive testing
-├── agents/                     # Agent-specific tests with JSON result output
-├── validation/                 # Architecture validation tests
-├── fixtures/                   # Real data fixtures
+├── unit/                       # Unit tests (agents logic, configuration)
+├── integration/                # Multi-service integration tests
+├── azure_validation/           # Azure service health validation
+├── performance/                # Performance and SLA compliance tests
 └── test_results/               # Timestamped test result storage
 
 config/                         # Environment-based configuration
 └── environments/               # Environment-specific Azure settings (.env files)
+```
+
+## Development Workflow Patterns
+
+### Pre-commit Validation
+```bash
+# Run before committing
+black . --check                # Code formatting check
+isort . --check-only           # Import organization check
+cd frontend && npm run lint    # Frontend linting
+pytest tests/unit/             # Quick unit tests
+```
+
+### Service Validation Commands
+```bash
+make health                    # Full system health check
+make azure-status             # Azure infrastructure status
+make session-report           # Current session metrics
+```
+
+### Data Pipeline Commands
+```bash
+make data-prep-full           # Complete data processing pipeline
+make query-demo               # Query pipeline demonstration
+make unified-search-demo      # Unified search demonstration
 ```
 
 ## Current Development Context

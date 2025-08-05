@@ -8,7 +8,7 @@ Provides dependency injection pattern for Knowledge Extraction Agent.
 from typing import Optional, Any
 from pydantic import BaseModel, Field
 
-from ..core.azure_services import ConsolidatedAzureServices
+from .azure_service_container import ConsolidatedAzureServices
 from ..core.cache_manager import UnifiedCacheManager
 from ..core.memory_manager import UnifiedMemoryManager
 

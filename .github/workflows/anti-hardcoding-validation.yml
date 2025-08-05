@@ -1,0 +1,30 @@
+name: Anti-Hardcoding Validation
+
+on: [push, pull_request]
+
+jobs:
+  validate-configuration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Anti-Hardcoding Tests
+        run: |
+          pytest tests/architecture/test_anti_hardcoding_compliance.py -v
+
+      - name: Validate Workflow Integration
+        run: |
+          python scripts/validate_workflow_integration.py
+
+      - name: Check for Hardcoded Patterns
+        run: |
+          ./scripts/hooks/pre-commit-anti-hardcoding.sh

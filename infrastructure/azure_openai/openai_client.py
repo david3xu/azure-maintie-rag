@@ -14,8 +14,8 @@ from openai import AzureOpenAI
 
 from config.settings import azure_settings
 
-# Configuration imports
-from config.centralized_config import get_model_config, get_infrastructure_config, get_azure_services_config
+# Clean configuration imports (CODING_STANDARDS compliant)
+from config.centralized_config import get_model_config_bootstrap
 
 from ..azure_auth.base_client import BaseAzureClient
 
@@ -67,20 +67,21 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
             return False
 
     def _initialize_client(self):
-        """Initialize Azure OpenAI client"""
-        # Get configuration
-        model_config = get_model_config()
-        azure_services_config = get_azure_services_config()
+        """Initialize Azure OpenAI client (CODING_STANDARDS: Clean configuration)"""
+        # Get clean configuration (bootstrap version to avoid circular dependencies)
+        model_config = get_model_config_bootstrap()
         
         if self.use_managed_identity:
             # Use managed identity for azd deployments
-            from azure.identity import DefaultAzureCredential
+            from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
             credential = DefaultAzureCredential()
+            token_provider = get_bearer_token_provider(
+                credential, "https://cognitiveservices.azure.com/.default"
+            )
+            
             self._client = AzureOpenAI(
-                azure_ad_token_provider=lambda: credential.get_token(
-                    azure_services_config.cognitive_services_scope
-                ).token,
+                azure_ad_token_provider=token_provider,
                 api_version=model_config.openai_api_version,
                 azure_endpoint=self.endpoint,
             )
@@ -99,17 +100,17 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
             self.rate_limiter = SimpleRateLimiter(domain="general")
 
     async def test_connection(self) -> Dict[str, Any]:
-        """Test Azure OpenAI connection"""
+        """Test Azure OpenAI connection (CODING_STANDARDS: Clean implementation)"""
         try:
             self.ensure_initialized()
 
-            # Simple test request to verify connectivity
-            model_config = get_model_config()
+            # Simple test request to verify connectivity  
+            model_config = get_model_config_bootstrap()
             response = await asyncio.to_thread(
                 self._client.chat.completions.create,
                 model=azure_settings.openai_deployment_name or model_config.gpt4o_deployment_name,
                 messages=[{"role": "user", "content": "Hello"}],
-                max_tokens=model_config.default_max_tokens // 800,  # Small test request
+                max_tokens=5,  # Minimal test request
             )
 
             return {
@@ -183,9 +184,8 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                         f"Extraction failed for text {i+1}: {result.get('error')}"
                     )
 
-                # Progress logging using configured batch size
-                infra_config = get_infrastructure_config()
-                batch_size = infra_config.max_batch_size
+                # Progress logging using simple batch size
+                batch_size = 10  # Simple default batch size
                 if (i + 1) % batch_size == 0 or i == 0:
                     print(
                         f"    📊 Progress: {i + 1}/{len(texts)} texts | Entities: {len(all_entities)} | Relationships: {len(all_relationships)}"
@@ -481,7 +481,8 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
             # Create prompt-like object for backward compatibility
             class AsyncPrompts:
                 def __init__(self, ml_config):
-                    self.model_name = "gpt-4o"  # Default model
+                    # self.model_name = "gpt-4o"  # ❌ HARDCODED - Removed to force Dynamic Model Manager
+                    self.model_name = None  # Must be loaded from Dynamic Model Manager
                     self.temperature = 0.1
                     self.max_tokens = 2000
                     self.requests_per_minute = 50
@@ -498,7 +499,8 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
 
             # Fallback to minimal config
             class FallbackPrompts:
-                model_name = "gpt-4o"
+                # model_name = "gpt-4o"  # ❌ HARDCODED - Removed to force Dynamic Model Manager
+                model_name = None  # Must be loaded from Dynamic Model Manager
                 temperature = 0.1
                 max_tokens = 2000
                 requests_per_minute = 50

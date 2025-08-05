@@ -10,7 +10,7 @@ from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from ..universal_search.agent import get_universal_agent
+from ..universal_search.agent import get_universal_search_agent
 from ..domain_intelligence.agent import get_domain_intelligence_agent
 from .workflow_enums import WorkflowState, NodeState
 from .state_persistence import WorkflowStateManager
@@ -337,7 +337,7 @@ class SearchWorkflow:
     
     async def _execute_tri_modal_search(self, context: WorkflowContext) -> Dict[str, Any]:
         """Execute tri-modal search node"""
-        agent = get_universal_agent()
+        agent = get_universal_search_agent()
         
         query = context.input_data.get("query", "")
         domain_info = context.results.get("domain_detection", {})
@@ -386,6 +386,30 @@ class SearchWorkflow:
             "response_confidence": 0.9,
             "generation_method": "template_based"
         }
+
+    async def health_check(self) -> Dict[str, Any]:
+        """Perform health check on search workflow components"""
+        try:
+            # Check if agents are accessible
+            domain_agent = get_domain_intelligence_agent()
+            search_agent = get_universal_search_agent()
+            
+            return {
+                "overall_status": "healthy",
+                "components": {
+                    "domain_intelligence_agent": "available",
+                    "universal_search_agent": "available",
+                    "workflow_nodes": len(self.nodes),
+                    "state_manager": "operational"
+                },
+                "workflow_status": "ready"
+            }
+        except Exception as e:
+            return {
+                "overall_status": "degraded",
+                "error": str(e),
+                "workflow_status": "limited"
+            }
 
 
 # Export main components

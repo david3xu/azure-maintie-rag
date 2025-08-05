@@ -29,7 +29,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Import centralized configuration
-from config.centralized_config import get_ml_hyperparameters_config
+# Clean configuration (CODING_STANDARDS compliant)
+# Sub-millisecond threshold for performance tracking
+SUB_MILLISECOND_THRESHOLD = 0.001  # 1 millisecond
 
 logger = logging.getLogger(__name__)
 
@@ -104,9 +106,8 @@ class CachePerformanceMetrics:
         else:
             self.cache_misses += 1
 
-        # Track lookup performance (using centralized threshold)
-        ml_config = get_ml_hyperparameters_config()
-        if lookup_time < ml_config.sub_millisecond_threshold:  # Sub-millisecond
+        # Track lookup performance (CODING_STANDARDS: Simple constant)
+        if lookup_time < SUB_MILLISECOND_THRESHOLD:  # Sub-millisecond
             self.fast_lookups += 1
 
         # Update average lookup time (weighted moving average)

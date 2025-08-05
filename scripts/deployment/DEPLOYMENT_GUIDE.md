@@ -66,10 +66,10 @@ python3 scripts/deployment/test_azure_services_status.py
 #### Azure Resources Cleanup
 ```bash
 # Dry run (safe)
-python3 scripts/deployment/cleanup_azure_services.py --subscription-id <sub-id> --dry-run
+python3 scripts/deployment/cleanup_azure_service_container.py --subscription-id <sub-id> --dry-run
 
 # Live cleanup (DANGEROUS)
-python3 scripts/deployment/cleanup_azure_services.py --subscription-id <sub-id> --live
+python3 scripts/deployment/cleanup_azure_service_container.py --subscription-id <sub-id> --live
 ```
 
 **Features:**

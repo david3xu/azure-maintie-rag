@@ -357,7 +357,7 @@ The result is a unified, intelligent system where configuration and extraction c
 **Role**: Main orchestration and search coordination
 
 **Code Files Used**:
-- `core/azure_services.py` - Azure service integration
+- `core/azure_service_container.py` - Azure service integration
 - `domain_intelligence_agent.py` - Delegates domain tasks
 - **Imports issue**: Tries to import from `..config.v2_config_models` (problematic)
 
@@ -370,7 +370,7 @@ The result is a unified, intelligent system where configuration and extraction c
 **Role**: Simplified version of Universal Agent
 
 **Code Files Used**:
-- `core/azure_services.py`, `core/cache_manager.py`, `core/error_handler.py`, `core/memory_manager.py`
+- `core/azure_service_container.py`, `core/cache_manager.py`, `core/error_handler.py`, `core/memory_manager.py`
 - `tools/consolidated_tools.py` - Tool management
 - **Missing**: No Config-Extraction orchestration integration
 
@@ -454,7 +454,7 @@ graph TB
     end
 
     subgraph "Supporting Infrastructure"
-        AS[azure_services.py]
+        AS[azure_service_container.py]
         MM[memory_manager.py]
 
         KEA --> AS
@@ -626,7 +626,7 @@ Based on complete directory analysis, the Azure Universal RAG system has **4 mai
 **Role**: Main orchestration and search coordination
 
 **Direct Code Files Used**:
-- `core/azure_services.py` - Azure service integration
+- `core/azure_service_container.py` - Azure service integration
 - `domain_intelligence_agent.py` - Delegates domain tasks
 - `tools/search_tools.py` - Vector, graph, and GNN search execution
 
@@ -639,7 +639,7 @@ Based on complete directory analysis, the Azure Universal RAG system has **4 mai
 **Role**: Simplified version of Universal Agent
 
 **Direct Code Files Used**:
-- `core/azure_services.py`, `core/cache_manager.py`, `core/error_handler.py`, `core/memory_manager.py`
+- `core/azure_service_container.py`, `core/cache_manager.py`, `core/error_handler.py`, `core/memory_manager.py`
 - `tools/consolidated_tools.py` - Tool management
 - `tools/discovery_tools.py` - Domain discovery
 
@@ -651,7 +651,7 @@ Based on complete directory analysis, the Azure Universal RAG system has **4 mai
 ### Supporting Infrastructure Files
 
 #### **Used by Agents**:
-- `core/azure_services.py` - Used by all agents for Azure integration
+- `core/azure_service_container.py` - Used by all agents for Azure integration
 - `core/cache_manager.py` - Used by all agents for performance caching
 - `core/error_handler.py` - Used by extraction and universal agents
 - `core/memory_manager.py` - Used by simple universal agent

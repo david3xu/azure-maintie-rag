@@ -10,8 +10,22 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, validator
 
-# Import centralized configuration
-from config.centralized_config import get_pattern_recognition_config
+# Clean configuration (CODING_STANDARDS compliant)
+# Simple security patterns
+DANGEROUS_PATTERNS = [
+    r"<script",
+    r"javascript:",
+    r"eval\(",
+    r"exec\(",
+    r"import\s+os",
+    r"subprocess",
+]
+
+# Backward compatibility
+class PatternConfig:
+    dangerous_patterns = DANGEROUS_PATTERNS
+
+get_pattern_recognition_config = lambda: PatternConfig()
 
 
 class SearchType(str, Enum):
