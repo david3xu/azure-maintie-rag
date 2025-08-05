@@ -2,10 +2,15 @@
 from .classification_client import (
     AzureClassificationPipeline as AzureMLClassificationService,
 )
-
-# from .gnn.training.orchestrator import UnifiedGNNTrainingOrchestrator as AzureMLGNNProcessor  # Disabled - GNN module removed
+from .gnn_training_client import GNNTrainingClient
+from .gnn_inference_client import GNNInferenceClient
+from .gnn_model import UniversalGNN, UniversalGNNConfig, create_gnn_model
 
 __all__ = [
-    # 'AzureMLGNNProcessor',  # Disabled - GNN module removed
-    "AzureMLClassificationService"
+    "AzureMLClassificationService",
+    "GNNTrainingClient",
+    "GNNInferenceClient", 
+    "UniversalGNN",
+    "UniversalGNNConfig",
+    "create_gnn_model"
 ]

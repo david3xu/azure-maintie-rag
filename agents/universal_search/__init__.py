@@ -28,13 +28,13 @@ from .agent import (
     SearchResponse
 )
 
-# Import orchestrator workflow if available
+# Import search workflow orchestrator (single source of truth)
 try:
-    from ..workflows.tri_modal_orchestrator import TriModalOrchestrator
+    from ..workflows.search_workflow_graph import SearchWorkflow
     WORKFLOW_ORCHESTRATOR_AVAILABLE = True
 except ImportError:
     WORKFLOW_ORCHESTRATOR_AVAILABLE = False
-    TriModalOrchestrator = None
+    SearchWorkflow = None
 
 __all__ = [
     # Consolidated orchestrator
@@ -49,5 +49,5 @@ __all__ = [
     "QueryRequest",
     "SearchResponse",
     # Workflow orchestrator (if available)
-    "TriModalOrchestrator",
+    "SearchWorkflow",
 ]

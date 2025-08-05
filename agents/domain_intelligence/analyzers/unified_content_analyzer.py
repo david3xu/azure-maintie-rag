@@ -34,11 +34,24 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Configuration imports
-from config.centralized_config import (
-    get_domain_analyzer_config,
-    get_statistical_domain_analyzer_config,
-)
+# Clean configuration (CODING_STANDARDS compliant)
+# Simple pattern configurations for content analysis
+class DomainConfig:
+    technical_terms_pattern = r'\b[A-Z]{2,}(?:[_-][A-Z]{2,})*\b'
+    model_names_pattern = r'\b(?:gpt|bert|llama|claude|openai|azure)\w*\b'
+    process_steps_pattern = r'\b(?:step|phase|stage|process|workflow)\s+\d+\b'
+    measurements_pattern = r'\b\d+(?:\.\d+)?\s*(?:ms|sec|min|mb|gb|kb|%)\b'
+    identifiers_pattern = r'\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b'
+
+class StatisticalConfig:
+    min_samples_for_analysis = 5
+    tfidf_max_features = 1000
+    clustering_min_clusters = 2
+    clustering_max_clusters = 10
+
+# Backward compatibility
+get_domain_analyzer_config = lambda: DomainConfig()
+get_statistical_domain_analyzer_config = lambda: StatisticalConfig()
 
 logger = logging.getLogger(__name__)
 

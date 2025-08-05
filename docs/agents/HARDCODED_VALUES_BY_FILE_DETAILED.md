@@ -40,7 +40,7 @@ This document provides a comprehensive breakdown of hardcoded values across all 
 | 15 | **agents/domain_intelligence/domain_analyzer.py** | 44 | 3 levels | 🟡 Medium |
 | 16 | **agents/workflows/tri_modal_orchestrator.py** | 42 | 2 levels | 🟡 Medium |
 | 17 | **agents/domain_intelligence/background_processor.py** | 40 | 1 level | 🟡 Medium |
-| 18 | **agents/core/azure_services.py** | 38 | 6 levels | 🔴 High |
+| 18 | **agents/core/azure_service_container.py** | 38 | 6 levels | 🔴 High |
 | 19 | **agents/domain_intelligence/config_generator.py** | 35 | 2 levels | 🟡 Medium |
 | 20 | **agents/workflows/search_workflow_graph.py** | 33 | 1 level | 🟢 Low |
 | 21 | **agents/workflows/config_extraction_graph.py** | 32 | 1 level | 🟢 Low |
@@ -86,7 +86,7 @@ These files should be targeted for further centralized configuration implementat
 3. **relationship_processor.py** (75) - Relationship extraction parameters
 4. **entity_processor.py** (63) - Entity processing configurations with 5-level impact
 5. **knowledge_extraction/agent.py** (57) - Agent configuration with 6-level impact
-6. **azure_services.py** (38) - Core service configurations with 6-level impact
+6. **azure_service_container.py** (38) - Core service configurations with 6-level impact
 7. **cache_manager.py** (29) - Caching parameters with 4-level impact
 
 ### 🟡 **Medium Priority Files** (20-65 values)

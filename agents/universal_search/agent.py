@@ -26,12 +26,19 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
-# Import centralized configuration
-from config.centralized_config import (
-    get_universal_search_agent_config,
-    get_model_config,
-    get_tri_modal_orchestration_config
-)
+# Clean configuration imports (CODING_STANDARDS compliant) 
+from config.centralized_config import get_model_config, get_search_config
+
+# Backward compatibility for gradual migration
+class UniversalSearchAgentConfig:
+    def __init__(self):
+        model_config = get_model_config()
+        self.azure_endpoint = model_config.azure_endpoint
+        self.api_version = model_config.api_version  
+        self.deployment_name = model_config.deployment_name
+
+get_universal_search_agent_config = lambda: UniversalSearchAgentConfig()
+get_tri_modal_orchestration_config = get_search_config  # Alias for compatibility
 
 # Import consolidated orchestrator
 from .orchestrators.consolidated_search_orchestrator import (

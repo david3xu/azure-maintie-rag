@@ -37,11 +37,37 @@ from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
-# Import centralized configuration
-from config.centralized_config import get_knowledge_extraction_agent_config
+# Clean configuration imports (CODING_STANDARDS compliant)
+from config.centralized_config import get_extraction_config
 
-# Get configuration instance (cached)
-_config = get_knowledge_extraction_agent_config()
+# Lazy configuration loading - will be loaded when needed
+_config = None
+
+def _get_config(domain_name: str = "general"):
+    """Get extraction configuration lazily to avoid circular imports"""
+    try:
+        return get_extraction_config(domain_name)
+    except Exception:
+        # Return safe defaults if config loading fails during initialization
+        from types import SimpleNamespace
+        return SimpleNamespace(
+            azure_endpoint="https://example.openai.azure.com/",
+            api_version="2024-08-01-preview", 
+            # deployment_name="gpt-4o",  # ❌ HARDCODED - Removed to force Dynamic Model Manager
+            deployment_name=None,  # Must be loaded from Dynamic Model Manager
+            confidence_default=0.8,
+            processing_time_initial=1.0,
+            max_successful_extractions=1,
+            entity_precision_multiplier=1.0,
+            entity_recall_multiplier=1.0,
+            relationship_precision_multiplier=1.0,
+            relationship_recall_multiplier=1.0,
+            max_documents_divisor=1,
+            memory_usage_default_mb=256,
+            cpu_utilization_default_percent=50,
+            cache_hit_rate_default=0.6,
+            cache_hit_rate_disabled=0.0
+        )
 
 # Import models from interfaces
 try:
@@ -55,12 +81,12 @@ except ImportError:
     # Fallback models if interface not available
     class ExtractionConfiguration(BaseModel):
         domain_name: str = "general"
-        entity_confidence_threshold: float = _config.entity_confidence_threshold
-        relationship_confidence_threshold: float = _config.relationship_confidence_threshold
+        entity_confidence_threshold: float = 0.7  # Will be overridden by domain config
+        relationship_confidence_threshold: float = 0.65  # Will be overridden by domain config
         expected_entity_types: List[str] = []
         technical_vocabulary: List[str] = []
         key_concepts: List[str] = []
-        minimum_quality_score: float = _config.minimum_quality_score
+        minimum_quality_score: float = 0.8  # Will be overridden by domain config
         enable_caching: bool = True
         cache_ttl_seconds: int = 3600
         max_concurrent_chunks: int = 5
@@ -128,10 +154,11 @@ def _create_agent_with_toolset() -> Agent:
 
     try:
         # Configure Azure OpenAI provider
-        azure_endpoint = _config.azure_endpoint
+        config = _get_config()
+        azure_endpoint = config.azure_endpoint
         api_key = os.getenv("AZURE_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
-        api_version = _config.api_version
-        deployment_name = _config.deployment_name
+        api_version = config.api_version
+        deployment_name = config.deployment_name
 
         if not api_key:
             raise ValueError("AZURE_OPENAI_API_KEY or OPENAI_API_KEY environment variable is required")
@@ -261,7 +288,7 @@ async def extract_knowledge_from_document(
             relationships=relationship_result.get("relationships", []),
             key_concepts=[],  # Could be enhanced
             technical_terms=[],  # Could be enhanced
-            extraction_confidence=validation_result.get("overall_quality", _config.confidence_default),
+            extraction_confidence=validation_result.get("overall_quality", _get_config().confidence_default),
             entity_count=len(entity_result.get("entities", [])),
             relationship_count=len(relationship_result.get("relationships", [])),
             passed_validation=validation_result.get("validation_passed", False),
@@ -275,7 +302,7 @@ async def extract_knowledge_from_document(
         return ExtractedKnowledge(
             source_document=document_id or f"doc_{int(time.time())}",
             extraction_timestamp=datetime.now().isoformat(),
-            processing_time_seconds=_config.processing_time_initial,
+            processing_time_seconds=_get_config().processing_time_initial,
             entities=[],
             relationships=[],
             key_concepts=[],
@@ -318,7 +345,8 @@ async def extract_knowledge_from_documents(
         # Aggregate extraction data
         total_entity_count = sum(e.entity_count for e in successful_extractions)
         total_relationship_count = sum(e.relationship_count for e in successful_extractions)
-        avg_confidence = sum(e.extraction_confidence for e in successful_extractions) / max(len(successful_extractions), _config.max_successful_extractions)
+        config = _get_config()
+        avg_confidence = sum(e.extraction_confidence for e in successful_extractions) / max(len(successful_extractions), config.max_successful_extractions)
         
         # Create extraction results
         results = ExtractionResults(
@@ -326,14 +354,14 @@ async def extract_knowledge_from_documents(
             documents_processed=len(documents),
             total_processing_time_seconds=total_time,
             extraction_accuracy=avg_confidence,
-            entity_precision=avg_confidence * _config.entity_precision_multiplier,
-            entity_recall=avg_confidence * _config.entity_recall_multiplier,
-            relationship_precision=avg_confidence * _config.relationship_precision_multiplier,
-            relationship_recall=avg_confidence * _config.relationship_recall_multiplier,
-            average_processing_time_per_document=total_time / max(len(documents), _config.max_documents_divisor),
-            memory_usage_mb=_config.memory_usage_default_mb,
-            cpu_utilization_percent=_config.cpu_utilization_default_percent,
-            cache_hit_rate=_config.cache_hit_rate_default if config.enable_caching else _config.cache_hit_rate_disabled,
+            entity_precision=avg_confidence * config.entity_precision_multiplier,
+            entity_recall=avg_confidence * config.entity_recall_multiplier,
+            relationship_precision=avg_confidence * config.relationship_precision_multiplier,
+            relationship_recall=avg_confidence * config.relationship_recall_multiplier,
+            average_processing_time_per_document=total_time / max(len(documents), config.max_documents_divisor),
+            memory_usage_mb=config.memory_usage_default_mb,
+            cpu_utilization_percent=config.cpu_utilization_default_percent,
+            cache_hit_rate=config.cache_hit_rate_default if config.enable_caching else config.cache_hit_rate_disabled,
             total_entities_extracted=total_entity_count,
             total_relationships_extracted=total_relationship_count,
             unique_entity_types_found=len(set(

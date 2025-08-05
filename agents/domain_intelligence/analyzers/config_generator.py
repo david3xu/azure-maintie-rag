@@ -12,8 +12,20 @@ from typing import Dict, List
 
 from .pattern_engine import ExtractedPatterns
 
-# Import centralized configuration
-from config.centralized_config import get_ml_hyperparameters_config, get_config_generator_config
+# Clean configuration (CODING_STANDARDS compliant)
+# Simple ML configurations
+class MLConfig:
+    simple_gnn_config = {"layers": 2, "hidden_dim": 64}
+    medium_gnn_config = {"layers": 3, "hidden_dim": 128}
+    complex_gnn_config = {"layers": 4, "hidden_dim": 256}
+
+class ConfigGenConfig:
+    primary_concepts_fallback_limit = 10
+    primary_concepts_main_limit = 15
+
+# Backward compatibility
+get_ml_hyperparameters_config = lambda: MLConfig()
+get_config_generator_config = lambda: ConfigGenConfig()
 
 
 @dataclass

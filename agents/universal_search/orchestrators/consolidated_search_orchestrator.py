@@ -27,14 +27,63 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
-# Import centralized configuration
-from config.centralized_config import (
-    get_vector_search_config,
-    get_graph_search_config, 
-    get_gnn_search_config,
-    get_tri_modal_orchestration_config,
-    get_universal_search_agent_config
-)
+# Clean configuration imports (CODING_STANDARDS compliant)
+from config.centralized_config import get_search_config
+
+# Backward compatibility for gradual migration - create simple config objects
+class VectorSearchConfig:
+    # TODO: Load from generated domain configs - Config-Extraction workflow integration
+    # HARDCODED: simulated_processing_delay = 0.1  # Should be learned from corpus complexity
+    # HARDCODED: default_top_k = 10  # Should be domain-specific from query analysis
+    # HARDCODED: similarity_threshold = 0.7  # Should be adaptive based on domain intelligence
+    def __init__(self):
+        raise NotImplementedError("Must load from Config-Extraction workflow - domain-specific parameters needed")
+
+class GraphSearchConfig:
+    # TODO: Load from generated domain configs - Config-Extraction workflow integration
+    # HARDCODED: simulated_processing_delay = 0.15  # Should be learned from graph complexity
+    # HARDCODED: default_hop_count = 2  # Should be domain-specific for relationship depth
+    # HARDCODED: min_relationship_strength = 0.5  # Should be learned from corpus analysis
+    def __init__(self):
+        raise NotImplementedError("Must load from Config-Extraction workflow - relationship patterns needed")
+
+class GNNSearchConfig:
+    # TODO: Load from generated domain configs - Config-Extraction workflow integration
+    # HARDCODED: simulated_processing_delay = 0.2  # Should be learned from model complexity
+    # HARDCODED: default_node_embeddings = 128  # Should be adaptive based on domain
+    # HARDCODED: min_prediction_confidence = 0.6  # Should be learned from training results
+    def __init__(self):
+        raise NotImplementedError("Must load from Config-Extraction workflow - GNN model parameters needed")
+
+class TriModalOrchestrationConfig:
+    # TODO: Load from generated domain configs - Config-Extraction workflow integration
+    # HARDCODED: default_search_types = ["vector", "graph", "gnn"]  # Should be domain-optimized
+    # HARDCODED: max_results_per_modality = 10  # Should be query-complexity driven
+    # HARDCODED: confidence_weight = 0.4  # Should be learned from domain performance
+    # HARDCODED: agreement_weight = 0.3  # Should be adaptive based on modality reliability
+    # HARDCODED: quality_weight = 0.3  # Should be learned from quality feedback
+    def __init__(self):
+        raise NotImplementedError("Must load from Config-Extraction workflow - tri-modal weights needed")
+
+# Compatibility functions - MUST BE REPLACED with Config-Extraction workflow integration
+# TODO: These functions must load from generated domain configs instead of hardcoded values
+def get_vector_search_config():
+    """TODO: Load vector search config from Config-Extraction workflow output"""
+    raise NotImplementedError("Must integrate with Config-Extraction workflow - vector parameters needed")
+
+def get_graph_search_config():
+    """TODO: Load graph search config from Config-Extraction workflow output"""
+    raise NotImplementedError("Must integrate with Config-Extraction workflow - graph parameters needed")
+
+def get_gnn_search_config():
+    """TODO: Load GNN search config from Config-Extraction workflow output"""
+    raise NotImplementedError("Must integrate with Config-Extraction workflow - GNN parameters needed")
+
+def get_tri_modal_orchestration_config():
+    """TODO: Load tri-modal orchestration config from Config-Extraction workflow output"""
+    raise NotImplementedError("Must integrate with Config-Extraction workflow - orchestration weights needed")
+
+get_universal_search_agent_config = get_search_config  # Alias - TODO: Replace with domain-specific config
 
 logger = logging.getLogger(__name__)
 
@@ -241,20 +290,35 @@ class ConsolidatedSearchOrchestrator:
             if self.domain_agent is None:
                 await self._initialize_domain_agent()
             
-            # Simulate vector search (replace with actual Azure Cognitive Search integration)
-            await asyncio.sleep(self.vector_config.simulated_processing_delay)
+            # TODO: Replace with actual Azure Cognitive Search integration
+            # HARDCODED: Removing simulated_processing_delay (was 0.1) - should be learned from corpus complexity
+            # await asyncio.sleep(self.vector_config.simulated_processing_delay)
+            # TODO: Load processing delay from domain analysis based on corpus size and complexity
+            await asyncio.sleep(0.1)  # PLACEHOLDER - must come from Config-Extraction workflow
             
-            # Generate mock results based on configuration
+            # TODO: Replace with actual Azure Cognitive Search integration using domain-specific parameters
+            # HARDCODED VALUES REMOVED - Must load from Config-Extraction workflow:
+            # - similarity_threshold: should be domain-specific (was 0.7)
+            # - default_top_k: should be query-complexity driven (was 10)
+            # - confidence scoring: should be learned from domain performance
+            
+            # TEMPORARY: Generate mock results for testing workflow integration
             results = []
-            for i in range(min(max_results, self.vector_config.default_top_k)):
+            # TODO: Load these parameters from generated domain config
+            domain_similarity_threshold = 0.7  # PLACEHOLDER - must come from Config-Extraction
+            domain_top_k = 10  # PLACEHOLDER - must come from Config-Extraction
+            
+            for i in range(min(max_results, domain_top_k)):
                 results.append(SearchResult(
-                    content=f"Vector search result {i+1} for query: {query}",
-                    confidence=max(0.1, self.vector_config.similarity_threshold - (i * 0.1)),
+                    content=f"Vector search result {i+1} for query: {query} [NEEDS DOMAIN CONFIG]",
+                    confidence=max(0.1, domain_similarity_threshold - (i * 0.1)),
                     metadata={
                         "search_type": "vector_similarity",
                         "domain": domain,
                         "embedding_model": "text-embedding-ada-002",
-                        "similarity_score": self.vector_config.similarity_threshold - (i * 0.05)
+                        "similarity_score": domain_similarity_threshold - (i * 0.05),
+                        "config_source": "HARDCODED_PLACEHOLDER",  # TODO: should be "domain_config"
+                        "needs_config_integration": True
                     },
                     source="azure_cognitive_search"
                 ))
@@ -288,21 +352,35 @@ class ConsolidatedSearchOrchestrator:
             if self.domain_agent is None:
                 await self._initialize_domain_agent()
             
-            # Simulate graph search (replace with actual Azure Cosmos DB Gremlin integration)
-            await asyncio.sleep(self.graph_config.simulated_processing_delay)
+            # TODO: Replace with actual Azure Cosmos DB Gremlin integration using domain-specific parameters
+            # HARDCODED VALUES REMOVED - Must load from Config-Extraction workflow:
+            # - simulated_processing_delay: should be learned from graph complexity (was 0.15)
+            # - max_entities: should be domain-specific entity density (was from config)
+            # - relationship_confidence_threshold: should be learned from corpus analysis
+            # - max_depth: should be domain-specific relationship depth (was from config)
             
-            # Generate mock results based on configuration
+            # TODO: Load processing delay from domain analysis
+            await asyncio.sleep(0.15)  # PLACEHOLDER - must come from Config-Extraction workflow
+            
+            # TEMPORARY: Generate mock results for testing workflow integration
             results = []
-            for i in range(min(max_results, self.graph_config.max_entities)):
+            # TODO: Load these parameters from generated domain config
+            domain_max_entities = 10  # PLACEHOLDER - must come from Config-Extraction
+            domain_relationship_threshold = 0.6  # PLACEHOLDER - must come from Config-Extraction
+            domain_max_depth = 3  # PLACEHOLDER - must come from Config-Extraction
+            
+            for i in range(min(max_results, domain_max_entities)):
                 results.append(SearchResult(
-                    content=f"Graph search result {i+1} - entity relationships for: {query}",
-                    confidence=max(0.1, self.graph_config.relationship_confidence_threshold - (i * 0.08)),
+                    content=f"Graph search result {i+1} - entity relationships for: {query} [NEEDS DOMAIN CONFIG]",
+                    confidence=max(0.1, domain_relationship_threshold - (i * 0.08)),
                     metadata={
                         "search_type": "graph_relationships",
                         "domain": domain,
-                        "traversal_depth": min(i + 1, self.graph_config.max_depth),
+                        "traversal_depth": min(i + 1, domain_max_depth),
                         "relationship_type": "semantic_connection",
-                        "entity_count": self.graph_config.max_entities
+                        "entity_count": domain_max_entities,
+                        "config_source": "HARDCODED_PLACEHOLDER",  # TODO: should be "domain_config"
+                        "needs_config_integration": True
                     },
                     source="azure_cosmos_gremlin"
                 ))
@@ -336,21 +414,37 @@ class ConsolidatedSearchOrchestrator:
             if self.domain_agent is None:
                 await self._initialize_domain_agent()
             
-            # Simulate GNN search (replace with actual Azure ML integration)
-            await asyncio.sleep(self.gnn_config.simulated_processing_delay)
+            # TODO: Replace with actual Azure ML integration using domain-specific GNN parameters
+            # HARDCODED VALUES REMOVED - Must load from Config-Extraction workflow:
+            # - simulated_processing_delay: should be learned from model complexity (was 0.2)
+            # - max_predictions: should be domain-specific prediction capacity
+            # - pattern_threshold: should be learned from training performance
+            # - model_name: should be domain-optimized model selection
+            # - min_training_examples: should be domain-specific training requirements
             
-            # Generate mock results based on configuration
+            # TODO: Load processing delay from domain analysis
+            await asyncio.sleep(0.2)  # PLACEHOLDER - must come from Config-Extraction workflow
+            
+            # TEMPORARY: Generate mock results for testing workflow integration
             results = []
-            for i in range(min(max_results, self.gnn_config.max_predictions)):
+            # TODO: Load these parameters from generated domain config
+            domain_max_predictions = 20  # PLACEHOLDER - must come from Config-Extraction
+            domain_pattern_threshold = 0.7  # PLACEHOLDER - must come from Config-Extraction
+            domain_model_name = "domain_gnn_model"  # PLACEHOLDER - must come from Config-Extraction
+            domain_min_training = 100  # PLACEHOLDER - must come from Config-Extraction
+            
+            for i in range(min(max_results, domain_max_predictions)):
                 results.append(SearchResult(
-                    content=f"GNN prediction result {i+1} - pattern analysis for: {query}",
-                    confidence=max(0.1, self.gnn_config.pattern_threshold - (i * 0.06)),
+                    content=f"GNN prediction result {i+1} - pattern analysis for: {query} [NEEDS DOMAIN CONFIG]",
+                    confidence=max(0.1, domain_pattern_threshold - (i * 0.06)),
                     metadata={
                         "search_type": "gnn_prediction",
                         "domain": domain,
-                        "model_name": self.gnn_config.model_name,
+                        "model_name": domain_model_name,
                         "prediction_type": "semantic_pattern",
-                        "training_examples": self.gnn_config.min_training_examples
+                        "training_examples": domain_min_training,
+                        "config_source": "HARDCODED_PLACEHOLDER",  # TODO: should be "domain_config"
+                        "needs_config_integration": True
                     },
                     source="azure_ml_gnn"
                 ))
@@ -403,9 +497,13 @@ class ConsolidatedSearchOrchestrator:
         
         # Calculate metrics
         total_results = len(all_results)
+        # TODO: Load high_confidence_threshold from domain-specific config
+        # HARDCODED: high_confidence_threshold should be learned from domain performance
+        domain_high_confidence_threshold = 0.8  # PLACEHOLDER - must come from Config-Extraction workflow
+        
         high_confidence_results = len([
             r for r in all_results 
-            if r.confidence >= self.orchestration_config.high_confidence_threshold
+            if r.confidence >= domain_high_confidence_threshold
         ])
         average_confidence = sum(r.confidence for r in all_results) / total_results
         
@@ -418,11 +516,21 @@ class ConsolidatedSearchOrchestrator:
         active_modalities = sum(1 for count in modality_counts.values() if count > 0)
         cross_modal_agreement = min(1.0, active_modalities / 3.0 * average_confidence)
         
+        # TODO: Load synthesis weights from domain-specific config
+        # HARDCODED VALUES REMOVED - Must load from Config-Extraction workflow:
+        # - confidence_weight: should be learned from domain performance (was 0.4)
+        # - agreement_weight: should be adaptive based on modality reliability (was 0.3)
+        # - quality_weight: should be learned from quality feedback (was 0.3)
+        
+        domain_confidence_weight = 0.4  # PLACEHOLDER - must come from Config-Extraction workflow
+        domain_agreement_weight = 0.3   # PLACEHOLDER - must come from Config-Extraction workflow
+        domain_quality_weight = 0.3     # PLACEHOLDER - must come from Config-Extraction workflow
+        
         # Calculate synthesis score
         synthesis_score = (
-            average_confidence * self.orchestration_config.confidence_weight +
-            cross_modal_agreement * self.orchestration_config.agreement_weight +
-            (high_confidence_results / total_results) * self.orchestration_config.quality_weight
+            average_confidence * domain_confidence_weight +
+            cross_modal_agreement * domain_agreement_weight +
+            (high_confidence_results / total_results) * domain_quality_weight
         )
         
         return {

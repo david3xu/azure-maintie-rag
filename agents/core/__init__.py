@@ -11,7 +11,7 @@ This module provides consolidated core services following clean architecture pri
 All services follow dependency injection patterns and layer boundary rules.
 """
 
-from .azure_services import ConsolidatedAzureServices, create_azure_service_container
+from .azure_service_container import ConsolidatedAzureServices, create_azure_service_container
 from .cache_manager import UnifiedCacheManager, cached_operation, get_cache_manager
 from .error_handler import UnifiedErrorHandler
 from .memory_manager import UnifiedMemoryManager, get_memory_manager

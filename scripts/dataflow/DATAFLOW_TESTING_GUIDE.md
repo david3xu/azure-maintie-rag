@@ -221,7 +221,7 @@ python scripts/dataflow/11_streaming_monitor.py
 ### **Setup and Configuration**
 ```bash
 # Initialize Azure services configuration
-python scripts/dataflow/setup_azure_services.py
+python scripts/dataflow/setup_azure_service_container.py
 ```
 
 ### **Data Loading and Analysis**

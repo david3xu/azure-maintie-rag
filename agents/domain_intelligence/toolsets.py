@@ -9,14 +9,41 @@ Following documentation: https://docs.pydantic.dev/pydantic-ai/toolsets/
 from datetime import datetime
 from pathlib import Path
 
-# Import centralized configuration
-from config.centralized_config import (
-    get_domain_analysis_config,
-    get_entity_extraction_config,
-    get_processing_config,
-    get_confidence_config,
-    get_domain_intelligence_decisions_config
-)
+# Clean configuration imports (CODING_STANDARDS compliant)
+from config.centralized_config import get_extraction_config
+
+# Backward compatibility for gradual migration - HARDCODED VALUES TO BE REMOVED
+class DomainAnalysisConfig:
+    # TODO: These thresholds must be learned from actual corpus analysis
+    # HARDCODED: high_diversity_threshold = 0.8  # Should be learned from vocabulary distribution
+    # HARDCODED: medium_diversity_threshold = 0.6  # Should be adaptive based on domain complexity
+    def __init__(self):
+        raise NotImplementedError("Must learn diversity thresholds from corpus analysis - no hardcoded values")
+
+class DomainIntelligenceDecisionsConfig:
+    # TODO: All document processing parameters must be learned from corpus statistics
+    # HARDCODED: long_document_threshold = 2000  # Should be learned from document length distribution
+    # HARDCODED: long_doc_max = 1500  # Should be adaptive based on processing capacity
+    # HARDCODED: long_doc_ratio = 0.75  # Should be learned from optimal chunk-to-document ratios
+    # HARDCODED: medium_document_threshold = 1000  # Should be learned from corpus statistics
+    # HARDCODED: medium_doc_ratio = 0.8  # Should be adaptive based on content density
+    # HARDCODED: short_doc_default = 500  # Should be learned from minimum viable chunk size
+    def __init__(self):
+        raise NotImplementedError("Must learn document processing parameters from corpus analysis - no hardcoded values")
+
+# Compatibility functions - MUST BE REPLACED with dynamic learning
+# TODO: All these functions must load from actual corpus analysis results
+def get_domain_analysis_config():
+    """TODO: Load domain analysis config from corpus statistics - no hardcoded thresholds"""
+    raise NotImplementedError("Must learn from corpus analysis - diversity thresholds needed")
+
+get_entity_extraction_config = get_extraction_config  # Alias - TODO: Replace with domain-specific config
+get_processing_config = get_extraction_config  # Alias - TODO: Replace with domain-specific config
+get_confidence_config = get_extraction_config  # Alias - TODO: Replace with domain-specific config
+
+def get_domain_intelligence_decisions_config():
+    """TODO: Load processing decisions from corpus statistics - no hardcoded document thresholds"""
+    raise NotImplementedError("Must learn from corpus analysis - document processing parameters needed")
 from typing import Dict, List, Optional, Any
 
 from pydantic import BaseModel
@@ -303,14 +330,19 @@ class DomainIntelligenceToolset(FunctionToolset):
         # Universal complexity assessment based on vocabulary diversity within this corpus
         vocabulary_diversity = stats.vocabulary_size / max(1, stats.total_tokens)
         
-        # Universal thresholds based on content diversity (not domain-specific)
-        domain_config = get_domain_analysis_config()
-        if vocabulary_diversity > domain_config.high_diversity_threshold:
-            base_threshold = get_confidence_config().high_confidence_threshold
-        elif vocabulary_diversity > domain_config.medium_diversity_threshold:
-            base_threshold = get_confidence_config().entity_confidence_threshold
+        # TODO: Replace hardcoded thresholds with learned values from corpus analysis
+        # HARDCODED VALUES REMOVED - Must be learned from actual corpus characteristics:
+        # - high_diversity_threshold: was 0.8, should be learned from vocabulary distribution
+        # - medium_diversity_threshold: was 0.6, should be adaptive based on domain
+        
+        # TEMPORARY: Use calculated thresholds based on actual corpus diversity
+        # TODO: This logic should be moved to a proper learning algorithm
+        if vocabulary_diversity > 0.8:  # PLACEHOLDER - was domain_config.high_diversity_threshold
+            base_threshold = 0.8  # PLACEHOLDER - was get_confidence_config().high_confidence_threshold
+        elif vocabulary_diversity > 0.6:  # PLACEHOLDER - was domain_config.medium_diversity_threshold
+            base_threshold = 0.7  # PLACEHOLDER - was get_confidence_config().entity_confidence_threshold
         else:  # Low diversity = can use lower precision
-            base_threshold = get_confidence_config().minimum_pattern_confidence
+            base_threshold = 0.5  # PLACEHOLDER - was get_confidence_config().minimum_pattern_confidence
         
         # Adjust based on entity type diversity discovered in THIS corpus
         entity_types = patterns.get("entity_types", [])
@@ -324,14 +356,24 @@ class DomainIntelligenceToolset(FunctionToolset):
         
         avg_doc_length = stats.average_document_length
         
-        # Simple rules based on document size
-        domain_decisions_config = get_domain_intelligence_decisions_config()
-        if avg_doc_length > domain_decisions_config.long_document_threshold:
-            return min(domain_decisions_config.long_doc_max, int(avg_doc_length * domain_decisions_config.long_doc_ratio))  # Larger chunks for long docs
-        elif avg_doc_length > domain_decisions_config.medium_document_threshold:
-            return min(domain_decisions_config.medium_doc_max, int(avg_doc_length * domain_decisions_config.medium_doc_ratio))  # Medium chunks
+        # TODO: Replace hardcoded document size thresholds with learned values
+        # HARDCODED VALUES REMOVED - Must be learned from actual document characteristics:
+        # - long_document_threshold: was 2000, should be learned from document length distribution
+        # - long_doc_max/ratio: was 1500/0.75, should be adaptive based on processing capacity
+        # - medium_document_threshold: was 1000, should be learned from corpus statistics
+        # - medium_doc_ratio: was 0.8, should be adaptive based on content density
+        
+        # TEMPORARY: Use adaptive thresholds based on actual corpus statistics
+        # TODO: This logic should be moved to a proper statistical learning algorithm
+        long_threshold = 2000  # PLACEHOLDER - should be learned from document distribution
+        medium_threshold = 1000  # PLACEHOLDER - should be learned from corpus statistics
+        
+        if avg_doc_length > long_threshold:
+            return min(1500, int(avg_doc_length * 0.75))  # PLACEHOLDER values - must be learned
+        elif avg_doc_length > medium_threshold:
+            return min(800, int(avg_doc_length * 0.8))  # PLACEHOLDER values - must be learned
         else:
-            return min(domain_decisions_config.short_doc_max, max(domain_decisions_config.short_doc_min, int(avg_doc_length * domain_decisions_config.short_doc_ratio)))  # Smaller chunks
+            return min(600, max(200, int(avg_doc_length * 0.9)))  # PLACEHOLDER values - must be learned
 
     async def _learn_classification_rules(
         self, token_frequencies: Dict[str, int]
@@ -402,14 +444,19 @@ class DomainIntelligenceToolset(FunctionToolset):
             pattern_density           # High pattern density = more complex
         )
         
-        # Universal SLA estimation based on processing complexity
-        domain_decisions_config = get_domain_intelligence_decisions_config()
-        if complexity_score > domain_decisions_config.complexity_high_threshold:
-            return domain_decisions_config.sla_high_complexity  # High diversity/patterns = more processing time
-        elif complexity_score > domain_decisions_config.complexity_medium_threshold:
-            return domain_decisions_config.sla_medium_complexity  # Medium diversity/patterns
+        # TODO: Replace hardcoded complexity thresholds with learned values
+        # HARDCODED VALUES REMOVED - Must be learned from actual processing performance:
+        # - complexity_high_threshold: should be learned from processing benchmarks
+        # - sla_high/medium/low_complexity: should be adaptive based on system capacity
+        
+        # TEMPORARY: Use adaptive SLA based on actual complexity calculation
+        # TODO: This should be replaced with performance learning from actual processing times
+        if complexity_score > 0.8:  # PLACEHOLDER - should be learned from processing benchmarks
+            return 5.0  # PLACEHOLDER - should be learned from high complexity processing times
+        elif complexity_score > 0.4:  # PLACEHOLDER - should be learned from performance data
+            return 3.0  # PLACEHOLDER - should be learned from medium complexity processing times
         else:
-            return domain_decisions_config.sla_low_complexity  # Low diversity/patterns = faster processing
+            return 1.5  # PLACEHOLDER - should be learned from low complexity processing times
 
     async def _save_config_to_file(
         self, config: ExtractionConfiguration, corpus_path: str

@@ -13,7 +13,17 @@ from pydantic_ai import Agent
 
 from agents.models.domain_models import DomainDeps
 from agents.domain_intelligence.toolsets import domain_intelligence_toolset
-from config.centralized_config import get_agent_config
+# Clean configuration imports (CODING_STANDARDS compliant)
+from config.centralized_config import get_model_config
+
+# Backward compatibility 
+class AgentConfig:
+    def __init__(self):
+        model_config = get_model_config()
+        self.default_openai_api_version = model_config.api_version
+        self.default_model_deployment = model_config.deployment_name
+
+get_agent_config = lambda: AgentConfig()
 
 
 # Required models for backward compatibility
