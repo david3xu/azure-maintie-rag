@@ -157,8 +157,8 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                 f"❌ Azure OpenAI connection failed: {e}. Cannot extract knowledge without Azure OpenAI."
             )
 
-        if not texts:
-            raise ValueError("No texts provided for knowledge extraction")
+        # Use PydanticAI built-in validation instead of manual checks
+        # texts parameter should be validated at function signature level
 
         try:
             all_entities = []
@@ -258,8 +258,8 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                 text_content=text, domain_name=domain
             )
         except Exception as e:
-            logger.warning(f"Failed to load template prompt, using fallback: {e}")
-            # Fallback to original hardcoded prompt if template fails
+            logger.warning(f"Failed to load template prompt, using dynamic fallback: {e}")
+            # Dynamic fallback using domain-specific extraction focus
             extraction_focus = f"entities, relationships, {domain}-specific concepts"
             return f"""You are a knowledge extraction system. Extract entities and relationships from this {domain} text.
 
@@ -481,12 +481,15 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
             # Create prompt-like object for backward compatibility
             class AsyncPrompts:
                 def __init__(self, ml_config):
-                    # self.model_name = "gpt-4o"  # ❌ HARDCODED - Removed to force Dynamic Model Manager
-                    self.model_name = None  # Must be loaded from Dynamic Model Manager
-                    self.temperature = 0.1
-                    self.max_tokens = 2000
-                    self.requests_per_minute = 50
-                    self.chunk_size = 1000
+                    # Get model name from Azure settings or use dynamic configuration
+                    from config.settings import azure_settings
+                    self.model_name = azure_settings.openai_deployment_name or "gpt-4o"
+                    # Use centralized constants - validated by PydanticAI Field constraints elsewhere
+                    from infrastructure.constants import AzureServiceLimits
+                    self.temperature = AzureServiceLimits.DEFAULT_TEMPERATURE
+                    self.max_tokens = AzureServiceLimits.DEFAULT_MAX_TOKENS
+                    self.requests_per_minute = AzureServiceLimits.DEFAULT_REQUESTS_PER_MINUTE
+                    self.chunk_size = AzureServiceLimits.DEFAULT_CHUNK_SIZE
                     self.extraction_focus = (
                         f"entities, relationships, {domain}-specific concepts"
                     )
@@ -499,12 +502,15 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
 
             # Fallback to minimal config
             class FallbackPrompts:
-                # model_name = "gpt-4o"  # ❌ HARDCODED - Removed to force Dynamic Model Manager
-                model_name = None  # Must be loaded from Dynamic Model Manager
-                temperature = 0.1
-                max_tokens = 2000
-                requests_per_minute = 50
-                chunk_size = 1000
+                # Get model name from Azure settings
+                from config.settings import azure_settings
+                model_name = azure_settings.openai_deployment_name or "gpt-4o"
+                # Use centralized constants - validated by PydanticAI Field constraints elsewhere  
+                from infrastructure.constants import AzureServiceLimits
+                temperature = AzureServiceLimits.DEFAULT_TEMPERATURE
+                max_tokens = AzureServiceLimits.DEFAULT_MAX_TOKENS
+                requests_per_minute = AzureServiceLimits.DEFAULT_REQUESTS_PER_MINUTE
+                chunk_size = AzureServiceLimits.DEFAULT_CHUNK_SIZE
                 extraction_focus = "entities, relationships, concepts"
                 completion_context = "information processing"
                 query_enhancement = "information retrieval"

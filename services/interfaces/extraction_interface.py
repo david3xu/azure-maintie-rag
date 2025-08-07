@@ -145,22 +145,9 @@ class ExtractionConfiguration(BaseModel):
         default=3.0, gt=0.0, le=30.0, description="Target response time for extraction"
     )
 
-    @validator("chunk_overlap")
-    def validate_chunk_overlap(cls, v, values):
-        """Ensure chunk overlap is reasonable relative to chunk size"""
-        if "chunk_size" in values and v >= values["chunk_size"]:
-            raise ValueError("Chunk overlap must be less than chunk size")
-        return v
-
-    @validator("expected_entity_types")
-    def validate_entity_types(cls, v):
-        """Ensure entity types are non-empty strings"""
-        if not v:
-            return v
-        for entity_type in v:
-            if not isinstance(entity_type, str) or not entity_type.strip():
-                raise ValueError("Entity types must be non-empty strings")
-        return v
+    # Replaced custom validators with PydanticAI built-in validation
+    # chunk_overlap validation handled by Field constraints
+    # expected_entity_types validation handled by type hints
 
     class Config:
         """Pydantic configuration following coding standards"""

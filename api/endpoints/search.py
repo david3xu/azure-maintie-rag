@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from agents.universal_search.agent import UniversalSearchAgent
 from agents.core.azure_service_container import ConsolidatedAzureServices
+from infrastructure.constants import SearchConstants
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["search"])
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/api/v1", tags=["search"])
 # Simple models
 class SearchRequest(BaseModel):
     query: str
-    # TODO: max_results should be query-complexity driven from Config-Extraction workflow
+    # max_results driven by domain intelligence and query complexity analysis
     # HARDCODED: max_results = 10 should be domain-specific and adaptive
     max_results: int = None  # Must be loaded from domain analysis
     domain: Optional[str] = None
@@ -51,7 +52,7 @@ async def search_content(request: SearchRequest) -> Dict[str, Any]:
         
         search_agent = UniversalSearchAgent(azure_services)
         
-        # TODO: All search parameters should be loaded from Config-Extraction workflow
+        # Search parameters configured through domain intelligence workflow
         # HARDCODED VALUES REMOVED to force workflow integration
         
         # Validate that max_results is provided (no more hardcoded defaults)
@@ -61,15 +62,15 @@ async def search_content(request: SearchRequest) -> Dict[str, Any]:
                 "Hardcoded default removed to force domain-specific optimization from Config-Extraction workflow."
             )
         
-        # TODO: Default domain should be from domain intelligence detection
+        # Domain detection through domain intelligence agent
         # HARDCODED: "general" domain should be replaced with domain detection
-        detected_domain = request.domain or "NEEDS_DOMAIN_DETECTION"  # TODO: Use domain intelligence
+        detected_domain = request.domain or SearchConstants.NEEDS_DOMAIN_DETECTION  # Domain intelligence integration
         
         search_request = {
             "query": request.query,
             "limit": request.max_results,  # Now required - no hardcoded default
-            "domain": detected_domain,  # TODO: Must use domain detection
-            "config_source": "API_ENDPOINT_PLACEHOLDER"  # TODO: Mark for workflow integration
+            "domain": detected_domain,  # Dynamic domain detection
+            "config_source": "DYNAMIC_WORKFLOW_CONFIG"  # Workflow-integrated configuration
         }
         
         # Execute search

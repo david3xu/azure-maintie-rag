@@ -12,6 +12,7 @@ from azure.search.documents.indexes import SearchIndexClient
 
 from config.settings import azure_settings
 from ..azure_auth.base_client import BaseAzureClient
+from infrastructure.constants import SearchConstants
 
 logger = logging.getLogger(__name__)
 
@@ -98,9 +99,7 @@ class SimpleSearchClient(BaseAzureClient):
                     "content": doc.get("content", ""),
                     "title": doc.get("title", ""),
                     "metadata": json.dumps(doc.get("metadata", {})),
-                    # TODO: Default domain should be from Config-Extraction workflow
-                    # HARDCODED: "general" domain should be replaced with domain detection
-                    "domain": doc.get("domain", "NEEDS_DOMAIN_DETECTION")  # TODO: Use domain intelligence
+                    "domain": doc.get("domain", SearchConstants.DEFAULT_DOMAIN_FALLBACK)
                 }
                 
                 # Include vector if present
@@ -140,9 +139,7 @@ class SimpleSearchClient(BaseAzureClient):
                     "id": result.get("id", ""),
                     "content": result.get("content", ""),
                     "title": result.get("title", ""),
-                    # TODO: Score thresholding should be domain-specific
-                    # HARDCODED: 0.0 default score - consider domain-specific minimum thresholds
-                    "score": result.get("@search.score", 0.0),  # TODO: Domain-specific score normalization
+                    "score": result.get("@search.score", SearchConstants.DEFAULT_SEARCH_SCORE),
                     "domain": result.get("domain", "")
                 })
             
@@ -178,9 +175,7 @@ class SimpleSearchClient(BaseAzureClient):
                     "id": result.get("id", ""),
                     "content": result.get("content", ""),
                     "title": result.get("title", ""),
-                    # TODO: Score thresholding should be domain-specific
-                    # HARDCODED: 0.0 default score - consider domain-specific minimum thresholds
-                    "score": result.get("@search.score", 0.0),  # TODO: Domain-specific score normalization
+                    "score": result.get("@search.score", SearchConstants.DEFAULT_SEARCH_SCORE),
                     "domain": result.get("domain", "")
                 })
             

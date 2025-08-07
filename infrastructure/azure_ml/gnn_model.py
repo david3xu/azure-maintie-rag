@@ -8,6 +8,8 @@ from torch_geometric.data import Data, DataLoader
 from typing import Dict, Any, Optional, List
 import logging
 
+from infrastructure.constants import MLModelConstants
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,10 +19,10 @@ class UniversalGNN(nn.Module):
     def __init__(self,
                  num_node_features: int,
                  num_classes: int,
-                 hidden_dim: int = 128,
-                 num_layers: int = 2,
-                 dropout: float = 0.5,
-                 conv_type: str = "gcn"):
+                 hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
+                 num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
+                 dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
+                 conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE):
         """
         Initialize Universal GNN
 
@@ -141,12 +143,12 @@ class UniversalGNNConfig:
     """Configuration for Universal GNN model"""
 
     def __init__(self,
-                 hidden_dim: int = 128,
-                 num_layers: int = 2,
-                 dropout: float = 0.5,
-                 conv_type: str = "gcn",
-                 learning_rate: float = 0.001,
-                 weight_decay: float = 1e-5):
+                 hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
+                 num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
+                 dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
+                 conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE,
+                 learning_rate: float = MLModelConstants.DEFAULT_LEARNING_RATE,
+                 weight_decay: float = MLModelConstants.DEFAULT_WEIGHT_DECAY):
         """
         Initialize GNN configuration
 
@@ -180,12 +182,12 @@ class UniversalGNNConfig:
     def from_dict(cls, config_dict: Dict[str, Any]) -> 'UniversalGNNConfig':
         """Create config from dictionary"""
         return cls(
-            hidden_dim=config_dict.get("hidden_dim", 128),
-            num_layers=config_dict.get("num_layers", 2),
-            dropout=config_dict.get("dropout", 0.5),
-            conv_type=config_dict.get("conv_type", "gcn"),
-            learning_rate=config_dict.get("learning_rate", 0.001),
-            weight_decay=config_dict.get("weight_decay", 1e-5)
+            hidden_dim=config_dict.get("hidden_dim", MLModelConstants.DEFAULT_HIDDEN_DIM),
+            num_layers=config_dict.get("num_layers", MLModelConstants.DEFAULT_NUM_LAYERS),
+            dropout=config_dict.get("dropout", MLModelConstants.DEFAULT_DROPOUT_RATE),
+            conv_type=config_dict.get("conv_type", MLModelConstants.DEFAULT_CONV_TYPE),
+            learning_rate=config_dict.get("learning_rate", MLModelConstants.DEFAULT_LEARNING_RATE),
+            weight_decay=config_dict.get("weight_decay", MLModelConstants.DEFAULT_WEIGHT_DECAY)
         )
 
 

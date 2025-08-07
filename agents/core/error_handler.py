@@ -18,134 +18,29 @@ import asyncio
 import functools
 import logging
 import time
+
+# Import constants for zero-hardcoded-values compliance
+from agents.core.constants import MathematicalConstants, PerformanceAdaptiveConstants, SystemBoundaryConstants, ErrorHandlingCoordinatedConstants
 import traceback
 from collections import defaultdict, deque
-from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
 
+# Import models from centralized data models
+from agents.core.data_models import (
+    ErrorSeverity, ErrorCategory, ErrorContext, ErrorMetrics
+)
+
 logger = logging.getLogger(__name__)
-
-
-class ErrorSeverity(Enum):
-    """Error severity levels"""
-
-    LOW = "low"  # Minor issues, graceful degradation
-    MEDIUM = "medium"  # Significant issues, some features affected
-    HIGH = "high"  # Major issues, core functionality affected
-    CRITICAL = "critical"  # System-level issues, immediate attention required
-
-
-class ErrorCategory(Enum):
-    """Error categories for handling strategies"""
-
-    AZURE_SERVICE = "azure_service"  # Azure service connectivity/auth issues
-    DOMAIN_INTELLIGENCE = "domain_intel"  # Domain detection/pattern learning issues
-    CACHE_MEMORY = "cache_memory"  # Cache or memory management issues
-    AGENT_PROCESSING = "agent_processing"  # PydanticAI agent execution issues
-    DATA_PROCESSING = "data_processing"  # Data parsing/transformation issues
-    NETWORK = "network"  # Network connectivity issues
-    CONFIGURATION = "configuration"  # Configuration or setup issues
-    UNKNOWN = "unknown"  # Unclassified errors
-
-
-@dataclass
-class ErrorContext:
-    """Comprehensive error context for analysis and recovery"""
-
-    error: Exception
-    severity: ErrorSeverity
-    category: ErrorCategory
-    operation: str
-    component: str
-    parameters: Dict[str, Any] = field(default_factory=dict)
-    timestamp: float = field(default_factory=time.time)
-    attempt_count: int = 0
-    max_retries: int = 3
-    recovery_strategy: Optional[str] = None
-    user_message: Optional[str] = None
-
-    @property
-    def should_retry(self) -> bool:
-        """Determine if error should be retried"""
-        return self.attempt_count < self.max_retries and self.category in [
-            ErrorCategory.AZURE_SERVICE,
-            ErrorCategory.NETWORK,
-            ErrorCategory.AGENT_PROCESSING,
-        ]
-
-    @property
-    def backoff_delay(self) -> float:
-        """Calculate exponential backoff delay"""
-        base_delay = 1.0
-        return min(30.0, base_delay * (2**self.attempt_count))
-
-
-@dataclass
-class ErrorMetrics:
-    """Error tracking metrics"""
-
-    total_errors: int = 0
-    errors_by_category: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
-    errors_by_severity: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
-    errors_by_component: Dict[str, int] = field(
-        default_factory=lambda: defaultdict(int)
-    )
-    successful_recoveries: int = 0
-    failed_recoveries: int = 0
-    average_recovery_time: float = 0.0
-    recent_errors: deque = field(default_factory=lambda: deque(maxlen=100))
-
-    def record_error(self, context: ErrorContext):
-        """Record error occurrence"""
-        self.total_errors += 1
-        self.errors_by_category[context.category.value] += 1
-        self.errors_by_severity[context.severity.value] += 1
-        self.errors_by_component[context.component] += 1
-        self.recent_errors.append(
-            {
-                "timestamp": context.timestamp,
-                "category": context.category.value,
-                "severity": context.severity.value,
-                "component": context.component,
-                "operation": context.operation,
-                "message": str(context.error),
-            }
-        )
-
-    def record_recovery(self, success: bool, recovery_time: float):
-        """Record recovery attempt"""
-        if success:
-            self.successful_recoveries += 1
-        else:
-            self.failed_recoveries += 1
-
-        # Update average recovery time
-        total_recoveries = self.successful_recoveries + self.failed_recoveries
-        if total_recoveries == 1:
-            self.average_recovery_time = recovery_time
-        else:
-            self.average_recovery_time = (
-                self.average_recovery_time * (total_recoveries - 1) + recovery_time
-            ) / total_recoveries
-
-    @property
-    def recovery_success_rate(self) -> float:
-        """Calculate recovery success rate"""
-        total_recoveries = self.successful_recoveries + self.failed_recoveries
-        if total_recoveries == 0:
-            return 0.0
-        return (self.successful_recoveries / total_recoveries) * 100
 
 
 class CircuitBreaker:
     """Circuit breaker for external service calls"""
 
-    def __init__(self, failure_threshold: int = 5, timeout: float = 60.0):
+    def __init__(self, failure_threshold: int = ErrorHandlingCoordinatedConstants.DEFAULT_FAILURE_THRESHOLD, timeout: float = PerformanceAdaptiveConstants.AZURE_SERVICE_TIMEOUT):
         self.failure_threshold = failure_threshold
         self.timeout = timeout
-        self.failure_count = 0
-        self.last_failure_time = 0.0
+        self.failure_count = SystemBoundaryConstants.FAILURE_COUNT_INITIAL
+        self.last_failure_time = MathematicalConstants.CONFIDENCE_MIN
         self.state = "closed"  # closed, open, half-open
 
     def can_proceed(self) -> bool:
@@ -162,12 +57,12 @@ class CircuitBreaker:
 
     def record_success(self):
         """Record successful operation"""
-        self.failure_count = 0
+        self.failure_count = SystemBoundaryConstants.FAILURE_COUNT_INITIAL
         self.state = "closed"
 
     def record_failure(self):
         """Record failed operation"""
-        self.failure_count += 1
+        self.failure_count += SystemBoundaryConstants.FAILURE_COUNT_INCREMENT
         self.last_failure_time = time.time()
 
         if self.failure_count >= self.failure_threshold:
@@ -440,8 +335,8 @@ class UnifiedErrorHandler:
 
         # Fallback to general domain
         return {
-            "domain": "general",
-            "confidence": 0.3,
+            "domain": SystemBoundaryConstants.DEFAULT_FALLBACK_DOMAIN,
+            "confidence": SystemBoundaryConstants.DEFAULT_FALLBACK_CONFIDENCE,
             "fallback": True,
             "message": "Using general domain due to detection error",
         }
@@ -519,7 +414,7 @@ class UnifiedErrorHandler:
                 "successful_recoveries": self.metrics.successful_recoveries,
                 "failed_recoveries": self.metrics.failed_recoveries,
                 "success_rate_percent": self.metrics.recovery_success_rate,
-                "average_recovery_time_ms": self.metrics.average_recovery_time * 1000,
+                "average_recovery_time_ms": self.metrics.average_recovery_time * MathematicalConstants.MS_PER_SECOND,
             },
             "circuit_breaker_status": {
                 name: {"state": cb.state, "failure_count": cb.failure_count}
@@ -541,9 +436,9 @@ class UnifiedErrorHandler:
         critical_errors = self.metrics.errors_by_severity.get("critical", 0)
         recovery_rate = self.metrics.recovery_success_rate
 
-        if critical_errors > 0 or recent_error_count > 50:
+        if critical_errors > 0 or recent_error_count > SystemBoundaryConstants.CRITICAL_ERROR_THRESHOLD:
             status = "critical"
-        elif recent_error_count > 20 or recovery_rate < 50:
+        elif recent_error_count > SystemBoundaryConstants.WARNING_ERROR_THRESHOLD or recovery_rate < SystemBoundaryConstants.MIN_RECOVERY_RATE_THRESHOLD:
             status = "warning"
         else:
             status = "healthy"
@@ -634,7 +529,7 @@ def domain_intelligence_errors(return_on_error: Any = None):
         component="domain_intelligence",
         category=ErrorCategory.DOMAIN_INTELLIGENCE,
         severity=ErrorSeverity.MEDIUM,
-        return_on_error=return_on_error or {"domain": "general", "confidence": 0.3},
+        return_on_error=return_on_error or {"domain": SystemBoundaryConstants.DEFAULT_FALLBACK_DOMAIN, "confidence": CoreSystemConstants.DEFAULT_FALLBACK_CONFIDENCE},
     )
 
 

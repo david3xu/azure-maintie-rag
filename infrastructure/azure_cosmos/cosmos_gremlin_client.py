@@ -12,6 +12,7 @@ from gremlin_python.driver import client, serializer
 
 from config.settings import azure_settings
 from ..azure_auth.base_client import BaseAzureClient
+from infrastructure.constants import AzureServiceLimits
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         try:
             self.ensure_initialized()
             result = self.gremlin_client.submit(query)
-            return result.all().result(timeout=30)
+            return result.all().result(timeout=AzureServiceLimits.DEFAULT_GREMLIN_TIMEOUT_SECONDS)
         except Exception as e:
             logger.error(f"Query failed: {e}")
             return []
@@ -153,7 +154,7 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             return self.handle_azure_error("add_relationship", e)
 
-    def find_entities_by_type(self, entity_type: str, domain: str, limit: int = 100) -> List[Dict[str, Any]]:
+    def find_entities_by_type(self, entity_type: str, domain: str, limit: int = AzureServiceLimits.DEFAULT_GREMLIN_QUERY_LIMIT) -> List[Dict[str, Any]]:
         """Find entities by type using simple query"""
         try:
             query = f"""
@@ -181,7 +182,7 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             logger.error(f"Find entities failed: {e}")
             return []
 
-    def find_related_entities(self, entity_text: str, domain: str, limit: int = 50) -> List[Dict[str, Any]]:
+    def find_related_entities(self, entity_text: str, domain: str, limit: int = AzureServiceLimits.DEFAULT_GREMLIN_QUERY_LIMIT // 2) -> List[Dict[str, Any]]:
         """Find related entities using simple traversal"""
         try:
             entity_text_escaped = entity_text.replace("'", "\\'")

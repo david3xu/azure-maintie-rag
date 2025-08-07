@@ -14,6 +14,7 @@ from openai import AzureOpenAI
 from config.settings import azure_settings
 
 from ..azure_auth.base_client import BaseAzureClient
+from infrastructure.constants import AzureServiceLimits
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +40,9 @@ class AzureEmbeddingService(BaseAzureClient):
     def _initialize_client(self):
         """Initialize Azure OpenAI client for embeddings"""
         if self.use_managed_identity:
-            from azure.identity import DefaultAzureCredential
+            from infrastructure.azure_auth_utils import get_azure_credential
 
-            credential = DefaultAzureCredential()
+            credential = get_azure_credential()
             self._client = AzureOpenAI(
                 azure_ad_token_provider=lambda: credential.get_token(
                     "https://cognitiveservices.azure.com/.default"
@@ -104,7 +105,7 @@ class AzureEmbeddingService(BaseAzureClient):
             }
 
             # Store in cache (limit cache size to prevent memory issues)
-            if len(self._embedding_cache) < 1000:  # Limit cache size
+            if len(self._embedding_cache) < AzureServiceLimits.DEFAULT_EMBEDDING_CACHE_SIZE_THRESHOLD:  # Limit cache size
                 self._embedding_cache[cache_key] = {
                     k: v for k, v in result_data.items() if k != "cache_hit"
                 }
@@ -126,7 +127,7 @@ class AzureEmbeddingService(BaseAzureClient):
         self,
         texts: List[str],
         model: str = "text-embedding-ada-002",
-        batch_size: int = 100,
+        batch_size: int = AzureServiceLimits.DEFAULT_EMBEDDING_BATCH_SIZE,
     ) -> Dict[str, Any]:
         """
         Generate embeddings for multiple texts in batches

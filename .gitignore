@@ -77,6 +77,16 @@ htmlcov/
 *.pt
 *.h5
 *.onnx
+*.pkl
+*.joblib
+*.model
+*.bin
+*.safetensors
+*.tflite
+*.pb
+models/
+checkpoints/
+artifacts/
 
 # Ignore compiled files
 *.egg-info/

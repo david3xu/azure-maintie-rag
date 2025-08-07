@@ -63,8 +63,8 @@ class SimpleStorageClient(BaseAzureClient):
     def _initialize_client(self):
         """Simple client initialization"""
         try:
-            from azure.identity import DefaultAzureCredential
-            credential = DefaultAzureCredential()
+            from infrastructure.azure_auth_utils import get_azure_credential
+            credential = get_azure_credential()
             
             # Create simple blob service client
             self._blob_service = BlobServiceClient(

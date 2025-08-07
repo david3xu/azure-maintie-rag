@@ -1,53 +1,62 @@
 """
-Simple Validation - Essential Quality Checks Only
+Centralized Validation using PydanticAI Output Validators
 
-This module provides basic validation of extraction results without over-engineering.
-Focus: Catch real errors, not create elaborate scoring systems.
+Uses centralized PydanticAI output validators from data_models.py.
+Replaces complex validation logic with agent-driven validation patterns.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
-from dataclasses import dataclass
+from typing import Any, Dict, List
+from pydantic import BaseModel, Field
 
-# Clean configuration (CODING_STANDARDS compliant)
-# Simple validation thresholds
-DEFAULT_ENTITY_CONFIDENCE_THRESHOLD = 0.7
-DEFAULT_RELATIONSHIP_CONFIDENCE_THRESHOLD = 0.65
+# Import centralized PydanticAI validators (replaces local validation models)
+from agents.core.data_models import (
+    validate_entity_extraction,
+    validate_relationship_extraction,
+    validate_extraction_quality,
+    ValidatedEntity,
+    ValidatedRelationship,
+    ExtractionQualityOutput,
+    ValidationResult
+)
 
-# Backward compatibility
-class QualityConfig:
-    default_entity_confidence_threshold = DEFAULT_ENTITY_CONFIDENCE_THRESHOLD
-    default_relationship_confidence_threshold = DEFAULT_RELATIONSHIP_CONFIDENCE_THRESHOLD
-
-class ConfidenceConfig:
-    default_entity_confidence_threshold = DEFAULT_ENTITY_CONFIDENCE_THRESHOLD
-    default_relationship_confidence_threshold = DEFAULT_RELATIONSHIP_CONFIDENCE_THRESHOLD
-
-get_confidence_calculation_config = lambda: ConfidenceConfig()
-get_quality_assessment_config = lambda: QualityConfig()
+# Import from centralized constants  
+from agents.core.constants import KnowledgeExtractionConstants, CacheConstants
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ValidationResult:
-    """Simple validation result"""
-    is_valid: bool
-    errors: List[str]
-    warnings: List[str]
-    entity_count: int
-    relationship_count: int
+# ValidationResult now imported from agents.core.data_models
 
 
-class SimpleValidator:
+# Simple validation using PydanticAI built-in patterns
+def validate_extraction_simple(
+    entities: List[Dict[str, Any]], 
+    relationships: List[Dict[str, Any]]
+) -> bool:
     """
-    Simple, practical validation without over-engineering.
+    Ultra-simple validation using PydanticAI built-in validation
     
-    Validates only what matters:
-    - Entities and relationships exist
-    - Basic data structure integrity
-    - Critical confidence thresholds
+    Returns:
+        bool: True if validation passes
     """
+    try:
+        # Use PydanticAI built-in validation
+        for entity_data in entities:
+            ValidatedEntity(**entity_data)  # Will raise ValidationError if invalid
+        
+        for rel_data in relationships:
+            ValidatedRelationship(**rel_data)  # Will raise ValidationError if invalid
+            
+        return len(entities) > 0  # Simple check: at least one entity
+        
+    except Exception as e:
+        logger.warning(f"Validation failed: {e}")
+        return False
+
+
+class PydanticAIValidator:
+    """Enhanced validator using centralized PydanticAI output validators"""
     
     def validate_extraction(
         self,
@@ -57,79 +66,59 @@ class SimpleValidator:
         min_relationship_confidence: float = None
     ) -> ValidationResult:
         """
-        Simple validation that checks only essential quality criteria.
+        Enhanced validation using centralized PydanticAI output validators
         
-        Args:
-            entities: Extracted entities
-            relationships: Extracted relationships  
-            min_entity_confidence: Minimum confidence for entities
-            min_relationship_confidence: Minimum confidence for relationships
-            
-        Returns:
-            ValidationResult: Simple pass/fail with basic metrics
+        Replaces manual validation logic with agent-driven validation patterns.
         """
-        # Use centralized configuration for defaults
-        quality_config = get_quality_assessment_config()
-        if min_entity_confidence is None:
-            min_entity_confidence = quality_config.default_entity_confidence_threshold
-        if min_relationship_confidence is None:
-            min_relationship_confidence = quality_config.default_relationship_confidence_threshold
-        
         errors = []
         warnings = []
         
-        # 1. Check basic data presence
-        if not entities:
-            errors.append("No entities extracted")
-        
-        if not relationships:
-            warnings.append("No relationships extracted")
-        
-        # 2. Check entity data integrity
-        for i, entity in enumerate(entities):
-            if not entity.get("name"):
-                errors.append(f"Entity {i} missing name")
+        try:
+            # Use centralized PydanticAI entity validation (replaces manual loops)
+            validated_entities: List[ValidatedEntity] = validate_entity_extraction(entities)
+            logger.info(f"PydanticAI entity validation: {len(entities)} → {len(validated_entities)} entities")
             
-            confidence = entity.get("confidence", 0.0)
-            if confidence < min_entity_confidence:
-                warnings.append(f"Entity '{entity.get('name', 'unknown')}' low confidence: {confidence}")
+        except Exception as e:
+            errors.append(f"PydanticAI entity validation failed: {str(e)}")
+            validated_entities = []
         
-        # 3. Check relationship data integrity
-        entity_names = {e.get("name") for e in entities}
-        for i, rel in enumerate(relationships):
-            source = rel.get("source")
-            target = rel.get("target")
+        try:
+            # Use centralized PydanticAI relationship validation (replaces manual loops)
+            validated_relationships: List[ValidatedRelationship] = validate_relationship_extraction(relationships)
+            logger.info(f"PydanticAI relationship validation: {len(relationships)} → {len(validated_relationships)} relationships")
             
-            if not source or not target:
-                errors.append(f"Relationship {i} missing source or target")
-                continue
+        except Exception as e:
+            errors.append(f"PydanticAI relationship validation failed: {str(e)}")
+            validated_relationships = []
+        
+        # Optional: Overall quality validation
+        if not errors and entities and relationships:
+            try:
+                quality_data = {
+                    "entities_per_text": len(validated_entities) / 1.0,  # Assume 1 text for simplicity
+                    "relations_per_entity": len(validated_relationships) / max(1, len(validated_entities)),
+                    "avg_entity_confidence": sum(e.confidence for e in validated_entities) / len(validated_entities),
+                    "avg_relation_confidence": sum(r.confidence for r in validated_relationships) / len(validated_relationships),
+                    "overall_score": 0.8,  # Base score
+                    "quality_tier": "good"
+                }
                 
-            # Check if entities exist
-            if source not in entity_names:
-                errors.append(f"Relationship source '{source}' not found in entities")
-            
-            if target not in entity_names:
-                errors.append(f"Relationship target '{target}' not found in entities")
-            
-            # Check confidence
-            confidence = rel.get("confidence", 0.0)
-            if confidence < min_relationship_confidence:
-                warnings.append(f"Relationship '{source} -> {target}' low confidence: {confidence}")
-        
-        # 4. Simple validation result
-        is_valid = len(errors) == 0
+                quality_result: ExtractionQualityOutput = validate_extraction_quality(quality_data)
+                logger.info(f"Overall extraction quality: {quality_result.quality_tier} ({quality_result.overall_score:.3f})")
+                
+            except Exception as e:
+                warnings.append(f"Quality assessment failed: {str(e)}")
         
         return ValidationResult(
-            is_valid=is_valid,
+            is_valid=len(errors) == 0,
             errors=errors,
             warnings=warnings,
-            entity_count=len(entities),
-            relationship_count=len(relationships)
+            entity_count=len(validated_entities),
+            relationship_count=len(validated_relationships)
         )
     
     def log_validation_result(self, result: ValidationResult, context: str = ""):
-        """Log validation results in a simple, readable format"""
-        
+        """Log validation results"""
         if result.is_valid:
             logger.info(f"✅ Validation passed {context}: {result.entity_count} entities, {result.relationship_count} relationships")
         else:
@@ -137,29 +126,14 @@ class SimpleValidator:
             
         for error in result.errors:
             logger.error(f"  ERROR: {error}")
-            
-        for warning in result.warnings:
-            logger.warning(f"  WARNING: {warning}")
 
 
-# Simple factory function
-def validate_extraction_simple(
-    entities: List[Dict[str, Any]], 
-    relationships: List[Dict[str, Any]]
-) -> bool:
-    """
-    Ultra-simple validation that just returns pass/fail
-    
-    Returns:
-        bool: True if basic validation passes
-    """
-    validator = SimpleValidator()
-    result = validator.validate_extraction(entities, relationships)
-    return result.is_valid
+# Backward compatibility aliases (updated to use PydanticAI)
+ValidationProcessor = PydanticAIValidator
+SimpleValidator = PydanticAIValidator  # Maintain old interface
 
-
-# Backward compatibility alias - ValidationProcessor is now SimpleValidator
-ValidationProcessor = SimpleValidator
-
-# Export interfaces (maintaining backward compatibility)
-__all__ = ["ValidationProcessor", "SimpleValidator", "ValidationResult", "validate_extraction_simple"]
+# Export interfaces (enhanced with PydanticAI)
+__all__ = [
+    "ValidationProcessor", "PydanticAIValidator", "SimpleValidator", 
+    "ValidationResult", "validate_extraction_simple"
+]

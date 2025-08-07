@@ -19,13 +19,18 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any, Dict, Generic, List, Optional, Protocol, TypeVar
 
+# Import constants for zero-hardcoded-values compliance
+from agents.core.constants import CacheConstants
+
+# Import consolidated data models
+from agents.core.data_models import CacheMetrics
+
 from pydantic import BaseModel, Field
 
 from ..interfaces.agent_contracts import (
     AzureServiceMetrics,
-    CacheContract,
     ErrorHandlingContract,
-    MonitoringContract,
+    # MonitoringContract deleted in Phase 9 - over-engineered monitoring with zero usage
 )
 
 # Import clean configuration (CODING_STANDARDS compliant)
@@ -69,22 +74,11 @@ class MonitoringCapability(Protocol):
 # =============================================================================
 
 
-@dataclass
-class CacheMetrics:
-    """Simple cache metrics without over-engineering"""
-    hits: int = 0
-    misses: int = 0
-    total_requests: int = 0
-
-    @property
-    def hit_rate(self) -> float:
-        """Calculate hit rate as simple percentage (CODING_STANDARDS: No arbitrary thresholds)"""
-        if self.total_requests == 0:
-            return 0.0
-        return (self.hits / self.total_requests) * 100
+# CacheMetrics now imported from agents.core.data_models
 
 
-class SharedCacheManager:
+# REMOVED: SharedCacheManager - unused duplicate of UnifiedCacheManager
+# class SharedCacheManager:
     """Simplified cache manager following CODING_STANDARDS (Performance-First, Universal Design)"""
 
     def __init__(self, redis_client=None):
@@ -182,8 +176,8 @@ class SimpleMonitoringManager:
         self.metrics[metric_name].append(value)
         
         # Keep only recent values (simple sliding window)
-        if len(self.metrics[metric_name]) > 1000:
-            self.metrics[metric_name] = self.metrics[metric_name][-1000:]
+        if len(self.metrics[metric_name]) > CacheConstants.MAX_METRICS_HISTORY:
+            self.metrics[metric_name] = self.metrics[metric_name][-CacheConstants.MAX_METRICS_HISTORY:]
 
     async def increment_counter(self, counter_name: str, tags: Dict[str, str] = None) -> None:
         """Increment counter without complex categorization (CODING_STANDARDS: Universal Design)"""
@@ -192,13 +186,13 @@ class SimpleMonitoringManager:
     def get_simple_stats(self, metric_name: str) -> Dict[str, float]:
         """Get basic statistics without over-engineering (CODING_STANDARDS: Essential only)"""
         if metric_name not in self.metrics or not self.metrics[metric_name]:
-            return {"count": 0, "average": 0.0, "latest": 0.0}
+            return {"count": 0, "average": CacheConstants.ZERO_FLOAT, "latest": CacheConstants.ZERO_FLOAT}
         
         values = self.metrics[metric_name]
         return {
             "count": len(values),
             "average": sum(values) / len(values),
-            "latest": values[-1] if values else 0.0
+            "latest": values[-1] if values else CacheConstants.ZERO_FLOAT
         }
 
 
@@ -210,7 +204,7 @@ class SimpleMonitoringManager:
 class SimpleDomainAnalyzer:
     """Domain analysis that delegates to Agent 1 (CODING_STANDARDS: Agent Boundaries)"""
 
-    def __init__(self, cache_manager: SharedCacheManager):
+    def __init__(self, cache_manager: Optional[Any] = None):
         self.cache_manager = cache_manager
 
     async def analyze_domain_with_caching(self, content: str, domain_hint: str = None) -> Dict[str, Any]:
@@ -241,7 +235,7 @@ class SimpleDomainAnalyzer:
         }
         
         # Cache result
-        await self.cache_manager.set(cache_key, analysis, ttl=3600, namespace="domain_analysis")
+        await self.cache_manager.set(cache_key, analysis, ttl=CacheConstants.DEFAULT_CACHE_TTL, namespace="domain_analysis")
         
         return analysis
 
@@ -259,10 +253,11 @@ class CapabilityFactory:
         self._monitoring_manager = None
         self._domain_analyzer = None
 
-    def get_cache_manager(self, redis_client=None) -> SharedCacheManager:
+    def get_cache_manager(self, redis_client=None) -> Optional[Any]:
         """Get shared cache manager"""
         if self._cache_manager is None:
-            self._cache_manager = SharedCacheManager(redis_client)
+            # Will be replaced with proper cache manager integration
+            self._cache_manager = None
         return self._cache_manager
 
     def get_monitoring_manager(self) -> SimpleMonitoringManager:

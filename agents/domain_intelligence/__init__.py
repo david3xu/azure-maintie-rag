@@ -23,9 +23,9 @@ Key features preserved:
 
 # Import analysis components from organized structure
 from .analyzers import (
-    UnifiedContentAnalyzer, UnifiedAnalysis, ContentQuality,
-    HybridConfigurationGenerator, ConfigurationRecommendations, LLMExtraction,
-    PatternEngine, LearnedPattern, ExtractedPatterns,
+    UnifiedContentAnalyzer, DomainAnalysisResult, DomainIntelligenceConfig,
+    HybridConfigurationGenerator, LLMExtraction,  # ConfigurationRecommendations deleted
+    DataDrivenPatternEngine, LearnedPattern, ExtractedPatterns,
     ConfigGenerator, DomainConfig,
     run_startup_background_processing, BackgroundProcessingStats,
 )
@@ -41,15 +41,15 @@ from .analyzers import (
 __all__ = [
     # Unified content analysis (primary)
     "UnifiedContentAnalyzer",
-    "UnifiedAnalysis", 
-    "ContentQuality",
+    "DomainAnalysisResult", 
+    "DomainIntelligenceConfig",
     # Configuration generation
     "HybridConfigurationGenerator",
-    "ConfigurationRecommendations",
+    # "ConfigurationRecommendations" deleted - generator now returns Dict[str, Any]
     "LLMExtraction",
     # Note: DomainAnalyzer and DomainClassification removed - use UnifiedContentAnalyzer
     # Pattern learning
-    "PatternEngine",
+    "DataDrivenPatternEngine",
     "LearnedPattern",
     "ExtractedPatterns",
     # Background processing

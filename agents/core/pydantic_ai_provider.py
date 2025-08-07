@@ -21,7 +21,7 @@ from pydantic_ai import Agent
 from pydantic_ai.providers.azure import AzureProvider
 
 # Clean configuration imports (CODING_STANDARDS compliant)
-from config.centralized_config import get_model_config
+from config.centralized_config import get_model_config, get_azure_services_config
 
 # Backward compatibility for gradual migration
 class AzureServicesConfig:

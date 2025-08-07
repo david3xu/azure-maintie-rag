@@ -1,24 +1,24 @@
 # Azure Universal RAG
 
-**Enterprise-Ready Azure-Powered Universal RAG System**
+**Production-Grade Multi-Agent Azure Universal RAG System**
 
-[![Azure](https://img.shields.io/badge/Azure-Universal%20RAG-blue)](https://azure.microsoft.com) [![Deployment](https://img.shields.io/badge/Status-Production%20Ready-green)](#deployment-ready) [![Architecture](https://img.shields.io/badge/Architecture-Enterprise%20Grade-orange)](#architecture)
+[![Azure](https://img.shields.io/badge/Azure-Universal%20RAG-blue)](https://azure.microsoft.com) [![Deployment](https://img.shields.io/badge/Status-Production%20Ready-green)](#deployment-ready) [![PydanticAI](https://img.shields.io/badge/Framework-PydanticAI-purple)](#multi-agent-system) [![Architecture](https://img.shields.io/badge/Architecture-Multi%20Agent-orange)](#architecture)
 
 ---
 
 ## 🚀 Overview
 
-Azure Universal RAG is a **production-grade backend system** for advanced universal intelligence, combining knowledge graphs, vector search, and GNN training with hybrid RBAC authentication across Azure services.
+Azure Universal RAG is a **production-ready multi-agent system** combining PydanticAI framework with Azure services for intelligent document processing, knowledge extraction, and tri-modal search (Vector + Graph + GNN).
 
-### **Core Capabilities**
-- **Universal RAG System** with complete Azure services integration
-- **Knowledge graph extraction** from domain-agnostic text data  
-- **Graph Neural Network (GNN) enhancement** with PyTorch Geometric for intelligent relationship reasoning
-- **Unified retrieval** (Azure Cognitive Search + Azure Cosmos DB + GNN)
-- **Multi-hop reasoning** with semantic path discovery
-- **Progressive real-time workflow** with streaming UI
-- **Azure Infrastructure as Code** with automated deployment
-- **Enterprise-grade security** with managed identity + RBAC
+### **Core Capabilities (Real Implementation)**
+- **Multi-Agent Architecture**: PydanticAI with 3 specialized agents (Domain Intelligence, Knowledge Extraction, Universal Search)
+- **Zero-Hardcoded-Values**: Dynamic configuration management with learned domain patterns
+- **Azure Service Container**: Unified service access with `DefaultAzureCredential` (471 lines)
+- **Centralized Data Models**: 1,536 lines with 80+ Pydantic models and PydanticAI validators
+- **Tri-Modal Search**: Vector + Graph + GNN unified orchestration
+- **Real-Time Streaming**: React frontend with Server-Sent Events and progressive disclosure
+- **Production-Ready Testing**: Real Azure services integration (no mocks)
+- **Enterprise Security**: Comprehensive RBAC with managed identity
 
 ### **Key Performance Metrics**
 - ✅ **Sub-3-second query processing** (exceeds enterprise SLAs)
@@ -28,54 +28,51 @@ Azure Universal RAG is a **production-grade backend system** for advanced univer
 
 ---
 
-## 📚 Documentation Guide
+## 📚 Documentation
 
-### 🚀 **Getting Started**
-- **[Setup Guide](docs/SETUP.md)** - Complete installation and configuration
-- **[Quick Start](docs/SETUP.md#quick-start)** - 5-minute deployment with `azd up`
-- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment strategies
+### **Essential Documentation (6 Files - Real Codebase Analysis)**
 
-### 🏗️ **Architecture & Development**
-- **[System Architecture](docs/ARCHITECTURE.md)** - Technical architecture deep-dive
-- **[Enhanced Architecture Plan](docs/MINIMAL_ARCHITECTURE_ENHANCEMENT_PLAN.md)** - Implementation enhancements and performance improvements
-- **[PyTorch Geometric Guide](docs/PYTORCH_GEOMETRIC_GUIDE.md)** - Graph Neural Network integration and GNN-enhanced RAG explanation
-- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
-- **[Development Guide](docs/CLAUDE.md)** - Development patterns and guidance
+| File | Purpose | Real Implementation Content |
+|------|---------|---------------------------|
+| **[docs/QUICKSTART.md](docs/QUICKSTART.md)** | 5-minute setup | Real agent initialization, Azure service health checks |
+| **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** | Development workflows | PydanticAI patterns, actual Azure integration (471-line service container) |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Technical architecture | Multi-agent boundaries, 1,536-line data models, real mermaid diagrams |
+| **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** | Issue resolution | Real Azure authentication, service diagnostics, error patterns |
+| **[docs/FRONTEND.md](docs/FRONTEND.md)** | Frontend development | React 19.1.0 + TypeScript 5.8.3, real hooks (30-line useUniversalRAG) |
+| **[docs/CLAUDE_DEVELOPMENT_GUIDE.md](docs/CLAUDE_DEVELOPMENT_GUIDE.md)** | Claude Code integration | Actual development context with verified line counts |
 
-### 📊 **Component Documentation**
-- **[Backend Guide](backend/README.md)** - Backend service architecture and development
-- **[API Layer Guide](backend/api/README.md)** - FastAPI endpoints and streaming implementation
-- **[Frontend Guide](frontend/README.md)** - React + TypeScript UI components
-- **[Infrastructure Guide](infra/README.md)** - Azure Bicep templates and deployment
-- **[Workflow Guide](backend/core/workflows/README.md)** - AI workflow orchestration
-
-### 📊 **Implementation Details**
-- **[Lifecycle Execution](docs/LIFECYCLE_EXECUTION_GUIDE.md)** - Data processing workflow
-- **[Demo Technical Report](docs/DEMO_TECHNICAL_REPORT.md)** - System performance analysis and metrics
+### **Data Source**
+- **Real corpus**: `data/raw/Programming-Language/` (82 files from Sebesta programming language textbook)
 
 ---
 
 ## 🛠️ Technology Stack
 
-### **Backend Stack**
+### **Multi-Agent Backend Stack (Real Implementation)**
 ```
-├─ FastAPI + uvicorn (streaming endpoints)
+├─ PydanticAI Framework (3 specialized agents)
+│  ├─ Domain Intelligence Agent (122 lines)
+│  ├─ Knowledge Extraction Agent (368 lines) 
+│  └─ Universal Search Agent (271 lines)
+├─ Azure Service Container (471 lines with DefaultAzureCredential)
+├─ Centralized Data Models (1,536 lines, 80+ Pydantic models)
+├─ FastAPI API (42 lines) + uvicorn (streaming endpoints)
 ├─ Azure OpenAI integration (GPT-4, embeddings)
-├─ Azure Cognitive Search (vector search)
+├─ Azure Cognitive Search (vector search, 1536D embeddings)
 ├─ Azure Cosmos DB (knowledge graphs, Gremlin API)
-├─ Azure Blob Storage (multi-account: RAG, ML, App data)
-├─ Azure Machine Learning (GNN training + inference)
-├─ PyTorch 2.0.0 + torch-geometric 2.3.0 (GNN)
-└─ NetworkX 3.2.0 (graph processing)
+├─ Azure ML (PyTorch + torch-geometric GNN training)
+└─ Dynamic Configuration Manager (zero-hardcoded-values)
 ```
 
-### **Frontend Stack**
+### **Frontend Stack (Verified Versions)**
 ```
-├─ React 19.1.0 + TypeScript 5.8.3
-├─ Vite 7.0.4 (build tool)
-├─ axios 1.10.0 (HTTP client)
-├─ Server-Sent Events (real-time updates)
-└─ Progressive disclosure UI (3-layer transparency)
+├─ React 19.1.0 + TypeScript 5.8.3 (frontend/package.json)
+├─ Vite 7.0.4 (build tool and HMR)
+├─ Axios 1.10.0 (HTTP client)
+├─ ESLint 9.30.1 (React-specific rules)
+├─ Custom Hooks (useUniversalRAG 30 lines, useWorkflowStream)
+├─ Server-Sent Events (real-time agent workflow updates)
+└─ Progressive disclosure UI (chat/, domain/, workflow/, shared/ components)
 ```
 
 ### **Infrastructure Stack**
@@ -476,12 +473,11 @@ curl localhost:8000/api/v1/query -X POST -H "Content-Type: application/json" -d 
 
 ## 📞 Getting Help
 
-- **Setup Issues**: See [Setup Guide](docs/SETUP.md) and [Troubleshooting](docs/SETUP.md#troubleshooting)
-- **API Documentation**: Check [API Reference](docs/API_REFERENCE.md)
-- **Architecture Questions**: Review [Architecture Guide](docs/ARCHITECTURE.md)
-- **Deployment Problems**: Consult [Deployment Guide](docs/DEPLOYMENT.md)
-
-For development guidance and patterns, see [CLAUDE.md](docs/CLAUDE.md).
+- **Setup Issues**: [docs/QUICKSTART.md](docs/QUICKSTART.md) and [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+- **Development**: [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)
+- **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **Frontend**: [docs/FRONTEND.md](docs/FRONTEND.md)
+- **Claude Code**: [docs/CLAUDE_DEVELOPMENT_GUIDE.md](docs/CLAUDE_DEVELOPMENT_GUIDE.md)
 
 ---
 

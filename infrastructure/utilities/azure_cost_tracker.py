@@ -7,6 +7,8 @@ Provides cost estimation for Azure service operations in workflows.
 import logging
 from typing import Any, Dict
 
+from infrastructure.constants import AzurePricingConstants
+
 logger = logging.getLogger(__name__)
 
 
@@ -15,16 +17,31 @@ class AzureServiceCostTracker:
 
     def __init__(self):
         self.cost_per_service = {
-            "azure_openai": {"per_token": 0.00002, "per_request": 0.001},
-            "cognitive_search": {"per_document": 0.01, "per_query": 0.005},
-            "cosmos_db": {"per_operation": 0.0001, "per_ru": 0.00008},
-            "blob_storage": {"per_gb_month": 0.018, "per_operation": 0.0001},
-            "azure_ml": {"per_training_hour": 2.50, "per_inference": 0.001},
+            "azure_openai": {
+                "per_token": AzurePricingConstants.AZURE_OPENAI_PER_TOKEN, 
+                "per_request": AzurePricingConstants.AZURE_OPENAI_PER_REQUEST
+            },
+            "cognitive_search": {
+                "per_document": AzurePricingConstants.COGNITIVE_SEARCH_PER_DOCUMENT, 
+                "per_query": AzurePricingConstants.COGNITIVE_SEARCH_PER_QUERY
+            },
+            "cosmos_db": {
+                "per_operation": AzurePricingConstants.COSMOS_DB_PER_OPERATION, 
+                "per_ru": AzurePricingConstants.COSMOS_DB_PER_RU
+            },
+            "blob_storage": {
+                "per_gb_month": AzurePricingConstants.BLOB_STORAGE_PER_GB_MONTH, 
+                "per_operation": AzurePricingConstants.BLOB_STORAGE_PER_OPERATION
+            },
+            "azure_ml": {
+                "per_training_hour": AzurePricingConstants.AZURE_ML_PER_TRAINING_HOUR, 
+                "per_inference": AzurePricingConstants.AZURE_ML_PER_INFERENCE
+            },
         }
 
     def _calculate_service_cost(self, service: str, usage: dict) -> float:
         """Calculate cost for a specific service based on usage"""
-        cost = 0.0
+        cost = AzurePricingConstants.ZERO_COST
         rates = self.cost_per_service.get(service, {})
 
         for key, value in usage.items():

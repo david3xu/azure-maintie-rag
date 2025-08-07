@@ -10,24 +10,21 @@ import asyncio
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 from pathlib import Path
-from dataclasses import dataclass, asdict
-from enum import Enum
+from dataclasses import asdict
 
-from .workflow_enums import WorkflowState, NodeState
+# Import constants for zero-hardcoded-values compliance
+from agents.core.constants import CacheConstants
+# Import models from centralized data models  
+from agents.core.data_models import (
+    WorkflowState,
+    NodeState,
+)
 
-
-@dataclass
-class WorkflowStateRecord:
-    """Workflow state record for persistence"""
-    workflow_id: str
-    workflow_type: str
-    state: WorkflowState
-    input_data: Dict[str, Any]
-    results: Dict[str, Any]
-    node_states: Dict[str, Dict[str, Any]]
-    created_at: datetime
-    updated_at: datetime
-    metadata: Dict[str, Any]
+# Simple replacement for the deleted PersistedWorkflowState
+class WorkflowStateRecord(dict):
+    """Temporary replacement for deleted PersistedWorkflowState model"""
+    def __init__(self, **kwargs):
+        super().__init__(kwargs)
 
 
 class WorkflowStateManager:
@@ -178,7 +175,7 @@ class WorkflowStateManager:
         self, 
         workflow_type: Optional[str] = None,
         state_filter: Optional[WorkflowState] = None,
-        limit: int = 100
+        limit: int = CacheConstants.PERCENTAGE_MULTIPLIER
     ) -> List[WorkflowStateRecord]:
         """
         List workflows with optional filtering.
@@ -355,14 +352,14 @@ class WorkflowStateManager:
     async def get_workflow_stats(self) -> Dict[str, Any]:
         """Get workflow statistics"""
         try:
-            workflows = await self.list_workflows(limit=1000)
+            workflows = await self.list_workflows(limit=1000)  # Reasonable default limit
             
             stats = {
                 "total_workflows": len(workflows),
                 "by_state": {},
                 "by_type": {},
-                "avg_execution_time": 0.0,
-                "storage_size_mb": 0.0
+                "avg_execution_time": CacheConstants.ZERO_FLOAT,
+                "storage_size_mb": CacheConstants.ZERO_FLOAT
             }
             
             # Count by state
@@ -376,7 +373,7 @@ class WorkflowStateManager:
             
             # Calculate storage size
             total_size = sum(f.stat().st_size for f in self.storage_dir.glob("workflow_*.json"))
-            stats["storage_size_mb"] = round(total_size / (1024 * 1024), 2)
+            stats["storage_size_mb"] = round(total_size / WorkflowConstants.BYTES_TO_MB_DIVISOR, WorkflowConstants.STORAGE_SIZE_PRECISION)
             
             return stats
             

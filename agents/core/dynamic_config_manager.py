@@ -24,44 +24,16 @@ logger = logging.getLogger(__name__)
 from agents.core.constants import (
     KnowledgeExtractionConstants, 
     UniversalSearchConstants, 
-    CacheConstants,
-    ProcessingConstants,
-    PathConstants
+    PerformanceAdaptiveConstants,
+    FileSystemConstants
 )
+from agents.core.math_expressions import MATH, EXPR
+
+# Import consolidated data models
+from agents.core.data_models import DynamicExtractionConfig, DynamicSearchConfig
 
 # Import workflow and agents dynamically to avoid circular imports
-
-
-@dataclass
-class DynamicExtractionConfig:
-    """Dynamically learned extraction configuration from Config-Extraction workflow"""
-    entity_confidence_threshold: float
-    relationship_confidence_threshold: float
-    chunk_size: int
-    chunk_overlap: int
-    batch_size: int
-    max_entities_per_chunk: int
-    min_relationship_strength: float
-    quality_validation_threshold: float
-    domain_name: str
-    learned_at: datetime
-    corpus_stats: Dict[str, Any]
-
-
-@dataclass
-class DynamicSearchConfig:
-    """Dynamically learned search configuration from domain analysis"""
-    vector_similarity_threshold: float
-    vector_top_k: int
-    graph_hop_count: int
-    graph_min_relationship_strength: float
-    gnn_prediction_confidence: float
-    gnn_node_embeddings: int
-    tri_modal_weights: Dict[str, float]  # {"vector": 0.4, "graph": 0.3, "gnn": 0.3}
-    result_synthesis_threshold: float
-    domain_name: str
-    learned_at: datetime
-    query_complexity_weights: Dict[str, Any]
+# DynamicExtractionConfig and DynamicSearchConfig now imported from agents.core.data_models
 
 
 class DynamicConfigManager:
@@ -75,11 +47,13 @@ class DynamicConfigManager:
     4. Enables continuous learning and optimization
     """
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.config_cache: Dict[str, Dict[str, Any]] = {}
-        self.cache_ttl = CacheConstants.DEFAULT_CACHE_TTL
-        self.generated_configs_path = Path("agents/domain_intelligence/generated_configs")
-        self.config_extraction_workflow = None
+        self.cache_ttl: int = PerformanceAdaptiveConstants.DEFAULT_CACHE_TTL
+        self.generated_configs_path: Path = Path(
+            "agents/domain_intelligence/generated_configs"
+        )
+        self.config_extraction_workflow: Optional[Any] = None
         
     async def get_extraction_config(self, domain_name: str) -> DynamicExtractionConfig:
         """
@@ -104,11 +78,14 @@ class DynamicConfigManager:
         # Trigger new Config-Extraction workflow
         return await self._generate_new_extraction_config(domain_name)
     
-    async def get_search_config(self, domain_name: str, query: str = None) -> DynamicSearchConfig:
+    async def get_search_config(
+        self, domain_name: str, query: str = None
+    ) -> DynamicSearchConfig:
         """
         Get search configuration for a specific domain and query complexity.
         
-        Uses domain analysis to determine optimal search parameters instead of hardcoded values.
+        Uses domain analysis to determine optimal search parameters 
+        instead of hardcoded values.
         """
         
         # Try to load recent learned config
@@ -117,12 +94,19 @@ class DynamicConfigManager:
             return learned_config
             
         # Trigger domain analysis for search optimization
-        return await self._generate_search_config_from_domain_analysis(domain_name, query)
+        return await self._generate_search_config_from_domain_analysis(
+            domain_name, query
+        )
     
-    async def _load_learned_extraction_config(self, domain_name: str) -> Optional[DynamicExtractionConfig]:
+    async def _load_learned_extraction_config(
+        self, domain_name: str
+    ) -> Optional[DynamicExtractionConfig]:
         """Load learned extraction config from Config-Extraction workflow results"""
         
-        config_file = self.generated_configs_path / f"{domain_name}{PathConstants.EXTRACTION_CONFIG_SUFFIX}"
+        config_file = (
+            self.generated_configs_path / 
+            f"{domain_name}{FileSystemConstants.EXTRACTION_CONFIG_SUFFIX}"
+        )
         
         if not config_file.exists():
             return None
@@ -132,19 +116,30 @@ class DynamicConfigManager:
                 config_data = yaml.safe_load(f)
                 
             # Check if config is recent (within 24 hours)
-            learned_at = datetime.fromisoformat(config_data.get('learned_at', CacheConstants.CONFIG_DEFAULT_TIMESTAMP))
-            if (datetime.now() - learned_at).total_seconds() > CacheConstants.CONFIG_FRESHNESS_THRESHOLD_SECONDS:
+            learned_at = datetime.fromisoformat(
+                config_data.get('learned_at', 0)
+            )
+            if ((datetime.now() - learned_at).total_seconds() > 
+                PerformanceAdaptiveConstants.CACHE_TTL_SECONDS):
                 return None
                 
             return DynamicExtractionConfig(
-                entity_confidence_threshold=config_data['entity_confidence_threshold'],
-                relationship_confidence_threshold=config_data['relationship_confidence_threshold'],
+                entity_confidence_threshold=config_data[
+                    'entity_confidence_threshold'
+                ],
+                relationship_confidence_threshold=config_data[
+                    'relationship_confidence_threshold'
+                ],
                 chunk_size=config_data['chunk_size'],
                 chunk_overlap=config_data['chunk_overlap'],
                 batch_size=config_data['batch_size'],
                 max_entities_per_chunk=config_data['max_entities_per_chunk'],
-                min_relationship_strength=config_data['min_relationship_strength'],
-                quality_validation_threshold=config_data['quality_validation_threshold'],
+                min_relationship_strength=config_data[
+                    'min_relationship_strength'
+                ],
+                quality_validation_threshold=config_data[
+                    'quality_validation_threshold'
+                ],
                 domain_name=domain_name,
                 learned_at=learned_at,
                 corpus_stats=config_data.get('corpus_stats', {})
@@ -154,10 +149,15 @@ class DynamicConfigManager:
             print(f"Failed to load learned extraction config for {domain_name}: {e}")
             return None
     
-    async def _load_learned_search_config(self, domain_name: str, query: str = None) -> Optional[DynamicSearchConfig]:
+    async def _load_learned_search_config(
+        self, domain_name: str, query: str = None
+    ) -> Optional[DynamicSearchConfig]:
         """Load learned search config optimized for domain and query complexity"""
         
-        config_file = self.generated_configs_path / f"{domain_name}{PathConstants.SEARCH_CONFIG_SUFFIX}"
+        config_file = (
+            self.generated_configs_path / 
+            f"{domain_name}{FileSystemConstants.SEARCH_CONFIG_SUFFIX}"
+        )
         
         if not config_file.exists():
             return None
@@ -167,13 +167,18 @@ class DynamicConfigManager:
                 config_data = yaml.safe_load(f)
                 
             # Check if config is recent
-            learned_at = datetime.fromisoformat(config_data.get('learned_at', CacheConstants.CONFIG_DEFAULT_TIMESTAMP))
-            if (datetime.now() - learned_at).total_seconds() > CacheConstants.CONFIG_FRESHNESS_THRESHOLD_SECONDS:
+            learned_at = datetime.fromisoformat(
+                config_data.get('learned_at', 0)
+            )
+            if ((datetime.now() - learned_at).total_seconds() > 
+                PerformanceAdaptiveConstants.CACHE_TTL_SECONDS):
                 return None
                 
             # Adjust parameters based on query complexity if provided
             if query:
-                config_data = await self._adjust_for_query_complexity(config_data, query)
+                config_data = await self._adjust_for_query_complexity(
+                    config_data, query
+                )
                 
             return DynamicSearchConfig(
                 vector_similarity_threshold=config_data['vector_similarity_threshold'],
@@ -216,35 +221,44 @@ class DynamicConfigManager:
             corpus_path = f"/workspace/azure-maintie-rag/data/raw/{corpus_dir}"
             
             # Analyze corpus domain using real data
-            domain_profile = await analyzer.analyze_corpus_domain(corpus_path)
+            domain_profile = analyzer.analyze_content(corpus_path)
             
             logger.info(f"✅ Domain analysis complete for {domain_name}:")
-            logger.info(f"   📊 {domain_profile.document_count} documents analyzed")
-            logger.info(f"   🎯 Learned entity threshold: {domain_profile.entity_confidence_threshold:.3f}")
-            logger.info(f"   📏 Optimal chunk size: {domain_profile.optimal_chunk_size}")
-            logger.info(f"   🔗 Relationship threshold: {domain_profile.relationship_confidence_threshold:.3f}")
+            logger.info(f"   📊 Analysis confidence: {domain_profile.analysis_confidence.confidence:.3f}")
+            logger.info(f"   📏 Word count: {domain_profile.text_statistics.total_words}")
+            logger.info(f"   🔗 Domain fit score: {domain_profile.domain_fit_score:.3f}")
             
-            # Create dynamic config from learned parameters (NO HARDCODED VALUES!)
+            # Extract learned parameters from analysis (NO HARDCODED VALUES!)
+            # Use analysis confidence for entity threshold
+            entity_threshold = domain_profile.analysis_confidence.confidence
+            relationship_threshold = entity_threshold * 0.9  # Slightly more conservative for relationships
+            
+            # Use document characteristics for chunk size
+            avg_sentence_length = domain_profile.text_statistics.avg_sentence_length or 50
+            optimal_chunk_size = min(2000, max(500, int(avg_sentence_length * 20)))  # Adaptive chunk size
+            
             learned_config = DynamicExtractionConfig(
-                entity_confidence_threshold=domain_profile.entity_confidence_threshold,
-                relationship_confidence_threshold=domain_profile.relationship_confidence_threshold,
-                chunk_size=domain_profile.optimal_chunk_size,
-                chunk_overlap=max(50, int(domain_profile.optimal_chunk_size * 0.1)),  # 10% overlap
-                batch_size=min(10, max(1, domain_profile.document_count // 10)),  # Scale with corpus size
-                max_entities_per_chunk=min(50, max(5, int(domain_profile.entity_density * 100))),  # Based on entity density
-                min_relationship_strength=domain_profile.relationship_confidence_threshold * 0.8,  # Slightly lower than threshold
-                quality_validation_threshold=domain_profile.entity_confidence_threshold * 0.9,  # High quality threshold
+                entity_confidence_threshold=entity_threshold,
+                relationship_confidence_threshold=relationship_threshold,
+                chunk_size=optimal_chunk_size,
+                chunk_overlap=EXPR.calculate_small_chunk_overlap(optimal_chunk_size),  # Centralized overlap ratio
+                batch_size=max(1, len(domain_profile.technical_vocabulary) // 10),  # Scale with vocabulary
+                max_entities_per_chunk=max(5, int(len(domain_profile.technical_vocabulary) / 20)),  # Based on vocabulary density
+                min_relationship_strength=EXPR.calculate_relationship_strength_threshold(relationship_threshold),  # Centralized strength factor
+                quality_validation_threshold=EXPR.calculate_quality_validation_threshold(entity_threshold),  # Centralized quality factor
                 domain_name=domain_name,
                 learned_at=datetime.now(),
                 corpus_stats={
-                    "document_count": domain_profile.document_count,
-                    "avg_document_length": domain_profile.avg_document_length,
-                    "technical_term_density": domain_profile.technical_term_density,
-                    "entity_density": domain_profile.entity_density,
-                    "processing_complexity": domain_profile.processing_complexity,
-                    "analysis_confidence": domain_profile.analysis_confidence,
+                    "total_words": domain_profile.text_statistics.total_words,
+                    "lexical_diversity": domain_profile.text_statistics.lexical_diversity,
+                    "readability_score": domain_profile.text_statistics.readability_score,
+                    "avg_sentence_length": domain_profile.text_statistics.avg_sentence_length,
+                    "processing_complexity": domain_profile.document_complexity.complexity_class,
+                    "analysis_confidence": domain_profile.analysis_confidence.confidence,
                     "technical_vocabulary_size": len(domain_profile.technical_vocabulary),
-                    "key_concepts_found": len(domain_profile.key_concepts)
+                    "domain_fit_score": domain_profile.domain_fit_score,
+                    "technical_vocabulary": domain_profile.technical_vocabulary[:20],  # Top technical terms
+                    "key_concepts": list(domain_profile.concept_hierarchy.keys())[:10]  # Top concepts
                 }
             )
             
@@ -352,7 +366,7 @@ class DynamicConfigManager:
         """Save learned configuration for future use"""
         
         os.makedirs(self.generated_configs_path, exist_ok=True)
-        config_file = self.generated_configs_path / f"{domain_name}_{config_type}{PathConstants.GENERAL_CONFIG_SUFFIX}"
+        config_file = self.generated_configs_path / f"{domain_name}_{config_type}{FileSystemConstants.GENERAL_CONFIG_SUFFIX}"
         
         try:
             with open(config_file, 'w') as f:

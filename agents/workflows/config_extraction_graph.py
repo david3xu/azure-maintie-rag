@@ -7,40 +7,20 @@ Provides graph-based control flow for domain analysis and knowledge extraction.
 
 import asyncio
 from typing import Dict, Any, List, Optional, Callable, Union
-from enum import Enum
-from dataclasses import dataclass, field
 from datetime import datetime
+
+# Import models from centralized data models
+from agents.core.data_models import (
+    WorkflowState,
+    NodeState,
+    NodeExecutionResult as WorkflowNode,
+    WorkflowExecutionState as WorkflowContext
+)
 
 from ..domain_intelligence.agent import get_domain_intelligence_agent
 from ..knowledge_extraction.agent import get_knowledge_extraction_agent
-from .workflow_enums import WorkflowState, NodeState
 from .state_persistence import WorkflowStateManager
-
-
-@dataclass
-class WorkflowNode:
-    """Workflow graph node"""
-    id: str
-    name: str
-    handler: Callable
-    dependencies: List[str] = field(default_factory=list)
-    state: NodeState = NodeState.READY
-    result: Any = None
-    error: Optional[str] = None
-    execution_time: float = 0.0
-    retry_count: int = 0
-    max_retries: int = 3
-
-
-@dataclass
-class WorkflowContext:
-    """Workflow execution context"""
-    workflow_id: str
-    input_data: Dict[str, Any]
-    results: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+from ..core.constants import WorkflowConstants
 
 
 class ConfigExtractionWorkflow:
@@ -308,7 +288,7 @@ class ConfigExtractionWorkflow:
         return {
             "domains_discovered": result.data if hasattr(result, 'data') else {},
             "discovery_method": "filesystem_scan",
-            "discovery_confidence": 0.9
+            "discovery_confidence": WorkflowConstants.DISCOVERY_CONFIDENCE
         }
 
     async def _execute_corpus_analysis(self, context: WorkflowContext) -> Dict[str, Any]:
@@ -329,7 +309,7 @@ class ConfigExtractionWorkflow:
         return {
             "statistical_analysis": result.data if hasattr(result, 'data') else {},
             "corpus_path": corpus_path,
-            "analysis_confidence": 0.85
+            "analysis_confidence": WorkflowConstants.ANALYSIS_CONFIDENCE
         }
 
     async def _execute_pattern_generation(self, context: WorkflowContext) -> Dict[str, Any]:
@@ -348,7 +328,7 @@ class ConfigExtractionWorkflow:
 
         return {
             "semantic_patterns": result.data if hasattr(result, 'data') else {},
-            "pattern_confidence": 0.8
+            "pattern_confidence": WorkflowConstants.PATTERN_CONFIDENCE
         }
 
     async def _execute_config_generation(self, context: WorkflowContext) -> Dict[str, Any]:
@@ -368,7 +348,7 @@ class ConfigExtractionWorkflow:
 
         return {
             "extraction_config": result.data if hasattr(result, 'data') else {},
-            "config_confidence": 0.9
+            "config_confidence": WorkflowConstants.CONFIG_CONFIDENCE
         }
 
     async def _execute_knowledge_extraction(self, context: WorkflowContext) -> Dict[str, Any]:
@@ -382,7 +362,7 @@ class ConfigExtractionWorkflow:
         return {
             "extracted_entities": [],
             "extracted_relationships": [],
-            "extraction_confidence": 0.75,
+            "extraction_confidence": WorkflowConstants.EXTRACTION_CONFIDENCE,
             "documents_processed": len(documents)
         }
 
@@ -393,9 +373,9 @@ class ConfigExtractionWorkflow:
         # Mock validation for now
         return {
             "validation_passed": True,
-            "quality_score": 0.85,
+            "quality_score": WorkflowConstants.QUALITY_SCORE,
             "validation_warnings": [],
-            "validation_confidence": 0.9
+            "validation_confidence": WorkflowConstants.VALIDATION_CONFIDENCE
         }
 
 
