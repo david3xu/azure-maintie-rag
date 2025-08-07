@@ -11,8 +11,8 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from infrastructure.azure_storage.storage_client import SimpleStorageClient
 from infrastructure.azure_openai.openai_client import AzureOpenAIClient
+from infrastructure.azure_storage.storage_client import SimpleStorageClient
 
 
 async def ingest_data(source_path: str, container_name: str = "raw-data"):
@@ -54,21 +54,23 @@ async def ingest_data(source_path: str, container_name: str = "raw-data"):
 
                 # Upload to Azure Blob Storage
                 blob_name = f"{container_name}/{file_path.name}"
-                
+
                 try:
                     # Use storage client to upload
                     upload_result = await storage_client.upload_text_content(
-                        content=content,
-                        blob_name=blob_name,
-                        container=container_name
+                        content=content, blob_name=blob_name, container=container_name
                     )
-                    print(f"📝 Uploaded: {file_path.name} ({file_size} bytes) → {blob_name}")
+                    print(
+                        f"📝 Uploaded: {file_path.name} ({file_size} bytes) → {blob_name}"
+                    )
                     processed += 1
-                    
+
                 except Exception as upload_error:
                     # Fallback to simulated upload if Azure storage unavailable
                     print(f"📝 Simulated upload: {file_path.name} ({file_size} bytes)")
-                    print(f"   ⚠️  Azure storage unavailable: {str(upload_error)[:50]}...")
+                    print(
+                        f"   ⚠️  Azure storage unavailable: {str(upload_error)[:50]}..."
+                    )
                     processed += 1
 
             except Exception as e:
@@ -88,10 +90,14 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Azure Universal RAG - Data Ingestion")
-    parser.add_argument("--source", default="/workspace/azure-maintie-rag/data/raw", 
-                       help="Source directory path")
-    parser.add_argument("--container", default="raw-data", 
-                       help="Azure Blob Storage container name")
+    parser.add_argument(
+        "--source",
+        default="/workspace/azure-maintie-rag/data/raw",
+        help="Source directory path",
+    )
+    parser.add_argument(
+        "--container", default="raw-data", help="Azure Blob Storage container name"
+    )
     args = parser.parse_args()
 
     print("📁 Azure Universal RAG - Data Ingestion")
@@ -101,7 +107,7 @@ if __name__ == "__main__":
     print("")
 
     result = asyncio.run(ingest_data(args.source, args.container))
-    
+
     if result:
         print(f"\n✅ SUCCESS: Ingested {result['processed']} files")
         sys.exit(0)

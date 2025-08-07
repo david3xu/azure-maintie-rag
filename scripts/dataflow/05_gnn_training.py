@@ -10,14 +10,14 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Add project root to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from infrastructure.azure_ml.gnn_training_client import GNNTrainingClient
-from infrastructure.azure_cosmos.cosmos_gremlin_client import CosmosGremlinClient
 from config.settings import azure_settings
+from infrastructure.azure_cosmos.cosmos_gremlin_client import CosmosGremlinClient
+from infrastructure.azure_ml.gnn_training_client import GNNTrainingClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

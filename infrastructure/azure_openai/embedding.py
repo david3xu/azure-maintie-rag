@@ -12,9 +12,9 @@ from typing import Any, Dict, List, Optional
 from openai import AzureOpenAI
 
 from config.settings import azure_settings
+from infrastructure.constants import AzureServiceLimits
 
 from ..azure_auth.base_client import BaseAzureClient
-from infrastructure.constants import AzureServiceLimits
 
 logger = logging.getLogger(__name__)
 

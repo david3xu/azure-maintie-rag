@@ -14,19 +14,20 @@ Key Principles:
 """
 
 import asyncio
-from typing import Dict, List, Any, Optional, Union
+from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
 from agents.core.universal_deps import UniversalDeps, get_universal_deps
 from agents.core.universal_models import (
-    UniversalDomainAnalysis,
-    SearchResult,
     SearchConfiguration,
+    SearchResult,
+    UniversalDomainAnalysis,
 )
-from agents.shared.query_tools import generate_search_query, generate_gremlin_query
 from agents.domain_intelligence.agent import domain_intelligence_agent
 from agents.knowledge_extraction.agent import knowledge_extraction_agent
+from agents.shared.query_tools import generate_gremlin_query, generate_search_query
 
 
 class MultiModalSearchResult(BaseModel):
@@ -55,7 +56,7 @@ class SearchMetrics(BaseModel):
 
 # Create the Universal Search Agent with proper PydanticAI patterns
 universal_search_agent = Agent[UniversalDeps, MultiModalSearchResult](
-    "openai:gpt-4o",
+    "azure_openai:gpt-4o",  # Use Azure OpenAI instead of OpenAI API
     deps_type=UniversalDeps,
     output_type=MultiModalSearchResult,
     system_prompt="""You are the Universal Search Agent.

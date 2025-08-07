@@ -14,7 +14,8 @@ Key Principles:
 """
 
 import asyncio
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
@@ -52,7 +53,7 @@ class ContentCharacteristics(BaseModel):
 
 # Create the Domain Intelligence Agent with proper PydanticAI patterns
 domain_intelligence_agent = Agent[UniversalDeps, UniversalDomainAnalysis](
-    "openai:gpt-4o",
+    "azure_openai:gpt-4o",  # Use Azure OpenAI instead of OpenAI API
     deps_type=UniversalDeps,
     output_type=UniversalDomainAnalysis,
     system_prompt="""You are the Universal Domain Intelligence Agent.

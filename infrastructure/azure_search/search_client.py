@@ -11,8 +11,9 @@ from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
 
 from config.settings import azure_settings
-from ..azure_auth.base_client import BaseAzureClient
 from infrastructure.constants import SearchConstants
+
+from ..azure_auth.base_client import BaseAzureClient
 
 logger = logging.getLogger(__name__)
 

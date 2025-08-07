@@ -21,25 +21,28 @@ PydanticAI Usage:
     result = await orchestrator.process_knowledge_extraction_workflow(content)
 """
 
-# Core universal components
-from .core.universal_models import *
 from .core.universal_deps import UniversalDeps, get_universal_deps
+
+# Core universal components  
+from .core.universal_models import (
+    UniversalDomainAnalysis,
+    UniversalDomainCharacteristics, 
+    UniversalProcessingConfiguration,
+    SearchResult,
+    ExtractedEntity,
+    ExtractedRelationship,
+)
 
 # PydanticAI Agents (proper architecture)
 from .domain_intelligence.agent import (
-    run_domain_analysis,
     create_domain_intelligence_agent,
     domain_intelligence_agent,
+    run_domain_analysis,
 )
 from .knowledge_extraction.agent import (
-    run_knowledge_extraction,
     create_knowledge_extraction_agent,
     knowledge_extraction_agent,
-)
-from .universal_search.agent import (
-    run_universal_search,
-    create_universal_search_agent,
-    universal_search_agent,
+    run_knowledge_extraction,
 )
 
 # Multi-agent orchestration
@@ -47,10 +50,15 @@ from .orchestrator import UniversalOrchestrator, UniversalWorkflowResult
 
 # Shared utilities (utility functions called by agent tools)
 from .shared.query_tools import (
+    generate_analysis_query,
     generate_gremlin_query,
     generate_search_query,
-    generate_analysis_query,
     orchestrate_query_workflow,
+)
+from .universal_search.agent import (
+    create_universal_search_agent,
+    run_universal_search,
+    universal_search_agent,
 )
 
 __version__ = "3.0.0-pydantic-ai"

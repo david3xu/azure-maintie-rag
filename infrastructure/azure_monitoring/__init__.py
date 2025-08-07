@@ -13,7 +13,7 @@ AzureMonitoringClient = AzureApplicationInsightsClient
 
 __all__ = [
     "AzureApplicationInsightsClient",
-    "AppInsightsClient", 
+    "AppInsightsClient",
     "MonitoringClient",
     "AzureMonitoringClient",
 ]

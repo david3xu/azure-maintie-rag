@@ -28,7 +28,7 @@ async def construct_graph(container: str = "knowledge-extraction"):
         except Exception as e:
             storage_client = None
             print(f"⚠️  Storage unavailable: {str(e)[:50]}...")
-            
+
         try:
             cosmos_client = SimpleCosmosClient()
             await cosmos_client.async_initialize()

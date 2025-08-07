@@ -12,12 +12,13 @@ Demonstrates the complete PydanticAI multi-agent workflow with proper:
 
 import asyncio
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
+
+from agents.domain_intelligence.agent import run_domain_analysis
+from agents.knowledge_extraction.agent import run_knowledge_extraction
 
 # Import proper PydanticAI multi-agent components
 from agents.orchestrator import UniversalOrchestrator, UniversalWorkflowResult
-from agents.domain_intelligence.agent import run_domain_analysis
-from agents.knowledge_extraction.agent import run_knowledge_extraction
 from agents.universal_search.agent import run_universal_search
 
 
@@ -81,9 +82,7 @@ async def demo_pydantic_ai_multi_agent_workflow():
         )
         print(f"✅ Entities found: {len(extraction_result.entities)}")
         print(f"🔗 Relationships found: {len(extraction_result.relationships)}")
-        print(
-            f"🎯 Extraction confidence: {extraction_result.extraction_confidence:.2f}"
-        )
+        print(f"🎯 Extraction confidence: {extraction_result.extraction_confidence:.2f}")
         print(f"📊 Processing signature: {extraction_result.processing_signature}")
 
         if extraction_result.entities:
@@ -103,9 +102,7 @@ async def demo_pydantic_ai_multi_agent_workflow():
         search_result = await run_universal_search(
             sample_query, max_results=5, use_domain_analysis=True
         )
-        print(
-            f"✅ Search completed with strategy: {search_result.search_strategy_used}"
-        )
+        print(f"✅ Search completed with strategy: {search_result.search_strategy_used}")
         print(f"📊 Total results: {search_result.total_results_found}")
         print(f"🎯 Search confidence: {search_result.search_confidence:.2f}")
         print(f"⚡ Processing time: {search_result.processing_time_seconds:.3f}s")

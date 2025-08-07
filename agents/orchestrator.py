@@ -7,17 +7,23 @@ Demonstrates agent delegation, dependency sharing, and workflow coordination.
 """
 
 import asyncio
+import logging
 import time
-from typing import Dict, List, Any, Optional, Union
+from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
 
+logger = logging.getLogger(__name__)
+
 from agents.core.universal_deps import UniversalDeps, get_universal_deps
-from agents.core.universal_models import UniversalDomainAnalysis, SearchResult
+from agents.core.universal_models import SearchResult, UniversalDomainAnalysis
 from agents.domain_intelligence.agent import run_domain_analysis
 from agents.knowledge_extraction.agent import run_knowledge_extraction
 from agents.universal_search.agent import run_universal_search
 from infrastructure.utilities.azure_cost_tracker import AzureServiceCostTracker
-from infrastructure.utilities.workflow_evidence_collector import AzureDataWorkflowEvidenceCollector
+from infrastructure.utilities.workflow_evidence_collector import (
+    AzureDataWorkflowEvidenceCollector,
+)
 
 
 class UniversalWorkflowResult(BaseModel):
@@ -30,7 +36,9 @@ class UniversalWorkflowResult(BaseModel):
     total_processing_time: float = Field(ge=0.0)
     agent_metrics: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     cost_summary: Dict[str, Any] = Field(default_factory=dict)  # Added cost tracking
-    evidence_report: Optional[Dict[str, Any]] = Field(default=None, description="Workflow evidence audit trail")
+    evidence_report: Optional[Dict[str, Any]] = Field(
+        default=None, description="Workflow evidence audit trail"
+    )
     errors: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
 
@@ -135,7 +143,7 @@ class UniversalOrchestrator:
         errors = []
         warnings = []
         agent_metrics = {}
-        
+
         # Initialize evidence collector for audit trail
         workflow_id = f"knowledge_extraction_{int(start_time)}"
         self.evidence_collector = AzureDataWorkflowEvidenceCollector(workflow_id)
@@ -212,7 +220,7 @@ class UniversalOrchestrator:
             cost_summary = self._calculate_workflow_costs(
                 agent_metrics, extraction_summary, domain_analysis
             )
-            
+
             # Generate evidence report for audit trail
             evidence_report = None
             if self.evidence_collector:
@@ -222,20 +230,37 @@ class UniversalOrchestrator:
                         step_number=99,  # Final step
                         azure_service="workflow_orchestrator",
                         operation_type="knowledge_extraction_workflow",
-                        input_data={"content_length": len(content), "use_domain_analysis": use_domain_analysis},
+                        input_data={
+                            "content_length": len(content),
+                            "use_domain_analysis": use_domain_analysis,
+                        },
                         output_data={
-                            "entities_count": extraction_summary.get("entities_count", 0) if extraction_summary else 0,
-                            "relationships_count": extraction_summary.get("relationships_count", 0) if extraction_summary else 0,
+                            "entities_count": (
+                                extraction_summary.get("entities_count", 0)
+                                if extraction_summary
+                                else 0
+                            ),
+                            "relationships_count": (
+                                extraction_summary.get("relationships_count", 0)
+                                if extraction_summary
+                                else 0
+                            ),
                             "success": len(errors) == 0,
                         },
                         processing_time_ms=(time.time() - start_time) * 1000,
                         quality_metrics={
                             "workflow_success_rate": 1.0 if len(errors) == 0 else 0.0,
-                            "agent_success_count": sum(1 for metrics in agent_metrics.values() if metrics.get("success", False)),
-                        }
+                            "agent_success_count": sum(
+                                1
+                                for metrics in agent_metrics.values()
+                                if metrics.get("success", False)
+                            ),
+                        },
                     )
-                    
-                    evidence_report = await self.evidence_collector.generate_workflow_evidence_report()
+
+                    evidence_report = (
+                        await self.evidence_collector.generate_workflow_evidence_report()
+                    )
                     logger.info(f"Evidence report generated for workflow {workflow_id}")
                 except Exception as e:
                     logger.warning(f"Evidence report generation failed: {e}")
@@ -365,12 +390,12 @@ class UniversalOrchestrator:
     ) -> Dict[str, Any]:
         """
         Calculate estimated costs for the workflow based on agent usage.
-        
+
         Provides enterprise-level cost monitoring and budgeting capabilities.
         """
         total_cost = 0.0
         cost_breakdown = {}
-        
+
         try:
             # Calculate domain analysis costs (Azure OpenAI usage)
             if "domain_intelligence" in agent_metrics:
@@ -379,27 +404,29 @@ class UniversalOrchestrator:
                 )
                 cost_breakdown["domain_analysis"] = domain_cost
                 total_cost += domain_cost
-            
+
             # Calculate knowledge extraction costs
             if "knowledge_extraction" in agent_metrics and extraction_summary:
                 entities_count = extraction_summary.get("entities_count", 0)
                 relationships_count = extraction_summary.get("relationships_count", 0)
-                
+
                 # Estimate based on entities and relationships processed
-                extraction_requests = max(1, (entities_count + relationships_count) // 10)
+                extraction_requests = max(
+                    1, (entities_count + relationships_count) // 10
+                )
                 extraction_cost = self.cost_tracker.estimate_operation_cost(
                     "azure_openai", "request", extraction_requests
                 )
-                
+
                 # Add Cosmos DB costs for graph storage
                 cosmos_cost = self.cost_tracker.estimate_operation_cost(
                     "cosmos_db", "operation", entities_count + relationships_count
                 )
-                
+
                 cost_breakdown["knowledge_extraction"] = extraction_cost
                 cost_breakdown["graph_storage"] = cosmos_cost
                 total_cost += extraction_cost + cosmos_cost
-            
+
             # Calculate search costs if applicable
             if "universal_search" in agent_metrics:
                 search_cost = self.cost_tracker.estimate_operation_cost(
@@ -407,7 +434,7 @@ class UniversalOrchestrator:
                 )
                 cost_breakdown["universal_search"] = search_cost
                 total_cost += search_cost
-            
+
             return {
                 "total_estimated_cost_usd": round(total_cost, 6),
                 "cost_breakdown": cost_breakdown,
@@ -416,7 +443,7 @@ class UniversalOrchestrator:
                 "currency": "USD",
                 "estimated_at": time.time(),
             }
-            
+
         except Exception as e:
             return {
                 "total_estimated_cost_usd": 0.0,

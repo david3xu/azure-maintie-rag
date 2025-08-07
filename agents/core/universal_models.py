@@ -9,7 +9,8 @@ All data structures are designed to adapt to ANY content type through
 data-driven discovery rather than predetermined categories.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 # Re-export the universal models from domain intelligence agent

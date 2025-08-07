@@ -11,8 +11,9 @@ import logging
 import os
 import time
 from typing import Optional
-from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+
 from azure.core.exceptions import ClientAuthenticationError
+from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +49,11 @@ def get_azure_credential() -> DefaultAzureCredential:
 def _refresh_credential():
     """
     Refresh Azure credential with managed identity fallback pattern.
-    
+
     Integrated from AzureSessionManager for production reliability.
     """
     global _azure_credential, _last_refresh_time
-    
+
     try:
         # Try managed identity first (for Azure environments)
         _azure_credential = ManagedIdentityCredential()
@@ -64,9 +65,7 @@ def _refresh_credential():
             logger.info("Azure credential refreshed with Default Credential")
         except Exception as e:
             logger.error(f"Credential refresh failed: {e}")
-            raise ClientAuthenticationError(
-                f"Failed to refresh Azure credentials: {e}"
-            )
+            raise ClientAuthenticationError(f"Failed to refresh Azure credentials: {e}")
 
     _last_refresh_time = time.time()
     logger.debug(f"Azure credential refreshed at {_last_refresh_time}")
@@ -112,17 +111,21 @@ def reset_azure_credential():
 def get_session_metadata() -> dict:
     """
     Get current session metadata for monitoring and debugging.
-    
+
     Returns:
         dict: Session information including refresh time and credential type
     """
     global _azure_credential, _last_refresh_time
-    
+
     return {
         "credential_initialized": _azure_credential is not None,
         "last_refresh_time": _last_refresh_time,
-        "time_since_refresh_minutes": (time.time() - _last_refresh_time) / 60 if _last_refresh_time > 0 else 0,
-        "credential_type": type(_azure_credential).__name__ if _azure_credential else None,
+        "time_since_refresh_minutes": (
+            (time.time() - _last_refresh_time) / 60 if _last_refresh_time > 0 else 0
+        ),
+        "credential_type": (
+            type(_azure_credential).__name__ if _azure_credential else None
+        ),
         "refresh_threshold_minutes": _refresh_threshold_minutes,
     }
 
@@ -130,7 +133,7 @@ def get_session_metadata() -> dict:
 def configure_refresh_threshold(minutes: int):
     """
     Configure the credential refresh threshold.
-    
+
     Args:
         minutes: Number of minutes before credential expiry to refresh
     """
@@ -142,7 +145,7 @@ def configure_refresh_threshold(minutes: int):
 def force_credential_refresh():
     """
     Force immediate credential refresh regardless of timing.
-    
+
     Useful for error recovery scenarios.
     """
     logger.info("Forcing Azure credential refresh")

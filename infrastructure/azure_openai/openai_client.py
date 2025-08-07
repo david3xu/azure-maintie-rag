@@ -22,6 +22,7 @@ from ..azure_auth.base_client import BaseAzureClient
 # Use existing configuration management
 try:
     from agents.core.simple_config_manager import SimpleConfigManager
+
     config_manager = SimpleConfigManager()
     CONSOLIDATED_INTELLIGENCE_AVAILABLE = True
 except ImportError:
@@ -31,6 +32,7 @@ except ImportError:
 # Use existing universal models
 try:
     from agents.core.universal_models import UniversalEntity, UniversalRelation
+
     CONSOLIDATED_MODELS_AVAILABLE = True
 except ImportError:
     # Simple fallback classes
@@ -39,14 +41,14 @@ except ImportError:
             self.text = text
             self.type = type
             self.context = context
-    
+
     class UniversalRelation:
         def __init__(self, source, target, relation, context=""):
             self.source = source
             self.target = target
             self.relation = relation
             self.context = context
-    
+
     CONSOLIDATED_MODELS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
@@ -75,6 +77,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         if self.use_managed_identity:
             # Use managed identity for azd deployments
             from azure.identity import get_bearer_token_provider
+
             from infrastructure.azure_auth_utils import get_azure_credential
 
             credential = get_azure_credential()
@@ -99,7 +102,9 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         """Ensure client is initialized with rate limiter"""
         super().ensure_initialized()
         if not hasattr(self, "rate_limiter"):
-            self.rate_limiter = SimpleRateLimiter(domain="universal")  # Domain-agnostic approach
+            self.rate_limiter = SimpleRateLimiter(
+                domain="universal"
+            )  # Domain-agnostic approach
 
     async def test_connection(self) -> Dict[str, Any]:
         """Test Azure OpenAI connection (CODING_STANDARDS: Clean implementation)"""
@@ -350,7 +355,11 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
     # === TEXT COMPLETION ===
 
     async def get_completion(
-        self, prompt: str, domain: str = "universal", model: str = None, **kwargs  # Domain-agnostic default
+        self,
+        prompt: str,
+        domain: str = "universal",
+        model: str = None,
+        **kwargs,  # Domain-agnostic default
     ) -> str:
         """Get text completion"""
         self.ensure_initialized()
@@ -392,7 +401,10 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
         return text
 
     async def _chunk_text(
-        self, text: str, domain: str = "universal", chunk_size: int = None  # Domain-agnostic default
+        self,
+        text: str,
+        domain: str = "universal",
+        chunk_size: int = None,  # Domain-agnostic default
     ) -> List[str]:
         """Split text into chunks"""
         if chunk_size is None:
@@ -492,7 +504,12 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
 
                     self.model_name = azure_settings.openai_deployment_name or "gpt-4o"
                     # Use centralized constants
-                    from agents.core.constants import DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS, DEFAULT_REQUESTS_PER_MINUTE, DEFAULT_CHUNK_SIZE
+                    from agents.core.constants import (
+                        DEFAULT_CHUNK_SIZE,
+                        DEFAULT_MAX_TOKENS,
+                        DEFAULT_REQUESTS_PER_MINUTE,
+                        DEFAULT_TEMPERATURE,
+                    )
 
                     self.temperature = DEFAULT_TEMPERATURE
                     self.max_tokens = DEFAULT_MAX_TOKENS
@@ -515,7 +532,12 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
 
                 model_name = azure_settings.openai_deployment_name or "gpt-4o"
                 # Use centralized constants
-                from agents.core.constants import DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS, DEFAULT_REQUESTS_PER_MINUTE, DEFAULT_CHUNK_SIZE
+                from agents.core.constants import (
+                    DEFAULT_CHUNK_SIZE,
+                    DEFAULT_MAX_TOKENS,
+                    DEFAULT_REQUESTS_PER_MINUTE,
+                    DEFAULT_TEMPERATURE,
+                )
 
                 temperature = DEFAULT_TEMPERATURE
                 max_tokens = DEFAULT_MAX_TOKENS
@@ -531,7 +553,9 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
 class SimpleRateLimiter:
     """Simple rate limiter for Azure OpenAI"""
 
-    def __init__(self, requests_per_minute: int = None, domain: str = "universal"):  # Domain-agnostic default
+    def __init__(
+        self, requests_per_minute: int = None, domain: str = "universal"
+    ):  # Domain-agnostic default
         if requests_per_minute is None:
             requests_per_minute = 50  # Default fallback
         self.requests_per_minute = requests_per_minute
