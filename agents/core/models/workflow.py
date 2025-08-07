@@ -22,7 +22,13 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, computed_field, validator
 
-from agents.core.constants import StatisticalConstants
+from agents.core.constants import (
+    ExtractionQualityConstants,
+    MathematicalFoundationConstants,
+    StatisticalConstants,
+    SystemPerformanceConstants,
+    WorkflowExecutionConstants,
+)
 
 from .base import (
     NodeState,
@@ -30,6 +36,61 @@ from .base import (
     StateTransferType,
     WorkflowState,
 )
+
+# =============================================================================
+# BACKGROUND PROCESSING MODELS
+# =============================================================================
+
+
+@dataclass
+class ProcessingStats:
+    """Statistics for background processing operations"""
+
+    total_domains: int = 0
+    successful_processes: int = 0
+    failed_processes: int = 0
+    total_documents: int = 0
+    total_processing_time: float = 0.0
+    average_confidence: float = 0.0
+    errors: List[str] = field(default_factory=list)
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+    @property
+    def success_rate(self) -> float:
+        """Calculate processing success rate"""
+        if self.total_domains == 0:
+            return 0.0
+        return self.successful_processes / self.total_domains
+
+    @property
+    def processing_duration(self) -> Optional[timedelta]:
+        """Calculate total processing duration"""
+        if self.start_time and self.end_time:
+            return self.end_time - self.start_time
+        return None
+
+
+@dataclass
+class DomainSignature:
+    """Domain signature containing essential patterns and configuration"""
+
+    domain: str
+    patterns: Dict[str, Any] = field(default_factory=dict)
+    config: Optional[Any] = None  # CompleteDomainConfig
+    signature_confidence: float = 0.0
+    creation_timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation"""
+        return {
+            "domain": self.domain,
+            "patterns": self.patterns,
+            "config": self.config.dict() if self.config else None,
+            "signature_confidence": self.signature_confidence,
+            "creation_timestamp": self.creation_timestamp,
+        }
+
 
 # =============================================================================
 # WORKFLOW EXECUTION STATE MODELS
@@ -342,7 +403,9 @@ class StatisticalAnalysis(BaseModel):
     )
     processing_time: float = Field(ge=0.0, description="Analysis processing time")
 
-    def get_top_tokens(self, limit: int = 20) -> List[tuple]:
+    def get_top_tokens(
+        self, limit: int = StatisticalConstants.DEFAULT_TOP_ITEMS_LIMIT
+    ) -> List[tuple]:
         """Get most frequent tokens"""
         sorted_tokens = sorted(
             self.token_frequencies.items(), key=lambda x: x[1], reverse=True
@@ -352,11 +415,15 @@ class StatisticalAnalysis(BaseModel):
     def calculate_readability_score(self) -> float:
         """Calculate approximate readability score"""
         if self.average_document_length == 0:
-            return 0.0
+            return MathematicalFoundationConstants.ZERO_THRESHOLD
 
         # Simple heuristic based on document length and vocabulary diversity
         vocab_diversity = self.vocabulary_size / max(self.total_tokens, 1)
-        length_factor = min(self.average_document_length / 1000, 1.0)
+        length_factor = min(
+            self.average_document_length
+            / StatisticalConstants.REFERENCE_DOCUMENT_LENGTH,
+            MathematicalFoundationConstants.PERFECT_SCORE,
+        )
 
         return vocab_diversity * (1 - self.technical_term_density) * length_factor
 
@@ -421,4 +488,4 @@ class LLMExtraction:
     entity_types: List[str]
     relationship_patterns: List[str]
     processing_complexity: str
-    reasoning_quality: float = 0.8
+    reasoning_quality: float = ExtractionQualityConstants.DEFAULT_REASONING_QUALITY

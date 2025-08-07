@@ -21,6 +21,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+from agents.core.constants import (
+    MathematicalFoundationConstants,
+    PerformanceAdaptiveConstants,
+    SystemPerformanceConstants,
+)
+
 from .base import ErrorCategory, HealthStatus
 
 # =============================================================================
@@ -96,9 +102,14 @@ class CacheMetrics:
         )
         return (hit_factor + eviction_factor) / 2.0
 
-    def is_performing_well(self, min_hit_rate: float = 0.6) -> bool:
+    def is_performing_well(
+        self, min_hit_rate: float = PerformanceAdaptiveConstants.MIN_CACHE_HIT_RATE
+    ) -> bool:
         """Check if cache is performing within acceptable parameters"""
-        return self.hit_rate >= min_hit_rate and self.memory_usage_mb < 1000.0
+        return (
+            self.hit_rate >= min_hit_rate
+            and self.memory_usage_mb < PerformanceAdaptiveConstants.MAX_MEMORY_USAGE_MB
+        )
 
 
 @dataclass
@@ -188,7 +199,7 @@ class MemoryStatus:
     """Memory management status and metrics"""
 
     total_items: int = 0
-    memory_limit_mb: float = 200.0
+    memory_limit_mb: float = PerformanceAdaptiveConstants.DEFAULT_MEMORY_LIMIT_MB
     estimated_usage_mb: float = 0.0
     evictions: int = 0
     last_cleanup: float = 0.0
@@ -213,7 +224,10 @@ class MemoryStatus:
         else:
             self.health_status = "healthy"
 
-    def needs_cleanup(self, threshold_percent: float = 80.0) -> bool:
+    def needs_cleanup(
+        self,
+        threshold_percent: float = PerformanceAdaptiveConstants.MEMORY_CLEANUP_THRESHOLD_PERCENT,
+    ) -> bool:
         """Check if memory cleanup is needed"""
         return self.utilization_percent > threshold_percent
 
@@ -415,7 +429,10 @@ class PerformanceFeedbackPoint(BaseModel):
             + memory_factor * 0.1
         )
 
-    def should_trigger_optimization(self, threshold: float = 0.6) -> bool:
+    def should_trigger_optimization(
+        self,
+        threshold: float = PerformanceAdaptiveConstants.OPTIMIZATION_TRIGGER_THRESHOLD,
+    ) -> bool:
         """Check if this feedback should trigger optimization"""
         return self.calculate_performance_score() < threshold
 
@@ -423,7 +440,10 @@ class PerformanceFeedbackPoint(BaseModel):
         """Get list of optimization targets based on feedback"""
         targets = []
 
-        if self.execution_time_seconds > 5.0:
+        if (
+            self.execution_time_seconds
+            > SystemPerformanceConstants.SLOW_OPERATION_THRESHOLD_SECONDS
+        ):
             targets.append("execution_time")
 
         if not self.success:

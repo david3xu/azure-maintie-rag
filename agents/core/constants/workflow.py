@@ -73,9 +73,29 @@ class WorkflowConstants:
     STORAGE_SIZE_PRECISION = 2  # Decimal precision for storage size
 
 
+class ErrorHandlingConstants:
+    """Error handling and recovery constants"""
+
+    # Backoff and delay
+    MAX_BACKOFF_DELAY_SECONDS = 30.0
+
+    # Adaptation thresholds
+    ADAPTATION_THRESHOLD = 0.7
+
+
+class WorkflowExecutionConstants:
+    """Workflow execution coordination constants"""
+
+    # Execution flow constants
+    DEFAULT_EXECUTION_TIMEOUT = 300
+    MAX_WORKFLOW_STEPS = 50
+
+
 # Export all constants
 __all__ = [
     "WorkflowCoordinationConstants",
     "ErrorHandlingCoordinatedConstants",
     "WorkflowConstants",
+    "ErrorHandlingConstants",
+    "WorkflowExecutionConstants",
 ]

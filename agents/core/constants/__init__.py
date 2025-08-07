@@ -13,6 +13,13 @@ Phase 1 Implementation Features:
 - Mathematical base constants as foundation layer
 - Interdependency group documentation preserved
 
+**Phase 3 Implementation Features (NEW):**
+- Automation classification system for constants by generation potential
+- Performance feedback loops for adaptive constant optimization
+- Domain Intelligence Agent integration for automatic constant generation
+- Comprehensive safety validation for automated generation
+- Configuration discovery from Azure deployment scanning
+
 Modular Structure:
 - base.py: Mathematical constants and scaling factors (foundation)
 - system.py: System boundary and infrastructure constants
@@ -23,11 +30,21 @@ Modular Structure:
 - extraction.py: Knowledge extraction constants
 - validation.py: Security and validation constants
 - legacy.py: Backward compatibility aliases
+- **automation_classifier.py: Automation potential classification (Phase 3)**
+- **automation_interface.py: Automation coordination (Phase 3)**
+- **domain_intelligence_integration.py: Domain-driven generation (Phase 3)**
+- **performance_feedback_loops.py: Real-time optimization (Phase 3)**
+- **safety_validation.py: Comprehensive validation (Phase 3)**
 
 Import this module using any of these patterns (all work identically):
     from agents.core.constants import SystemBoundaryConstants
     from agents.core.constants.system import SystemBoundaryConstants
     from agents.core.constants import MathematicalConstants
+    
+**Phase 3 Automation Access:**
+    from agents.core.constants import automation_coordinator
+    from agents.core.constants import performance_feedback_orchestrator
+    from agents.core.constants import constant_safety_validator
 """
 
 # =============================================================================
@@ -40,6 +57,7 @@ from typing import Any, Dict, List
 from .base import (
     BaseScalingFactors,
     MathematicalConstants,
+    MathematicalFoundationConstants,
     derive_chunk_size,
     derive_confidence,
     derive_timeout,
@@ -49,11 +67,13 @@ from .base import (
 from .domain import (
     ContentAnalysisAdaptiveConstants,
     DomainAdaptiveConstants,
+    DomainIntelligenceConstants,
 )
 
 # Extraction Layer - Knowledge Processing
 from .extraction import (
     ExtractionAlgorithmConstants,
+    ExtractionQualityConstants,
     KnowledgeExtractionConstants,
 )
 
@@ -85,6 +105,7 @@ from .system import (
     FileSystemConstants,
     InfrastructureConstants,
     SystemBoundaryConstants,
+    SystemPerformanceConstants,
 )
 
 # Validation Layer - Security and Data Integrity
@@ -95,9 +116,62 @@ from .validation import (
 
 # Workflow Layer - Coordination and Orchestration
 from .workflow import (
+    ErrorHandlingConstants,
     ErrorHandlingCoordinatedConstants,
     WorkflowConstants,
     WorkflowCoordinationConstants,
+    WorkflowExecutionConstants,
+)
+
+# =============================================================================
+# PHASE 3: AUTOMATION SYSTEM IMPORTS
+# =============================================================================
+
+# Automation Classification and Coordination
+from .automation_classifier import (
+    AutomationPotential,
+    LearningMechanism,
+    ConstantClassification,
+    AutomationClassifier,
+    automation_classifier,
+)
+
+# Automation Interface and Coordination
+from .automation_interface import (
+    GenerationRequest,
+    GenerationResult,
+    AutomationCoordinator,
+    automation_coordinator,
+)
+
+# Domain Intelligence Integration
+from .domain_intelligence_integration import (
+    DomainAnalysisResult,
+    DomainIntelligenceConstantGenerator,
+    domain_intelligence_generator,
+)
+
+# Performance Feedback Loops
+from .performance_feedback_loops import (
+    MetricType,
+    PerformanceMetric,
+    AdaptationRule,
+    PerformanceFeedbackOrchestrator,
+    performance_feedback_orchestrator,
+    record_response_time,
+    record_cache_hit_rate,
+    record_extraction_accuracy,
+    record_search_relevance,
+)
+
+# Safety Validation
+from .safety_validation import (
+    ValidationSeverity,
+    ValidationCategory,
+    ValidationIssue,
+    ValidationResult,
+    ConstantSafetyValidator,
+    constant_safety_validator,
 )
 
 # =============================================================================
@@ -297,15 +371,9 @@ def validate_constants() -> List[str]:
 
 
 # =============================================================================
-# PRESERVE ORIGINAL DOMAIN INTELLIGENCE CONSTANTS (Empty placeholder)
+# ORIGINAL DOMAIN INTELLIGENCE CONSTANTS NOW IMPORTED FROM DOMAIN MODULE
 # =============================================================================
-# Maintaining the original structure for any remaining dependencies
-
-
-class DomainIntelligenceConstants:
-    """Domain Intelligence Agent specific constants - Legacy placeholder"""
-
-    pass
+# The DomainIntelligenceConstants are now properly imported from domain.py
 
 
 # =============================================================================
@@ -315,27 +383,32 @@ class DomainIntelligenceConstants:
 __all__ = [
     # Foundation Layer
     "MathematicalConstants",
+    "MathematicalFoundationConstants",
     "BaseScalingFactors",
     "derive_timeout",
     "derive_chunk_size",
     "derive_confidence",
     # Modular Organization - New Structure
     "SystemBoundaryConstants",
+    "SystemPerformanceConstants",
     "InfrastructureConstants",
     "FileSystemConstants",
     "DomainAdaptiveConstants",
+    "DomainIntelligenceConstants",
     "ContentAnalysisAdaptiveConstants",
     "PerformanceAdaptiveConstants",
     "SearchPerformanceAdaptiveConstants",
     "MLModelStaticConstants",
     "StatisticalConstants",
     "WorkflowCoordinationConstants",
+    "WorkflowExecutionConstants",
+    "ErrorHandlingConstants",
     "ErrorHandlingCoordinatedConstants",
     "SecurityConstants",
     "ExtractionAlgorithmConstants",
+    "ExtractionQualityConstants",
     "DataModelConstants",
     # Legacy Agent-Specific Constants (backward compatibility)
-    "DomainIntelligenceConstants",
     "KnowledgeExtractionConstants",
     "UniversalSearchConstants",
     "WorkflowConstants",
@@ -351,4 +424,32 @@ __all__ = [
     "get_automation_potential_summary",
     "get_interdependency_groups",
     "validate_constants",
+    # Phase 3: Automation System Components
+    "AutomationPotential",
+    "LearningMechanism",
+    "ConstantClassification",
+    "AutomationClassifier",
+    "automation_classifier",
+    "GenerationRequest",
+    "GenerationResult",
+    "AutomationCoordinator",
+    "automation_coordinator",
+    "DomainAnalysisResult",
+    "DomainIntelligenceConstantGenerator",
+    "domain_intelligence_generator",
+    "MetricType",
+    "PerformanceMetric",
+    "AdaptationRule",
+    "PerformanceFeedbackOrchestrator",
+    "performance_feedback_orchestrator",
+    "record_response_time",
+    "record_cache_hit_rate",
+    "record_extraction_accuracy",
+    "record_search_relevance",
+    "ValidationSeverity",
+    "ValidationCategory",
+    "ValidationIssue",
+    "ValidationResult",
+    "ConstantSafetyValidator",
+    "constant_safety_validator",
 ]

@@ -47,7 +47,6 @@ from agents.core.constants import ContentAnalysisConstants, StubConstants
 
 # Import PydanticAI validators for domain intelligence validation
 from agents.core.data_models import (
-    validate_content_analysis,
     ContentAnalysisOutput,
     DomainAnalysisResult,
     DomainIntelligenceConfig,
@@ -334,8 +333,8 @@ class UnifiedContentAnalyzer:
                         "confidence_score": analysis_confidence.value,
                     }
 
-                    validated_analysis: ContentAnalysisOutput = (
-                        validate_content_analysis(content_analysis_data)
+                    validated_analysis: ContentAnalysisOutput = ContentAnalysisOutput(
+                        **content_analysis_data
                     )
                     logger.info(
                         f"PydanticAI validation: {validated_analysis.quality_tier} quality content"

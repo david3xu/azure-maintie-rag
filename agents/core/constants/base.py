@@ -42,6 +42,22 @@ class MathematicalConstants:
     BASE_CONFIDENCE = 0.7  # Base confidence threshold
 
 
+class MathematicalFoundationConstants:
+    """Enhanced mathematical foundation constants for model integration"""
+
+    # Perfect mathematical values
+    PERFECT_SCORE = 1.0
+    ZERO_THRESHOLD = 0.0
+    MILLISECONDS_PER_SECOND = 1000.0
+
+    # Exponential backoff
+    EXPONENTIAL_BACKOFF_BASE = 2.0
+    BASE_DELAY_SECONDS = 1.0
+
+    # Random seed for reproducibility
+    RANDOM_SEED = 42
+
+
 class BaseScalingFactors:
     """Scaling factors to derive related constants from base values"""
 

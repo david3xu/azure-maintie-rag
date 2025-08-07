@@ -42,6 +42,10 @@ from agents.shared.extraction_base import (
 
 class BaseExtractionStrategy(ABC):
     """Base class for extraction strategies"""
+    
+    def __init__(self, strategy_type: str, confidence_threshold: float = 0.5):
+        self.strategy_type = strategy_type
+        self.confidence_threshold = confidence_threshold
 
     @abstractmethod
     def extract(self, context: ExtractionContext) -> EntityExtractionResult:
@@ -66,6 +70,7 @@ from agents.core.constants import KnowledgeExtractionConstants
 from agents.core.data_models import (
     EntityExtractionResult,
     KnowledgeExtractionResult,
+    RelationshipConfidenceFactors,
     RelationshipExtractionResult,
     ValidatedEntity,
     ValidatedRelationship,
@@ -74,16 +79,42 @@ from agents.core.data_models import (
 )
 from agents.shared.confidence_calculator import (  # EntityConfidenceFactors deleted - using inline calculation; calculate_ensemble_confidence, ConfidenceScore
     ConfidenceScore,
-    RelationshipConfidenceFactors,
-    calculate_entity_confidence,
-    calculate_relationship_confidence,
 )
+
+# Define stub functions for now - these will be implemented properly later
+def calculate_entity_confidence(entity_data: Dict[str, Any]) -> float:
+    """Stub function for entity confidence calculation"""
+    return entity_data.get('confidence', 0.5)
+
+def calculate_relationship_confidence(rel_data: Dict[str, Any]) -> float:
+    """Stub function for relationship confidence calculation"""
+    return rel_data.get('confidence', 0.5)
+
 from agents.shared.content_preprocessing import (
-    ContentChunker,
-    TextCleaningOptions,
-    chunk_content,
     clean_text_content,
 )
+
+# Define stub functions and classes for now - these will be implemented properly later
+def chunk_content(text: str, chunk_size: int = 1000, overlap: int = 100) -> List[str]:
+    """Stub function for content chunking"""
+    chunks = []
+    for i in range(0, len(text), chunk_size - overlap):
+        chunks.append(text[i:i + chunk_size])
+    return chunks
+
+class ContentChunker:
+    """Stub class for content chunking"""
+    def __init__(self, chunk_size: int = 1000, overlap: int = 100):
+        self.chunk_size = chunk_size
+        self.overlap = overlap
+    
+    def chunk(self, text: str) -> List[str]:
+        return chunk_content(text, self.chunk_size, self.overlap)
+
+class TextCleaningOptions:
+    """Stub class for text cleaning options"""
+    def __init__(self, **kwargs):
+        self.options = kwargs
 
 logger = logging.getLogger(__name__)
 

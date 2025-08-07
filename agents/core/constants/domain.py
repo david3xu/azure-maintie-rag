@@ -85,7 +85,24 @@ class ContentAnalysisAdaptiveConstants:
 
 
 # Export all constants
+class DomainIntelligenceConstants:
+    """Domain Intelligence Agent specific constants"""
+
+    # Pattern detection parameters
+    MIN_PATTERN_FREQUENCY = 2
+    MAX_PATTERNS_PER_TYPE = 20
+
+    # TF-IDF parameters
+    TFIDF_MAX_FEATURES = 1000
+    TFIDF_MIN_DF = 2
+    TFIDF_MAX_DF = 0.8
+
+    # Clustering parameters
+    N_SEMANTIC_CLUSTERS = 5
+
+
 __all__ = [
     "DomainAdaptiveConstants",
     "ContentAnalysisAdaptiveConstants",
+    "DomainIntelligenceConstants",
 ]

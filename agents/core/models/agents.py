@@ -18,8 +18,13 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, computed_field
 
 from agents.core.constants import (
+    DomainIntelligenceConstants,
+    ExtractionQualityConstants,
     InfrastructureConstants,
+    MathematicalFoundationConstants,
     PerformanceAdaptiveConstants,
+    StatisticalConstants,
+    SystemPerformanceConstants,
     UniversalSearchConstants,
 )
 
@@ -137,6 +142,20 @@ class UniversalSearchContract(BaseModel):
 # =============================================================================
 
 
+class CompleteDomainConfig(BaseModel):
+    """Complete domain configuration combining infrastructure, ML, and patterns"""
+
+    domain: str = Field(description="Domain identifier")
+    infrastructure: "InfrastructureConfig" = Field(
+        description="Infrastructure configuration"
+    )
+    ml_model: "MLModelConfig" = Field(description="ML model configuration")
+    patterns: Any = Field(description="Extracted patterns used for configuration")
+    generation_confidence: float = Field(
+        ge=0.0, le=1.0, description="Configuration generation confidence"
+    )
+
+
 class SynthesisWeights(BaseModel):
     """Result synthesis weight configuration"""
 
@@ -240,12 +259,20 @@ class GNNSearchConfig(BaseModel):
     embedding_dimension: int = Field(
         default=UniversalSearchConstants.DEFAULT_GNN_NODE_EMBEDDINGS, ge=50, le=1024
     )
-    max_hops: int = Field(default=2, ge=1, le=3, description="Maximum GNN hops")
+    max_hops: int = Field(
+        default=UniversalSearchConstants.DEFAULT_GNN_MAX_HOPS,
+        ge=1,
+        le=3,
+        description="Maximum GNN hops",
+    )
     confidence_threshold: float = Field(
         default=UniversalSearchConstants.GNN_MIN_PREDICTION_CONFIDENCE, ge=0.0, le=1.0
     )
     batch_size: int = Field(
-        default=32, ge=1, le=128, description="Batch size for inference"
+        default=SystemPerformanceConstants.ML_BATCH_SIZE,
+        ge=1,
+        le=128,
+        description="Batch size for inference",
     )
 
 
@@ -367,16 +394,25 @@ class ServiceContainerConfig(BaseModel):
     # Performance settings
     cache_enabled: bool = Field(default=True, description="Enable caching")
     max_concurrent_requests: int = Field(
-        default=10, ge=1, le=50, description="Maximum concurrent requests"
+        default=SystemPerformanceConstants.DEFAULT_CONCURRENT_REQUESTS,
+        ge=1,
+        le=50,
+        description="Maximum concurrent requests",
     )
     request_timeout_seconds: int = Field(
-        default=30, ge=5, le=300, description="Request timeout"
+        default=SystemPerformanceConstants.DEFAULT_TIMEOUT_SECONDS,
+        ge=5,
+        le=300,
+        description="Request timeout",
     )
 
     # Health monitoring
     health_check_enabled: bool = Field(default=True, description="Enable health checks")
     health_check_interval_seconds: int = Field(
-        default=60, ge=10, le=300, description="Health check interval"
+        default=SystemPerformanceConstants.HEALTH_CHECK_INTERVAL_SECONDS,
+        ge=10,
+        le=300,
+        description="Health check interval",
     )
 
 
@@ -401,27 +437,44 @@ class DomainIntelligenceConfig(PydanticAIContextualModel):
 
     # Pattern detection parameters
     min_pattern_frequency: int = Field(
-        default=2, ge=1, description="Minimum frequency for pattern detection"
+        default=DomainIntelligenceConstants.MIN_PATTERN_FREQUENCY,
+        ge=1,
+        description="Minimum frequency for pattern detection",
     )
     max_patterns_per_type: int = Field(
-        default=20, ge=1, description="Maximum patterns per type"
+        default=DomainIntelligenceConstants.MAX_PATTERNS_PER_TYPE,
+        ge=1,
+        description="Maximum patterns per type",
     )
 
     # TF-IDF parameters
     tfidf_max_features: int = Field(
-        default=1000, ge=100, description="Maximum TF-IDF features"
+        default=DomainIntelligenceConstants.TFIDF_MAX_FEATURES,
+        ge=100,
+        description="Maximum TF-IDF features",
     )
-    tfidf_min_df: int = Field(default=2, ge=1, description="Minimum document frequency")
+    tfidf_min_df: int = Field(
+        default=DomainIntelligenceConstants.TFIDF_MIN_DF,
+        ge=1,
+        description="Minimum document frequency",
+    )
     tfidf_max_df: float = Field(
-        default=0.8, gt=0.0, lt=1.0, description="Maximum document frequency ratio"
+        default=DomainIntelligenceConstants.TFIDF_MAX_DF,
+        gt=0.0,
+        lt=1.0,
+        description="Maximum document frequency ratio",
     )
 
     # Clustering parameters
     n_clusters: int = Field(
-        default=5, ge=2, le=20, description="Number of semantic clusters"
+        default=DomainIntelligenceConstants.N_SEMANTIC_CLUSTERS,
+        ge=2,
+        le=20,
+        description="Number of semantic clusters",
     )
     cluster_random_state: int = Field(
-        default=42, description="Random state for clustering"
+        default=MathematicalFoundationConstants.RANDOM_SEED,
+        description="Random state for clustering",
     )
 
     # Confidence calculation
@@ -429,7 +482,10 @@ class DomainIntelligenceConfig(PydanticAIContextualModel):
         default=ConfidenceMethod.ADAPTIVE, description="Confidence calculation method"
     )
     min_confidence_threshold: float = Field(
-        default=0.5, ge=0.0, le=1.0, description="Minimum confidence threshold"
+        default=StatisticalConstants.MIN_DOMAIN_CONFIDENCE,
+        ge=0.0,
+        le=1.0,
+        description="Minimum confidence threshold",
     )
 
     @computed_field
@@ -462,6 +518,27 @@ class DomainIntelligenceConfig(PydanticAIContextualModel):
                 },
             }
         }
+
+
+class DomainAnalysisOutput(BaseModel):
+    """Structured output from Domain Intelligence Agent for PydanticAI"""
+
+    domain_classification: str = Field(description="Detected domain type")
+    confidence_score: float = Field(
+        ge=0.0, le=1.0, description="Classification confidence score"
+    )
+    generated_config: Optional[Dict[str, Any]] = Field(
+        default=None, description="Generated configuration parameters"
+    )
+    patterns_identified: Optional[Dict[str, List[str]]] = Field(
+        default_factory=dict, description="Identified domain patterns"
+    )
+    technical_vocabulary: Optional[List[str]] = Field(
+        default_factory=list, description="Technical terms found"
+    )
+    processing_metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Processing metadata"
+    )
 
 
 class DomainAnalysisResult(PydanticAIContextualModel):

@@ -21,6 +21,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, computed_field
 
+from agents.core.constants import (
+    ErrorHandlingConstants,
+    MathematicalFoundationConstants,
+    SystemPerformanceConstants,
+)
+
 from .base import ErrorCategory, ErrorSeverity, PydanticAIContextualModel
 
 # =============================================================================
@@ -44,7 +50,10 @@ class ValidationResult(BaseModel):
     )
     warnings: List[str] = Field(default_factory=list, description="Validation warnings")
     confidence: float = Field(
-        default=1.0, ge=0.0, le=1.0, description="Validation confidence"
+        default=MathematicalFoundationConstants.PERFECT_SCORE,
+        ge=0.0,
+        le=1.0,
+        description="Validation confidence",
     )
     validation_time: float = Field(
         default=0.0, ge=0.0, description="Validation processing time"
@@ -119,7 +128,7 @@ class ErrorContext:
     parameters: Dict[str, Any] = None
     timestamp: float = None
     attempt_count: int = 0
-    max_retries: int = 3
+    max_retries: int = SystemPerformanceConstants.DEFAULT_MAX_RETRIES
     recovery_strategy: Optional[str] = None
     user_message: Optional[str] = None
 
@@ -141,8 +150,15 @@ class ErrorContext:
     @property
     def backoff_delay(self) -> float:
         """Calculate exponential backoff delay"""
-        base_delay = 1.0
-        return min(30.0, base_delay * (2**self.attempt_count))
+        base_delay = MathematicalFoundationConstants.BASE_DELAY_SECONDS
+        return min(
+            ErrorHandlingConstants.MAX_BACKOFF_DELAY_SECONDS,
+            base_delay
+            * (
+                MathematicalFoundationConstants.EXPONENTIAL_BACKOFF_BASE
+                ** self.attempt_count
+            ),
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization"""
@@ -291,7 +307,9 @@ class PerformanceFeedbackPoint(BaseModel):
         # Weighted average
         return time_score * 0.3 + success_score * 0.4 + quality_score * 0.3
 
-    def should_trigger_adaptation(self, threshold: float = 0.7) -> bool:
+    def should_trigger_adaptation(
+        self, threshold: float = ErrorHandlingConstants.ADAPTATION_THRESHOLD
+    ) -> bool:
         """Determine if this feedback should trigger configuration adaptation"""
         return self.calculate_overall_score() < threshold
 
