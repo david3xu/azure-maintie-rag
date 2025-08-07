@@ -16,7 +16,7 @@ ORGANIZATION STRATEGY:
 Each category is marked with automation potential and interdependency notes.
 """
 
-from typing import Dict, List, Tuple, Any
+from typing import Any, Dict, List, Tuple
 
 # =============================================================================
 # CATEGORY 0: MATHEMATICAL AND BASE CONSTANTS
@@ -627,6 +627,52 @@ class ProcessingConstants:
     MAX_EXECUTION_TIME_MIN = (
         SystemBoundaryConstants.MAX_EXECUTION_TIME_LIMIT / 60.0
     )  # Convert to minutes
+
+
+class StubConstants:
+    """Constants for stub functions during implementation transition"""
+
+    # Confidence calculation stubs
+    STUB_ADAPTIVE_CONFIDENCE = (
+        MathematicalConstants.BASE_CONFIDENCE
+        + BaseScalingFactors.HIGH_CONFIDENCE_OFFSET
+    )  # 0.8
+    STUB_COMPLEXITY_SCORE = 0.5  # Medium complexity default
+
+    # Text analysis stubs
+    DEFAULT_MEDIUM_COMPLEXITY = "medium"
+
+    # Dynamic configuration mathematical factors
+    RELATIONSHIP_THRESHOLD_FACTOR = (
+        0.9  # Factor to derive relationship threshold from entity threshold
+    )
+    MAX_WORDS_BASE = 500  # Base maximum words
+    MAX_WORDS_MULTIPLIER = 20  # Multiplier for average sentence length
+
+    # Extraction processor fallback configuration
+    FALLBACK_ENTITY_THRESHOLD = KnowledgeExtractionConstants.ENTITY_CONFIDENCE_THRESHOLD
+    FALLBACK_RELATIONSHIP_THRESHOLD = (
+        KnowledgeExtractionConstants.RELATIONSHIP_CONFIDENCE_THRESHOLD
+    )
+    FALLBACK_CHUNK_SIZE = ProcessingConstants.DEFAULT_CHUNK_SIZE
+    FALLBACK_MAX_ENTITIES_PER_CHUNK = (
+        KnowledgeExtractionConstants.MAX_ENTITIES_PER_CHUNK
+    )
+    FALLBACK_MINIMUM_QUALITY_SCORE = MathematicalConstants.BASE_CONFIDENCE
+
+    # Position and confidence factors for extraction
+    EARLY_POSITION_FACTOR = 0.8  # Factor for entities found in first quarter of text
+    LATE_POSITION_FACTOR = 0.6  # Factor for entities found later in text
+
+    # Confidence distribution thresholds
+    VERY_HIGH_CONFIDENCE_THRESHOLD = 0.9  # Threshold for very high confidence
+    HIGH_CONFIDENCE_THRESHOLD = MathematicalConstants.BASE_CONFIDENCE  # 0.8
+    MEDIUM_CONFIDENCE_THRESHOLD = 0.6  # Threshold for medium confidence
+
+    # Default statistical values
+    DEFAULT_ZERO_FLOAT = 0.0  # Default zero value for statistical calculations
+    PERCENTAGE_MULTIPLIER = 100  # Multiplier to convert ratio to percentage
+    MAX_COVERAGE_PERCENTAGE = 100.0  # Maximum coverage percentage
     DEFAULT_MEMORY_LIMIT_MB = SystemBoundaryConstants.DEFAULT_MEMORY_LIMIT_MB
     MAX_AZURE_SERVICE_COST_USD = 100.0  # Maximum cost per operation
     MEMORY_CLEANUP_THRESHOLD = 0.8  # Memory cleanup threshold as percentage

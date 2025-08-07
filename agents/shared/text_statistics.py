@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, computed_field
 import statistics
 import re
 from collections import Counter
+from agents.core.constants import StubConstants
 
 
 # Stub functions - these should be properly implemented
@@ -24,12 +25,12 @@ def calculate_text_statistics(text: str) -> Dict[str, Any]:
 
 def analyze_document_complexity(text: str) -> Dict[str, Any]:
     """Stub for document complexity analysis"""
-    return {"complexity_score": 0.5}
+    return {"complexity_score": StubConstants.STUB_COMPLEXITY_SCORE}
 
 
 def classify_complexity(stats: Dict[str, Any]) -> str:
     """Stub for complexity classification"""
-    return "medium"
+    return StubConstants.DEFAULT_MEDIUM_COMPLEXITY
 
 
 # Stub classes
