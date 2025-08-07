@@ -1,0 +1,124 @@
+"""
+Universal Data Models - Zero Hardcoded Domain Knowledge
+======================================================
+
+These models support truly universal RAG processing without predetermined
+domain assumptions, classifications, or hardcoded configurations.
+
+All data structures are designed to adapt to ANY content type through
+data-driven discovery rather than predetermined categories.
+"""
+
+from typing import Dict, List, Any, Optional
+from pydantic import BaseModel, Field
+
+# Re-export the universal models from domain intelligence agent
+# This provides a central location for all universal data structures
+
+class UniversalDomainCharacteristics(BaseModel):
+    """Data-driven domain characteristics discovered from content analysis"""
+    
+    # Content structure metrics (measured, not assumed)
+    avg_document_length: int = Field(..., description="Average document length in characters")
+    document_count: int = Field(..., description="Total documents analyzed")
+    vocabulary_richness: float = Field(..., ge=0.0, le=1.0, description="Unique words / total words ratio")
+    sentence_complexity: float = Field(..., ge=0.0, description="Average words per sentence")
+    
+    # Discovered content patterns (learned from data)
+    most_frequent_terms: List[str] = Field(default_factory=list, description="Top terms found in content")
+    content_patterns: List[str] = Field(default_factory=list, description="Structural patterns discovered")
+    language_indicators: Dict[str, float] = Field(default_factory=dict, description="Language detection scores")
+    
+    # Complexity indicators (measured from actual content)
+    lexical_diversity: float = Field(..., ge=0.0, le=1.0, description="Type-token ratio")
+    technical_vocabulary_ratio: float = Field(..., ge=0.0, le=1.0, description="Technical vs common word ratio")
+    structural_consistency: float = Field(..., ge=0.0, le=1.0, description="Document structure consistency")
+
+class UniversalProcessingConfiguration(BaseModel):
+    """Processing configuration generated from content characteristics"""
+    
+    # Adaptive chunking (based on discovered content patterns)
+    optimal_chunk_size: int = Field(..., ge=100, le=4000, description="Optimal chunk size for this content")
+    chunk_overlap_ratio: float = Field(..., ge=0.0, le=0.5, description="Overlap ratio based on content coherence")
+    
+    # Adaptive extraction thresholds (learned from content distribution)
+    entity_confidence_threshold: float = Field(..., ge=0.5, le=1.0, description="Entity extraction threshold")
+    relationship_density: float = Field(..., ge=0.0, le=1.0, description="Expected relationship density")
+    
+    # Adaptive search optimization (based on content characteristics)
+    vector_search_weight: float = Field(..., ge=0.0, le=1.0, description="Vector search importance weight")
+    graph_search_weight: float = Field(..., ge=0.0, le=1.0, description="Graph search importance weight")
+    
+    # Quality expectations (based on content analysis)
+    expected_extraction_quality: float = Field(..., ge=0.0, le=1.0, description="Expected extraction quality")
+    processing_complexity: str = Field(..., description="Processing complexity level (low/medium/high)")
+
+class UniversalDomainAnalysis(BaseModel):
+    """Complete universal domain analysis without predetermined categories"""
+    
+    # Dynamic domain identification (signature derived from content)
+    domain_signature: str = Field(..., description="Unique signature generated from content characteristics")
+    content_type_confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in content type detection")
+    
+    # Discovered characteristics and adaptive configuration
+    characteristics: UniversalDomainCharacteristics
+    processing_config: UniversalProcessingConfiguration
+    
+    # Data-driven insights (discovered from analysis)
+    key_insights: List[str] = Field(default_factory=list, description="Key insights about the content")
+    adaptation_recommendations: List[str] = Field(default_factory=list, description="Processing adaptation recommendations")
+    
+    # Analysis metadata and quality indicators
+    analysis_timestamp: str = Field(..., description="When the analysis was performed")
+    processing_time: float = Field(..., ge=0.0, description="Time taken for analysis in seconds")
+    data_source_path: str = Field(..., description="Path to the analyzed data")
+    analysis_reliability: float = Field(..., ge=0.0, le=1.0, description="Reliability score of this analysis")
+
+class UniversalDomainDeps(BaseModel):
+    """Universal dependencies without domain assumptions"""
+    
+    data_directory: str = Field(default="/workspace/azure-maintie-rag/data/raw", description="Path to data directory")
+    max_files_to_analyze: int = Field(default=50, ge=1, le=1000, description="Maximum files to analyze")
+    min_content_length: int = Field(default=100, ge=50, le=10000, description="Minimum content length to consider")
+    enable_multilingual: bool = Field(default=True, description="Enable multilingual content support")
+
+# Orchestration models for multi-agent coordination
+class UniversalOrchestrationResult(BaseModel):
+    """Results from universal RAG workflow orchestration"""
+    
+    success: bool = Field(..., description="Whether the workflow completed successfully")
+    domain_analysis: Optional[UniversalDomainAnalysis] = Field(None, description="Domain intelligence results")
+    extraction_results: Optional[Dict[str, Any]] = Field(None, description="Knowledge extraction results")
+    search_results: Optional[Dict[str, Any]] = Field(None, description="Universal search results")
+    
+    # Workflow metadata
+    total_processing_time: float = Field(default=0.0, ge=0.0, description="Total workflow processing time")
+    errors: List[str] = Field(default_factory=list, description="Any errors encountered")
+    warnings: List[str] = Field(default_factory=list, description="Any warnings generated")
+    
+    # Quality metrics
+    overall_confidence: float = Field(default=0.0, ge=0.0, le=1.0, description="Overall result confidence")
+    quality_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Overall quality score")
+
+# Agent communication models  
+class AgentHandoffData(BaseModel):
+    """Data structure for passing information between agents"""
+    
+    source_agent: str = Field(..., description="Agent that generated this data")
+    target_agent: str = Field(..., description="Intended recipient agent")
+    data_type: str = Field(..., description="Type of data being passed")
+    payload: Dict[str, Any] = Field(..., description="The actual data payload")
+    
+    # Handoff metadata
+    timestamp: str = Field(..., description="When this handoff was created")
+    priority: str = Field(default="normal", description="Processing priority (low/normal/high)")
+    requires_validation: bool = Field(default=False, description="Whether this data needs validation")
+
+__all__ = [
+    "UniversalDomainCharacteristics",
+    "UniversalProcessingConfiguration", 
+    "UniversalDomainAnalysis",
+    "UniversalDomainDeps",
+    "UniversalOrchestrationResult",
+    "AgentHandoffData"
+]

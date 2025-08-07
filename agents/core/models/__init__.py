@@ -292,7 +292,7 @@ __all__ = [
     "TriModalResult",
     "ModalityResult",
     "ConsolidatedSearchConfiguration",
-    "DynamicSearchConfig", 
+    "DynamicSearchConfig",
     "UniversalSearchOutput",
     # Extraction Models
     "ExtractedKnowledge",

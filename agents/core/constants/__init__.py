@@ -124,55 +124,11 @@ from .workflow import (
 )
 
 # =============================================================================
-# PHASE 3: AUTOMATION SYSTEM IMPORTS
+# PHASE 3: AUTOMATION SYSTEM IMPORTS - DISABLED FOR SIMPLIFICATION
 # =============================================================================
 
-# Automation Classification and Coordination
-from .automation_classifier import (
-    AutomationPotential,
-    LearningMechanism,
-    ConstantClassification,
-    AutomationClassifier,
-    automation_classifier,
-)
-
-# Automation Interface and Coordination
-from .automation_interface import (
-    GenerationRequest,
-    GenerationResult,
-    AutomationCoordinator,
-    automation_coordinator,
-)
-
-# Domain Intelligence Integration
-from .domain_intelligence_integration import (
-    DomainAnalysisResult,
-    DomainIntelligenceConstantGenerator,
-    domain_intelligence_generator,
-)
-
-# Performance Feedback Loops
-from .performance_feedback_loops import (
-    MetricType,
-    PerformanceMetric,
-    AdaptationRule,
-    PerformanceFeedbackOrchestrator,
-    performance_feedback_orchestrator,
-    record_response_time,
-    record_cache_hit_rate,
-    record_extraction_accuracy,
-    record_search_relevance,
-)
-
-# Safety Validation
-from .safety_validation import (
-    ValidationSeverity,
-    ValidationCategory,
-    ValidationIssue,
-    ValidationResult,
-    ConstantSafetyValidator,
-    constant_safety_validator,
-)
+# NOTE: Automation system imports disabled for agent simplification
+# These modules were deleted as part of architectural consolidation
 
 # =============================================================================
 # PRESERVE ORIGINAL UTILITY FUNCTIONS FOR BACKWARD COMPATIBILITY
@@ -426,30 +382,5 @@ __all__ = [
     "validate_constants",
     # Phase 3: Automation System Components
     "AutomationPotential",
-    "LearningMechanism",
-    "ConstantClassification",
-    "AutomationClassifier",
-    "automation_classifier",
-    "GenerationRequest",
-    "GenerationResult",
-    "AutomationCoordinator",
-    "automation_coordinator",
-    "DomainAnalysisResult",
-    "DomainIntelligenceConstantGenerator",
-    "domain_intelligence_generator",
-    "MetricType",
-    "PerformanceMetric",
-    "AdaptationRule",
-    "PerformanceFeedbackOrchestrator",
-    "performance_feedback_orchestrator",
-    "record_response_time",
-    "record_cache_hit_rate",
-    "record_extraction_accuracy",
-    "record_search_relevance",
-    "ValidationSeverity",
-    "ValidationCategory",
-    "ValidationIssue",
-    "ValidationResult",
-    "ConstantSafetyValidator",
-    "constant_safety_validator",
+    # NOTE: Automation system exports removed for simplification
 ]
