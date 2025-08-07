@@ -20,7 +20,11 @@ from typing import Any, Dict, List, Optional, Union
 from azure.core.exceptions import AzureError
 
 # Import constants for zero-hardcoded-values compliance
-from agents.core.constants import MathematicalConstants, InfrastructureConstants, SystemBoundaryConstants
+from agents.core.constants import (
+    MathematicalConstants,
+    InfrastructureConstants,
+    SystemBoundaryConstants,
+)
 
 # Import consolidated data models
 from agents.core.data_models import ConsolidatedAzureServices
@@ -28,7 +32,11 @@ from azure.identity import DefaultAzureCredential
 from pydantic_ai.providers.azure import AzureProvider
 
 # Import clean configuration (CODING_STANDARDS compliant)
-from config.centralized_config import get_system_config, get_model_config_bootstrap, get_workflow_config
+from config.centralized_config import (
+    get_system_config,
+    get_model_config_bootstrap,
+    get_workflow_config,
+)
 
 # Get configuration instances (cleaned)
 _system_config = get_system_config()
@@ -78,6 +86,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 # ConsolidatedAzureServices now imported from agents.core.data_models
+
 
 async def create_azure_service_container() -> ConsolidatedAzureServices:
     """

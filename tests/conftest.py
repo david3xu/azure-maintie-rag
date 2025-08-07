@@ -31,17 +31,19 @@ def event_loop():
 async def azure_services():
     """Real Azure services fixture - no mocking"""
     services = ConsolidatedAzureServices()
-    
+
     # Initialize with real Azure services
     service_status = await services.initialize_all_services()
-    
+
     # Validate critical services are available
     critical_services = ["ai_foundry", "search", "cosmos"]
-    available_services = sum(1 for service in critical_services if service_status.get(service, False))
-    
+    available_services = sum(
+        1 for service in critical_services if service_status.get(service, False)
+    )
+
     if available_services < 1:
         pytest.skip(f"Insufficient Azure services available: {available_services}/3")
-    
+
     yield services
 
 
@@ -52,7 +54,7 @@ async def knowledge_extraction_agent(azure_services):
     return agent
 
 
-@pytest_asyncio.fixture(scope="session") 
+@pytest_asyncio.fixture(scope="session")
 async def universal_search_agent(azure_services):
     """Real Universal Search Agent with Azure backend"""
     agent = get_universal_search_agent()
@@ -82,19 +84,21 @@ def sample_documents():
         Hypertension is a common cardiovascular condition affecting blood pressure.
         ACE inhibitors and beta-blockers are frequently prescribed medications.
         Regular monitoring and lifestyle modifications are essential for management.
-        """
+        """,
     }
 
 
 @pytest.fixture
 def performance_monitor():
     """Performance monitoring fixture for SLA testing"""
+
     class PerformanceMonitor:
         def __init__(self):
             self.measurements = []
-            
+
         def measure_operation(self, operation_name: str, sla_target: float = 3.0):
             """Context manager for performance measurement"""
+
             class OperationMeasurement:
                 def __init__(self, monitor, name, target):
                     self.monitor = monitor
@@ -102,30 +106,32 @@ def performance_monitor():
                     self.target = target
                     self.start_time = None
                     self.end_time = None
-                    
+
                 async def __aenter__(self):
                     self.start_time = time.time()
                     return self
-                    
+
                 async def __aexit__(self, exc_type, exc_val, exc_tb):
                     self.end_time = time.time()
                     duration = self.end_time - self.start_time
-                    
+
                     measurement = {
                         "operation": self.name,
                         "duration": duration,
                         "sla_target": self.target,
                         "sla_compliant": duration <= self.target,
-                        "timestamp": time.time()
+                        "timestamp": time.time(),
                     }
-                    
+
                     self.monitor.measurements.append(measurement)
-                    
+
                     if not measurement["sla_compliant"]:
-                        print(f"⚠️  SLA warning: {self.name} took {duration:.3f}s (target: {self.target}s)")
-            
+                        print(
+                            f"⚠️  SLA warning: {self.name} took {duration:.3f}s (target: {self.target}s)"
+                        )
+
             return OperationMeasurement(self, operation_name, sla_target)
-    
+
     return PerformanceMonitor()
 
 
@@ -141,31 +147,23 @@ def test_data_directory():
 async def azure_health_check(azure_services):
     """Validate Azure services health before tests"""
     health_status = azure_services.get_service_status()
-    
+
     if not health_status["overall_health"]:
         pytest.skip(
             f"Azure services unhealthy: {health_status['successful_services']}"
             f"/{health_status['total_services']} services available"
         )
-    
+
     return health_status
 
 
 # Pytest configuration
 def pytest_configure(config):
     """Configure pytest for Azure testing"""
-    config.addinivalue_line(
-        "markers", "azure: mark test as requiring Azure services"
-    )
-    config.addinivalue_line(
-        "markers", "performance: mark test as performance/SLA test"
-    )
-    config.addinivalue_line(
-        "markers", "integration: mark test as integration test"
-    )
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow running"
-    )
+    config.addinivalue_line("markers", "azure: mark test as requiring Azure services")
+    config.addinivalue_line("markers", "performance: mark test as performance/SLA test")
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -175,13 +173,13 @@ def pytest_collection_modifyitems(config, items):
         if "integration" in str(item.fspath):
             item.add_marker(pytest.mark.azure)
             item.add_marker(pytest.mark.integration)
-            
-        # Auto-mark tests in performance/ directory  
+
+        # Auto-mark tests in performance/ directory
         if "performance" in str(item.fspath):
             item.add_marker(pytest.mark.azure)
             item.add_marker(pytest.mark.performance)
             item.add_marker(pytest.mark.slow)
-            
+
         # Auto-mark tests in azure_validation/ directory
         if "azure_validation" in str(item.fspath):
             item.add_marker(pytest.mark.azure)

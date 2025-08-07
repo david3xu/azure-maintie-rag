@@ -31,16 +31,18 @@ class SimpleSearchClient(BaseAzureClient):
     def _health_check(self) -> bool:
         """Simple health check with network error handling"""
         try:
-            if hasattr(self, '_search_client') and self._search_client:
+            if hasattr(self, "_search_client") and self._search_client:
                 # Use a lighter health check that doesn't require network resolution
                 # Just verify the client object is properly initialized
                 if self._search_client and self._index_client:
                     # Try a simple operation that doesn't require full network connectivity
-                    return hasattr(self._search_client, 'search') and hasattr(self._index_client, 'get_index_statistics')
+                    return hasattr(self._search_client, "search") and hasattr(
+                        self._index_client, "get_index_statistics"
+                    )
         except Exception as e:
             logger.warning(f"Health check failed: {e}")
         return False
-    
+
     async def test_connection(self) -> bool:
         """Test connection method expected by ConsolidatedAzureServices"""
         try:
@@ -53,35 +55,37 @@ class SimpleSearchClient(BaseAzureClient):
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize simple search client"""
         super().__init__(config)
-        
+
         # Simple configuration
-        self.index_name = self.config.get("index_name") or azure_settings.azure_search_index
+        self.index_name = (
+            self.config.get("index_name") or azure_settings.azure_search_index
+        )
         self._search_client = None
         self._index_client = None
-        
+
         logger.info(f"Simple search client initialized for {self.index_name}")
 
     def _initialize_client(self):
         """Simple client initialization"""
         try:
             from azure.identity import DefaultAzureCredential
+
             credential = DefaultAzureCredential()
-            
+
             # Create simple search clients
             self._search_client = SearchClient(
                 endpoint=self.endpoint,
                 index_name=self.index_name,
-                credential=credential
+                credential=credential,
             )
-            
+
             self._index_client = SearchIndexClient(
-                endpoint=self.endpoint,
-                credential=credential
+                endpoint=self.endpoint, credential=credential
             )
-            
+
             self._client = self._search_client
             logger.info("Search client initialized")
-            
+
         except Exception as e:
             logger.error(f"Client initialization failed: {e}")
             raise
@@ -90,7 +94,7 @@ class SimpleSearchClient(BaseAzureClient):
         """Index documents using simple approach"""
         try:
             self.ensure_initialized()
-            
+
             # Prepare documents for indexing
             search_documents = []
             for i, doc in enumerate(documents):
@@ -99,56 +103,63 @@ class SimpleSearchClient(BaseAzureClient):
                     "content": doc.get("content", ""),
                     "title": doc.get("title", ""),
                     "metadata": json.dumps(doc.get("metadata", {})),
-                    "domain": doc.get("domain", SearchConstants.DEFAULT_DOMAIN_FALLBACK)
+                    "domain": doc.get(
+                        "domain", SearchConstants.DEFAULT_DOMAIN_FALLBACK
+                    ),
                 }
-                
+
                 # Include vector if present
                 if "content_vector" in doc:
                     search_doc["content_vector"] = doc["content_vector"]
-                    
+
                 search_documents.append(search_doc)
-            
+
             # Upload documents
             result = self._search_client.upload_documents(documents=search_documents)
-            
-            return self.create_success_response("index_documents", {
-                "indexed_count": len(search_documents),
-                "results": [r for r in result]
-            })
-            
+
+            return self.create_success_response(
+                "index_documents",
+                {
+                    "indexed_count": len(search_documents),
+                    "results": [r for r in result],
+                },
+            )
+
         except Exception as e:
             return self.handle_azure_error("index_documents", e)
 
-    async def search_documents(self, query: str, top: int = 10, filters: str = None) -> Dict[str, Any]:
+    async def search_documents(
+        self, query: str, top: int = 10, filters: str = None
+    ) -> Dict[str, Any]:
         """Search documents using simple approach"""
         try:
             self.ensure_initialized()
-            
+
             # Perform simple search
             results = self._search_client.search(
-                search_text=query,
-                top=top,
-                filter=filters,
-                include_total_count=True
+                search_text=query, top=top, filter=filters, include_total_count=True
             )
-            
+
             # Convert results to list
             documents = []
             for result in results:
-                documents.append({
-                    "id": result.get("id", ""),
-                    "content": result.get("content", ""),
-                    "title": result.get("title", ""),
-                    "score": result.get("@search.score", SearchConstants.DEFAULT_SEARCH_SCORE),
-                    "domain": result.get("domain", "")
-                })
-            
-            return self.create_success_response("search_documents", {
-                "query": query,
-                "documents": documents,
-                "count": len(documents)
-            })
-            
+                documents.append(
+                    {
+                        "id": result.get("id", ""),
+                        "content": result.get("content", ""),
+                        "title": result.get("title", ""),
+                        "score": result.get(
+                            "@search.score", SearchConstants.DEFAULT_SEARCH_SCORE
+                        ),
+                        "domain": result.get("domain", ""),
+                    }
+                )
+
+            return self.create_success_response(
+                "search_documents",
+                {"query": query, "documents": documents, "count": len(documents)},
+            )
+
         except Exception as e:
             return self.handle_azure_error("search_documents", e)
 
@@ -156,34 +167,39 @@ class SimpleSearchClient(BaseAzureClient):
         """Vector search using simple approach"""
         try:
             self.ensure_initialized()
-            
+
             # Perform vector search
             results = self._search_client.search(
                 search_text="*",
-                vector_queries=[{
-                    "vector": vector,
-                    "k_nearest_neighbors": top,
-                    "fields": "content_vector"
-                }],
-                top=top
+                vector_queries=[
+                    {
+                        "vector": vector,
+                        "k_nearest_neighbors": top,
+                        "fields": "content_vector",
+                    }
+                ],
+                top=top,
             )
-            
+
             # Convert results to list
             documents = []
             for result in results:
-                documents.append({
-                    "id": result.get("id", ""),
-                    "content": result.get("content", ""),
-                    "title": result.get("title", ""),
-                    "score": result.get("@search.score", SearchConstants.DEFAULT_SEARCH_SCORE),
-                    "domain": result.get("domain", "")
-                })
-            
-            return self.create_success_response("vector_search", {
-                "documents": documents,
-                "count": len(documents)
-            })
-            
+                documents.append(
+                    {
+                        "id": result.get("id", ""),
+                        "content": result.get("content", ""),
+                        "title": result.get("title", ""),
+                        "score": result.get(
+                            "@search.score", SearchConstants.DEFAULT_SEARCH_SCORE
+                        ),
+                        "domain": result.get("domain", ""),
+                    }
+                )
+
+            return self.create_success_response(
+                "vector_search", {"documents": documents, "count": len(documents)}
+            )
+
         except Exception as e:
             return self.handle_azure_error("vector_search", e)
 
@@ -191,13 +207,11 @@ class SimpleSearchClient(BaseAzureClient):
         """Get single document by ID"""
         try:
             self.ensure_initialized()
-            
+
             result = self._search_client.get_document(key=doc_id)
-            
-            return self.create_success_response("get_document", {
-                "document": result
-            })
-            
+
+            return self.create_success_response("get_document", {"document": result})
+
         except Exception as e:
             return self.handle_azure_error("get_document", e)
 
@@ -205,17 +219,17 @@ class SimpleSearchClient(BaseAzureClient):
         """Delete documents by IDs"""
         try:
             self.ensure_initialized()
-            
+
             # Prepare documents for deletion
             delete_docs = [{"id": doc_id} for doc_id in doc_ids]
-            
+
             result = self._search_client.delete_documents(documents=delete_docs)
-            
-            return self.create_success_response("delete_documents", {
-                "deleted_count": len(doc_ids),
-                "results": [r for r in result]
-            })
-            
+
+            return self.create_success_response(
+                "delete_documents",
+                {"deleted_count": len(doc_ids), "results": [r for r in result]},
+            )
+
         except Exception as e:
             return self.handle_azure_error("delete_documents", e)
 
@@ -223,15 +237,18 @@ class SimpleSearchClient(BaseAzureClient):
         """Get simple index statistics"""
         try:
             self.ensure_initialized()
-            
+
             stats = self._index_client.get_index_statistics(self.index_name)
-            
-            return self.create_success_response("get_index_stats", {
-                "document_count": getattr(stats, "document_count", 0),
-                "storage_size": getattr(stats, "storage_size", 0),
-                "index_name": self.index_name
-            })
-            
+
+            return self.create_success_response(
+                "get_index_stats",
+                {
+                    "document_count": getattr(stats, "document_count", 0),
+                    "storage_size": getattr(stats, "storage_size", 0),
+                    "index_name": self.index_name,
+                },
+            )
+
         except Exception as e:
             return self.handle_azure_error("get_index_stats", e)
 

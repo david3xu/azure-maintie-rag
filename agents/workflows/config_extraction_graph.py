@@ -14,7 +14,7 @@ from agents.core.data_models import (
     WorkflowState,
     NodeState,
     NodeExecutionResult as WorkflowNode,
-    WorkflowExecutionState as WorkflowContext
+    WorkflowExecutionState as WorkflowContext,
 )
 
 from ..domain_intelligence.agent import get_domain_intelligence_agent
@@ -43,7 +43,7 @@ class ConfigExtractionWorkflow:
         self.nodes["domain_discovery"] = WorkflowNode(
             id="domain_discovery",
             name="Domain Discovery",
-            handler=self._execute_domain_discovery
+            handler=self._execute_domain_discovery,
         )
 
         # Node 2: Corpus Analysis (depends on domain discovery)
@@ -51,7 +51,7 @@ class ConfigExtractionWorkflow:
             id="corpus_analysis",
             name="Corpus Statistical Analysis",
             handler=self._execute_corpus_analysis,
-            dependencies=["domain_discovery"]
+            dependencies=["domain_discovery"],
         )
 
         # Node 3: Pattern Generation (depends on corpus analysis)
@@ -59,7 +59,7 @@ class ConfigExtractionWorkflow:
             id="pattern_generation",
             name="Semantic Pattern Generation",
             handler=self._execute_pattern_generation,
-            dependencies=["corpus_analysis"]
+            dependencies=["corpus_analysis"],
         )
 
         # Node 4: Config Generation (depends on pattern generation)
@@ -67,7 +67,7 @@ class ConfigExtractionWorkflow:
             id="config_generation",
             name="Extraction Configuration Generation",
             handler=self._execute_config_generation,
-            dependencies=["pattern_generation"]
+            dependencies=["pattern_generation"],
         )
 
         # Node 5: Knowledge Extraction (depends on config generation)
@@ -75,7 +75,7 @@ class ConfigExtractionWorkflow:
             id="knowledge_extraction",
             name="Document Knowledge Extraction",
             handler=self._execute_knowledge_extraction,
-            dependencies=["config_generation"]
+            dependencies=["config_generation"],
         )
 
         # Node 6: Quality Validation (depends on knowledge extraction)
@@ -83,7 +83,7 @@ class ConfigExtractionWorkflow:
             id="quality_validation",
             name="Extraction Quality Validation",
             handler=self._execute_quality_validation,
-            dependencies=["knowledge_extraction"]
+            dependencies=["knowledge_extraction"],
         )
 
     async def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -101,9 +101,7 @@ class ConfigExtractionWorkflow:
         # Create workflow context
         workflow_id = f"config_extraction_{int(time.time())}"
         context = WorkflowContext(
-            workflow_id=workflow_id,
-            input_data=input_data,
-            start_time=datetime.now()
+            workflow_id=workflow_id, input_data=input_data, start_time=datetime.now()
         )
 
         try:
@@ -147,7 +145,9 @@ class ConfigExtractionWorkflow:
                 "execution_summary": self._generate_execution_summary(),
                 "start_time": context.start_time.isoformat(),
                 "end_time": context.end_time.isoformat(),
-                "total_time_seconds": (context.end_time - context.start_time).total_seconds()
+                "total_time_seconds": (
+                    context.end_time - context.start_time
+                ).total_seconds(),
             }
 
         except Exception as e:
@@ -163,10 +163,14 @@ class ConfigExtractionWorkflow:
                 "execution_summary": self._generate_execution_summary(),
                 "start_time": context.start_time.isoformat(),
                 "end_time": context.end_time.isoformat(),
-                "total_time_seconds": (context.end_time - context.start_time).total_seconds()
+                "total_time_seconds": (
+                    context.end_time - context.start_time
+                ).total_seconds(),
             }
 
-    async def _execute_node_with_retry(self, node: WorkflowNode, context: WorkflowContext):
+    async def _execute_node_with_retry(
+        self, node: WorkflowNode, context: WorkflowContext
+    ):
         """Execute a node with retry logic"""
         import time
 
@@ -196,7 +200,7 @@ class ConfigExtractionWorkflow:
                     raise
 
                 # Wait before retry
-                await asyncio.sleep(2 ** node.retry_count)
+                await asyncio.sleep(2**node.retry_count)
 
     def _get_execution_order(self) -> List[str]:
         """Get topological execution order of nodes"""
@@ -241,7 +245,9 @@ class ConfigExtractionWorkflow:
     def _determine_final_state(self) -> WorkflowState:
         """Determine final workflow state based on node states"""
         failed_nodes = [n for n in self.nodes.values() if n.state == NodeState.FAILED]
-        completed_nodes = [n for n in self.nodes.values() if n.state == NodeState.COMPLETED]
+        completed_nodes = [
+            n for n in self.nodes.values() if n.state == NodeState.COMPLETED
+        ]
 
         if failed_nodes:
             return WorkflowState.FAILED
@@ -254,11 +260,17 @@ class ConfigExtractionWorkflow:
         """Generate execution summary"""
         summary = {
             "total_nodes": len(self.nodes),
-            "completed_nodes": len([n for n in self.nodes.values() if n.state == NodeState.COMPLETED]),
-            "failed_nodes": len([n for n in self.nodes.values() if n.state == NodeState.FAILED]),
-            "skipped_nodes": len([n for n in self.nodes.values() if n.state == NodeState.SKIPPED]),
+            "completed_nodes": len(
+                [n for n in self.nodes.values() if n.state == NodeState.COMPLETED]
+            ),
+            "failed_nodes": len(
+                [n for n in self.nodes.values() if n.state == NodeState.FAILED]
+            ),
+            "skipped_nodes": len(
+                [n for n in self.nodes.values() if n.state == NodeState.SKIPPED]
+            ),
             "total_execution_time": sum(n.execution_time for n in self.nodes.values()),
-            "node_details": {}
+            "node_details": {},
         }
 
         for node_id, node in self.nodes.items():
@@ -266,53 +278,65 @@ class ConfigExtractionWorkflow:
                 "state": node.state.value,
                 "execution_time": node.execution_time,
                 "retry_count": node.retry_count,
-                "error": node.error
+                "error": node.error,
             }
 
         return summary
 
     # Node handler implementations
-    async def _execute_domain_discovery(self, context: WorkflowContext) -> Dict[str, Any]:
+    async def _execute_domain_discovery(
+        self, context: WorkflowContext
+    ) -> Dict[str, Any]:
         """Execute domain discovery node"""
         agent = get_domain_intelligence_agent()
 
         # Use domain intelligence agent to discover available domains
         result = await agent.run(
             "discover_available_domains",
-            message_history=[{
-                "role": "user",
-                "content": f"Discover available domains from {context.input_data.get('data_directory', '/workspace/azure-maintie-rag/data/raw')}"
-            }]
+            message_history=[
+                {
+                    "role": "user",
+                    "content": f"Discover available domains from {context.input_data.get('data_directory', '/workspace/azure-maintie-rag/data/raw')}",
+                }
+            ],
         )
 
         return {
-            "domains_discovered": result.data if hasattr(result, 'data') else {},
+            "domains_discovered": result.data if hasattr(result, "data") else {},
             "discovery_method": "filesystem_scan",
-            "discovery_confidence": WorkflowConstants.DISCOVERY_CONFIDENCE
+            "discovery_confidence": WorkflowConstants.DISCOVERY_CONFIDENCE,
         }
 
-    async def _execute_corpus_analysis(self, context: WorkflowContext) -> Dict[str, Any]:
+    async def _execute_corpus_analysis(
+        self, context: WorkflowContext
+    ) -> Dict[str, Any]:
         """Execute corpus analysis node"""
         agent = get_domain_intelligence_agent()
 
         domain_result = context.results.get("domain_discovery", {})
-        corpus_path = context.input_data.get("corpus_path", "/workspace/azure-maintie-rag/data/raw")
+        corpus_path = context.input_data.get(
+            "corpus_path", "/workspace/azure-maintie-rag/data/raw"
+        )
 
         result = await agent.run(
             "analyze_corpus_statistics",
-            message_history=[{
-                "role": "user",
-                "content": f"Analyze corpus statistics for {corpus_path}"
-            }]
+            message_history=[
+                {
+                    "role": "user",
+                    "content": f"Analyze corpus statistics for {corpus_path}",
+                }
+            ],
         )
 
         return {
-            "statistical_analysis": result.data if hasattr(result, 'data') else {},
+            "statistical_analysis": result.data if hasattr(result, "data") else {},
             "corpus_path": corpus_path,
-            "analysis_confidence": WorkflowConstants.ANALYSIS_CONFIDENCE
+            "analysis_confidence": WorkflowConstants.ANALYSIS_CONFIDENCE,
         }
 
-    async def _execute_pattern_generation(self, context: WorkflowContext) -> Dict[str, Any]:
+    async def _execute_pattern_generation(
+        self, context: WorkflowContext
+    ) -> Dict[str, Any]:
         """Execute pattern generation node"""
         agent = get_domain_intelligence_agent()
 
@@ -320,18 +344,22 @@ class ConfigExtractionWorkflow:
 
         result = await agent.run(
             "generate_semantic_patterns",
-            message_history=[{
-                "role": "user",
-                "content": f"Generate semantic patterns based on analysis: {corpus_analysis}"
-            }]
+            message_history=[
+                {
+                    "role": "user",
+                    "content": f"Generate semantic patterns based on analysis: {corpus_analysis}",
+                }
+            ],
         )
 
         return {
-            "semantic_patterns": result.data if hasattr(result, 'data') else {},
-            "pattern_confidence": WorkflowConstants.PATTERN_CONFIDENCE
+            "semantic_patterns": result.data if hasattr(result, "data") else {},
+            "pattern_confidence": WorkflowConstants.PATTERN_CONFIDENCE,
         }
 
-    async def _execute_config_generation(self, context: WorkflowContext) -> Dict[str, Any]:
+    async def _execute_config_generation(
+        self, context: WorkflowContext
+    ) -> Dict[str, Any]:
         """Execute config generation node"""
         agent = get_domain_intelligence_agent()
 
@@ -340,22 +368,28 @@ class ConfigExtractionWorkflow:
 
         result = await agent.run(
             "create_fully_learned_extraction_config",
-            message_history=[{
-                "role": "user",
-                "content": f"Create extraction config from patterns: {patterns} and stats: {stats}"
-            }]
+            message_history=[
+                {
+                    "role": "user",
+                    "content": f"Create extraction config from patterns: {patterns} and stats: {stats}",
+                }
+            ],
         )
 
         return {
-            "extraction_config": result.data if hasattr(result, 'data') else {},
-            "config_confidence": WorkflowConstants.CONFIG_CONFIDENCE
+            "extraction_config": result.data if hasattr(result, "data") else {},
+            "config_confidence": WorkflowConstants.CONFIG_CONFIDENCE,
         }
 
-    async def _execute_knowledge_extraction(self, context: WorkflowContext) -> Dict[str, Any]:
+    async def _execute_knowledge_extraction(
+        self, context: WorkflowContext
+    ) -> Dict[str, Any]:
         """Execute knowledge extraction node"""
         agent = get_knowledge_extraction_agent()
 
-        config = context.results.get("config_generation", {}).get("extraction_config", {})
+        config = context.results.get("config_generation", {}).get(
+            "extraction_config", {}
+        )
         documents = context.input_data.get("documents", [])
 
         # Mock extraction for now - would use actual agent tools
@@ -363,10 +397,12 @@ class ConfigExtractionWorkflow:
             "extracted_entities": [],
             "extracted_relationships": [],
             "extraction_confidence": WorkflowConstants.EXTRACTION_CONFIDENCE,
-            "documents_processed": len(documents)
+            "documents_processed": len(documents),
         }
 
-    async def _execute_quality_validation(self, context: WorkflowContext) -> Dict[str, Any]:
+    async def _execute_quality_validation(
+        self, context: WorkflowContext
+    ) -> Dict[str, Any]:
         """Execute quality validation node"""
         extraction_results = context.results.get("knowledge_extraction", {})
 
@@ -375,7 +411,7 @@ class ConfigExtractionWorkflow:
             "validation_passed": True,
             "quality_score": WorkflowConstants.QUALITY_SCORE,
             "validation_warnings": [],
-            "validation_confidence": WorkflowConstants.VALIDATION_CONFIDENCE
+            "validation_confidence": WorkflowConstants.VALIDATION_CONFIDENCE,
         }
 
 

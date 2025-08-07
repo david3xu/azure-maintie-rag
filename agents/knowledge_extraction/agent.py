@@ -39,10 +39,16 @@ from pydantic_ai import Agent, RunContext
 
 # Clean configuration imports (CODING_STANDARDS compliant)
 from config.centralized_config import get_extraction_config
-from agents.core.constants import KnowledgeExtractionConstants, ProcessingConstants, CacheConstants, AzureServiceConstants
+from agents.core.constants import (
+    KnowledgeExtractionConstants,
+    ProcessingConstants,
+    CacheConstants,
+    AzureServiceConstants,
+)
 
 # Lazy configuration loading - will be loaded when needed
 _config = None
+
 
 def _get_config(domain_name: str = "general"):
     """Get extraction configuration lazily to avoid circular imports"""
@@ -51,9 +57,10 @@ def _get_config(domain_name: str = "general"):
     except Exception:
         # Return safe defaults if config loading fails during initialization
         from types import SimpleNamespace
+
         return SimpleNamespace(
             azure_endpoint="https://example.openai.azure.com/",
-            api_version=AzureServiceConstants.OPENAI_API_VERSION, 
+            api_version=AzureServiceConstants.OPENAI_API_VERSION,
             # deployment_name="gpt-4o",  # ❌ HARDCODED - Removed to force Dynamic Model Manager
             deployment_name=None,  # Must be loaded from Dynamic Model Manager
             confidence_default=KnowledgeExtractionConstants.DEFAULT_CONFIDENCE_THRESHOLD,
@@ -67,8 +74,9 @@ def _get_config(domain_name: str = "general"):
             memory_usage_default_mb=KnowledgeExtractionConstants.DEFAULT_MEMORY_USAGE_MB,
             cpu_utilization_default_percent=50,
             cache_hit_rate_default=KnowledgeExtractionConstants.DEFAULT_CACHE_HIT_RATE,
-            cache_hit_rate_disabled=CacheConstants.ZERO_FLOAT
+            cache_hit_rate_disabled=CacheConstants.ZERO_FLOAT,
         )
+
 
 # Import models from centralized data models
 from agents.core.data_models import (
@@ -76,12 +84,11 @@ from agents.core.data_models import (
     ExtractionConfiguration,
     ExtractionResults,
     ExtractedKnowledge,
-    
     # NEW: Enhanced models with PydanticAI integration and dynamic configuration
     ConsolidatedExtractionConfiguration,
     # EnhancedKnowledgeExtractionContract deleted - use KnowledgeExtractionContract
     ConfigurationResolver,
-    PydanticAIContextualModel
+    PydanticAIContextualModel,
 )
 
 
@@ -90,6 +97,7 @@ _knowledge_extraction_agent = None
 
 # Import the toolset following target architecture with lazy loading
 from .toolsets import get_knowledge_extraction_toolset, KnowledgeExtractionDeps
+
 
 def _create_agent_with_toolset() -> Agent:
     """Create Knowledge Extraction Agent with unified processor integration"""
@@ -106,7 +114,9 @@ def _create_agent_with_toolset() -> Agent:
         deployment_name = config.deployment_name
 
         if not api_key:
-            raise ValueError("AZURE_OPENAI_API_KEY or OPENAI_API_KEY environment variable is required")
+            raise ValueError(
+                "AZURE_OPENAI_API_KEY or OPENAI_API_KEY environment variable is required"
+            )
 
         # Use Azure OpenAI with API key
         azure_model = OpenAIModel(
@@ -135,7 +145,7 @@ def _create_agent_with_toolset() -> Agent:
                 "You work with Azure AI services and use centralized configuration for all parameters."
             ),
         )
-        
+
         return agent
 
     except Exception as e:
@@ -145,12 +155,14 @@ def _create_agent_with_toolset() -> Agent:
         )
         raise RuntimeError(error_msg)
 
+
 def get_knowledge_extraction_agent() -> Agent:
     """Get Knowledge Extraction Agent with lazy initialization and unified processor"""
     global _knowledge_extraction_agent
     if _knowledge_extraction_agent is None:
         _knowledge_extraction_agent = _create_agent_with_toolset()
     return _knowledge_extraction_agent
+
 
 # For backward compatibility, create module-level agent getter
 knowledge_extraction_agent = get_knowledge_extraction_agent
@@ -160,27 +172,30 @@ knowledge_extraction_agent = get_knowledge_extraction_agent
 async def test_knowledge_extraction_agent():
     """Test the Knowledge Extraction Agent with target architecture"""
     try:
-        # Get agent with lazy initialization 
+        # Get agent with lazy initialization
         agent = get_knowledge_extraction_agent()
-        
-        print("✅ Knowledge Extraction Agent created successfully with toolset integration")
+
+        print(
+            "✅ Knowledge Extraction Agent created successfully with toolset integration"
+        )
         print(f"   - Agent name: {agent.name}")
-        print(f"   - Toolsets registered: {len(agent.toolsets) if hasattr(agent, 'toolsets') else 0}")
-        print(f"   - Dependencies type: {agent._deps_type.__name__ if hasattr(agent, '_deps_type') else 'None'}")
-        
+        print(
+            f"   - Toolsets registered: {len(agent.toolsets) if hasattr(agent, 'toolsets') else 0}"
+        )
+        print(
+            f"   - Dependencies type: {agent._deps_type.__name__ if hasattr(agent, '_deps_type') else 'None'}"
+        )
+
         return {
             "agent_created": True,
             "lazy_initialization": True,
             "toolset_integration": True,
-            "azure_openai_model": True
+            "azure_openai_model": True,
         }
-        
+
     except Exception as e:
         print(f"❌ Knowledge Extraction Agent test failed: {e}")
-        return {
-            "agent_created": False,
-            "error": str(e)
-        }
+        return {"agent_created": False, "error": str(e)}
 
 
 # Simple wrapper function for backward compatibility
@@ -191,39 +206,43 @@ async def extract_knowledge_from_document(
 ) -> ExtractedKnowledge:
     """
     Extract knowledge from a single document using provided configuration.
-    
+
     This is a simplified wrapper that delegates to the agent's toolset.
     """
     try:
         agent = get_knowledge_extraction_agent()
-        
+
         # Create a simple deps object for the toolset
         from .toolsets import KnowledgeExtractionDeps
+
         deps = KnowledgeExtractionDeps()
-        
+
         # Use the toolset directly for extraction
         toolset_instance = get_knowledge_extraction_toolset()
-        
+
         # Simulate the extraction using the toolset pattern
         start_time = time.time()
-        
+
         # Extract entities using multi-strategy approach
         entity_result = await toolset_instance.extract_entities_multi_strategy(
             None, document_content, config  # ctx not needed for basic operation
         )
-        
+
         # Extract relationships
         relationship_result = await toolset_instance.extract_relationships_contextual(
             None, document_content, entity_result.get("entities", []), config
         )
-        
+
         # Validate extraction quality
         validation_result = await toolset_instance.validate_extraction_quality(
-            None, entity_result.get("entities", []), relationship_result.get("relationships", []), config
+            None,
+            entity_result.get("entities", []),
+            relationship_result.get("relationships", []),
+            config,
         )
-        
+
         processing_time = time.time() - start_time
-        
+
         # Create structured knowledge object
         knowledge = ExtractedKnowledge(
             source_document=document_id or f"doc_{int(time.time())}",
@@ -233,15 +252,17 @@ async def extract_knowledge_from_document(
             relationships=relationship_result.get("relationships", []),
             key_concepts=[],  # Could be enhanced
             technical_terms=[],  # Could be enhanced
-            extraction_confidence=validation_result.get("overall_quality", _get_config().confidence_default),
+            extraction_confidence=validation_result.get(
+                "overall_quality", _get_config().confidence_default
+            ),
             entity_count=len(entity_result.get("entities", [])),
             relationship_count=len(relationship_result.get("relationships", [])),
             passed_validation=validation_result.get("validation_passed", False),
             validation_warnings=validation_result.get("warnings", []),
         )
-        
+
         return knowledge
-        
+
     except Exception as e:
         # Create error result
         return ExtractedKnowledge(
@@ -266,33 +287,39 @@ async def extract_knowledge_from_documents(
 ) -> ExtractionResults:
     """
     Extract knowledge from multiple documents using configuration.
-    
+
     This is a simplified wrapper that processes multiple documents.
     """
     try:
         start_time = time.time()
-        
+
         # Process documents sequentially for simplicity
         # (Could be enhanced with parallel processing)
         successful_extractions = []
         failed_extractions = []
-        
+
         for content, doc_id in documents:
             try:
-                knowledge = await extract_knowledge_from_document(content, config, doc_id)
+                knowledge = await extract_knowledge_from_document(
+                    content, config, doc_id
+                )
                 successful_extractions.append(knowledge)
             except Exception as e:
                 failed_extractions.append(e)
-        
+
         # Calculate metrics
         total_time = time.time() - start_time
-        
+
         # Aggregate extraction data
         total_entity_count = sum(e.entity_count for e in successful_extractions)
-        total_relationship_count = sum(e.relationship_count for e in successful_extractions)
+        total_relationship_count = sum(
+            e.relationship_count for e in successful_extractions
+        )
         config = _get_config()
-        avg_confidence = sum(e.extraction_confidence for e in successful_extractions) / max(len(successful_extractions), config.max_successful_extractions)
-        
+        avg_confidence = sum(
+            e.extraction_confidence for e in successful_extractions
+        ) / max(len(successful_extractions), config.max_successful_extractions)
+
         # Create extraction results
         results = ExtractionResults(
             domain_name=config.domain_name,
@@ -301,24 +328,34 @@ async def extract_knowledge_from_documents(
             extraction_accuracy=avg_confidence,
             entity_precision=avg_confidence * config.entity_precision_multiplier,
             entity_recall=avg_confidence * config.entity_recall_multiplier,
-            relationship_precision=avg_confidence * config.relationship_precision_multiplier,
+            relationship_precision=avg_confidence
+            * config.relationship_precision_multiplier,
             relationship_recall=avg_confidence * config.relationship_recall_multiplier,
-            average_processing_time_per_document=total_time / max(len(documents), config.max_documents_divisor),
+            average_processing_time_per_document=total_time
+            / max(len(documents), config.max_documents_divisor),
             memory_usage_mb=config.memory_usage_default_mb,
             cpu_utilization_percent=config.cpu_utilization_default_percent,
-            cache_hit_rate=config.cache_hit_rate_default if config.enable_caching else config.cache_hit_rate_disabled,
+            cache_hit_rate=(
+                config.cache_hit_rate_default
+                if config.enable_caching
+                else config.cache_hit_rate_disabled
+            ),
             total_entities_extracted=total_entity_count,
             total_relationships_extracted=total_relationship_count,
-            unique_entity_types_found=len(set(
-                e.get("type", "unknown")
-                for extraction in successful_extractions
-                for e in extraction.entities
-            )),
-            unique_relationship_types_found=len(set(
-                r.get("type", "unknown")
-                for extraction in successful_extractions
-                for r in extraction.relationships
-            )),
+            unique_entity_types_found=len(
+                set(
+                    e.get("type", "unknown")
+                    for extraction in successful_extractions
+                    for e in extraction.entities
+                )
+            ),
+            unique_relationship_types_found=len(
+                set(
+                    r.get("type", "unknown")
+                    for extraction in successful_extractions
+                    for r in extraction.relationships
+                )
+            ),
             extraction_passed_validation=len(failed_extractions) == 0,
             validation_error_count=len(failed_extractions),
             validation_warnings=[
@@ -327,9 +364,9 @@ async def extract_knowledge_from_documents(
                 for w in extraction.validation_warnings
             ],
         )
-        
+
         return results
-        
+
     except Exception as e:
         # Return error results
         return ExtractionResults(
@@ -357,6 +394,7 @@ async def extract_knowledge_from_documents(
 
 class ExtractionError(Exception):
     """Exception raised when knowledge extraction fails"""
+
     pass
 
 
@@ -364,7 +402,7 @@ class ExtractionError(Exception):
 __all__ = [
     "ExtractedKnowledge",
     "ExtractionError",
-    "ExtractionConfiguration", 
+    "ExtractionConfiguration",
     "ExtractionResults",
     "get_knowledge_extraction_agent",
     "knowledge_extraction_agent",

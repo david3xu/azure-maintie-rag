@@ -39,7 +39,7 @@ from .background_processor import (
 __all__ = [
     # Unified content analysis
     "UnifiedContentAnalyzer",
-    "DomainAnalysisResult", 
+    "DomainAnalysisResult",
     "DomainIntelligenceConfig",
     # Configuration generation
     "HybridConfigurationGenerator",

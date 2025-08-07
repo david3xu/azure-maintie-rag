@@ -1,4 +1,5 @@
 """Azure ML service integrations for Universal RAG"""
+
 from .classification_client import (
     AzureClassificationPipeline as AzureMLClassificationService,
 )
@@ -9,8 +10,8 @@ from .gnn_model import UniversalGNN, UniversalGNNConfig, create_gnn_model
 __all__ = [
     "AzureMLClassificationService",
     "GNNTrainingClient",
-    "GNNInferenceClient", 
+    "GNNInferenceClient",
     "UniversalGNN",
     "UniversalGNNConfig",
-    "create_gnn_model"
+    "create_gnn_model",
 ]

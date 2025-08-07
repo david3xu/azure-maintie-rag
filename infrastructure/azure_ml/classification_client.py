@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from config.settings import azure_settings
 from infrastructure.azure_openai import UnifiedAzureOpenAIClient
 from infrastructure.constants import AzureServiceLimits
+
 # QualityThresholds replaced with direct values - validated by PydanticAI Field constraints
 
 logger = logging.getLogger(__name__)
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ClassificationResult:
     """Simple classification result"""
+
     entity_type: str
     confidence: float
     category: str
@@ -36,13 +38,15 @@ class SimpleAzureClassifier:
         """Initialize simple Azure classifier"""
         self.domain_config = domain_config or {}
         self.azure_client = UnifiedAzureOpenAIClient()
-        
+
         # Simple thresholds (CODING_STANDARDS: Essential parameters only)
         self.confidence_threshold = AzureServiceLimits.DEFAULT_CLASSIFICATION_CONFIDENCE
-        
+
         logger.info("Simple Azure classifier initialized")
 
-    async def classify_entity(self, entity_text: str, context: str = "") -> ClassificationResult:
+    async def classify_entity(
+        self, entity_text: str, context: str = ""
+    ) -> ClassificationResult:
         """
         Classify entity using Azure OpenAI (CODING_STANDARDS: Data-Driven)
         Simple prompt-based classification without over-engineering
@@ -60,10 +64,10 @@ Return only the entity type (person, organization, location, concept, etc.)."""
             # Use Azure OpenAI for classification
             result = await self.azure_client.get_completion(prompt, "classification")
             entity_type = result.strip().lower()
-            
+
             # Simple confidence calculation
             confidence = 0.9  # Default confidence for Azure OpenAI results - validated by PydanticAI elsewhere
-            
+
             return ClassificationResult(
                 entity_type=entity_type,
                 confidence=confidence,
@@ -71,8 +75,8 @@ Return only the entity type (person, organization, location, concept, etc.)."""
                 metadata={
                     "source": "azure_openai",
                     "original_text": entity_text,
-                    "context_length": len(context)
-                }
+                    "context_length": len(context),
+                },
             )
 
         except Exception as e:
@@ -82,10 +86,12 @@ Return only the entity type (person, organization, location, concept, etc.)."""
                 entity_type="unknown",
                 confidence=0.0,
                 category="entity",
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
-    async def classify_relation(self, entity1: str, entity2: str, relation_text: str) -> ClassificationResult:
+    async def classify_relation(
+        self, entity1: str, entity2: str, relation_text: str
+    ) -> ClassificationResult:
         """
         Classify relationship using Azure OpenAI (CODING_STANDARDS: Simple approach)
         """
@@ -102,20 +108,20 @@ Return only the relationship type (e.g., "works_for", "located_in", "part_of", e
             # Use Azure OpenAI for classification
             result = await self.azure_client.get_completion(prompt, "classification")
             relation_type = result.strip().lower().replace(" ", "_")
-            
+
             # Simple confidence calculation
             confidence = 0.75  # Default confidence for relations - validated by PydanticAI elsewhere
-            
+
             return ClassificationResult(
                 entity_type=relation_type,
                 confidence=confidence,
                 category="relation",
                 metadata={
-                    "source": "azure_openai", 
+                    "source": "azure_openai",
                     "entity1": entity1,
                     "entity2": entity2,
-                    "relation_text": relation_text
-                }
+                    "relation_text": relation_text,
+                },
             )
 
         except Exception as e:
@@ -125,7 +131,7 @@ Return only the relationship type (e.g., "works_for", "located_in", "part_of", e
                 entity_type="related_to",
                 confidence=0.0,
                 category="relation",
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
 

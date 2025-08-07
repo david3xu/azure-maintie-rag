@@ -32,14 +32,14 @@ from .pattern_engine import create_pattern_engine
 logger = logging.getLogger(__name__)
 
 
-# Import consolidated data models  
+# Import consolidated data models
 from agents.core.data_models import ProcessingStats, DomainSignature
 
 
 class CleanDomainBackgroundProcessor:
     """
     Clean background processor following CODING_STANDARDS.md principles.
-    
+
     CODING_STANDARDS Compliance:
     - Data-Driven Everything: Processes actual domain documents for pattern discovery
     - Universal Design: Works with any domain structure without hardcoded assumptions
@@ -52,7 +52,7 @@ class CleanDomainBackgroundProcessor:
         # Get clean configuration
         self.processing_config = get_processing_config()
         self.cache_config = get_cache_config()
-        
+
         # Data directory from environment or default
         self.data_dir = Path(data_dir or "data/domains")
         self.stats = ProcessingStats()
@@ -64,7 +64,9 @@ class CleanDomainBackgroundProcessor:
         self.domain_cache = DomainCache()
 
         # Thread pool for I/O operations
-        self.thread_pool = ThreadPoolExecutor(max_workers=self.processing_config.max_workers)
+        self.thread_pool = ThreadPoolExecutor(
+            max_workers=self.processing_config.max_workers
+        )
 
         logger.info("✅ Clean domain background processor initialized")
 
@@ -81,7 +83,9 @@ class CleanDomainBackgroundProcessor:
             logger.info(f"📁 Discovered {len(domains)} domains: {domains}")
 
             # 2. Process domains in parallel for performance
-            domain_tasks = [self._process_domain_completely(domain) for domain in domains]
+            domain_tasks = [
+                self._process_domain_completely(domain) for domain in domains
+            ]
             domain_results = await asyncio.gather(*domain_tasks, return_exceptions=True)
 
             # 3. Collect results and statistics
@@ -99,9 +103,15 @@ class CleanDomainBackgroundProcessor:
 
             # Log completion statistics
             stats_dict = self.stats.to_dict()
-            logger.info(f"✅ Background processing complete in {stats_dict['total_time']:.2f}s")
-            logger.info(f"📊 Processed {stats_dict['domains_processed']} domains, {stats_dict['files_processed']} files")
-            logger.info(f"⚡ Processing rate: {stats_dict['files_per_second']:.1f} files/sec")
+            logger.info(
+                f"✅ Background processing complete in {stats_dict['total_time']:.2f}s"
+            )
+            logger.info(
+                f"📊 Processed {stats_dict['domains_processed']} domains, {stats_dict['files_processed']} files"
+            )
+            logger.info(
+                f"⚡ Processing rate: {stats_dict['files_per_second']:.1f} files/sec"
+            )
 
             return self.stats
 
@@ -120,9 +130,11 @@ class CleanDomainBackgroundProcessor:
 
         # Discover all subdirectories as potential domains
         for subdir in self.data_dir.iterdir():
-            if subdir.is_dir() and not subdir.name.startswith('.'):
+            if subdir.is_dir() and not subdir.name.startswith("."):
                 # Check if directory contains text files
-                text_files = list(subdir.glob("**/*.txt")) + list(subdir.glob("**/*.md"))
+                text_files = list(subdir.glob("**/*.txt")) + list(
+                    subdir.glob("**/*.md")
+                )
                 if text_files:
                     domains.append(subdir.name)
 
@@ -147,7 +159,9 @@ class CleanDomainBackgroundProcessor:
             logger.info(f"📄 Found {len(files)} files in domain {domain}")
 
             # 2. Process files in parallel
-            file_tasks = [self._process_file_for_domain(domain, file_path) for file_path in files]
+            file_tasks = [
+                self._process_file_for_domain(domain, file_path) for file_path in files
+            ]
             file_results = await asyncio.gather(*file_tasks, return_exceptions=True)
 
             # 3. Collect successful results
@@ -170,7 +184,9 @@ class CleanDomainBackgroundProcessor:
             domain_signature = await self._create_domain_signature(domain, all_analyses)
 
             # 5. Generate domain configuration
-            domain_config = await self.config_generator.generate_complete_config(domain, all_analyses[0])
+            domain_config = await self.config_generator.generate_complete_config(
+                domain, all_analyses[0]
+            )
 
             # 6. Cache everything for runtime performance
             await self.domain_cache.set(f"domain_signature_{domain}", domain_signature)
@@ -180,7 +196,9 @@ class CleanDomainBackgroundProcessor:
             self.stats.files_processed += files_processed
 
             domain_time = time.time() - domain_start
-            logger.info(f"✅ Domain {domain} processed in {domain_time:.2f}s: {files_processed} files")
+            logger.info(
+                f"✅ Domain {domain} processed in {domain_time:.2f}s: {files_processed} files"
+            )
 
             return {
                 "domain": domain,
@@ -193,7 +211,9 @@ class CleanDomainBackgroundProcessor:
             self.stats.processing_errors += 1
             raise
 
-    async def _process_file_for_domain(self, domain: str, file_path: Path) -> Optional[DomainAnalysisResult]:
+    async def _process_file_for_domain(
+        self, domain: str, file_path: Path
+    ) -> Optional[DomainAnalysisResult]:
         """Process single file using unified content analyzer (CODING_STANDARDS: Agent delegation)"""
         try:
             # Use unified content analyzer for all statistical processing
@@ -210,18 +230,24 @@ class CleanDomainBackgroundProcessor:
             logger.error(f"Failed to process file {file_path}: {e}")
             raise
 
-    async def _create_domain_signature(self, domain: str, all_analyses: List[DomainAnalysisResult]) -> DomainSignature:
+    async def _create_domain_signature(
+        self, domain: str, all_analyses: List[DomainAnalysisResult]
+    ) -> DomainSignature:
         """Create domain signature from content analyses (CODING_STANDARDS: Mathematical Foundation)"""
-        
+
         # Aggregate statistical features from all analyses
         total_word_count = sum(analysis.word_count for analysis in all_analyses)
-        avg_complexity = sum(analysis.complexity_score for analysis in all_analyses) / len(all_analyses)
-        avg_vocabulary_richness = sum(analysis.vocabulary_richness for analysis in all_analyses) / len(all_analyses)
+        avg_complexity = sum(
+            analysis.complexity_score for analysis in all_analyses
+        ) / len(all_analyses)
+        avg_vocabulary_richness = sum(
+            analysis.vocabulary_richness for analysis in all_analyses
+        ) / len(all_analyses)
 
         # Extract patterns using pattern engine (delegate to specialized component)
         combined_patterns = await self.pattern_engine.discover_patterns_from_corpus(
             documents=[str(analysis.source_file) for analysis in all_analyses],
-            domain_hint=domain
+            domain_hint=domain,
         )
 
         # Create signature with essential information only
@@ -231,7 +257,7 @@ class CleanDomainBackgroundProcessor:
             config=None,  # Will be set separately
             content_analysis=all_analyses[0],  # Representative analysis
             processing_timestamp=time.time(),
-            cache_key=f"domain_signature_{domain}"
+            cache_key=f"domain_signature_{domain}",
         )
 
         return signature
@@ -250,7 +276,11 @@ class CleanDomainBackgroundProcessor:
         return {
             "is_processing": self.stats.start_time > 0 and self.stats.end_time == 0,
             "processing_stats": self.stats.to_dict(),
-            "cache_stats": await self.domain_cache.get_cache_stats() if hasattr(self.domain_cache, 'get_cache_stats') else {}
+            "cache_stats": (
+                await self.domain_cache.get_cache_stats()
+                if hasattr(self.domain_cache, "get_cache_stats")
+                else {}
+            ),
         }
 
     def cleanup(self):
@@ -261,7 +291,9 @@ class CleanDomainBackgroundProcessor:
 
 
 # Factory function for clean architecture
-def create_background_processor(data_dir: Optional[str] = None) -> CleanDomainBackgroundProcessor:
+def create_background_processor(
+    data_dir: Optional[str] = None,
+) -> CleanDomainBackgroundProcessor:
     """Create clean background processor (CODING_STANDARDS: Clean Architecture)"""
     return CleanDomainBackgroundProcessor(data_dir)
 

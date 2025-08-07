@@ -21,20 +21,25 @@ def calculate_text_statistics(text: str) -> Dict[str, Any]:
     """Stub for text statistics calculation"""
     return {"word_count": len(text.split()), "char_count": len(text)}
 
+
 def analyze_document_complexity(text: str) -> Dict[str, Any]:
     """Stub for document complexity analysis"""
     return {"complexity_score": 0.5}
+
 
 def classify_complexity(stats: Dict[str, Any]) -> str:
     """Stub for complexity classification"""
     return "medium"
 
+
 # Stub classes
 class DocumentComplexityProfile:
     """Stub for document complexity profile"""
+
     pass
+
 
 class TextStatistics:
     """Stub for text statistics"""
-    pass
 
+    pass

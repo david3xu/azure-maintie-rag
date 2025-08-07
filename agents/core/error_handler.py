@@ -20,14 +20,22 @@ import logging
 import time
 
 # Import constants for zero-hardcoded-values compliance
-from agents.core.constants import MathematicalConstants, PerformanceAdaptiveConstants, SystemBoundaryConstants, ErrorHandlingCoordinatedConstants
+from agents.core.constants import (
+    MathematicalConstants,
+    PerformanceAdaptiveConstants,
+    SystemBoundaryConstants,
+    ErrorHandlingCoordinatedConstants,
+)
 import traceback
 from collections import defaultdict, deque
 from typing import Any, Callable, Dict, List, Optional, Union
 
 # Import models from centralized data models
 from agents.core.data_models import (
-    ErrorSeverity, ErrorCategory, ErrorContext, ErrorMetrics
+    ErrorSeverity,
+    ErrorCategory,
+    ErrorContext,
+    ErrorMetrics,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,7 +44,11 @@ logger = logging.getLogger(__name__)
 class CircuitBreaker:
     """Circuit breaker for external service calls"""
 
-    def __init__(self, failure_threshold: int = ErrorHandlingCoordinatedConstants.DEFAULT_FAILURE_THRESHOLD, timeout: float = PerformanceAdaptiveConstants.AZURE_SERVICE_TIMEOUT):
+    def __init__(
+        self,
+        failure_threshold: int = ErrorHandlingCoordinatedConstants.DEFAULT_FAILURE_THRESHOLD,
+        timeout: float = PerformanceAdaptiveConstants.AZURE_SERVICE_TIMEOUT,
+    ):
         self.failure_threshold = failure_threshold
         self.timeout = timeout
         self.failure_count = SystemBoundaryConstants.FAILURE_COUNT_INITIAL
@@ -414,7 +426,8 @@ class UnifiedErrorHandler:
                 "successful_recoveries": self.metrics.successful_recoveries,
                 "failed_recoveries": self.metrics.failed_recoveries,
                 "success_rate_percent": self.metrics.recovery_success_rate,
-                "average_recovery_time_ms": self.metrics.average_recovery_time * MathematicalConstants.MS_PER_SECOND,
+                "average_recovery_time_ms": self.metrics.average_recovery_time
+                * MathematicalConstants.MS_PER_SECOND,
             },
             "circuit_breaker_status": {
                 name: {"state": cb.state, "failure_count": cb.failure_count}
@@ -436,9 +449,15 @@ class UnifiedErrorHandler:
         critical_errors = self.metrics.errors_by_severity.get("critical", 0)
         recovery_rate = self.metrics.recovery_success_rate
 
-        if critical_errors > 0 or recent_error_count > SystemBoundaryConstants.CRITICAL_ERROR_THRESHOLD:
+        if (
+            critical_errors > 0
+            or recent_error_count > SystemBoundaryConstants.CRITICAL_ERROR_THRESHOLD
+        ):
             status = "critical"
-        elif recent_error_count > SystemBoundaryConstants.WARNING_ERROR_THRESHOLD or recovery_rate < SystemBoundaryConstants.MIN_RECOVERY_RATE_THRESHOLD:
+        elif (
+            recent_error_count > SystemBoundaryConstants.WARNING_ERROR_THRESHOLD
+            or recovery_rate < SystemBoundaryConstants.MIN_RECOVERY_RATE_THRESHOLD
+        ):
             status = "warning"
         else:
             status = "healthy"
@@ -529,7 +548,11 @@ def domain_intelligence_errors(return_on_error: Any = None):
         component="domain_intelligence",
         category=ErrorCategory.DOMAIN_INTELLIGENCE,
         severity=ErrorSeverity.MEDIUM,
-        return_on_error=return_on_error or {"domain": SystemBoundaryConstants.DEFAULT_FALLBACK_DOMAIN, "confidence": CoreSystemConstants.DEFAULT_FALLBACK_CONFIDENCE},
+        return_on_error=return_on_error
+        or {
+            "domain": SystemBoundaryConstants.DEFAULT_FALLBACK_DOMAIN,
+            "confidence": CoreSystemConstants.DEFAULT_FALLBACK_CONFIDENCE,
+        },
     )
 
 

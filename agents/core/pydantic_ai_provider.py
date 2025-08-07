@@ -23,9 +23,11 @@ from pydantic_ai.providers.azure import AzureProvider
 # Clean configuration imports (CODING_STANDARDS compliant)
 from config.centralized_config import get_model_config, get_azure_services_config
 
+
 # Backward compatibility for gradual migration
 class AzureServicesConfig:
     cognitive_services_scope = "https://cognitiveservices.azure.com/.default"
+
 
 azure_services_config = AzureServicesConfig()
 
@@ -77,7 +79,7 @@ def create_azure_pydantic_provider(
         # Get Azure OpenAI configuration from consolidated services
         model_config = get_model_config()
         azure_services_config = get_azure_services_config()
-        
+
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         api_version = os.getenv("OPENAI_API_VERSION", model_config.api_version)
 
@@ -139,7 +141,7 @@ async def create_azure_pydantic_provider_async(
         # Get Azure OpenAI configuration from consolidated services
         model_config = get_model_config()
         azure_services_config = get_azure_services_config()
-        
+
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
         api_version = os.getenv("OPENAI_API_VERSION", model_config.api_version)
 
@@ -196,7 +198,7 @@ def create_pydantic_agent(
     if model_name is None:
         model_config = get_model_config()
         model_name = model_config.deployment_name
-    
+
     # Create Azure provider with ConsolidatedAzureServices integration
     azure_provider = create_azure_pydantic_provider(azure_services)
 
@@ -265,7 +267,7 @@ async def create_pydantic_agent_async(
     if model_name is None:
         model_config = get_model_config()
         model_name = model_config.deployment_name
-    
+
     # Create Azure provider with ConsolidatedAzureServices integration
     azure_provider = await create_azure_pydantic_provider_async(azure_services)
 
@@ -333,7 +335,9 @@ def test_azure_provider_connection(
         # Create test agent using default model from configuration
         model_config = get_model_config()
         agent = create_pydantic_agent(
-            model_name=os.getenv("OPENAI_MODEL_DEPLOYMENT", model_config.deployment_name),
+            model_name=os.getenv(
+                "OPENAI_MODEL_DEPLOYMENT", model_config.deployment_name
+            ),
             system_prompt="You are a test agent for connection validation.",
             agent_name="test-connection-agent",
             azure_services=azure_services,
@@ -376,7 +380,9 @@ async def test_azure_provider_connection_async(
         # Create test agent using default model from configuration
         model_config = get_model_config()
         agent = await create_pydantic_agent_async(
-            model_name=os.getenv("OPENAI_MODEL_DEPLOYMENT", model_config.deployment_name),
+            model_name=os.getenv(
+                "OPENAI_MODEL_DEPLOYMENT", model_config.deployment_name
+            ),
             system_prompt="You are a test agent for connection validation.",
             agent_name="test-connection-agent",
             azure_services=azure_services,

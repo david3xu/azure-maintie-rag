@@ -21,12 +21,14 @@ logger = logging.getLogger(__name__)
 
 class ExtractionType(Enum):
     """Extraction operation types"""
+
     ENTITY = "entity"
     RELATIONSHIP = "relationship"
 
 
 class ExtractionStatus(Enum):
-    """Extraction status values"""  
+    """Extraction status values"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -34,4 +36,3 @@ class ExtractionStatus(Enum):
 
 
 # Models consolidated to agents.core.data_models
-

@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic_ai import Agent, RunContext
 
-# Clean configuration imports (CODING_STANDARDS compliant) 
+# Clean configuration imports (CODING_STANDARDS compliant)
 from config.centralized_config import get_model_config, get_search_config
 
 # Import models from centralized data models
@@ -35,34 +35,36 @@ from agents.core.data_models import (
     SearchResponse,
     UniversalSearchDeps,
     TriModalSearchResult,
-    
     # NEW: Enhanced models with PydanticAI integration and dynamic configuration
     ConsolidatedSearchConfiguration,
     ConsolidatedAzureConfiguration,
     # EnhancedUniversalSearchContract deleted - use UniversalSearchContract
     ConfigurationResolver,
-    PydanticAIContextualModel
+    PydanticAIContextualModel,
 )
+
 
 # Backward compatibility for gradual migration
 class UniversalSearchAgentConfig:
     def __init__(self):
         model_config = get_model_config()
         self.azure_endpoint = model_config.azure_endpoint
-        self.api_version = model_config.api_version  
+        self.api_version = model_config.api_version
         self.deployment_name = model_config.deployment_name
+
 
 get_universal_search_agent_config = lambda: UniversalSearchAgentConfig()
 get_tri_modal_orchestration_config = get_search_config  # Alias for compatibility
 
 # Import consolidated orchestrator
 from .orchestrators.consolidated_search_orchestrator import (
-    ConsolidatedSearchOrchestrator
+    ConsolidatedSearchOrchestrator,
 )
 
 # Import domain intelligence integration
 try:
     from ..domain_intelligence.agent import get_domain_agent
+
     DOMAIN_AGENT_AVAILABLE = True
 except ImportError:
     DOMAIN_AGENT_AVAILABLE = False
@@ -103,7 +105,9 @@ def _create_agent_with_consolidated_orchestrator() -> Agent:
         deployment_name = agent_config.deployment_name
 
         if not api_key:
-            raise ValueError("AZURE_OPENAI_API_KEY or OPENAI_API_KEY environment variable is required")
+            raise ValueError(
+                "AZURE_OPENAI_API_KEY or OPENAI_API_KEY environment variable is required"
+            )
 
         # Use Azure OpenAI with API key
         azure_model = OpenAIModel(
@@ -131,7 +135,7 @@ def _create_agent_with_consolidated_orchestrator() -> Agent:
                 "You work with centralized configuration and provide enterprise-grade search capabilities."
             ),
         )
-        
+
         return agent
 
     except Exception as e:
@@ -158,20 +162,20 @@ async def execute_universal_search(
     query: str,
     domain: str = None,
     search_types: List[str] = None,
-    max_results: int = None
+    max_results: int = None,
 ) -> SearchResponse:
     """
     Execute universal search using consolidated orchestrator.
-    
+
     This is a simplified wrapper that delegates to the consolidated orchestrator
     while maintaining backward compatibility.
     """
     try:
         start_time = time.time()
-        
+
         # Get orchestrator
         orchestrator = get_consolidated_orchestrator()
-        
+
         # Detect domain if not provided
         if domain is None:
             if DOMAIN_AGENT_AVAILABLE:
@@ -184,17 +188,17 @@ async def execute_universal_search(
                     domain = "general"
             else:
                 domain = "general"
-        
+
         # Execute tri-modal search
         search_result = await orchestrator.execute_tri_modal_search(
             query=query,
             domain=domain,
             search_types=search_types,
-            max_results=max_results
+            max_results=max_results,
         )
-        
+
         execution_time = time.time() - start_time
-        
+
         # Create response
         response = SearchResponse(
             success=True,
@@ -202,15 +206,15 @@ async def execute_universal_search(
             domain=domain,
             results=search_result,
             execution_time=execution_time,
-            cached=False  # Could be enhanced with actual caching
+            cached=False,  # Could be enhanced with actual caching
         )
-        
+
         return response
-        
+
     except Exception as e:
         execution_time = time.time() - start_time
         logger.error(f"Universal search failed: {e}")
-        
+
         # Create error response
         return SearchResponse(
             success=False,
@@ -231,49 +235,52 @@ async def execute_universal_search(
                 total_results=0,
                 high_confidence_results=0,
                 average_confidence=0.0,
-                cross_modal_agreement=0.0
+                cross_modal_agreement=0.0,
             ),
             execution_time=execution_time,
-            error=str(e)
+            error=str(e),
         )
 
 
 async def test_universal_search_agent():
     """Test the Universal Search Agent with consolidated orchestrator"""
     try:
-        # Get agent with lazy initialization 
+        # Get agent with lazy initialization
         agent = get_universal_search_agent()
-        
-        print("✅ Universal Search Agent created successfully with consolidated orchestrator")
+
+        print(
+            "✅ Universal Search Agent created successfully with consolidated orchestrator"
+        )
         print(f"   - Agent name: {agent.name}")
-        print(f"   - Dependencies type: {agent._deps_type.__name__ if hasattr(agent, '_deps_type') else 'None'}")
-        
+        print(
+            f"   - Dependencies type: {agent._deps_type.__name__ if hasattr(agent, '_deps_type') else 'None'}"
+        )
+
         # Test orchestrator directly
         orchestrator = get_consolidated_orchestrator()
-        print(f"✅ Consolidated orchestrator initialized: {type(orchestrator).__name__}")
-        
+        print(
+            f"✅ Consolidated orchestrator initialized: {type(orchestrator).__name__}"
+        )
+
         return {
             "agent_created": True,
             "lazy_initialization": True,
             "consolidated_orchestrator": True,
-            "azure_openai_model": True
+            "azure_openai_model": True,
         }
-        
+
     except Exception as e:
         print(f"❌ Universal Search Agent test failed: {e}")
-        return {
-            "agent_created": False,
-            "error": str(e)
-        }
+        return {"agent_created": False, "error": str(e)}
 
 
 # Export main components
 __all__ = [
     "get_universal_search_agent",
-    "universal_search_agent", 
+    "universal_search_agent",
     "execute_universal_search",
     "test_universal_search_agent",
     "QueryRequest",
     "SearchResponse",
-    "UniversalSearchDeps"
+    "UniversalSearchDeps",
 ]

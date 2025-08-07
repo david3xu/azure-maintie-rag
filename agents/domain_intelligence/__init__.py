@@ -23,12 +23,20 @@ Key features preserved:
 
 # Import analysis components from organized structure
 from .analyzers import (
-    UnifiedContentAnalyzer, DomainAnalysisResult, DomainIntelligenceConfig,
-    HybridConfigurationGenerator, LLMExtraction,  # ConfigurationRecommendations deleted
-    DataDrivenPatternEngine, LearnedPattern, ExtractedPatterns,
-    ConfigGenerator, DomainConfig,
-    run_startup_background_processing, BackgroundProcessingStats,
+    UnifiedContentAnalyzer,
+    DomainAnalysisResult,
+    DomainIntelligenceConfig,
+    HybridConfigurationGenerator,
+    LLMExtraction,  # ConfigurationRecommendations deleted
+    DataDrivenPatternEngine,
+    LearnedPattern,
+    ExtractedPatterns,
+    ConfigGenerator,
+    DomainConfig,
+    run_startup_background_processing,
+    BackgroundProcessingStats,
 )
+
 # Note: DomainAnalyzer and DomainClassification removed - use UnifiedContentAnalyzer directly
 
 # PydanticAI tools moved to toolsets.py following target architecture
@@ -41,7 +49,7 @@ from .analyzers import (
 __all__ = [
     # Unified content analysis (primary)
     "UnifiedContentAnalyzer",
-    "DomainAnalysisResult", 
+    "DomainAnalysisResult",
     "DomainIntelligenceConfig",
     # Configuration generation
     "HybridConfigurationGenerator",
@@ -60,6 +68,6 @@ __all__ = [
     "ConfigGenerator",
     # PydanticAI Tools moved to toolsets.py following target architecture
     # "discover_domain_tool",
-    # "analyze_domain_patterns_tool", 
+    # "analyze_domain_patterns_tool",
     # "validate_domain_confidence_tool",
 ]

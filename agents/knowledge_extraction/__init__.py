@@ -3,7 +3,7 @@ Knowledge Extraction Agent - Following Target Architecture
 
 This agent provides advanced knowledge extraction capabilities with:
 - Lazy initialization pattern
-- FunctionToolset integration  
+- FunctionToolset integration
 - Azure OpenAI integration with environment variables
 - Multi-strategy entity and relationship extraction
 - Quality validation and knowledge graph construction
@@ -32,11 +32,11 @@ from .toolsets import (
 __all__ = [
     # Main agent interfaces
     "get_knowledge_extraction_agent",
-    "extract_knowledge_from_document", 
+    "extract_knowledge_from_document",
     "extract_knowledge_from_documents",
     "test_knowledge_extraction_agent",
     # Toolset classes
     "KnowledgeExtractionToolset",
-    "KnowledgeExtractionDeps", 
+    "KnowledgeExtractionDeps",
     "knowledge_extraction_toolset",
 ]

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class GNNTrainingOrchestrator:
     """Orchestrates GNN training pipeline for knowledge graph intelligence."""
-    
+
     def __init__(self):
         """Initialize GNN training orchestrator."""
         # TODO: Initialize Azure ML training client for GNN orchestration
@@ -35,8 +35,10 @@ class GNNTrainingOrchestrator:
         # TODO: Set up training result storage and model registry
         self.gnn_client = GNNTrainingClient()
         self.cosmos_client = CosmosGremlinClient()
-        
-    async def execute_gnn_training_pipeline(self, domain: str, training_config: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def execute_gnn_training_pipeline(
+        self, domain: str, training_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute complete GNN training pipeline for domain."""
         # TODO: Extract knowledge graph data from Cosmos DB for domain
         # TODO: Prepare graph data for GNN training (nodes, edges, features)
@@ -45,40 +47,40 @@ class GNNTrainingOrchestrator:
         # TODO: Evaluate trained model and register in model registry
         # TODO: Return training results with model performance metrics
         logger.info(f"🧠 Starting GNN training pipeline for domain: {domain}")
-        
+
         try:
             # Step 1: Extract graph data
             graph_data = await self._extract_graph_data(domain)
             logger.info(f"📊 Extracted graph data: {graph_data['summary']}")
-            
+
             # Step 2: Prepare training data
-            training_data = await self._prepare_training_data(graph_data, training_config)
+            training_data = await self._prepare_training_data(
+                graph_data, training_config
+            )
             logger.info(f"🔧 Prepared training data: {training_data['summary']}")
-            
+
             # Step 3: Submit training job
-            training_job = await self._submit_training_job(training_data, training_config)
+            training_job = await self._submit_training_job(
+                training_data, training_config
+            )
             logger.info(f"🚀 Submitted training job: {training_job['job_id']}")
-            
+
             # Step 4: Monitor training progress
-            training_results = await self._monitor_training(training_job['job_id'])
+            training_results = await self._monitor_training(training_job["job_id"])
             logger.info(f"✅ Training completed: {training_results['summary']}")
-            
+
             return {
                 "success": True,
                 "domain": domain,
-                "training_job_id": training_job['job_id'],
+                "training_job_id": training_job["job_id"],
                 "results": training_results,
-                "model_id": training_results.get('model_id'),
-                "performance_metrics": training_results.get('metrics', {})
+                "model_id": training_results.get("model_id"),
+                "performance_metrics": training_results.get("metrics", {}),
             }
-            
+
         except Exception as e:
             logger.error(f"❌ GNN training failed: {e}")
-            return {
-                "success": False,
-                "domain": domain,
-                "error": str(e)
-            }
+            return {"success": False, "domain": domain, "error": str(e)}
 
     async def _extract_graph_data(self, domain: str) -> Dict[str, Any]:
         """Extract knowledge graph data from Cosmos DB."""
@@ -89,7 +91,9 @@ class GNNTrainingOrchestrator:
         # TODO: Return structured graph data ready for GNN training
         pass
 
-    async def _prepare_training_data(self, graph_data: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _prepare_training_data(
+        self, graph_data: Dict[str, Any], config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Prepare graph data for GNN training."""
         # TODO: Convert graph data to PyTorch Geometric format
         # TODO: Create train/validation/test splits for nodes and edges
@@ -100,7 +104,9 @@ class GNNTrainingOrchestrator:
         # TODO: Return training data summary with quality metrics
         pass
 
-    async def _submit_training_job(self, training_data: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+    async def _submit_training_job(
+        self, training_data: Dict[str, Any], config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Submit GNN training job to Azure ML."""
         # TODO: Configure GNN architecture based on graph characteristics
         # TODO: Set up training environment with PyTorch Geometric
@@ -127,7 +133,9 @@ class GNNTrainingOrchestrator:
         # TODO: Return validation results with quality recommendations
         pass
 
-    async def generate_training_report(self, training_results: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_training_report(
+        self, training_results: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate comprehensive GNN training report."""
         # TODO: Compile training metrics and performance analysis
         # TODO: Generate model quality assessment and recommendations
@@ -140,24 +148,24 @@ class GNNTrainingOrchestrator:
 async def main():
     """Main execution function for GNN training step."""
     logger.info("🧠 GNN Training Pipeline - Step 05")
-    
+
     orchestrator = GNNTrainingOrchestrator()
-    
+
     # TODO: Load domain configuration from previous steps
     # TODO: Configure training parameters from learned settings
     domain = "programming_language"  # Example domain
     training_config = {
         "model_type": "GraphSAGE",  # Will be learned from graph analysis
-        "hidden_dim": 256,          # Will be learned from domain complexity
-        "num_layers": 3,            # Will be learned from graph diameter
-        "learning_rate": 0.001,     # Will be learned from optimization
-        "epochs": 100,              # Will be learned from convergence analysis
-        "batch_size": 1024          # Will be learned from resource optimization
+        "hidden_dim": 256,  # Will be learned from domain complexity
+        "num_layers": 3,  # Will be learned from graph diameter
+        "learning_rate": 0.001,  # Will be learned from optimization
+        "epochs": 100,  # Will be learned from convergence analysis
+        "batch_size": 1024,  # Will be learned from resource optimization
     }
-    
+
     # Execute training pipeline
     results = await orchestrator.execute_gnn_training_pipeline(domain, training_config)
-    
+
     if results["success"]:
         logger.info(f"✅ GNN training completed successfully")
         logger.info(f"📊 Model ID: {results.get('model_id')}")

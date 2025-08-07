@@ -9,12 +9,12 @@ from .consolidated_search_orchestrator import (
     ConsolidatedSearchOrchestrator,
     TriModalSearchResult,
     SearchResult,
-    ModalityResult
+    ModalityResult,
 )
 
 __all__ = [
     "ConsolidatedSearchOrchestrator",
-    "TriModalSearchResult", 
+    "TriModalSearchResult",
     "SearchResult",
-    "ModalityResult"
+    "ModalityResult",
 ]

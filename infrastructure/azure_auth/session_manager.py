@@ -1,4 +1,5 @@
 """Azure Session Management with Auto-Refresh"""
+
 import logging
 import time
 from typing import Any, Dict, Optional

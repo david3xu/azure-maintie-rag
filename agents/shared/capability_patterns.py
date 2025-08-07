@@ -48,7 +48,13 @@ class CacheCapability(Protocol):
         """Retrieve cached value"""
         ...
 
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None, namespace: str = "default") -> bool:
+    async def set(
+        self,
+        key: str,
+        value: Any,
+        ttl: Optional[int] = None,
+        namespace: str = "default",
+    ) -> bool:
         """Store cached value"""
         ...
 
@@ -60,25 +66,26 @@ class CacheCapability(Protocol):
 class MonitoringCapability(Protocol):
     """Protocol for shared monitoring capabilities"""
 
-    async def record_metric(self, metric_name: str, value: float, tags: Dict[str, str] = None) -> None:
+    async def record_metric(
+        self, metric_name: str, value: float, tags: Dict[str, str] = None
+    ) -> None:
         """Record a metric value"""
         ...
 
-    async def increment_counter(self, counter_name: str, tags: Dict[str, str] = None) -> None:
+    async def increment_counter(
+        self, counter_name: str, tags: Dict[str, str] = None
+    ) -> None:
         """Increment a counter"""
         ...
 
+    # =============================================================================
+    # SHARED CACHE IMPLEMENTATION (CODING_STANDARDS: Performance-First)
+    # =============================================================================
 
-# =============================================================================
-# SHARED CACHE IMPLEMENTATION (CODING_STANDARDS: Performance-First)
-# =============================================================================
+    # CacheMetrics now imported from agents.core.data_models
 
-
-# CacheMetrics now imported from agents.core.data_models
-
-
-# REMOVED: SharedCacheManager - unused duplicate of UnifiedCacheManager
-# class SharedCacheManager:
+    # REMOVED: SharedCacheManager - unused duplicate of UnifiedCacheManager
+    # class SharedCacheManager:
     """Simplified cache manager following CODING_STANDARDS (Performance-First, Universal Design)"""
 
     def __init__(self, redis_client=None):
@@ -90,7 +97,7 @@ class MonitoringCapability(Protocol):
     async def get(self, key: str, namespace: str = "default") -> Optional[Any]:
         """Get value from cache with simple metrics (CODING_STANDARDS: No fake data)"""
         namespaced_key = f"{namespace}:{key}"
-        
+
         # Check local cache first
         if namespaced_key in self.local_cache:
             self.metrics.hits += 1
@@ -115,13 +122,19 @@ class MonitoringCapability(Protocol):
         self.metrics.total_requests += 1
         return None
 
-    async def set(self, key: str, value: Any, ttl: Optional[int] = None, namespace: str = "default") -> bool:
+    async def set(
+        self,
+        key: str,
+        value: Any,
+        ttl: Optional[int] = None,
+        namespace: str = "default",
+    ) -> bool:
         """Set value in cache with simple TTL (CODING_STANDARDS: Configuration-driven)"""
         namespaced_key = f"{namespace}:{key}"
-        
+
         # Store locally
         self.local_cache[namespaced_key] = value
-        
+
         # Store in Redis if available
         if self.redis_client:
             try:
@@ -130,23 +143,23 @@ class MonitoringCapability(Protocol):
                 return True
             except Exception:
                 pass  # Local cache still works
-        
+
         return True
 
     async def delete(self, key: str, namespace: str = "default") -> bool:
         """Delete value from cache"""
         namespaced_key = f"{namespace}:{key}"
-        
+
         # Remove from local cache
         self.local_cache.pop(namespaced_key, None)
-        
+
         # Remove from Redis if available
         if self.redis_client:
             try:
                 await self.redis_client.delete(namespaced_key)
             except Exception:
                 pass
-        
+
         return True
 
     def get_cache_status(self) -> str:
@@ -168,31 +181,41 @@ class SimpleMonitoringManager:
         self.metrics: Dict[str, List[float]] = {}
         self.counters: Dict[str, int] = {}
 
-    async def record_metric(self, metric_name: str, value: float, tags: Dict[str, str] = None) -> None:
+    async def record_metric(
+        self, metric_name: str, value: float, tags: Dict[str, str] = None
+    ) -> None:
         """Record metric value without complex calculations (CODING_STANDARDS: Real results)"""
         if metric_name not in self.metrics:
             self.metrics[metric_name] = []
-        
+
         self.metrics[metric_name].append(value)
-        
+
         # Keep only recent values (simple sliding window)
         if len(self.metrics[metric_name]) > CacheConstants.MAX_METRICS_HISTORY:
-            self.metrics[metric_name] = self.metrics[metric_name][-CacheConstants.MAX_METRICS_HISTORY:]
+            self.metrics[metric_name] = self.metrics[metric_name][
+                -CacheConstants.MAX_METRICS_HISTORY :
+            ]
 
-    async def increment_counter(self, counter_name: str, tags: Dict[str, str] = None) -> None:
+    async def increment_counter(
+        self, counter_name: str, tags: Dict[str, str] = None
+    ) -> None:
         """Increment counter without complex categorization (CODING_STANDARDS: Universal Design)"""
         self.counters[counter_name] = self.counters.get(counter_name, 0) + 1
 
     def get_simple_stats(self, metric_name: str) -> Dict[str, float]:
         """Get basic statistics without over-engineering (CODING_STANDARDS: Essential only)"""
         if metric_name not in self.metrics or not self.metrics[metric_name]:
-            return {"count": 0, "average": CacheConstants.ZERO_FLOAT, "latest": CacheConstants.ZERO_FLOAT}
-        
+            return {
+                "count": 0,
+                "average": CacheConstants.ZERO_FLOAT,
+                "latest": CacheConstants.ZERO_FLOAT,
+            }
+
         values = self.metrics[metric_name]
         return {
             "count": len(values),
             "average": sum(values) / len(values),
-            "latest": values[-1] if values else CacheConstants.ZERO_FLOAT
+            "latest": values[-1] if values else CacheConstants.ZERO_FLOAT,
         }
 
 
@@ -207,22 +230,25 @@ class SimpleDomainAnalyzer:
     def __init__(self, cache_manager: Optional[Any] = None):
         self.cache_manager = cache_manager
 
-    async def analyze_domain_with_caching(self, content: str, domain_hint: str = None) -> Dict[str, Any]:
+    async def analyze_domain_with_caching(
+        self, content: str, domain_hint: str = None
+    ) -> Dict[str, Any]:
         """
         Simple domain analysis that relies on Domain Intelligence Agent
         CODING_STANDARDS: No hardcoded domain assumptions
         """
-        
+
         # Cache key based on content hash
         import hashlib
+
         content_hash = hashlib.md5(content.encode()).hexdigest()
         cache_key = f"domain_analysis:{content_hash}"
-        
+
         # Check cache first
         cached_result = await self.cache_manager.get(cache_key, "domain_analysis")
         if cached_result:
             return cached_result
-        
+
         # CODING_STANDARDS: Universal Design - no domain-specific hardcoded logic
         analysis = {
             "content_length": len(content),
@@ -231,12 +257,17 @@ class SimpleDomainAnalyzer:
             "analysis_timestamp": time.time(),
             # CODING_STANDARDS: No arbitrary confidence scores
             "requires_agent1_analysis": True,  # Delegate to Domain Intelligence Agent
-            "status": "requires_statistical_analysis"
+            "status": "requires_statistical_analysis",
         }
-        
+
         # Cache result
-        await self.cache_manager.set(cache_key, analysis, ttl=CacheConstants.DEFAULT_CACHE_TTL, namespace="domain_analysis")
-        
+        await self.cache_manager.set(
+            cache_key,
+            analysis,
+            ttl=CacheConstants.DEFAULT_CACHE_TTL,
+            namespace="domain_analysis",
+        )
+
         return analysis
 
 
