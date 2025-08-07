@@ -28,6 +28,17 @@ Competitive Advantages Maintained:
 ✅ Unified tool system with parallel execution and retry logic
 """
 
+from agents.core.constants import StubConstants
+
+# Import structured models from centralized data models
+from agents.core.data_models import DomainDetectionResult as ModelDomainDetectionResult
+from agents.core.data_models import HealthStatus as ConfidenceLevel  # Temporary mapping
+from agents.core.data_models import (
+    QueryRequest,
+)
+from agents.core.data_models import SearchResponse as TriModalSearchResult
+from agents.core.data_models import SearchResult as SearchDocument
+
 # Import consolidated core services
 from .core import (
     ConsolidatedAzureServices,
@@ -37,39 +48,27 @@ from .core import (
     get_cache_manager,
 )
 
+# Import consolidated intelligence
+from .domain_intelligence import (  # ConfigurationRecommendations deleted; Note: DomainAnalyzer and DomainClassification moved to compatibility module
+    DataDrivenPatternEngine,
+    DomainAnalysisResult,
+    DomainIntelligenceConfig,
+    ExtractedPatterns,
+    HybridConfigurationGenerator,
+    LearnedPattern,
+    UnifiedContentAnalyzer,
+)
+from .domain_intelligence.agent import get_domain_intelligence_agent  # ✅ Lazy function
+from .domain_intelligence.agent import (  # Agent tools
+    DomainDetectionResult,
+    get_domain_agent,
+)
+
 # Import moved utilities from shared
 from .shared import (
     UnifiedMemoryManager,
     get_memory_manager,
 )
-
-# Import consolidated intelligence
-from .domain_intelligence import (
-    UnifiedContentAnalyzer,
-    DomainAnalysisResult,
-    DomainIntelligenceConfig,
-    HybridConfigurationGenerator,
-    # ConfigurationRecommendations deleted
-    # Note: DomainAnalyzer and DomainClassification moved to compatibility module
-    ExtractedPatterns,
-    LearnedPattern,
-    DataDrivenPatternEngine,
-)
-from .domain_intelligence.agent import (  # Agent tools
-    DomainDetectionResult,
-    get_domain_agent,
-    get_domain_intelligence_agent,  # ✅ Lazy function
-)
-
-# Import structured models from centralized data models
-from agents.core.data_models import (
-    QueryRequest,
-    SearchResponse as TriModalSearchResult,
-    DomainDetectionResult as ModelDomainDetectionResult,
-    SearchResult as SearchDocument,
-    HealthStatus as ConfidenceLevel,  # Temporary mapping
-)
-from agents.core.constants import StubConstants
 
 
 # Define SearchResultType for backward compatibility
@@ -102,16 +101,19 @@ class SimpleQueryRequest:
         self.domain = domain
 
 
-# Import main agent interfaces (lazy functions only, no instances)
-from .universal_search.agent import (  # PydanticAI tools
-    get_universal_search_agent,  # ✅ Lazy function (consolidated)
-    # Remove direct agent instance import to avoid initialization
+from .knowledge_extraction.agent import (
+    extract_knowledge_from_document,  # Function interface
+)
+from .knowledge_extraction.agent import (
+    extract_knowledge_from_documents,  # Batch processing
+)
+from .knowledge_extraction.agent import (
+    get_knowledge_extraction_agent,  # Knowledge extraction tools; ✅ Lazy function
 )
 
-from .knowledge_extraction.agent import (  # Knowledge extraction tools
-    get_knowledge_extraction_agent,  # ✅ Lazy function
-    extract_knowledge_from_document,  # Function interface
-    extract_knowledge_from_documents,  # Batch processing
+# Import main agent interfaces (lazy functions only, no instances)
+from .universal_search.agent import (
+    get_universal_search_agent,  # PydanticAI tools; Remove direct agent instance import to avoid initialization; ✅ Lazy function (consolidated)
 )
 
 # Import search workflow orchestrator (Single source of truth)
