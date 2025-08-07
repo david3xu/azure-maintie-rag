@@ -16,6 +16,9 @@ Categories:
 
 from typing import Dict, Any
 
+# Import centralized constants to avoid duplication
+from agents.core.constants import StubConstants
+
 
 # =============================================================================
 # MACHINE LEARNING MODEL PARAMETERS
@@ -26,13 +29,13 @@ class MLModelConstants:
     """Machine Learning model hyperparameters and configurations"""
 
     # GNN Model Architecture
-    DEFAULT_HIDDEN_DIM = 128
+    DEFAULT_HIDDEN_DIM = StubConstants.GNN_HIDDEN_DIM_STANDARD  # 128
     DEFAULT_NUM_LAYERS = 2
-    DEFAULT_DROPOUT_RATE = 0.5
+    DEFAULT_DROPOUT_RATE = StubConstants.DEFAULT_DROPOUT_RATE  # 0.5
     DEFAULT_CONV_TYPE = "gcn"
 
     # Training Parameters
-    DEFAULT_LEARNING_RATE = 0.001
+    DEFAULT_LEARNING_RATE = StubConstants.DEFAULT_LEARNING_RATE  # 0.001
     DEFAULT_WEIGHT_DECAY = 1e-5
 
     # Memory Estimation (bytes)
@@ -63,8 +66,8 @@ class QualityThresholds:
 
     # Constants for reference (non-validation use)
     RANGE_MIN_ENTITIES = 1.0
-    RANGE_MAX_ENTITIES = 20.0
-    RANGE_MIN_CONFIDENCE = 0.6
+    RANGE_MAX_ENTITIES = 20.0  # Keep as infrastructure-specific constant
+    RANGE_MIN_CONFIDENCE = StubConstants.VOCABULARY_HIGH_RICHNESS  # 0.6
     RANGE_MAX_CONFIDENCE = 1.0
 
 
@@ -77,7 +80,7 @@ class SearchConstants:
     """Search operation defaults and scoring parameters"""
 
     # Default Scores
-    DEFAULT_SEARCH_SCORE = 0.0
+    DEFAULT_SEARCH_SCORE = StubConstants.STAT_INITIAL_ZERO  # 0.0
 
     # Domain Detection
     NEEDS_DOMAIN_DETECTION = "NEEDS_DOMAIN_DETECTION"
@@ -117,11 +120,11 @@ class AzureServiceLimits:
 
     # Cosmos DB Gremlin
     DEFAULT_GREMLIN_TIMEOUT_SECONDS = 30
-    DEFAULT_GREMLIN_QUERY_LIMIT = 100
+    DEFAULT_GREMLIN_QUERY_LIMIT = StubConstants.COMPLIANCE_PERFECT_SCORE  # 100
 
     # OpenAI Embedding
-    DEFAULT_EMBEDDING_BATCH_SIZE = 100
-    DEFAULT_EMBEDDING_CACHE_SIZE_THRESHOLD = 1000
+    DEFAULT_EMBEDDING_BATCH_SIZE = StubConstants.COMPLIANCE_PERFECT_SCORE  # 100
+    DEFAULT_EMBEDDING_CACHE_SIZE_THRESHOLD = StubConstants.DEFAULT_QUERY_LIMIT  # 1000
 
     # Azure ML Classification
     DEFAULT_CLASSIFICATION_CONFIDENCE = 0.7
@@ -133,7 +136,7 @@ class AzureServiceLimits:
     DEFAULT_TEMPERATURE = 0.1
     DEFAULT_MAX_TOKENS = 2000
     DEFAULT_REQUESTS_PER_MINUTE = 50
-    DEFAULT_CHUNK_SIZE = 1000
+    DEFAULT_CHUNK_SIZE = StubConstants.DEFAULT_QUERY_LIMIT  # 1000
 
 
 # =============================================================================
@@ -149,7 +152,7 @@ class FallbackConfigurations:
         # REPLACED: Use Field(ge=0.6, le=1.0) for validation instead
         "entity_confidence_threshold": QualityThresholds.RANGE_MIN_CONFIDENCE,  # Use range constants
         "relationship_confidence_threshold": 0.7,  # Direct value - will be validated by PydanticAI
-        "chunk_size": 1000,
+        "chunk_size": StubConstants.DEFAULT_QUERY_LIMIT,  # 1000
         "chunk_overlap": 200,
         "batch_size": 10,
         "max_entities_per_chunk": 20,

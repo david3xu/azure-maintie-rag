@@ -75,7 +75,7 @@ repos:
 
       - id: prevent-large-artifacts
         name: Prevent large ML artifacts
-        entry: bash -c 'find . -name "*.pth" -o -name "*.pkl" -o -name "*.h5" -o -name "*.onnx" | head -1 | grep -q . && echo "❌ Large ML artifacts detected. Use .gitignore" && exit 1 || exit 0'
+        entry: bash -c 'find . -name "*.pth" -o -name "*.pkl" -o -name "*.h5" -o -name "*.onnx" | grep -v "\.venv" | grep -v "/venv/" | head -1 | grep -q . && echo "❌ Large ML artifacts detected. Use .gitignore" && exit 1 || exit 0'
         language: system
         pass_filenames: false
 

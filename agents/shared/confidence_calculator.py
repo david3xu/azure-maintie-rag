@@ -11,20 +11,15 @@ Used by Knowledge Extraction for entity/relationship confidence and Domain Intel
 for quality assessment scoring.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Union
-from pydantic import BaseModel, Field, validator
-import statistics
-import math
-from enum import Enum
+from typing import Any, Dict
 
-# Import consolidated data models
-from agents.core.data_models import (
-    ConfidenceScore,
-    # AggregatedConfidence, EntityConfidenceFactors deleted - using simple calculations
-    RelationshipConfidenceFactors,
-    ConfidenceMethod,
-)
 from agents.core.constants import StubConstants
+
+# Import consolidated data models when needed by actual implementations
+from agents.core.data_models import (
+    ConfidenceMethod,
+    ConfidenceScore,
+)
 
 
 # Stub functions - these should be properly implemented
@@ -33,4 +28,9 @@ def calculate_adaptive_confidence(data: Dict[str, Any]) -> float:
     return StubConstants.STUB_ADAPTIVE_CONFIDENCE
 
 
-# ConfidenceScore and other models imported from data_models.py above
+# Export the models for use by other modules
+__all__ = [
+    "calculate_adaptive_confidence",
+    "ConfidenceScore",
+    "ConfidenceMethod",
+]

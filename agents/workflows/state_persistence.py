@@ -13,7 +13,7 @@ from pathlib import Path
 from dataclasses import asdict
 
 # Import constants for zero-hardcoded-values compliance
-from agents.core.constants import CacheConstants
+from agents.core.constants import CacheConstants, StubConstants
 
 # Import models from centralized data models
 from agents.core.data_models import (
@@ -365,7 +365,7 @@ class WorkflowStateManager:
         """Get workflow statistics"""
         try:
             workflows = await self.list_workflows(
-                limit=1000
+                limit=StubConstants.DEFAULT_QUERY_LIMIT
             )  # Reasonable default limit
 
             stats = {

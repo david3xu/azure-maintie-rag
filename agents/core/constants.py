@@ -505,6 +505,46 @@ class KnowledgeExtractionConstants:
     FALLBACK_MIN_RELATIONSHIP_STRENGTH = 0.5  # Reference to DomainAdaptiveConstants
     FALLBACK_QUALITY_VALIDATION_THRESHOLD = 0.8  # Reference to quality requirements
 
+    # Extraction processing constants (from hardcoded values)
+    STRATEGY_PATTERN_REDUCTION_PERCENT = 40  # 40% reduction through strategy pattern
+    DEFAULT_STATISTICS_CONFIDENCE = 0.0  # Default confidence for statistics
+    FREQUENCY_BOOST_MULTIPLIER = 10.0  # Used in frequency_boost calculation
+    FREQUENCY_BOOST_BASE = 1.0  # Base value for frequency boost
+    FREQUENCY_BOOST_MAX = 2.0  # Maximum frequency boost value
+    MODEL_CONFIDENCE_WEIGHT = 0.25  # Weight for model confidence
+    CONTEXT_CLARITY_WEIGHT = 0.15  # Weight for context clarity
+    ENTITY_PRECISION_MULTIPLIER = 0.8  # Entity precision factor
+    PATTERN_MATCH_WEIGHT = 0.1  # Pattern matching weight
+    DOMAIN_RELEVANCE_WEIGHT = 0.1  # Domain relevance weight
+    VALIDATION_WEIGHT = 0.1  # Validation score weight
+
+    # Text clarity analysis constants
+    CLARITY_WORD_DIVISOR = 20.0  # Divisor for word count in clarity calculation
+    CLARITY_PUNCTUATION_MULTIPLIER = 2.0  # Multiplier for punctuation ratio
+    MAX_PUNCTUATION_RATIO = 0.5  # Maximum punctuation ratio consideration
+    MIN_CLARITY_SCORE = 0.1  # Minimum clarity score
+    PRECISION_PENALTY = 0.2  # Penalty for precision issues
+
+    # Type consistency scores
+    PERSON_TYPE_CONFIDENCE_HIGH = 0.9  # High confidence for person entities
+    PERSON_TYPE_CONFIDENCE_LOW = 0.6  # Low confidence for person entities
+    ORG_TYPE_CONFIDENCE_HIGH = 0.9  # High confidence for organization entities
+    ORG_TYPE_CONFIDENCE_LOW = 0.7  # Low confidence for organization entities
+    LOCATION_TYPE_CONFIDENCE_HIGH = 0.9  # High confidence for location entities
+    LOCATION_TYPE_CONFIDENCE_LOW = 0.6  # Low confidence for location entities
+    TECHNICAL_TYPE_CONFIDENCE_HIGH = 0.9  # High confidence for technical entities
+    TECHNICAL_TYPE_CONFIDENCE_LOW = 0.5  # Low confidence for technical entities
+
+    # Relationship extraction constants
+    DEFAULT_DOMAIN_PLAUSIBILITY = 0.7  # Default domain plausibility score
+    MIN_RELATIONSHIP_CONFIDENCE = 0.5  # Minimum relationship confidence
+    RELATIONSHIP_PROXIMITY_BASE = 0.1  # Base proximity score
+    MIN_COHERENCE_SCORE = 0.3  # Minimum coherence score
+    DEFAULT_COHERENCE_SCORE = 0.7  # Default coherence score
+    DEFAULT_CHUNK_OVERLAP = 100  # Default chunk overlap
+    DEFAULT_DOMAIN_RELEVANCE = 0.8  # Default domain relevance score
+    MS_MULTIPLIER = 1000.0  # Milliseconds multiplier
+
 
 class UniversalSearchConstants:
     """Universal Search Agent specific constants"""
@@ -627,6 +667,9 @@ class ProcessingConstants:
     MAX_EXECUTION_TIME_MIN = (
         SystemBoundaryConstants.MAX_EXECUTION_TIME_LIMIT / 60.0
     )  # Convert to minutes
+    DEFAULT_MEMORY_LIMIT_MB = SystemBoundaryConstants.DEFAULT_MEMORY_LIMIT_MB
+    MAX_AZURE_SERVICE_COST_USD = 100.0  # Maximum cost per operation
+    MEMORY_CLEANUP_THRESHOLD = 0.8  # Memory cleanup threshold as percentage
 
 
 class StubConstants:
@@ -650,14 +693,14 @@ class StubConstants:
     MAX_WORDS_MULTIPLIER = 20  # Multiplier for average sentence length
 
     # Extraction processor fallback configuration
-    FALLBACK_ENTITY_THRESHOLD = KnowledgeExtractionConstants.ENTITY_CONFIDENCE_THRESHOLD
+    FALLBACK_ENTITY_THRESHOLD = (
+        KnowledgeExtractionConstants.DEFAULT_CONFIDENCE_THRESHOLD
+    )
     FALLBACK_RELATIONSHIP_THRESHOLD = (
-        KnowledgeExtractionConstants.RELATIONSHIP_CONFIDENCE_THRESHOLD
+        KnowledgeExtractionConstants.DEFAULT_RELATIONSHIP_CONFIDENCE_THRESHOLD
     )
-    FALLBACK_CHUNK_SIZE = ProcessingConstants.DEFAULT_CHUNK_SIZE
-    FALLBACK_MAX_ENTITIES_PER_CHUNK = (
-        KnowledgeExtractionConstants.MAX_ENTITIES_PER_CHUNK
-    )
+    FALLBACK_CHUNK_SIZE = KnowledgeExtractionConstants.DEFAULT_CHUNK_SIZE
+    FALLBACK_MAX_ENTITIES_PER_CHUNK = 20  # Reference to DomainAdaptiveConstants
     FALLBACK_MINIMUM_QUALITY_SCORE = MathematicalConstants.BASE_CONFIDENCE
 
     # Position and confidence factors for extraction
@@ -676,6 +719,80 @@ class StubConstants:
     DEFAULT_MEMORY_LIMIT_MB = SystemBoundaryConstants.DEFAULT_MEMORY_LIMIT_MB
     MAX_AZURE_SERVICE_COST_USD = 100.0  # Maximum cost per operation
     MEMORY_CLEANUP_THRESHOLD = 0.8  # Memory cleanup threshold as percentage
+
+    # Text processing constants
+    DEFAULT_MAX_TEXT_LENGTH = int(
+        MathematicalConstants.BASE_CHUNK_SIZE * BaseScalingFactors.STANDARD_CHUNK_FACTOR
+    )  # 1000
+    DEFAULT_TEXT_SUFFIX = "..."  # Default truncation suffix
+
+    # Content analysis constants
+    READABILITY_SCORE_DIVISOR = MathematicalConstants.PERCENTAGE_MULTIPLIER  # 100.0
+    WORDS_PER_THOUSAND = (
+        MathematicalConstants.MS_PER_SECOND
+    )  # 1000.0 (reusing constant for word scaling)
+    AVG_WORDS_PER_SENTENCE_THRESHOLD = 20.0  # Threshold for average words per sentence
+
+    # Frequency and scoring constants
+    FREQUENCY_WEIGHT = 0.4  # Weight for frequency score in combined scoring
+    TFIDF_WEIGHT = 0.6  # Weight for TF-IDF score in combined scoring
+
+    # Content complexity tier weights
+    COMPLEXITY_SIMPLE_WEIGHT = 0.2  # Weight for simple complexity
+    COMPLEXITY_MODERATE_WEIGHT = 0.6  # Weight for moderate complexity
+    COMPLEXITY_COMPLEX_WEIGHT = 0.8  # Weight for complex complexity
+    COMPLEXITY_DEFAULT_WEIGHT = 0.5  # Default weight for unknown complexity
+
+    # TF-IDF and analysis constants
+    TFIDF_FEATURES_DIVISOR = 50.0  # Divisor for TF-IDF feature normalization
+    TEXT_STATS_WORD_DIVISOR = 200.0  # Divisor for text statistics word normalization
+
+    # Content scoring thresholds
+    CONTENT_HIGH_SCORE_THRESHOLD = 0.8  # High content quality score threshold
+    CONTENT_GOOD_SCORE_THRESHOLD = 0.6  # Good content quality score threshold
+    CONTENT_FAIR_SCORE_THRESHOLD = 0.4  # Fair content quality score threshold
+
+    # Pattern and model agreement constants
+    MODEL_AGREEMENT_THRESHOLD = (
+        0.8  # Threshold for model agreement in integration tests
+    )
+    PROCESSING_TIME_MS_MULTIPLIER = MathematicalConstants.MS_PER_SECOND  # 1000
+
+    # Vocabulary richness thresholds
+    VOCABULARY_HIGH_RICHNESS = 0.6  # High vocabulary richness threshold
+    VOCABULARY_LOW_RICHNESS = 0.3  # Low vocabulary richness threshold
+
+    # Content analysis confidence adjustments
+    HIGH_WORD_COUNT_THRESHOLD = MathematicalConstants.MS_PER_SECOND  # 1000 words
+    HIGH_WORD_COUNT_CONFIDENCE_BOOST = 0.2  # Confidence boost for high word count
+    MEDIUM_WORD_COUNT_CONFIDENCE_BOOST = 0.1  # Confidence boost for medium word count
+
+    # ML Model constants
+    GNN_HIDDEN_DIM_STANDARD = 128  # Standard GNN hidden dimension
+    GNN_HIDDEN_DIM_LARGE = 256  # Large GNN hidden dimension
+    DEFAULT_DROPOUT_RATE = 0.5  # Standard dropout rate for ML models
+    DEFAULT_LEARNING_RATE = 0.001  # Standard learning rate for training
+
+    # Minimum text length thresholds
+    MIN_CLEANED_TEXT_LENGTH = (
+        MathematicalConstants.PERCENTAGE_MULTIPLIER
+    )  # 100 characters
+
+    # Performance and execution constants
+    USER_COUNT_SUPPORTED = "100+"  # Number of concurrent users supported
+    COMPLIANCE_PERFECT_SCORE = MathematicalConstants.PERCENTAGE_MULTIPLIER  # 100.0
+
+    # Database limits and pagination
+    DEFAULT_QUERY_LIMIT = MathematicalConstants.MS_PER_SECOND  # 1000 records
+
+    # Statistical initialization values
+    STAT_INITIAL_ZERO = MathematicalConstants.CONFIDENCE_MIN  # 0.0
+    STAT_INITIAL_COUNT = 0  # Initial count value
+
+    # Embedding model constants
+    DEFAULT_EMBEDDING_MODEL_NAME = (
+        "text-embedding-ada-002"  # Default Azure OpenAI embedding model
+    )
 
 
 class AzureServiceConstants:

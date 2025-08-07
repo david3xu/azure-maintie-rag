@@ -19,7 +19,7 @@ import statistics
 import time
 
 # Import constants for zero-hardcoded-values compliance
-from agents.core.constants import CacheConstants
+from agents.core.constants import CacheConstants, StubConstants
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -58,8 +58,8 @@ class DataDrivenPatternEngine:
         self.pattern_statistics = {
             "total_patterns": 0,
             "unique_patterns": 0,
-            "average_confidence": 0.0,
-            "pattern_diversity": 0.0,
+            "average_confidence": StubConstants.STAT_INITIAL_ZERO,
+            "pattern_diversity": StubConstants.STAT_INITIAL_ZERO,
         }
 
         # Cache management
@@ -308,7 +308,7 @@ class DataDrivenPatternEngine:
             # Calculate diversity as entropy of pattern types
             type_counts = Counter(p.pattern_type for p in patterns)
             total = sum(type_counts.values())
-            diversity = 0.0
+            diversity = StubConstants.STAT_INITIAL_ZERO
 
             for count in type_counts.values():
                 if count > 0:

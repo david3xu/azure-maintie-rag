@@ -11,6 +11,13 @@ venv/
 .env
 .venv/
 
+# Large ML artifacts and libraries
+*.so
+*.so.*
+**/lib/lib*.so*
+**/.venv/**
+**/venv/**
+
 # Environment variables
 .env
 .env.*
