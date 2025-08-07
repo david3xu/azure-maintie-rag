@@ -38,9 +38,9 @@ class AzureMLClient:
 
     def __init__(self):
         """Initialize Azure ML client"""
-        from azure.identity import DefaultAzureCredential
+        from infrastructure.azure_auth_utils import get_azure_credential
 
-        credential = DefaultAzureCredential()
+        credential = get_azure_credential()
         self.ml_client = MLClient(
             credential=credential,
             subscription_id=azure_settings.azure_subscription_id,

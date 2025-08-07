@@ -30,6 +30,8 @@ from agents.domain_intelligence.agent import domain_intelligence_agent
 from infrastructure.prompt_workflows.universal_prompt_generator import (
     UniversalPromptGenerator,
 )
+from infrastructure.azure_ml.classification_client import SimpleAzureClassifier
+from infrastructure.prompt_workflows.quality_assessor import assess_extraction_quality
 
 
 class ExtractionResult(BaseModel):
@@ -41,6 +43,7 @@ class ExtractionResult(BaseModel):
     processing_signature: str = Field(description="Processing configuration used")
     graph_nodes_created: int = Field(default=0, ge=0)
     graph_edges_created: int = Field(default=0, ge=0)
+    quality_assessment: Optional[Dict[str, Any]] = Field(default=None, description="Automated quality assessment")
 
 
 class GraphOperationResult(BaseModel):
@@ -158,11 +161,41 @@ async def extract_entities_and_relationships(
         signature_parts.append(domain_analysis.content_signature)
     processing_signature = "_".join(signature_parts)
 
+    # Perform quality assessment
+    quality_assessment = None
+    try:
+        entities_dict = [
+            {
+                "entity_type": e.type,
+                "confidence": e.confidence,
+                "text": e.text,
+            }
+            for e in entities
+        ]
+        relationships_dict = [
+            {
+                "relation_type": r.relationship_type,
+                "confidence": r.confidence,
+                "source": r.source_entity,
+                "target": r.target_entity,
+            }
+            for r in relationships
+        ]
+        
+        quality_assessment = assess_extraction_quality(
+            entities_dict, relationships_dict, [content[:1000]]  # Use first 1k chars for assessment
+        )
+        logger.info(f"Quality assessment: {quality_assessment.get('quality_tier', 'unknown')} "
+                   f"(score: {quality_assessment.get('overall_score', 0.0):.3f})")
+    except Exception as e:
+        logger.warning(f"Quality assessment failed: {e}")
+
     return ExtractionResult(
         entities=entities,
         relationships=relationships,
         extraction_confidence=extraction_confidence,
         processing_signature=processing_signature,
+        quality_assessment=quality_assessment,
     )
 
 
@@ -312,9 +345,12 @@ async def _extract_relationships_with_prompt_workflow(
 async def _extract_entities_simple_approach(
     content: str, max_entities: int, confidence_threshold: float
 ) -> List[ExtractedEntity]:
-    """Simple entity extraction without hardcoded domain patterns."""
+    """Enhanced entity extraction with classification client integration."""
     entities = []
     words = content.split()
+    
+    # Initialize classifier for better entity typing
+    classifier = SimpleAzureClassifier()
 
     # Universal pattern: Capitalized words (domain-agnostic)
     for i, word in enumerate(words):
@@ -323,20 +359,49 @@ async def _extract_entities_simple_approach(
             context_end = min(len(words), i + 4)
             context = " ".join(words[context_start:context_end])
 
-            confidence = 0.7
+            base_confidence = 0.7
             if any(indicator in context.lower() for indicator in ["the", "a", "an"]):
-                confidence += 0.1
+                base_confidence += 0.1
 
-            if confidence >= confidence_threshold:
-                entity = ExtractedEntity(
-                    text=word,
-                    type="discovered_entity",  # Domain-agnostic type
-                    confidence=confidence,
-                    context=context,
-                    start_position=i,
-                    properties={"discovery_method": "capitalization_pattern"},
-                )
-                entities.append(entity)
+            if base_confidence >= confidence_threshold:
+                try:
+                    # Use classification client for better entity typing
+                    classification_result = await classifier.classify_entity(word, context)
+                    entity_type = classification_result.entity_type
+                    classification_confidence = classification_result.confidence
+                    
+                    # Combine base confidence with classification confidence
+                    final_confidence = (base_confidence + classification_confidence) / 2.0
+                    
+                    entity = ExtractedEntity(
+                        text=word,
+                        type=entity_type,  # Use classifier result instead of generic type
+                        confidence=final_confidence,
+                        context=context,
+                        start_position=i,
+                        properties={
+                            "discovery_method": "capitalization_pattern_with_classification",
+                            "classification_metadata": classification_result.metadata,
+                            "base_confidence": base_confidence,
+                            "classification_confidence": classification_confidence,
+                        },
+                    )
+                    entities.append(entity)
+                
+                except Exception as e:
+                    # Fallback to original approach if classification fails
+                    entity = ExtractedEntity(
+                        text=word,
+                        type="discovered_entity",  # Fallback type
+                        confidence=base_confidence,
+                        context=context,
+                        start_position=i,
+                        properties={
+                            "discovery_method": "capitalization_pattern_fallback",
+                            "classification_error": str(e)
+                        },
+                    )
+                    entities.append(entity)
 
                 if len(entities) >= max_entities:
                     break
@@ -350,10 +415,13 @@ async def _extract_relationships_simple_approach(
     max_relationships: int,
     confidence_threshold: float,
 ) -> List[ExtractedRelationship]:
-    """Simple relationship extraction without hardcoded patterns."""
+    """Enhanced relationship extraction with classification client integration."""
     relationships = []
+    
+    # Initialize classifier for better relationship typing
+    classifier = SimpleAzureClassifier()
 
-    # Use basic proximity and co-occurrence instead of hardcoded patterns
+    # Use proximity and co-occurrence with classification enhancement
     for i, entity1 in enumerate(entities):
         for j, entity2 in enumerate(entities[i + 1 :], i + 1):
             # Check if entities appear near each other in content
@@ -363,21 +431,57 @@ async def _extract_relationships_simple_approach(
             if entity1_pos != -1 and entity2_pos != -1:
                 distance = abs(entity2_pos - entity1_pos)
                 if distance < 100:  # Entities within 100 characters
-                    confidence = max(0.5, 1.0 - distance / 200.0)
+                    base_confidence = max(0.5, 1.0 - distance / 200.0)
 
-                    if confidence >= confidence_threshold:
-                        relationship = ExtractedRelationship(
-                            source_entity=entity1.text,
-                            target_entity=entity2.text,
-                            relationship_type="co_occurs_with",
-                            confidence=confidence,
-                            context=f"Entities appear within {distance} characters",
-                            properties={
-                                "discovery_method": "proximity",
-                                "distance": distance,
-                            },
-                        )
-                        relationships.append(relationship)
+                    if base_confidence >= confidence_threshold:
+                        # Extract context around both entities for classification
+                        start_pos = min(entity1_pos, entity2_pos)
+                        end_pos = max(entity1_pos + len(entity1.text), 
+                                     entity2_pos + len(entity2.text))
+                        relation_context = content[max(0, start_pos-50):end_pos+50]
+                        
+                        try:
+                            # Use classification client for better relationship typing
+                            classification_result = await classifier.classify_relation(
+                                entity1.text, entity2.text, relation_context
+                            )
+                            relation_type = classification_result.entity_type  # relation type stored in entity_type field
+                            classification_confidence = classification_result.confidence
+                            
+                            # Combine base confidence with classification confidence
+                            final_confidence = (base_confidence + classification_confidence) / 2.0
+                            
+                            relationship = ExtractedRelationship(
+                                source_entity=entity1.text,
+                                target_entity=entity2.text,
+                                relationship_type=relation_type,  # Use classifier result
+                                confidence=final_confidence,
+                                context=relation_context,
+                                properties={
+                                    "discovery_method": "proximity_with_classification",
+                                    "distance": distance,
+                                    "classification_metadata": classification_result.metadata,
+                                    "base_confidence": base_confidence,
+                                    "classification_confidence": classification_confidence,
+                                },
+                            )
+                            relationships.append(relationship)
+                            
+                        except Exception as e:
+                            # Fallback to original approach if classification fails
+                            relationship = ExtractedRelationship(
+                                source_entity=entity1.text,
+                                target_entity=entity2.text,
+                                relationship_type="co_occurs_with",  # Fallback type
+                                confidence=base_confidence,
+                                context=f"Entities appear within {distance} characters",
+                                properties={
+                                    "discovery_method": "proximity_fallback",
+                                    "distance": distance,
+                                    "classification_error": str(e),
+                                },
+                            )
+                            relationships.append(relationship)
 
                         if len(relationships) >= max_relationships:
                             return relationships

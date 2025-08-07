@@ -78,10 +78,10 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             account_name = self.endpoint.replace("https://", "").split(".")[0]
             gremlin_endpoint = f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
 
-            # Use managed identity for authentication
-            from azure.identity import DefaultAzureCredential
+            # Use managed identity for authentication with session management
+            from infrastructure.azure_auth_utils import get_azure_credential
 
-            credential = DefaultAzureCredential()
+            credential = get_azure_credential()
             token = credential.get_token("https://cosmos.azure.com/.default")
 
             # Create simple Gremlin client
