@@ -47,7 +47,7 @@ class PromptTemplateLoader:
     def render_knowledge_extraction_prompt(
         self,
         text_content: str,
-        domain_name: str = "maintenance",
+        domain_name: str = "universal",  # Domain-agnostic default
         extraction_focus: str = None,
     ) -> str:
         """
@@ -135,7 +135,7 @@ prompt_loader = PromptTemplateLoader()
 
 
 def load_knowledge_extraction_prompt(
-    text_content: str, domain: str = "maintenance"
+    text_content: str, domain: str = "universal"  # Domain-agnostic default
 ) -> str:
     """Convenience function to load knowledge extraction prompt"""
     return prompt_loader.render_knowledge_extraction_prompt(text_content, domain)
@@ -156,6 +156,6 @@ if __name__ == "__main__":
 
     print("\nTesting knowledge extraction prompt:")
     test_prompt = loader.render_knowledge_extraction_prompt(
-        text_content="air conditioner thermostat not working", domain_name="maintenance"
+        text_content="system component analysis and optimization", domain_name="universal"
     )
     print(test_prompt[:200] + "..." if len(test_prompt) > 200 else test_prompt)

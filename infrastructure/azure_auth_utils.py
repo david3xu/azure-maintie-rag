@@ -1,44 +1,75 @@
 """
-Azure Authentication Utilities
-=============================
+Azure Authentication Utilities with Session Management
+======================================================
 
 Centralized Azure authentication to eliminate duplicate credential initialization
 patterns found across 12+ files in the infrastructure layer.
+Enhanced with auto-refresh session management for production reliability.
 """
 
 import logging
 import os
+import time
 from typing import Optional
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+from azure.core.exceptions import ClientAuthenticationError
 
 logger = logging.getLogger(__name__)
 
-# Global credential instance for reuse
+# Global credential instance and session tracking for reuse
 _azure_credential: Optional[DefaultAzureCredential] = None
+_last_refresh_time: float = 0
+_refresh_threshold_minutes: int = 50  # Refresh before 1-hour Azure token expiry
 
 
 def get_azure_credential() -> DefaultAzureCredential:
     """
-    Get centralized Azure credential instance.
+    Get centralized Azure credential instance with auto-refresh session management.
 
     Uses singleton pattern to avoid recreating DefaultAzureCredential
-    multiple times across different Azure service clients.
+    multiple times across different Azure service clients. Automatically
+    refreshes credentials before expiry for production reliability.
 
     Returns:
-        DefaultAzureCredential: Configured Azure credential
+        DefaultAzureCredential: Configured Azure credential with session management
     """
-    global _azure_credential
+    global _azure_credential, _last_refresh_time
 
-    if _azure_credential is None:
-        try:
-            # Create credential with managed identity preference
-            _azure_credential = DefaultAzureCredential()
-            logger.info("Azure credential initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize Azure credential: {e}")
-            raise
+    current_time = time.time()
+    time_since_refresh = (current_time - _last_refresh_time) / 60  # Convert to minutes
+
+    # Refresh if credential doesn't exist or is approaching expiry
+    if not _azure_credential or time_since_refresh > _refresh_threshold_minutes:
+        _refresh_credential()
 
     return _azure_credential
+
+
+def _refresh_credential():
+    """
+    Refresh Azure credential with managed identity fallback pattern.
+    
+    Integrated from AzureSessionManager for production reliability.
+    """
+    global _azure_credential, _last_refresh_time
+    
+    try:
+        # Try managed identity first (for Azure environments)
+        _azure_credential = ManagedIdentityCredential()
+        logger.info("Azure credential refreshed with Managed Identity")
+    except Exception:
+        try:
+            # Fallback to default credential chain
+            _azure_credential = DefaultAzureCredential()
+            logger.info("Azure credential refreshed with Default Credential")
+        except Exception as e:
+            logger.error(f"Credential refresh failed: {e}")
+            raise ClientAuthenticationError(
+                f"Failed to refresh Azure credentials: {e}"
+            )
+
+    _last_refresh_time = time.time()
+    logger.debug(f"Azure credential refreshed at {_last_refresh_time}")
 
 
 def get_azure_credential_with_fallback() -> DefaultAzureCredential:
@@ -72,6 +103,47 @@ def reset_azure_credential():
 
     Useful for testing or when credential needs to be refreshed.
     """
-    global _azure_credential
+    global _azure_credential, _last_refresh_time
     _azure_credential = None
+    _last_refresh_time = 0
     logger.info("Azure credential reset")
+
+
+def get_session_metadata() -> dict:
+    """
+    Get current session metadata for monitoring and debugging.
+    
+    Returns:
+        dict: Session information including refresh time and credential type
+    """
+    global _azure_credential, _last_refresh_time
+    
+    return {
+        "credential_initialized": _azure_credential is not None,
+        "last_refresh_time": _last_refresh_time,
+        "time_since_refresh_minutes": (time.time() - _last_refresh_time) / 60 if _last_refresh_time > 0 else 0,
+        "credential_type": type(_azure_credential).__name__ if _azure_credential else None,
+        "refresh_threshold_minutes": _refresh_threshold_minutes,
+    }
+
+
+def configure_refresh_threshold(minutes: int):
+    """
+    Configure the credential refresh threshold.
+    
+    Args:
+        minutes: Number of minutes before credential expiry to refresh
+    """
+    global _refresh_threshold_minutes
+    _refresh_threshold_minutes = minutes
+    logger.info(f"Azure credential refresh threshold set to {minutes} minutes")
+
+
+def force_credential_refresh():
+    """
+    Force immediate credential refresh regardless of timing.
+    
+    Useful for error recovery scenarios.
+    """
+    logger.info("Forcing Azure credential refresh")
+    _refresh_credential()

@@ -20,6 +20,7 @@ from agents.domain_intelligence.agent import run_domain_analysis
 from agents.knowledge_extraction.agent import run_knowledge_extraction
 from agents.orchestrator import UniversalOrchestrator
 from agents.core.universal_deps import get_universal_deps
+from infrastructure.utilities.azure_cost_tracker import AzureServiceCostTracker
 
 
 async def knowledge_extraction_pipeline(
@@ -40,8 +41,12 @@ async def knowledge_extraction_pipeline(
         "session_id": session_id,
         "data_directory": data_directory,
         "stages": [],
+        "cost_tracking": {"enabled": True, "total_cost": 0.0, "breakdown": {}},
         "overall_status": "in_progress"
     }
+    
+    # Initialize cost tracker
+    cost_tracker = AzureServiceCostTracker()
     
     start_time = time.time()
 

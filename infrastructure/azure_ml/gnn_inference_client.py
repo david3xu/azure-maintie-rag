@@ -9,8 +9,8 @@ import asyncio
 from typing import Dict, Any, List, Optional
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import OnlineEndpoint, OnlineDeployment
-from azure.identity import DefaultAzureCredential
 from config.settings import azure_settings
+from infrastructure.azure_auth_utils import get_azure_credential
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class GNNInferenceClient:
 
     def __init__(self):
         """Initialize GNN inference client with real Azure ML endpoints."""
-        self.credential = DefaultAzureCredential()
+        self.credential = get_azure_credential()  # Use centralized session-managed credential
         self.ml_client = None
         self.deployment_name = None
         self.inference_cache = {}

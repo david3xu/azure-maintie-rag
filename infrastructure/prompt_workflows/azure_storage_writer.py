@@ -27,7 +27,7 @@ async def store_knowledge_graph(
     entities: List[Dict[str, Any]],
     relations: List[Dict[str, Any]],
     summary: Dict[str, Any],
-    domain_name: str = "general",
+    domain_name: str = "universal"  # Domain-agnostic default,
 ) -> Dict[str, Any]:
     """
     Store universal knowledge graph in Azure services
@@ -184,7 +184,7 @@ def main(
     entities: List[Dict[str, Any]],
     relations: List[Dict[str, Any]],
     summary: Dict[str, Any],
-    domain_name: str = "general",
+    domain_name: str = "universal"  # Domain-agnostic default,
 ) -> Dict[str, Any]:
     """
     Main function called by Azure Prompt Flow

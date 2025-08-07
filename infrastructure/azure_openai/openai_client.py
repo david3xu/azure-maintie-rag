@@ -74,9 +74,10 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
 
         if self.use_managed_identity:
             # Use managed identity for azd deployments
-            from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+            from azure.identity import get_bearer_token_provider
+            from infrastructure.azure_auth_utils import get_azure_credential
 
-            credential = DefaultAzureCredential()
+            credential = get_azure_credential()
             token_provider = get_bearer_token_provider(
                 credential, "https://cognitiveservices.azure.com/.default"
             )
@@ -98,7 +99,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         """Ensure client is initialized with rate limiter"""
         super().ensure_initialized()
         if not hasattr(self, "rate_limiter"):
-            self.rate_limiter = SimpleRateLimiter(domain="general")
+            self.rate_limiter = SimpleRateLimiter(domain="universal")  # Domain-agnostic approach
 
     async def test_connection(self) -> Dict[str, Any]:
         """Test Azure OpenAI connection (CODING_STANDARDS: Clean implementation)"""
@@ -131,7 +132,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
     # === KNOWLEDGE EXTRACTION ===
 
     async def extract_knowledge(
-        self, texts: List[str], domain: str = "general"
+        self, texts: List[str], domain: str = "universal"  # Domain-agnostic default
     ) -> Dict[str, Any]:
         """Extract entities and relationships from texts - REQUIRES Azure OpenAI"""
         self.ensure_initialized()
@@ -349,7 +350,7 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
     # === TEXT COMPLETION ===
 
     async def get_completion(
-        self, prompt: str, domain: str = "general", model: str = None, **kwargs
+        self, prompt: str, domain: str = "universal", model: str = None, **kwargs  # Domain-agnostic default
     ) -> str:
         """Get text completion"""
         self.ensure_initialized()
@@ -391,7 +392,7 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
         return text
 
     async def _chunk_text(
-        self, text: str, domain: str = "general", chunk_size: int = None
+        self, text: str, domain: str = "universal", chunk_size: int = None  # Domain-agnostic default
     ) -> List[str]:
         """Split text into chunks"""
         if chunk_size is None:
@@ -530,7 +531,7 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
 class SimpleRateLimiter:
     """Simple rate limiter for Azure OpenAI"""
 
-    def __init__(self, requests_per_minute: int = None, domain: str = "general"):
+    def __init__(self, requests_per_minute: int = None, domain: str = "universal"):  # Domain-agnostic default
         if requests_per_minute is None:
             requests_per_minute = 50  # Default fallback
         self.requests_per_minute = requests_per_minute

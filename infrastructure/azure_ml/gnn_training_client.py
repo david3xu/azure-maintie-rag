@@ -16,8 +16,8 @@ import time
 from typing import Dict, Any, List, Optional, Tuple
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import Job, Environment, Command
-from azure.identity import DefaultAzureCredential
 from config.settings import azure_settings
+from infrastructure.azure_auth_utils import get_azure_credential
 from .gnn_model import UniversalGNN, UniversalGNNConfig, create_gnn_model
 
 logger = logging.getLogger(__name__)
@@ -30,8 +30,8 @@ class GNNTrainingClient:
         self, config: Optional[UniversalGNNConfig] = None, device: Optional[str] = None
     ):
         """Initialize GNN training client with Azure ML workspace and original trainer."""
-        # Azure ML setup
-        self.credential = DefaultAzureCredential()
+        # Azure ML setup with centralized session management
+        self.credential = get_azure_credential()
         self.ml_client = MLClient(
             credential=self.credential,
             subscription_id=azure_settings.azure_subscription_id,

@@ -16,6 +16,74 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 
+class ExtractionQualityOutput(BaseModel):
+    """PydanticAI quality assessment output model."""
+    
+    overall_score: float = Field(ge=0.0, le=1.0, description="Overall quality score")
+    quality_tier: str = Field(description="Quality tier classification")
+    entities_per_text: float = Field(ge=0.0, description="Average entities per text")
+    relations_per_entity: float = Field(ge=0.0, description="Average relations per entity") 
+    avg_entity_confidence: float = Field(ge=0.0, le=1.0, description="Average entity confidence")
+    avg_relation_confidence: float = Field(ge=0.0, le=1.0, description="Average relation confidence")
+
+
+def validate_extraction_quality(quality_data: Dict[str, Any]) -> ExtractionQualityOutput:
+    """
+    Universal quality validation using PydanticAI patterns.
+    
+    Replaces complex validation logic with universal quality assessment.
+    """
+    try:
+        # Calculate overall score based on universal metrics
+        entities_per_text = quality_data.get("entities_per_text", 0.0)
+        relations_per_entity = quality_data.get("relations_per_entity", 0.0)
+        avg_entity_confidence = quality_data.get("avg_entity_confidence", 0.0)
+        avg_relation_confidence = quality_data.get("avg_relation_confidence", 0.0)
+        
+        # Universal scoring algorithm (domain-agnostic)
+        extraction_density_score = min(1.0, entities_per_text / 5.0)  # Normalize to 5 entities per text
+        relationship_richness_score = min(1.0, relations_per_entity / 2.0)  # Normalize to 2 relations per entity
+        confidence_score = (avg_entity_confidence + avg_relation_confidence) / 2.0
+        
+        # Weighted overall score (universal formula)
+        overall_score = (
+            extraction_density_score * 0.3 + 
+            relationship_richness_score * 0.3 + 
+            confidence_score * 0.4
+        )
+        
+        # Determine quality tier based on score
+        if overall_score >= 0.8:
+            quality_tier = "excellent"
+        elif overall_score >= 0.6:
+            quality_tier = "good"
+        elif overall_score >= 0.4:
+            quality_tier = "acceptable" 
+        else:
+            quality_tier = "needs_improvement"
+        
+        return ExtractionQualityOutput(
+            overall_score=overall_score,
+            quality_tier=quality_tier,
+            entities_per_text=entities_per_text,
+            relations_per_entity=relations_per_entity,
+            avg_entity_confidence=avg_entity_confidence,
+            avg_relation_confidence=avg_relation_confidence,
+        )
+        
+    except Exception as e:
+        logger.error(f"Quality validation failed: {e}")
+        # Return safe fallback
+        return ExtractionQualityOutput(
+            overall_score=0.0,
+            quality_tier="validation_error",
+            entities_per_text=quality_data.get("entities_per_text", 0.0),
+            relations_per_entity=quality_data.get("relations_per_entity", 0.0),
+            avg_entity_confidence=quality_data.get("avg_entity_confidence", 0.0),
+            avg_relation_confidence=quality_data.get("avg_relation_confidence", 0.0),
+        )
+
+
 def assess_extraction_quality(
     entities: List[Dict[str, Any]],
     relations: List[Dict[str, Any]],
