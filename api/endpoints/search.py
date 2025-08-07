@@ -16,9 +16,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.universal_search.agent import UniversalSearchAgent
-from agents.core.azure_service_container import ConsolidatedAzureServices
-from infrastructure.constants import SearchConstants
+from agents.universal_search.agent import agent as universal_search_agent, SearchDeps
+from agents.orchestrator import UniversalOrchestrator
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["search"])

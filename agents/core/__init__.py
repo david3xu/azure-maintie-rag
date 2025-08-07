@@ -1,53 +1,13 @@
-"""
-Core Services - Unified foundational services for agent architecture
+"""Universal core utilities and models for zero-hardcoded-values architecture"""
 
-This module provides consolidated core services following clean architecture principles:
-- ConsolidatedAzureServices: Unified Azure integration
-- UnifiedCacheManager: High-performance caching with pattern indexing
-- UnifiedMemoryManager: Standardized memory management
-- UnifiedErrorHandler: Centralized error handling
-- PydanticAI Provider: Enterprise PydanticAI integration with managed identity
-
-All services follow dependency injection patterns and layer boundary rules.
-"""
-
-from .azure_service_container import (
-    ConsolidatedAzureServices,
-    create_azure_service_container,
-)
-from .cache_manager import UnifiedCacheManager, cached_operation, get_cache_manager
-from .error_handler import UnifiedErrorHandler
-
-# memory_manager moved to agents.shared
-from .pydantic_ai_provider import (
-    create_azure_pydantic_provider,
-    create_azure_pydantic_provider_async,
-    create_pydantic_agent,
-    create_pydantic_agent_async,
-    test_azure_provider_connection,
-    test_azure_provider_connection_async,
-)
-
-# Backward compatibility aliases
-AzureServiceContainer = ConsolidatedAzureServices
-DomainCache = UnifiedCacheManager
+from .universal_models import *
+from .constants import *
 
 __all__ = [
-    "ConsolidatedAzureServices",
-    "create_azure_service_container",
-    "UnifiedCacheManager",
-    "get_cache_manager",
-    "cached_operation",
-    # UnifiedMemoryManager moved to agents.shared
-    "UnifiedErrorHandler",
-    # PydanticAI Integration
-    "create_azure_pydantic_provider",
-    "create_azure_pydantic_provider_async",
-    "create_pydantic_agent",
-    "create_pydantic_agent_async",
-    "test_azure_provider_connection",
-    "test_azure_provider_connection_async",
-    # Backward compatibility
-    "AzureServiceContainer",
-    "DomainCache",
+    "UniversalDomainCharacteristics",
+    "UniversalProcessingConfiguration", 
+    "UniversalDomainAnalysis",
+    "UniversalDomainDeps",
+    "UniversalOrchestrationResult",
+    "AgentHandoffData"
 ]
