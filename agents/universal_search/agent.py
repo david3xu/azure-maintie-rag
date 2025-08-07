@@ -25,23 +25,23 @@ from typing import Any, Dict, List, Optional
 
 from pydantic_ai import Agent, RunContext
 
-# Clean configuration imports (CODING_STANDARDS compliant)
-from config.centralized_config import get_model_config, get_search_config
+from agents.core.constants import CacheConstants, StubConstants
 
 # Import models from centralized data models
-from agents.core.data_models import (
-    # Legacy models (maintained for compatibility)
+from agents.core.data_models import (  # Legacy models (maintained for compatibility); NEW: Enhanced models with PydanticAI integration and dynamic configuration; EnhancedUniversalSearchContract deleted - use UniversalSearchContract; PydanticAI Output Model
+    ConfigurationResolver,
+    ConsolidatedAzureConfiguration,
+    ConsolidatedSearchConfiguration,
+    PydanticAIContextualModel,
     QueryRequest,
     SearchResponse,
-    UniversalSearchDeps,
     TriModalSearchResult,
-    # NEW: Enhanced models with PydanticAI integration and dynamic configuration
-    ConsolidatedSearchConfiguration,
-    ConsolidatedAzureConfiguration,
-    # EnhancedUniversalSearchContract deleted - use UniversalSearchContract
-    ConfigurationResolver,
-    PydanticAIContextualModel,
+    UniversalSearchDeps,
+    UniversalSearchOutput,
 )
+
+# Clean configuration imports (CODING_STANDARDS compliant)
+from config.centralized_config import get_model_config, get_search_config
 
 
 # Backward compatibility for gradual migration
@@ -89,6 +89,7 @@ def get_consolidated_orchestrator() -> ConsolidatedSearchOrchestrator:
 def _create_agent_with_consolidated_orchestrator() -> Agent:
     """Create Universal Search Agent with consolidated orchestrator integration"""
     import os
+
     from pydantic_ai.models.openai import OpenAIModel
     from pydantic_ai.providers.azure import AzureProvider
 
@@ -123,6 +124,8 @@ def _create_agent_with_consolidated_orchestrator() -> Agent:
         agent = Agent(
             azure_model,
             deps_type=UniversalSearchDeps,
+            output_type=UniversalSearchOutput,  # ✅ PydanticAI structured output
+            instrument=True,  # ✅ Enable instrumentation for monitoring
             name="universal-search-agent",
             system_prompt=(
                 "You are the Universal Search Orchestrator using consolidated tri-modal search processing. "
@@ -133,6 +136,14 @@ def _create_agent_with_consolidated_orchestrator() -> Agent:
                 "4. Sub-3-second response times through consolidated processing and caching"
                 "5. Dynamic search type selection based on query characteristics"
                 "You work with centralized configuration and provide enterprise-grade search capabilities."
+                ""
+                "IMPORTANT: Always return structured output as UniversalSearchOutput with:"
+                "- search_results: list of tri-modal search results with confidence scores"
+                "- modality_results: individual results from vector, graph, and GNN searches"
+                "- synthesis_confidence: overall result synthesis confidence (range from ConfidenceConstants)"
+                "- search_strategy: applied search strategy and modality selection"
+                "- performance_metrics: execution times and performance data"
+                "- metadata: search metadata and execution context"
             ),
         )
 
@@ -229,13 +240,13 @@ async def execute_universal_search(
                 synthesis_score=CacheConstants.ZERO_FLOAT,
                 execution_time=execution_time,
                 modalities_executed=[],
-                vector_execution_time=0.0,
-                graph_execution_time=0.0,
-                gnn_execution_time=0.0,
+                vector_execution_time=StubConstants.STAT_INITIAL_ZERO,
+                graph_execution_time=StubConstants.STAT_INITIAL_ZERO,
+                gnn_execution_time=StubConstants.STAT_INITIAL_ZERO,
                 total_results=0,
                 high_confidence_results=0,
-                average_confidence=0.0,
-                cross_modal_agreement=0.0,
+                average_confidence=StubConstants.STAT_INITIAL_ZERO,
+                cross_modal_agreement=StubConstants.STAT_INITIAL_ZERO,
             ),
             execution_time=execution_time,
             error=str(e),

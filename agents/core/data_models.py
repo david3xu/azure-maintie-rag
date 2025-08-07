@@ -20,38 +20,38 @@ Categories:
 - Azure Service Models
 """
 
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Literal
-from dataclasses import dataclass, field
 
-from pydantic import BaseModel, Field, validator, computed_field
+# Import centralized configuration for dynamic value resolution
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, Field, computed_field, validator
 from pydantic_ai import RunContext
 
 # Note: PydanticAI output_validator is used as a method decorator on Agent instances, not imported directly
 
-# Import centralized configuration for dynamic value resolution
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from config.centralized_config import (
-        SystemConfiguration,
         ExtractionConfiguration,
         SearchConfiguration,
+        SystemConfiguration,
     )
 
 # Import centralized constants
 from agents.core.constants import (
-    StatisticalConstants,
-    KnowledgeExtractionConstants,
-    UniversalSearchConstants,
-    PerformanceAdaptiveConstants,
-    WorkflowConstants,
-    InfrastructureConstants,
     DomainIntelligenceConstants,
     ErrorHandlingCoordinatedConstants,
     FileSystemConstants,
+    InfrastructureConstants,
+    KnowledgeExtractionConstants,
+    PerformanceAdaptiveConstants,
+    StatisticalConstants,
+    UniversalSearchConstants,
+    WorkflowConstants,
 )
 
 # =============================================================================
@@ -2969,6 +2969,43 @@ class KnowledgeExtractionResult(PydanticAIContextualModel):
 
 
 # =============================================================================
+# 7.2. KNOWLEDGE EXTRACTION STRATEGY MODELS (from processors/unified_extraction_processor.py)
+# =============================================================================
+
+
+class EntityExtractionResult(BaseModel):
+    """
+    Result from entity extraction strategy
+
+    Centralized from agents/knowledge_extraction/processors/unified_extraction_processor.py
+    to eliminate scattered data model definitions.
+    """
+
+    entities: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Extracted entities with metadata"
+    )
+    confidence: float = Field(
+        default=0.0, ge=0.0, le=1.0, description="Overall extraction confidence"
+    )
+
+
+class RelationshipExtractionResult(BaseModel):
+    """
+    Result from relationship extraction strategy
+
+    Centralized from agents/knowledge_extraction/processors/unified_extraction_processor.py
+    to eliminate scattered data model definitions.
+    """
+
+    relationships: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Extracted relationships with metadata"
+    )
+    confidence: float = Field(
+        default=0.0, ge=0.0, le=1.0, description="Overall extraction confidence"
+    )
+
+
+# =============================================================================
 # 8. DOMAIN INTELLIGENCE ADDITIONAL MODELS (from analyzers/unified_content_analyzer.py)
 # =============================================================================
 
@@ -3697,6 +3734,133 @@ class ModalityResult(PydanticAIContextualModel):
 
 
 # =============================================================================
+# 13. PYDANTIC AI AGENT OUTPUT MODELS
+# =============================================================================
+
+
+class DomainAnalysisOutput(PydanticAIContextualModel):
+    """Structured output model for Domain Intelligence Agent"""
+
+    domain_classification: str = Field(
+        ..., description="Detected domain classification"
+    )
+    confidence_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Classification confidence"
+    )
+    generated_config: Dict[str, Any] = Field(
+        default_factory=dict, description="Generated domain configuration"
+    )
+    processing_recommendations: List[str] = Field(
+        default_factory=list, description="Processing recommendations"
+    )
+    domain_patterns: List[str] = Field(
+        default_factory=list, description="Identified domain patterns"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Analysis metadata"
+    )
+
+    @computed_field
+    @property
+    def run_context_data(self) -> Dict[str, Any]:
+        """Provide RunContext data for PydanticAI domain analysis operations"""
+        return {
+            "domain_analysis": {
+                "classification": {
+                    "domain": self.domain_classification,
+                    "confidence": self.confidence_score,
+                    "patterns_found": len(self.domain_patterns),
+                },
+                "configuration": {
+                    "config_keys": list(self.generated_config.keys()),
+                    "recommendations_count": len(self.processing_recommendations),
+                },
+                "metadata": self.metadata,
+            }
+        }
+
+
+class KnowledgeExtractionOutput(PydanticAIContextualModel):
+    """Structured output model for Knowledge Extraction Agent"""
+
+    entities: List[ValidatedEntity] = Field(
+        default_factory=list, description="Extracted and validated entities"
+    )
+    relationships: List[ValidatedRelationship] = Field(
+        default_factory=list, description="Extracted and validated relationships"
+    )
+    extraction_confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Overall extraction confidence"
+    )
+    processing_stats: Dict[str, Any] = Field(
+        default_factory=dict, description="Processing statistics"
+    )
+    validation_results: Dict[str, Any] = Field(
+        default_factory=dict, description="Validation results"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Extraction metadata"
+    )
+
+    @computed_field
+    @property
+    def run_context_data(self) -> Dict[str, Any]:
+        """Provide RunContext data for PydanticAI knowledge extraction operations"""
+        return {
+            "knowledge_extraction": {
+                "results": {
+                    "entities_count": len(self.entities),
+                    "relationships_count": len(self.relationships),
+                    "extraction_confidence": self.extraction_confidence,
+                },
+                "processing": self.processing_stats,
+                "validation": self.validation_results,
+                "metadata": self.metadata,
+            }
+        }
+
+
+class UniversalSearchOutput(PydanticAIContextualModel):
+    """Structured output model for Universal Search Agent"""
+
+    search_results: List[SearchResult] = Field(
+        default_factory=list, description="Tri-modal search results"
+    )
+    modality_results: Dict[str, ModalityResult] = Field(
+        default_factory=dict, description="Results from individual modalities"
+    )
+    synthesis_confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Result synthesis confidence"
+    )
+    search_strategy: Dict[str, Any] = Field(
+        default_factory=dict, description="Applied search strategy"
+    )
+    performance_metrics: Dict[str, float] = Field(
+        default_factory=dict, description="Performance metrics"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Search metadata"
+    )
+
+    @computed_field
+    @property
+    def run_context_data(self) -> Dict[str, Any]:
+        """Provide RunContext data for PydanticAI universal search operations"""
+        return {
+            "universal_search": {
+                "results": {
+                    "total_results": len(self.search_results),
+                    "modalities_used": list(self.modality_results.keys()),
+                    "synthesis_confidence": self.synthesis_confidence,
+                },
+                "strategy": self.search_strategy,
+                "performance": self.performance_metrics,
+                "metadata": self.metadata,
+            }
+        }
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -3827,6 +3991,8 @@ __all__ = [
     # Knowledge Extraction Models
     "ValidationResult",
     "KnowledgeExtractionResult",
+    "EntityExtractionResult",
+    "RelationshipExtractionResult",
     # Domain Intelligence Additional Models
     "DomainAnalysisResult",
     "DomainIntelligenceConfig",
@@ -3843,6 +4009,10 @@ __all__ = [
     "CompleteDomainConfig",
     # Universal Search Models
     "ModalityResult",
+    # PydanticAI Agent Output Models
+    "DomainAnalysisOutput",
+    "KnowledgeExtractionOutput",
+    "UniversalSearchOutput",
     # PydanticAI Output Validator Functions
     "validate_extraction_quality",
     "validate_entity_extraction",

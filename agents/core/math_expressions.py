@@ -7,6 +7,8 @@ the agents directory. Eliminates hardcoded mathematical values in calculations.
 Purpose: Replace all hardcoded mathematical constants and expressions.
 """
 
+from typing import List, Optional
+
 # =============================================================================
 # MATHEMATICAL EXPRESSION CONSTANTS
 # =============================================================================
@@ -126,7 +128,7 @@ class MathExpressions:
 
     @staticmethod
     def calculate_weighted_confidence(
-        individual_scores: list, weights: list = None
+        individual_scores: List[float], weights: Optional[List[float]] = None
     ) -> float:
         """Calculate weighted confidence score with boundary constraints"""
         if not individual_scores:
@@ -154,7 +156,9 @@ class MathExpressions:
         return sum(scores) / len(scores) if scores else 0.0
 
     @staticmethod
-    def boost_confidence(base_confidence: float, multiplier: float = None) -> float:
+    def boost_confidence(
+        base_confidence: float, multiplier: Optional[float] = None
+    ) -> float:
         """Boost confidence with multiplier, capped at 1.0"""
         multiplier = multiplier or MATH.CONFIDENCE_BOOST_MULTIPLIER
         return min(1.0, base_confidence * multiplier)
@@ -193,7 +197,9 @@ class MathExpressions:
     # =============================================================================
 
     @staticmethod
-    def calculate_chunk_overlap(chunk_size: int, overlap_ratio: float = None) -> int:
+    def calculate_chunk_overlap(
+        chunk_size: int, overlap_ratio: Optional[float] = None
+    ) -> int:
         """Calculate chunk overlap size"""
         ratio = overlap_ratio or MATH.CHUNK_OVERLAP_RATIO
         return max(50, int(chunk_size * ratio))

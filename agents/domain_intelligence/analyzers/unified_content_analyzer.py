@@ -9,7 +9,7 @@ Refactored to follow PydanticAI best practices with shared infrastructure:
 - Agent-focused domain intelligence without hardcoded values
 
 Architecture Benefits:
-- 600 lines (from 1,236) - 51% reduction through shared utilities
+- Significant reduction through shared utilities
 - Clean separation between domain intelligence and statistical utilities
 - Enhanced PydanticAI compliance with output validators
 - Cross-agent statistical utility sharing
@@ -43,7 +43,7 @@ from agents.shared.confidence_calculator import (
 )
 
 # Import centralized configuration
-from agents.core.constants import ContentAnalysisConstants
+from agents.core.constants import ContentAnalysisConstants, StubConstants
 
 # Import PydanticAI validators for domain intelligence validation
 from agents.core.data_models import (
@@ -125,7 +125,7 @@ class UnifiedContentAnalyzer:
         # Performance tracking
         self.analysis_stats = {
             "total_analyses": 0,
-            "avg_processing_time": 0.0,
+            "avg_processing_time": StubConstants.STAT_INITIAL_ZERO,
             "successful_analyses": 0,
         }
 
@@ -202,7 +202,8 @@ class UnifiedContentAnalyzer:
 
             if (
                 self.config.enable_advanced_analytics
-                and len(cleaning_result.cleaned_text) > 100
+                and len(cleaning_result.cleaned_text)
+                > StubConstants.MIN_CLEANED_TEXT_LENGTH
             ):
                 try:
                     # TF-IDF analysis
@@ -262,7 +263,11 @@ class UnifiedContentAnalyzer:
                     1.0, document_complexity.statistics.lexical_diversity * 2
                 ),
                 "data_quality": cleaning_result.cleaning_quality_score,
-                "model_agreement": min(1.0, text_statistics.readability_score / 100.0),
+                "model_agreement": min(
+                    1.0,
+                    text_statistics.readability_score
+                    / StubConstants.READABILITY_SCORE_DIVISOR,
+                ),
             }
 
             analysis_confidence_score = calculate_adaptive_confidence(
@@ -278,7 +283,7 @@ class UnifiedContentAnalyzer:
                 method=self.config.confidence_method,
                 source="domain_intelligence",
                 reliability=min(
-                    1.0, text_statistics.total_words / 1000.0
+                    1.0, text_statistics.total_words / StubConstants.WORDS_PER_THOUSAND
                 ),  # Higher reliability with more text
             )
 
@@ -292,7 +297,9 @@ class UnifiedContentAnalyzer:
                 analysis_confidence.value, domain_fit_score, text_statistics
             )
 
-            processing_time_ms = (time.time() - start_time) * 1000
+            processing_time_ms = (
+                time.time() - start_time
+            ) * StubConstants.PROCESSING_TIME_MS_MULTIPLIER
 
             # Create validated result using PydanticAI patterns
             result = DomainAnalysisResult(
@@ -319,7 +326,9 @@ class UnifiedContentAnalyzer:
                         "word_count": text_statistics.total_words,
                         "vocabulary_richness": text_statistics.lexical_diversity,
                         "complexity_score": min(
-                            1.0, text_statistics.avg_words_per_sentence / 20.0
+                            1.0,
+                            text_statistics.avg_words_per_sentence
+                            / StubConstants.AVG_WORDS_PER_SENTENCE_THRESHOLD,
                         ),
                         "quality_tier": processing_quality,
                         "confidence_score": analysis_confidence.value,
@@ -417,17 +426,20 @@ class UnifiedContentAnalyzer:
         for concept in all_concepts:
             # Base frequency score
             frequency = text_lower.count(concept.lower())
-            frequency_score = min(1.0, frequency / total_words * 100)
+            frequency_score = min(
+                1.0, frequency / total_words * StubConstants.READABILITY_SCORE_DIVISOR
+            )
 
             # TF-IDF boost
-            tfidf_score = tfidf_features.get(concept, 0.0)
+            tfidf_score = tfidf_features.get(concept, StubConstants.STAT_INITIAL_ZERO)
 
             # Domain relevance boost
             domain_boost = 1.2 if concept in domain_keywords else 1.0
 
             # Combined importance score
             importance_score = (
-                frequency_score * 0.4 + tfidf_score * 0.6
+                frequency_score * StubConstants.FREQUENCY_WEIGHT
+                + tfidf_score * StubConstants.TFIDF_WEIGHT
             ) * domain_boost
 
             if importance_score > 0.01:  # Filter low-importance concepts
@@ -450,11 +462,13 @@ class UnifiedContentAnalyzer:
 
         # Complexity alignment score
         complexity_score = {
-            "simple": 0.2,
-            "moderate": 0.6,
-            "complex": 0.8,
+            "simple": StubConstants.COMPLEXITY_SIMPLE_WEIGHT,
+            "moderate": StubConstants.COMPLEXITY_MODERATE_WEIGHT,
+            "complex": StubConstants.COMPLEXITY_COMPLEX_WEIGHT,
             "technical": 1.0,
-        }.get(document_complexity.complexity_tier, 0.5)
+        }.get(
+            document_complexity.complexity_tier, StubConstants.COMPLEXITY_DEFAULT_WEIGHT
+        )
         fit_scores.append(complexity_score)
 
         # Domain pattern density score
@@ -466,7 +480,7 @@ class UnifiedContentAnalyzer:
 
         # TF-IDF feature richness
         tfidf_richness = min(
-            1.0, len(tfidf_features) / 50.0
+            1.0, len(tfidf_features) / StubConstants.TFIDF_FEATURES_DIVISOR
         )  # Normalize to 50 features
         fit_scores.append(tfidf_richness)
 
@@ -474,7 +488,11 @@ class UnifiedContentAnalyzer:
         stats_quality = min(1.0, document_complexity.statistics.lexical_diversity * 2)
         fit_scores.append(stats_quality)
 
-        return sum(fit_scores) / len(fit_scores) if fit_scores else 0.5
+        return (
+            sum(fit_scores) / len(fit_scores)
+            if fit_scores
+            else StubConstants.COMPLEXITY_DEFAULT_WEIGHT
+        )
 
     def _determine_processing_quality(
         self,
@@ -487,16 +505,16 @@ class UnifiedContentAnalyzer:
 
         # Text adequacy factor
         text_adequacy = min(
-            1.0, text_stats.total_words / 200.0
+            1.0, text_stats.total_words / StubConstants.TEXT_STATS_WORD_DIVISOR
         )  # Good quality needs 200+ words
 
         final_score = combined_score * text_adequacy
 
-        if final_score >= 0.8:
+        if final_score >= StubConstants.CONTENT_HIGH_SCORE_THRESHOLD:
             return "excellent"
-        elif final_score >= 0.6:
+        elif final_score >= StubConstants.CONTENT_GOOD_SCORE_THRESHOLD:
             return "good"
-        elif final_score >= 0.4:
+        elif final_score >= StubConstants.CONTENT_FAIR_SCORE_THRESHOLD:
             return "moderate"
         else:
             return "poor"
@@ -511,7 +529,7 @@ class UnifiedContentAnalyzer:
             **self.analysis_stats,
             "success_rate": success_rate,
             "avg_processing_time_seconds": self.analysis_stats["avg_processing_time"]
-            / 1000.0,
+            / StubConstants.PROCESSING_TIME_MS_MULTIPLIER,
         }
 
 

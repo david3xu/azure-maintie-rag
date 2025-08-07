@@ -18,6 +18,7 @@ from agents.core.data_models import (
     CompleteDomainConfig,
     DomainConfig,
 )
+from agents.core.constants import StubConstants
 
 
 # Clean configuration (CODING_STANDARDS compliant)
@@ -26,11 +27,11 @@ class MLConfig:
     simple_gnn_config = {"layers": 2, "hidden_dim": 64}
     medium_gnn_config = {
         "layers": 4,
-        "hidden_dim": 128,
+        "hidden_dim": StubConstants.GNN_HIDDEN_DIM_STANDARD,
     }  # GNN_NUM_LAYERS=3, GNN_HIDDEN_DIM=128
     complex_gnn_config = {
         "layers": 5,
-        "hidden_dim": 256,
+        "hidden_dim": StubConstants.GNN_HIDDEN_DIM_LARGE,
     }  # More layers and dimensions for complex domains
 
 

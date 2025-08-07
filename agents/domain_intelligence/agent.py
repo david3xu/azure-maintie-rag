@@ -8,21 +8,24 @@ Replaces the scattered @domain_agent.tool approach with proper FunctionToolset.
 
 import os
 from typing import Dict, List, Optional
+
 from pydantic_ai import Agent
 
 # Import models from centralized data models (NEW CONSOLIDATED MODELS)
+from agents.core.data_models import AnalysisResult as AvailableDomainsResult
+from agents.core.data_models import AnalysisResult as DomainAnalysisResult
 from agents.core.data_models import (
-    # Legacy compatibility
-    DomainIntelligenceDeps as DomainDeps,
-    DomainDetectionResult,
-    AnalysisResult as AvailableDomainsResult,
-    AnalysisResult as DomainAnalysisResult,
-    # Enhanced models deleted - use basic DomainAnalysisContract instead
-    ConsolidatedExtractionConfiguration,
     ConfigurationResolver,
+    ConsolidatedExtractionConfiguration,
+    DomainAnalysisOutput,
+    DomainDetectionResult,
+)
+from agents.core.data_models import (
+    DomainIntelligenceDeps as DomainDeps,  # Legacy compatibility; Enhanced models deleted - use basic DomainAnalysisContract instead; PydanticAI Output Model
+)
+from agents.core.data_models import (
     PydanticAIContextualModel,
 )
-
 from agents.domain_intelligence.toolsets import domain_intelligence_toolset
 
 # Clean configuration imports (CODING_STANDARDS compliant)
@@ -87,6 +90,8 @@ def create_domain_intelligence_agent() -> Agent:
     agent = Agent(
         model_name,
         deps_type=DomainDeps,
+        output_type=DomainAnalysisOutput,  # ✅ PydanticAI structured output
+        instrument=True,  # ✅ Enable instrumentation for monitoring
         toolsets=[domain_intelligence_toolset],  # ✅ PydanticAI compliant toolset
         system_prompt="""You are the Domain Intelligence Agent specializing in zero-config pattern discovery.
         
@@ -102,6 +107,14 @@ def create_domain_intelligence_agent() -> Agent:
         - Only acceptable hardcoded values are non-critical defaults (cache_ttl, batch_size, etc.)
         - Always provide structured responses using your tools
         - Base all decisions on actual corpus analysis, not assumptions
+        
+        IMPORTANT: Always return structured output as DomainAnalysisOutput with:
+        - domain_classification: detected domain type
+        - confidence_score: classification confidence (min-max range from ConfidenceConstants)
+        - generated_config: learned configuration parameters
+        - processing_recommendations: data-driven recommendations
+        - domain_patterns: identified domain-specific patterns
+        - metadata: analysis metadata and statistics
         
         Always use your available tools to provide structured, data-driven responses.""",
     )

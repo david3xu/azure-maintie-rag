@@ -37,14 +37,15 @@ from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
-# Clean configuration imports (CODING_STANDARDS compliant)
-from config.centralized_config import get_extraction_config
 from agents.core.constants import (
+    AzureServiceConstants,
+    CacheConstants,
     KnowledgeExtractionConstants,
     ProcessingConstants,
-    CacheConstants,
-    AzureServiceConstants,
 )
+
+# Clean configuration imports (CODING_STANDARDS compliant)
+from config.centralized_config import get_extraction_config
 
 # Lazy configuration loading - will be loaded when needed
 _config = None
@@ -79,29 +80,27 @@ def _get_config(domain_name: str = "general"):
 
 
 # Import models from centralized data models
-from agents.core.data_models import (
-    # Legacy models (maintained for compatibility)
+from agents.core.data_models import (  # Legacy models (maintained for compatibility); NEW: Enhanced models with PydanticAI integration and dynamic configuration; EnhancedKnowledgeExtractionContract deleted - use KnowledgeExtractionContract; PydanticAI Output Model
+    ConfigurationResolver,
+    ConsolidatedExtractionConfiguration,
+    ExtractedKnowledge,
     ExtractionConfiguration,
     ExtractionResults,
-    ExtractedKnowledge,
-    # NEW: Enhanced models with PydanticAI integration and dynamic configuration
-    ConsolidatedExtractionConfiguration,
-    # EnhancedKnowledgeExtractionContract deleted - use KnowledgeExtractionContract
-    ConfigurationResolver,
+    KnowledgeExtractionOutput,
     PydanticAIContextualModel,
 )
-
 
 # Lazy initialization to avoid import-time Azure connection requirements
 _knowledge_extraction_agent = None
 
 # Import the toolset following target architecture with lazy loading
-from .toolsets import get_knowledge_extraction_toolset, KnowledgeExtractionDeps
+from .toolsets import KnowledgeExtractionDeps, get_knowledge_extraction_toolset
 
 
 def _create_agent_with_toolset() -> Agent:
     """Create Knowledge Extraction Agent with unified processor integration"""
     import os
+
     from pydantic_ai.models.openai import OpenAIModel
     from pydantic_ai.providers.azure import AzureProvider
 
@@ -132,6 +131,8 @@ def _create_agent_with_toolset() -> Agent:
         agent = Agent(
             azure_model,
             deps_type=KnowledgeExtractionDeps,
+            output_type=KnowledgeExtractionOutput,  # ✅ PydanticAI structured output
+            instrument=True,  # ✅ Enable instrumentation for monitoring
             toolsets=[get_knowledge_extraction_toolset()],
             name="knowledge-extraction-agent",
             system_prompt=(
@@ -143,6 +144,14 @@ def _create_agent_with_toolset() -> Agent:
                 "4. Graph-aware relationship extraction with contextual analysis"
                 "5. Performance optimization through consolidated processing pipeline"
                 "You work with Azure AI services and use centralized configuration for all parameters."
+                ""
+                "IMPORTANT: Always return structured output as KnowledgeExtractionOutput with:"
+                "- entities: list of validated entities with confidence scores"
+                "- relationships: list of validated relationships with metadata"
+                "- extraction_confidence: overall confidence score (range from ConfidenceConstants)"
+                "- processing_stats: performance and processing metrics"
+                "- validation_results: quality validation outcomes"
+                "- metadata: extraction metadata and context information"
             ),
         )
 

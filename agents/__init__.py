@@ -69,6 +69,7 @@ from agents.core.data_models import (
     SearchResult as SearchDocument,
     HealthStatus as ConfidenceLevel,  # Temporary mapping
 )
+from agents.core.constants import StubConstants
 
 
 # Define SearchResultType for backward compatibility
@@ -87,7 +88,9 @@ class SearchResultType:
 
 # Temporary placeholder classes for compatibility
 class AgentResponse:
-    def __init__(self, success=True, result=None, execution_time=0.0):
+    def __init__(
+        self, success=True, result=None, execution_time=StubConstants.STAT_INITIAL_ZERO
+    ):
         self.success = success
         self.result = result
         self.execution_time = execution_time
@@ -271,7 +274,7 @@ def get_architecture_info() -> dict:
             "response_time_target": "< 3 seconds",
             "domain_detection_speed": "< 5 milliseconds",
             "cache_hit_rate_target": "> 80%",
-            "concurrent_users_supported": "100+",
+            "concurrent_users_supported": StubConstants.USER_COUNT_SUPPORTED,
             "domains_supported": "unlimited (zero-config)",
         },
     }

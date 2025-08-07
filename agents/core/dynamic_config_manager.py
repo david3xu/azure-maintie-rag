@@ -9,32 +9,30 @@ Solves the critical design issue: Config-Extraction generates intelligent config
 but Search workflow was using static hardcoded values instead.
 """
 
-import asyncio
 import logging
 import os
-import yaml
-from typing import Dict, Any, Optional, List
-from pathlib import Path
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import yaml
+
+from agents.core.constants import (
+    FileSystemConstants,
+    KnowledgeExtractionConstants,
+    PerformanceAdaptiveConstants,
+    StubConstants,
+    UniversalSearchConstants,
+)
+from agents.core.data_models import DynamicExtractionConfig, DynamicSearchConfig
+from agents.core.math_expressions import EXPR
 
 logger = logging.getLogger(__name__)
 
-# Import centralized constants
-from agents.core.constants import (
-    KnowledgeExtractionConstants,
-    UniversalSearchConstants,
-    PerformanceAdaptiveConstants,
-    FileSystemConstants,
-    StubConstants,
-)
-from agents.core.math_expressions import MATH, EXPR
-
-# Import consolidated data models
-from agents.core.data_models import DynamicExtractionConfig, DynamicSearchConfig
-
 # Import workflow and agents dynamically to avoid circular imports
-# DynamicExtractionConfig and DynamicSearchConfig now imported from agents.core.data_models
+# DynamicExtractionConfig and DynamicSearchConfig now imported from
+# agents.core.data_models
 
 
 class DynamicConfigManager:
@@ -200,11 +198,13 @@ class DynamicConfigManager:
     async def _generate_new_extraction_config(
         self, domain_name: str
     ) -> DynamicExtractionConfig:
-        """Generate domain-specific config using Domain Intelligence Agent analysis with real data"""
+        """Generate domain-specific config using Domain Intelligence Agent
+        analysis with real data"""
 
         try:
             logger.info(
-                f"🧠 Using Domain Intelligence Agent to analyze corpus for {domain_name}"
+                f"🧠 Using Domain Intelligence Agent to analyze corpus for "
+                f"{domain_name}"
             )
 
             # Import domain intelligence analyzer
@@ -215,7 +215,8 @@ class DynamicConfigManager:
             # Initialize analyzer
             analyzer = UnifiedContentAnalyzer()
 
-            # Determine corpus path from domain name (e.g., programming_language -> Programming-Language)
+            # Determine corpus path from domain name
+            # (e.g., programming_language -> Programming-Language)
             domain_path_map = {
                 "programming_language": "Programming-Language",
                 "general": "Programming-Language",  # Default to available data
@@ -232,7 +233,8 @@ class DynamicConfigManager:
 
             logger.info(f"✅ Domain analysis complete for {domain_name}:")
             logger.info(
-                f"   📊 Analysis confidence: {domain_profile.analysis_confidence.confidence:.3f}"
+                f"   📊 Analysis confidence: "
+                f"{domain_profile.analysis_confidence.confidence:.3f}"
             )
             logger.info(
                 f"   📏 Word count: {domain_profile.text_statistics.total_words}"
@@ -283,11 +285,21 @@ class DynamicConfigManager:
                 learned_at=datetime.now(),
                 corpus_stats={
                     "total_words": domain_profile.text_statistics.total_words,
-                    "lexical_diversity": domain_profile.text_statistics.lexical_diversity,
-                    "readability_score": domain_profile.text_statistics.readability_score,
-                    "avg_sentence_length": domain_profile.text_statistics.avg_sentence_length,
-                    "processing_complexity": domain_profile.document_complexity.complexity_class,
-                    "analysis_confidence": domain_profile.analysis_confidence.confidence,
+                    "lexical_diversity": (
+                        domain_profile.text_statistics.lexical_diversity
+                    ),
+                    "readability_score": (
+                        domain_profile.text_statistics.readability_score
+                    ),
+                    "avg_sentence_length": (
+                        domain_profile.text_statistics.avg_sentence_length
+                    ),
+                    "processing_complexity": (
+                        domain_profile.document_complexity.complexity_class
+                    ),
+                    "analysis_confidence": (
+                        domain_profile.analysis_confidence.confidence
+                    ),
                     "technical_vocabulary_size": len(
                         domain_profile.technical_vocabulary
                     ),
@@ -311,18 +323,29 @@ class DynamicConfigManager:
 
         except Exception as e:
             logger.error(
-                f"❌ Failed to generate extraction config using domain intelligence: {e}"
+                f"❌ Failed to generate extraction config using domain "
+                f"intelligence: {e}"
             )
             # Fallback to centralized constants
             fallback_config = DynamicExtractionConfig(
-                entity_confidence_threshold=KnowledgeExtractionConstants.FALLBACK_ENTITY_CONFIDENCE_THRESHOLD,
-                relationship_confidence_threshold=KnowledgeExtractionConstants.FALLBACK_RELATIONSHIP_CONFIDENCE_THRESHOLD,
+                entity_confidence_threshold=(
+                    KnowledgeExtractionConstants.FALLBACK_ENTITY_CONFIDENCE_THRESHOLD
+                ),
+                relationship_confidence_threshold=(
+                    KnowledgeExtractionConstants.FALLBACK_RELATIONSHIP_CONFIDENCE_THRESHOLD
+                ),
                 chunk_size=KnowledgeExtractionConstants.FALLBACK_CHUNK_SIZE,
                 chunk_overlap=KnowledgeExtractionConstants.FALLBACK_CHUNK_OVERLAP,
                 batch_size=KnowledgeExtractionConstants.FALLBACK_BATCH_SIZE,
-                max_entities_per_chunk=KnowledgeExtractionConstants.FALLBACK_MAX_ENTITIES_PER_CHUNK,
-                min_relationship_strength=KnowledgeExtractionConstants.FALLBACK_MIN_RELATIONSHIP_STRENGTH,
-                quality_validation_threshold=KnowledgeExtractionConstants.FALLBACK_QUALITY_VALIDATION_THRESHOLD,
+                max_entities_per_chunk=(
+                    KnowledgeExtractionConstants.FALLBACK_MAX_ENTITIES_PER_CHUNK
+                ),
+                min_relationship_strength=(
+                    KnowledgeExtractionConstants.FALLBACK_MIN_RELATIONSHIP_STRENGTH
+                ),
+                quality_validation_threshold=(
+                    KnowledgeExtractionConstants.FALLBACK_QUALITY_VALIDATION_THRESHOLD
+                ),
                 domain_name=domain_name,
                 learned_at=datetime.now(),
                 corpus_stats={"fallback_used": True, "error": str(e)},
@@ -330,7 +353,9 @@ class DynamicConfigManager:
             return fallback_config
 
     async def _generate_search_config_from_domain_analysis(
-        self, domain_name: str, query: str = None
+        self,
+        domain_name: str,
+        query: str = None,
     ) -> DynamicSearchConfig:
         """Generate search config using Domain Intelligence Agent analysis"""
 
@@ -342,7 +367,7 @@ class DynamicConfigManager:
         # Analyze domain characteristics for search optimization
         analysis_prompt = f"""Analyze domain '{domain_name}' for optimal search configuration.
         Query: {query or 'General search'}
-        
+
         Provide optimal parameters for:
         1. Vector similarity threshold (precision vs recall balance)
         2. Vector top_k results needed
@@ -351,11 +376,11 @@ class DynamicConfigManager:
         5. GNN prediction confidence threshold
         6. Tri-modal search weights (vector, graph, gnn)
         7. Result synthesis threshold
-        
+
         Base recommendations on domain complexity and query type."""
 
         try:
-            result = await domain_agent.run(
+            await domain_agent.run(
                 "analyze_domain_for_search_optimization",
                 message_history=[{"role": "user", "content": analysis_prompt}],
             )
@@ -365,24 +390,44 @@ class DynamicConfigManager:
             # For now, using intelligent defaults based on domain analysis
 
             search_config = DynamicSearchConfig(
-                vector_similarity_threshold=UniversalSearchConstants.FALLBACK_VECTOR_SIMILARITY_THRESHOLD,  # Would be extracted from agent analysis
-                vector_top_k=UniversalSearchConstants.FALLBACK_VECTOR_TOP_K,  # Adjusted based on domain complexity
-                graph_hop_count=UniversalSearchConstants.FALLBACK_GRAPH_HOP_COUNT,  # Based on relationship depth analysis
-                graph_min_relationship_strength=UniversalSearchConstants.FALLBACK_GRAPH_MIN_RELATIONSHIP_STRENGTH,  # Domain-specific threshold
-                gnn_prediction_confidence=UniversalSearchConstants.FALLBACK_GNN_PREDICTION_CONFIDENCE,  # Based on model performance for domain
-                gnn_node_embeddings=UniversalSearchConstants.FALLBACK_GNN_NODE_EMBEDDINGS,  # Optimized for domain complexity
+                vector_similarity_threshold=(
+                    UniversalSearchConstants.FALLBACK_VECTOR_SIMILARITY_THRESHOLD
+                ),  # Would be extracted from agent analysis
+                vector_top_k=(
+                    UniversalSearchConstants.FALLBACK_VECTOR_TOP_K
+                ),  # Adjusted based on domain complexity
+                graph_hop_count=(
+                    UniversalSearchConstants.FALLBACK_GRAPH_HOP_COUNT
+                ),  # Based on relationship depth analysis
+                graph_min_relationship_strength=(
+                    UniversalSearchConstants.FALLBACK_GRAPH_MIN_RELATIONSHIP_STRENGTH
+                ),  # Domain-specific threshold
+                gnn_prediction_confidence=(
+                    UniversalSearchConstants.FALLBACK_GNN_PREDICTION_CONFIDENCE
+                ),  # Based on model performance for domain
+                gnn_node_embeddings=(
+                    UniversalSearchConstants.FALLBACK_GNN_NODE_EMBEDDINGS
+                ),  # Optimized for domain complexity
                 tri_modal_weights={
                     "vector": UniversalSearchConstants.MULTI_MODAL_WEIGHT_VECTOR,
                     "graph": UniversalSearchConstants.MULTI_MODAL_WEIGHT_GRAPH,
                     "gnn": UniversalSearchConstants.MULTI_MODAL_WEIGHT_GNN,
                 },  # Domain-optimized
-                result_synthesis_threshold=UniversalSearchConstants.FALLBACK_RESULT_SYNTHESIS_THRESHOLD,  # Quality threshold for domain
+                result_synthesis_threshold=(
+                    UniversalSearchConstants.FALLBACK_RESULT_SYNTHESIS_THRESHOLD
+                ),  # Quality threshold for domain
                 domain_name=domain_name,
                 learned_at=datetime.now(),
                 query_complexity_weights={
-                    "simple": UniversalSearchConstants.QUERY_COMPLEXITY_SIMPLE_MULTIPLIER,
-                    "medium": UniversalSearchConstants.QUERY_COMPLEXITY_MEDIUM_MULTIPLIER,
-                    "complex": UniversalSearchConstants.QUERY_COMPLEXITY_COMPLEX_MULTIPLIER,
+                    "simple": (
+                        UniversalSearchConstants.QUERY_COMPLEXITY_SIMPLE_MULTIPLIER
+                    ),
+                    "medium": (
+                        UniversalSearchConstants.QUERY_COMPLEXITY_MEDIUM_MULTIPLIER
+                    ),
+                    "complex": (
+                        UniversalSearchConstants.QUERY_COMPLEXITY_COMPLEX_MULTIPLIER
+                    ),
                 },
             )
 

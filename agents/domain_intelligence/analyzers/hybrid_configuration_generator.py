@@ -35,6 +35,7 @@ from agents.core.constants import (
     StatisticalConstants,
     CacheConstants,
     ContentAnalysisConstants,
+    StubConstants,
 )
 from agents.core.math_expressions import MATH, EXPR
 
@@ -216,8 +217,8 @@ Return ONLY essential information in this JSON format:
     "relationship_patterns": ["pattern1", "pattern2"],
     "processing_complexity": "low|medium|high",
     "content_structure": "structured|semi_structured|unstructured",
-    "semantic_density": 0.0-1.0,
-    "confidence_score": 0.0-1.0,
+    "semantic_density": "0.0-1.0",
+    "confidence_score": "0.0-1.0",
     "reasoning": "Brief explanation"
 }}
 
@@ -365,11 +366,12 @@ Focus on semantic characteristics that statistical analysis cannot capture.
         # Adjust based on vocabulary richness (mathematical foundation)
         vocabulary_factor = 1.0
         if (
-            content_analysis.vocabulary_richness > 0.6
+            content_analysis.vocabulary_richness
+            > StubConstants.VOCABULARY_HIGH_RICHNESS
         ):  # Rich vocabulary - smaller chunks
             vocabulary_factor = StatisticalConstants.RICH_VOCABULARY_FACTOR
         elif (
-            content_analysis.vocabulary_richness < 0.3
+            content_analysis.vocabulary_richness < StubConstants.VOCABULARY_LOW_RICHNESS
         ):  # Simple vocabulary - larger chunks
             vocabulary_factor = 1.1
 
@@ -491,10 +493,10 @@ Focus on semantic characteristics that statistical analysis cannot capture.
         data_confidence = StatisticalConstants.DEFAULT_DATA_CONFIDENCE
 
         # Boost from good statistical data
-        if content_analysis.word_count > 1000:
-            data_confidence += 0.2
+        if content_analysis.word_count > StubConstants.HIGH_WORD_COUNT_THRESHOLD:
+            data_confidence += StubConstants.HIGH_WORD_COUNT_CONFIDENCE_BOOST
         if content_analysis.analysis_quality == "high_quality":
-            data_confidence += 0.1
+            data_confidence += StubConstants.MEDIUM_WORD_COUNT_CONFIDENCE_BOOST
 
         # Boost from LLM confidence
         llm_confidence_boost = (

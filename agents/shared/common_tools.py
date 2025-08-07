@@ -16,6 +16,7 @@ from agents.core.constants import (
     CacheConstants,
     ContentAnalysisConstants,
     SecurityConstants,
+    StubConstants,
 )
 from agents.core.math_expressions import EXPR
 
@@ -188,7 +189,11 @@ def merge_dictionaries(
     return result
 
 
-def truncate_text(text: str, max_length: int = 1000, suffix: str = "...") -> str:
+def truncate_text(
+    text: str,
+    max_length: int = StubConstants.DEFAULT_MAX_TEXT_LENGTH,
+    suffix: str = StubConstants.DEFAULT_TEXT_SUFFIX,
+) -> str:
     """
     Truncate text to maximum length with suffix.
 
