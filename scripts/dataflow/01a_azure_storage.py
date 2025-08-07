@@ -49,13 +49,13 @@ async def upload_to_storage(source_path: str, container: str = "raw-data"):
         # Upload files to Azure Blob Storage
         uploaded = 0
         failed = 0
-        
+
         for file_path in files[:5]:  # Upload first 5 files
             try:
                 # Read file content
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
-                
+
                 blob_name = f"raw/{file_path.name}"
                 print(f"📤 Uploading: {file_path.name} → {blob_name}")
 
@@ -63,13 +63,11 @@ async def upload_to_storage(source_path: str, container: str = "raw-data"):
                     try:
                         # Real Azure Blob Storage upload
                         upload_result = await storage_client.upload_text_content(
-                            content=content,
-                            blob_name=blob_name,
-                            container=container
+                            content=content, blob_name=blob_name, container=container
                         )
                         uploaded += 1
                         print(f"   ✅ Upload successful")
-                        
+
                     except Exception as upload_error:
                         print(f"   ⚠️  Azure upload failed: {str(upload_error)[:50]}...")
                         print(f"   📝 Fallback: simulated upload")

@@ -9,22 +9,23 @@ FastAPI endpoints using proper PydanticAI agent delegation:
 - Zero hardcoded domain assumptions
 """
 
-import time
 import asyncio
+
+# Use orchestrator pattern for proper agent communication
+import sys
+import time
 from datetime import datetime
-from typing import Any, Dict, Optional, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-# Use orchestrator pattern for proper agent communication
-import sys
-from pathlib import Path
-
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.orchestrator import UniversalOrchestrator
 from agents.core.universal_deps import get_universal_deps
+from agents.orchestrator import UniversalOrchestrator
+from agents.knowledge_extraction.agent import run_knowledge_extraction
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["search"])

@@ -156,6 +156,7 @@ if __name__ == "__main__":
 
     print("\nTesting knowledge extraction prompt:")
     test_prompt = loader.render_knowledge_extraction_prompt(
-        text_content="system component analysis and optimization", domain_name="universal"
+        text_content="system component analysis and optimization",
+        domain_name="universal",
     )
     print(test_prompt[:200] + "..." if len(test_prompt) > 200 else test_prompt)

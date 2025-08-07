@@ -11,8 +11,8 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from infrastructure.azure_search.search_client import SimpleSearchClient
 from infrastructure.azure_openai.openai_client import AzureOpenAIClient
+from infrastructure.azure_search.search_client import SimpleSearchClient
 
 
 async def index_in_search(source_path: str, domain: str = "universal"):
@@ -30,7 +30,7 @@ async def index_in_search(source_path: str, domain: str = "universal"):
             search_client = None
             search_available = False
             print(f"⚠️  Azure Search unavailable: {str(e)[:50]}...")
-            
+
         try:
             openai_client = AzureOpenAIClient()
             await openai_client.async_initialize()

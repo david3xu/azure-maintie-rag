@@ -4,19 +4,24 @@ Data-driven fixtures using real Azure services.
 """
 
 import asyncio
-import pytest
-import pytest_asyncio
+import sys
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional
-import sys
+from typing import Any, Dict, Optional
+
+import pytest
+import pytest_asyncio
 
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agents.knowledge_extraction.agent import agent as knowledge_extraction_agent, ExtractionDeps
-from agents.universal_search.agent import agent as universal_search_agent, SearchDeps
+from agents.knowledge_extraction.agent import (
+    ExtractionDeps,
+)
+from agents.knowledge_extraction.agent import agent as knowledge_extraction_agent
 from agents.orchestrator import UniversalOrchestrator
+from agents.universal_search.agent import SearchDeps
+from agents.universal_search.agent import agent as universal_search_agent
 
 
 @pytest.fixture(scope="session")

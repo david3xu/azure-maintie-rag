@@ -1,12 +1,13 @@
 """Universal GNN model architecture for Azure Universal RAG system."""
 
+import logging
+from typing import Any, Dict, List, Optional
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.nn import GCNConv, GATConv, SAGEConv
 from torch_geometric.data import Data, DataLoader
-from typing import Dict, Any, Optional, List
-import logging
+from torch_geometric.nn import GATConv, GCNConv, SAGEConv
 
 from infrastructure.constants import MLModelConstants
 

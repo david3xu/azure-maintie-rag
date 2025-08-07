@@ -1,14 +1,14 @@
 """Universal Search Agent"""
 
+# Import universal models from core
+from agents.core.universal_models import SearchConfiguration, SearchResult
+
 from .agent import (
-    universal_search_agent,
+    MultiModalSearchResult,
     create_universal_search_agent,
     run_universal_search,
-    MultiModalSearchResult,
+    universal_search_agent,
 )
-
-# Import universal models from core
-from agents.core.universal_models import SearchResult, SearchConfiguration
 
 __all__ = [
     "universal_search_agent",

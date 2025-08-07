@@ -11,8 +11,9 @@ from typing import Any, Dict, List, Optional
 from gremlin_python.driver import client, serializer
 
 from config.settings import azure_settings
-from ..azure_auth.base_client import BaseAzureClient
 from infrastructure.constants import AzureServiceLimits
+
+from ..azure_auth.base_client import BaseAzureClient
 
 logger = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ AzureStorageClient = SimpleStorageClient
 __all__ = [
     "SimpleStorageClient",
     "UnifiedStorageClient",
-    "StorageClient", 
+    "StorageClient",
     "BlobStorageClient",
     "AzureStorageClient",
 ]

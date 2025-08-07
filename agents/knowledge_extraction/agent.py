@@ -14,24 +14,31 @@ Key Principles:
 """
 
 import asyncio
-from typing import Dict, List, Any, Optional, Union
+import logging
+from typing import Any, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
+logger = logging.getLogger(__name__)
+
 from agents.core.universal_deps import UniversalDeps, get_universal_deps
 from agents.core.universal_models import (
-    UniversalDomainAnalysis,
-    UniversalProcessingConfiguration,
     ExtractedEntity,
     ExtractedRelationship,
+    UniversalDomainAnalysis,
+    UniversalProcessingConfiguration,
 )
-from agents.shared.query_tools import generate_analysis_query, generate_gremlin_query
 from agents.domain_intelligence.agent import domain_intelligence_agent
+from agents.shared.query_tools import generate_analysis_query, generate_gremlin_query
+from infrastructure.azure_ml.classification_client import SimpleAzureClassifier
+from infrastructure.prompt_workflows.quality_assessor import assess_extraction_quality
 from infrastructure.prompt_workflows.universal_prompt_generator import (
     UniversalPromptGenerator,
 )
-from infrastructure.azure_ml.classification_client import SimpleAzureClassifier
-from infrastructure.prompt_workflows.quality_assessor import assess_extraction_quality
+from infrastructure.prompt_workflows.prompt_workflow_orchestrator import (
+    PromptWorkflowOrchestrator,
+)
 
 
 class ExtractionResult(BaseModel):
@@ -43,7 +50,9 @@ class ExtractionResult(BaseModel):
     processing_signature: str = Field(description="Processing configuration used")
     graph_nodes_created: int = Field(default=0, ge=0)
     graph_edges_created: int = Field(default=0, ge=0)
-    quality_assessment: Optional[Dict[str, Any]] = Field(default=None, description="Automated quality assessment")
+    quality_assessment: Optional[Dict[str, Any]] = Field(
+        default=None, description="Automated quality assessment"
+    )
 
 
 class GraphOperationResult(BaseModel):
@@ -58,7 +67,7 @@ class GraphOperationResult(BaseModel):
 
 # Create the Knowledge Extraction Agent with proper PydanticAI patterns
 knowledge_extraction_agent = Agent[UniversalDeps, ExtractionResult](
-    "openai:gpt-4o",
+    "azure_openai:gpt-4o",  # Use Azure OpenAI instead of OpenAI API
     deps_type=UniversalDeps,
     output_type=ExtractionResult,
     system_prompt="""You are the Universal Knowledge Extraction Agent.
@@ -82,6 +91,130 @@ You extract:
 Always use the Domain Intelligence Agent first to understand content characteristics,
 then adapt your extraction approach accordingly.""",
 )
+
+
+@knowledge_extraction_agent.tool
+async def extract_with_generated_prompts(
+    ctx: RunContext[UniversalDeps], 
+    content: str, 
+    use_domain_analysis: bool = True,
+    data_directory: Optional[str] = None
+) -> ExtractionResult:
+    """
+    Extract entities and relationships using dynamically generated prompts from domain analysis.
+    
+    This tool demonstrates the complete prompt workflow integration:
+    1. Domain analysis → 2. Prompt generation → 3. Entity/relationship extraction
+    """
+    logger.info("🔬 Starting extraction with generated prompts...")
+    
+    try:
+        # Create workflow orchestrator with domain intelligence
+        orchestrator = await PromptWorkflowOrchestrator.create_with_domain_intelligence()
+        
+        # Use the workflow orchestrator for complete extraction
+        workflow_results = await orchestrator.execute_extraction_workflow(
+            texts=[content],
+            confidence_threshold=0.7,
+            max_entities=50,
+            max_relationships=40
+        )
+        
+        # Convert workflow results to agent format
+        entities = []
+        for entity_data in workflow_results.get("entities", []):
+            entities.append(ExtractedEntity(
+                text=entity_data.get("text", ""),
+                type=entity_data.get("entity_type", "concept"),
+                confidence=entity_data.get("confidence", 0.7),
+                context=entity_data.get("context", ""),
+                properties=entity_data.get("properties", {})
+            ))
+        
+        relationships = []
+        for rel_data in workflow_results.get("relationships", []):
+            relationships.append(ExtractedRelationship(
+                source_entity=rel_data.get("subject", ""),
+                target_entity=rel_data.get("object", ""),
+                relationship_type=rel_data.get("predicate", "relates_to"),
+                confidence=rel_data.get("confidence", 0.7),
+                context=rel_data.get("context", ""),
+                properties={}
+            ))
+        
+        # Calculate extraction confidence from workflow results
+        workflow_metadata = workflow_results.get("workflow_metadata", {})
+        extraction_confidence = workflow_metadata.get("overall_confidence", 0.0)
+        
+        processing_signature = (
+            f"generated_prompts_"
+            f"{workflow_metadata.get('extraction_strategy', 'universal')}_"
+            f"{len(entities)}e_{len(relationships)}r"
+        )
+        
+        logger.info(f"✅ Generated prompt extraction completed: {len(entities)} entities, {len(relationships)} relationships")
+        
+        return ExtractionResult(
+            entities=entities,
+            relationships=relationships,
+            extraction_confidence=extraction_confidence,
+            processing_signature=processing_signature,
+            quality_assessment=workflow_results.get("quality_metrics")
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Generated prompt extraction failed: {e}")
+        logger.info("🔄 Falling back to standard extraction with hardcoded prompts...")
+        
+        # Comprehensive fallback mechanism
+        try:
+            # Try standard extraction first
+            fallback_result = await extract_entities_and_relationships(ctx, content, use_domain_analysis)
+            fallback_result.processing_signature += "_fallback_standard"
+            return fallback_result
+        except Exception as fallback_error:
+            logger.error(f"❌ Standard extraction also failed: {fallback_error}")
+            logger.info("🔄 Using emergency fallback with pattern-based extraction...")
+            
+            # Emergency fallback - basic pattern extraction
+            words = content.split()
+            entities = []
+            relationships = []
+            
+            # Extract capitalized words as potential entities
+            for i, word in enumerate(words):
+                if word and word[0].isupper() and len(word) > 2 and i < 20:  # Limit to 20
+                    entities.append(ExtractedEntity(
+                        text=word.strip('.,!?;:"()[]'),
+                        type="emergency_entity",
+                        confidence=0.5,
+                        context=f"Emergency extraction from word position {i}",
+                        properties={"extraction_method": "emergency_fallback"}
+                    ))
+            
+            # Create basic relationships between adjacent entities
+            for i in range(min(len(entities) - 1, 10)):  # Limit to 10
+                relationships.append(ExtractedRelationship(
+                    source_entity=entities[i].text,
+                    target_entity=entities[i + 1].text,
+                    relationship_type="emergency_relation",
+                    confidence=0.3,
+                    context="Emergency fallback relationship",
+                    properties={"extraction_method": "emergency_fallback"}
+                ))
+            
+            return ExtractionResult(
+                entities=entities,
+                relationships=relationships,
+                extraction_confidence=0.3,
+                processing_signature="emergency_fallback_pattern_extraction",
+                quality_assessment={
+                    "overall_score": 0.3,
+                    "quality_tier": "emergency",
+                    "extraction_method": "emergency_pattern_fallback",
+                    "note": "Generated prompts and standard extraction both failed"
+                }
+            )
 
 
 @knowledge_extraction_agent.tool
@@ -181,12 +314,16 @@ async def extract_entities_and_relationships(
             }
             for r in relationships
         ]
-        
+
         quality_assessment = assess_extraction_quality(
-            entities_dict, relationships_dict, [content[:1000]]  # Use first 1k chars for assessment
+            entities_dict,
+            relationships_dict,
+            [content[:1000]],  # Use first 1k chars for assessment
         )
-        logger.info(f"Quality assessment: {quality_assessment.get('quality_tier', 'unknown')} "
-                   f"(score: {quality_assessment.get('overall_score', 0.0):.3f})")
+        logger.info(
+            f"Quality assessment: {quality_assessment.get('quality_tier', 'unknown')} "
+            f"(score: {quality_assessment.get('overall_score', 0.0):.3f})"
+        )
     except Exception as e:
         logger.warning(f"Quality assessment failed: {e}")
 
@@ -348,7 +485,7 @@ async def _extract_entities_simple_approach(
     """Enhanced entity extraction with classification client integration."""
     entities = []
     words = content.split()
-    
+
     # Initialize classifier for better entity typing
     classifier = SimpleAzureClassifier()
 
@@ -366,13 +503,17 @@ async def _extract_entities_simple_approach(
             if base_confidence >= confidence_threshold:
                 try:
                     # Use classification client for better entity typing
-                    classification_result = await classifier.classify_entity(word, context)
+                    classification_result = await classifier.classify_entity(
+                        word, context
+                    )
                     entity_type = classification_result.entity_type
                     classification_confidence = classification_result.confidence
-                    
+
                     # Combine base confidence with classification confidence
-                    final_confidence = (base_confidence + classification_confidence) / 2.0
-                    
+                    final_confidence = (
+                        base_confidence + classification_confidence
+                    ) / 2.0
+
                     entity = ExtractedEntity(
                         text=word,
                         type=entity_type,  # Use classifier result instead of generic type
@@ -387,7 +528,7 @@ async def _extract_entities_simple_approach(
                         },
                     )
                     entities.append(entity)
-                
+
                 except Exception as e:
                     # Fallback to original approach if classification fails
                     entity = ExtractedEntity(
@@ -398,7 +539,7 @@ async def _extract_entities_simple_approach(
                         start_position=i,
                         properties={
                             "discovery_method": "capitalization_pattern_fallback",
-                            "classification_error": str(e)
+                            "classification_error": str(e),
                         },
                     )
                     entities.append(entity)
@@ -417,7 +558,7 @@ async def _extract_relationships_simple_approach(
 ) -> List[ExtractedRelationship]:
     """Enhanced relationship extraction with classification client integration."""
     relationships = []
-    
+
     # Initialize classifier for better relationship typing
     classifier = SimpleAzureClassifier()
 
@@ -436,21 +577,29 @@ async def _extract_relationships_simple_approach(
                     if base_confidence >= confidence_threshold:
                         # Extract context around both entities for classification
                         start_pos = min(entity1_pos, entity2_pos)
-                        end_pos = max(entity1_pos + len(entity1.text), 
-                                     entity2_pos + len(entity2.text))
-                        relation_context = content[max(0, start_pos-50):end_pos+50]
-                        
+                        end_pos = max(
+                            entity1_pos + len(entity1.text),
+                            entity2_pos + len(entity2.text),
+                        )
+                        relation_context = content[
+                            max(0, start_pos - 50) : end_pos + 50
+                        ]
+
                         try:
                             # Use classification client for better relationship typing
                             classification_result = await classifier.classify_relation(
                                 entity1.text, entity2.text, relation_context
                             )
-                            relation_type = classification_result.entity_type  # relation type stored in entity_type field
+                            relation_type = (
+                                classification_result.entity_type
+                            )  # relation type stored in entity_type field
                             classification_confidence = classification_result.confidence
-                            
+
                             # Combine base confidence with classification confidence
-                            final_confidence = (base_confidence + classification_confidence) / 2.0
-                            
+                            final_confidence = (
+                                base_confidence + classification_confidence
+                            ) / 2.0
+
                             relationship = ExtractedRelationship(
                                 source_entity=entity1.text,
                                 target_entity=entity2.text,
@@ -466,7 +615,7 @@ async def _extract_relationships_simple_approach(
                                 },
                             )
                             relationships.append(relationship)
-                            
+
                         except Exception as e:
                             # Fallback to original approach if classification fails
                             relationship = ExtractedRelationship(
@@ -626,18 +775,31 @@ async def create_knowledge_extraction_agent() -> Agent[UniversalDeps, Extraction
 
 # Main execution function for testing
 async def run_knowledge_extraction(
-    content: str, use_domain_analysis: bool = True
+    content: str, use_domain_analysis: bool = True, use_generated_prompts: bool = False
 ) -> ExtractionResult:
     """
     Run knowledge extraction with proper PydanticAI patterns.
+    
+    Args:
+        content: Text content to extract from
+        use_domain_analysis: Whether to use domain intelligence
+        use_generated_prompts: Whether to use dynamically generated prompts (recommended)
     """
     deps = await get_universal_deps()
     agent = await create_knowledge_extraction_agent()
 
-    result = await agent.run(
-        f"Extract entities and relationships from the following content:\n\n{content}",
-        deps=deps,
-    )
+    if use_generated_prompts:
+        # Use the new generated prompts workflow
+        result = await agent.run(
+            f"Use extract_with_generated_prompts tool for: {content[:200]}...",
+            deps=deps,
+        )
+    else:
+        # Use the standard extraction (with hardcoded prompts)
+        result = await agent.run(
+            f"Extract entities and relationships from the following content:\n\n{content}",
+            deps=deps,
+        )
 
     return result.output
 

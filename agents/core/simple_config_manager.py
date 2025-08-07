@@ -12,11 +12,11 @@ This module provides domain-aware configuration that:
 This replaces the broken dynamic_config_manager references.
 """
 
-import logging
 import asyncio
-from typing import Dict, Any, Optional
+import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

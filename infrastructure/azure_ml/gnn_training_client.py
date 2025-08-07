@@ -5,19 +5,22 @@ Azure ML client for Graph Neural Network training orchestration.
 Based on original Universal GNN trainer implementation.
 """
 
+import asyncio
+import logging
+import time
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch_geometric.data import DataLoader
-import numpy as np
-import logging
-import asyncio
-import time
-from typing import Dict, Any, List, Optional, Tuple
 from azure.ai.ml import MLClient
-from azure.ai.ml.entities import Job, Environment, Command
+from azure.ai.ml.entities import Command, Environment, Job
+from torch_geometric.data import DataLoader
+
 from config.settings import azure_settings
 from infrastructure.azure_auth_utils import get_azure_credential
+
 from .gnn_model import UniversalGNN, UniversalGNNConfig, create_gnn_model
 
 logger = logging.getLogger(__name__)

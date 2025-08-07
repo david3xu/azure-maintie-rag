@@ -14,7 +14,7 @@ CosmosDbClient = SimpleCosmosGremlinClient
 
 __all__ = [
     "SimpleCosmosGremlinClient",
-    "AzureCosmosGremlinClient", 
+    "AzureCosmosGremlinClient",
     "UnifiedCosmosClient",
     "GremlinClient",
     "CosmosDbClient",

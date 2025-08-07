@@ -1,0 +1,95 @@
+# Azure Prompt Flow - Universal Knowledge Extraction
+# Centralized workflow for domain-agnostic knowledge extraction
+
+environment:
+  python_requirements_txt: ../../../requirements.txt
+
+inputs:
+  texts:
+    type: list
+    description: "Raw text documents for knowledge extraction"
+  domain_name:
+    type: string
+    default: "general"
+    description: "Domain name for context (remains universal)"
+  max_entities:
+    type: int
+    default: 50
+    description: "Maximum entities to extract"
+  confidence_threshold:
+    type: float
+    default: 0.7
+    description: "Minimum confidence threshold"
+
+outputs:
+  entities:
+    type: list
+    description: "Extracted entities with metadata"
+  relations:
+    type: list
+    description: "Extracted relations with metadata"
+  extraction_summary:
+    type: object
+    description: "Extraction statistics and quality metrics"
+
+nodes:
+- name: entity_extraction
+  type: llm
+  source:
+    type: code
+    path: entity_extraction.jinja2
+  inputs:
+    deployment_name: ${env:AZURE_OPENAI_DEPLOYMENT_NAME}
+    temperature: 0.3
+    max_tokens: 500
+    texts: ${inputs.texts}
+    domain_name: ${inputs.domain_name}
+  connection: azure_openai_connection
+  api: chat
+
+- name: relation_extraction
+  type: llm
+  source:
+    type: code
+    path: relation_extraction.jinja2
+  inputs:
+    deployment_name: ${env:AZURE_OPENAI_DEPLOYMENT_NAME}
+    temperature: 0.4
+    max_tokens: 400
+    texts: ${inputs.texts}
+    domain_name: ${inputs.domain_name}
+    entities: ${entity_extraction.output}
+  connection: azure_openai_connection
+  api: chat
+
+- name: knowledge_graph_builder
+  type: python
+  source:
+    type: code
+    path: knowledge_graph_builder.py
+  inputs:
+    entities: ${entity_extraction.output}
+    relations: ${relation_extraction.output}
+    confidence_threshold: ${inputs.confidence_threshold}
+    max_entities: ${inputs.max_entities}
+
+- name: quality_assessor
+  type: python
+  source:
+    type: code
+    path: quality_assessor.py
+  inputs:
+    entities: ${knowledge_graph_builder.output.entities}
+    relations: ${knowledge_graph_builder.output.relations}
+    original_texts: ${inputs.texts}
+
+- name: azure_storage_writer
+  type: python
+  source:
+    type: code
+    path: azure_storage_writer.py
+  inputs:
+    entities: ${knowledge_graph_builder.output.entities}
+    relations: ${knowledge_graph_builder.output.relations}
+    summary: ${quality_assessor.output}
+    domain_name: ${inputs.domain_name}

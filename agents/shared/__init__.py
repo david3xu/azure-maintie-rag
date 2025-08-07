@@ -1,11 +1,11 @@
 """Shared utilities"""
 
 from .utils import (
-    get_current_timestamp,
     calculate_processing_time,
-    validate_file_path,
-    safe_divide,
+    get_current_timestamp,
     merge_metadata,
+    safe_divide,
+    validate_file_path,
 )
 
 __all__ = [

@@ -14,7 +14,7 @@ Categories:
 - Configuration Fallbacks
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Local constants to avoid circular imports
 

@@ -4,11 +4,13 @@ GNN Inference Client
 Azure ML client for Graph Neural Network inference and real-time predictions.
 """
 
-import logging
 import asyncio
-from typing import Dict, Any, List, Optional
+import logging
+from typing import Any, Dict, List, Optional
+
 from azure.ai.ml import MLClient
-from azure.ai.ml.entities import OnlineEndpoint, OnlineDeployment
+from azure.ai.ml.entities import OnlineDeployment, OnlineEndpoint
+
 from config.settings import azure_settings
 from infrastructure.azure_auth_utils import get_azure_credential
 
@@ -20,7 +22,9 @@ class GNNInferenceClient:
 
     def __init__(self):
         """Initialize GNN inference client with real Azure ML endpoints."""
-        self.credential = get_azure_credential()  # Use centralized session-managed credential
+        self.credential = (
+            get_azure_credential()
+        )  # Use centralized session-managed credential
         self.ml_client = None
         self.deployment_name = None
         self.inference_cache = {}
@@ -31,7 +35,7 @@ class GNNInferenceClient:
         """Initialize the Azure ML client connection."""
         if self._initialized:
             return
-            
+
         try:
             self.ml_client = MLClient(
                 credential=self.credential,
@@ -42,7 +46,9 @@ class GNNInferenceClient:
             self._initialized = True
             logger.info("GNN Inference client initialized with real Azure ML")
         except Exception as e:
-            logger.warning(f"GNN client initialization failed, using fallback mode: {e}")
+            logger.warning(
+                f"GNN client initialization failed, using fallback mode: {e}"
+            )
             # Still mark as initialized for fallback functionality
             self._initialized = True
 
@@ -337,51 +343,47 @@ class GNNInferenceClient:
     async def predict(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Universal prediction method for GNN inference.
-        
+
         Expected for compatibility with Universal Search Agent.
         """
         logger.info("Executing GNN prediction")
-        
+
         try:
             query = input_data.get("query_embedding", "")
             vector_context = input_data.get("vector_context", [])
-            graph_context = input_data.get("graph_context", []) 
+            graph_context = input_data.get("graph_context", [])
             max_results = input_data.get("max_results", 5)
-            
+
             # Generate predictions based on context
             predictions = []
-            
+
             # Use vector and graph context to generate GNN predictions
             entities_from_context = vector_context + graph_context
-            
+
             for i, entity in enumerate(entities_from_context[:max_results]):
                 if entity and entity.strip():
                     # Calculate confidence based on context similarity
                     confidence = max(0.3, min(0.95, 0.5 + (len(entity) / 100.0)))
-                    
+
                     prediction = {
                         "entity": entity.strip(),
                         "confidence": confidence,
                         "reasoning": f"GNN inference based on graph embeddings and vector similarity",
                         "prediction_type": "entity_relevance",
-                        "context_source": "vector_graph_fusion"
+                        "context_source": "vector_graph_fusion",
                     }
                     predictions.append(prediction)
-            
+
             return {
                 "predictions": predictions,
                 "total_predictions": len(predictions),
                 "inference_method": "gnn_graph_embedding",
-                "processing_time": 0.125  # Simulated processing time
+                "processing_time": 0.125,  # Simulated processing time
             }
-            
+
         except Exception as e:
             logger.error(f"GNN prediction failed: {e}")
-            return {
-                "predictions": [],
-                "total_predictions": 0,
-                "error": str(e)
-            }
+            return {"predictions": [], "total_predictions": 0, "error": str(e)}
 
     async def validate_deployment(
         self, validation_config: Dict[str, Any]

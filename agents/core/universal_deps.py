@@ -6,25 +6,26 @@ Centralized dependency management following PydanticAI best practices.
 All agents share the same dependencies to avoid duplication and ensure consistency.
 """
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import Optional
-import asyncio
-from openai import AsyncAzureOpenAI
-from azure.identity import DefaultAzureCredential
 
-from infrastructure.azure_openai.openai_client import UnifiedAzureOpenAIClient
-from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosGremlinClient
-from infrastructure.azure_search.search_client import UnifiedSearchClient
-from infrastructure.azure_storage.storage_client import SimpleStorageClient
-from infrastructure.azure_ml.gnn_inference_client import GNNInferenceClient
-from infrastructure.azure_monitoring.app_insights_client import (
-    AzureApplicationInsightsClient,
-)
+from azure.identity import DefaultAzureCredential
+from openai import AsyncAzureOpenAI
+
 from agents.core.simple_config_manager import SimpleDynamicConfigManager
 from agents.core.universal_models import (
     UniversalDomainAnalysis,
     UniversalProcessingConfiguration,
 )
+from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosGremlinClient
+from infrastructure.azure_ml.gnn_inference_client import GNNInferenceClient
+from infrastructure.azure_monitoring.app_insights_client import (
+    AzureApplicationInsightsClient,
+)
+from infrastructure.azure_openai.openai_client import UnifiedAzureOpenAIClient
+from infrastructure.azure_search.search_client import UnifiedSearchClient
+from infrastructure.azure_storage.storage_client import SimpleStorageClient
 
 
 @dataclass

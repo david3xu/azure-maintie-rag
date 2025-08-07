@@ -6,8 +6,10 @@ Utility functions for query generation that can be called by agent tools.
 These replace the old pseudo-agents with proper utility functions.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from pydantic_ai.tools import RunContext
+
 from agents.core.universal_deps import UniversalDeps
 from agents.core.universal_models import UniversalDomainAnalysis
 
