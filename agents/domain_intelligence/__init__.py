@@ -1,73 +1,22 @@
-# Intelligence consolidation - unified domain intelligence components
+"""Universal Domain Intelligence Agent - Zero Hardcoded Domain Knowledge"""
 
-"""
-Intelligence Module - Consolidated Domain Intelligence Components
-
-This module consolidates domain intelligence functionality from multiple
-directories (discovery/ and domain/) into unified, high-performance components:
-
-- DomainAnalyzer: Unified content analysis and domain classification
-- PatternEngine: Consolidated pattern extraction and learning system
-- Background Processing: Startup optimization and performance enhancement
-- Config Generation: Infrastructure and ML configuration management
-- PydanticAI Tools: Enterprise integration for PydanticAI agents
-
-Key features preserved:
-- Data-driven domain discovery (no hardcoded assumptions)
-- Statistical pattern learning and evolution tracking
-- High-performance pattern matching and indexing
-- Zero-config domain adaptation
-- Continuous learning from user interactions
-- Background processing for <5ms domain detection
-"""
-
-# Import analysis components from organized structure
-from .analyzers import (
-    UnifiedContentAnalyzer,
-    DomainAnalysisResult,
-    DomainIntelligenceConfig,
-    HybridConfigurationGenerator,
-    LLMExtraction,  # ConfigurationRecommendations deleted
-    DataDrivenPatternEngine,
-    LearnedPattern,
-    ExtractedPatterns,
-    ConfigGenerator,
-    DomainConfig,
-    run_startup_background_processing,
-    BackgroundProcessingStats,
+# Now using the working agent.py (broken version backed up as agent_broken_pydanticai.py)
+from .agent import (
+    run_universal_domain_analysis,
+    UniversalDomainDeps, 
+    UniversalDomainAnalysis
 )
 
-# Note: DomainAnalyzer and DomainClassification removed - use UnifiedContentAnalyzer directly
-
-# PydanticAI tools moved to toolsets.py following target architecture
-# from .pydantic_tools import (
-#     analyze_domain_patterns_tool,
-#     discover_domain_tool,
-#     validate_domain_confidence_tool,
-# )
+# Import characteristics and config from agent
+from .agent import (
+    WorkingDomainCharacteristics as UniversalDomainCharacteristics,
+    WorkingProcessingConfiguration as UniversalProcessingConfiguration
+)
 
 __all__ = [
-    # Unified content analysis (primary)
-    "UnifiedContentAnalyzer",
-    "DomainAnalysisResult",
-    "DomainIntelligenceConfig",
-    # Configuration generation
-    "HybridConfigurationGenerator",
-    # "ConfigurationRecommendations" deleted - generator now returns Dict[str, Any]
-    "LLMExtraction",
-    # Note: DomainAnalyzer and DomainClassification removed - use UnifiedContentAnalyzer
-    # Pattern learning
-    "DataDrivenPatternEngine",
-    "LearnedPattern",
-    "ExtractedPatterns",
-    # Background processing
-    "run_startup_background_processing",
-    "BackgroundProcessingStats",
-    # Config generation
-    "DomainConfig",
-    "ConfigGenerator",
-    # PydanticAI Tools moved to toolsets.py following target architecture
-    # "discover_domain_tool",
-    # "analyze_domain_patterns_tool",
-    # "validate_domain_confidence_tool",
+    "run_universal_domain_analysis", 
+    "UniversalDomainDeps",
+    "UniversalDomainAnalysis",
+    "UniversalDomainCharacteristics",
+    "UniversalProcessingConfiguration"
 ]

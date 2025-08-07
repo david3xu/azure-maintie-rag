@@ -14,9 +14,9 @@ import sys
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agents.core.azure_service_container import ConsolidatedAzureServices
-from agents.knowledge_extraction.agent import get_knowledge_extraction_agent
-from agents.universal_search.agent import get_universal_search_agent
+from agents.knowledge_extraction.agent import agent as knowledge_extraction_agent, ExtractionDeps
+from agents.universal_search.agent import agent as universal_search_agent, SearchDeps
+from agents.orchestrator import UniversalOrchestrator
 
 
 @pytest.fixture(scope="session")

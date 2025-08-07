@@ -1,19 +1,21 @@
 """
-Azure Storage Integration - Consolidated Client
-All Azure Storage functionality consolidated in this module
+Azure Storage Integration - Simple Client
+All Azure Storage functionality using the simple client implementation
 """
 
 # Main unified client implementation
-from .storage_client import UnifiedStorageClient
+from .storage_client import SimpleStorageClient
 
 # Maintain backwards compatibility with old class names
-StorageClient = UnifiedStorageClient
-BlobStorageClient = UnifiedStorageClient
-AzureStorageClient = UnifiedStorageClient
+UnifiedStorageClient = SimpleStorageClient
+StorageClient = SimpleStorageClient
+BlobStorageClient = SimpleStorageClient
+AzureStorageClient = SimpleStorageClient
 
 __all__ = [
+    "SimpleStorageClient",
     "UnifiedStorageClient",
-    "StorageClient",
+    "StorageClient", 
     "BlobStorageClient",
     "AzureStorageClient",
 ]
