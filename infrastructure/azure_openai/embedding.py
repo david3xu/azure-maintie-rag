@@ -98,14 +98,17 @@ class AzureEmbeddingService(BaseAzureClient):
                 "dimensions": len(embedding),
                 "model": model,
                 "text_length": len(text),
-                "tokens_used": response.usage.total_tokens
-                if hasattr(response, "usage")
-                else None,
+                "tokens_used": (
+                    response.usage.total_tokens if hasattr(response, "usage") else None
+                ),
                 "cache_hit": False,
             }
 
             # Store in cache (limit cache size to prevent memory issues)
-            if len(self._embedding_cache) < AzureServiceLimits.DEFAULT_EMBEDDING_CACHE_SIZE_THRESHOLD:  # Limit cache size
+            if (
+                len(self._embedding_cache)
+                < AzureServiceLimits.DEFAULT_EMBEDDING_CACHE_SIZE_THRESHOLD
+            ):  # Limit cache size
                 self._embedding_cache[cache_key] = {
                     k: v for k, v in result_data.items() if k != "cache_hit"
                 }
@@ -192,9 +195,9 @@ class AzureEmbeddingService(BaseAzureClient):
                     "successful_count": len(successful_embeddings),
                     "failed_count": failed_count,
                     "total_texts": len(texts),
-                    "dimensions": len(successful_embeddings[0])
-                    if successful_embeddings
-                    else 0,
+                    "dimensions": (
+                        len(successful_embeddings[0]) if successful_embeddings else 0
+                    ),
                     "model": model,
                     "total_tokens": total_tokens,
                     "batches_processed": (len(texts) + batch_size - 1) // batch_size,

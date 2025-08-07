@@ -16,13 +16,15 @@ logger = logging.getLogger(__name__)
 class UniversalGNN(nn.Module):
     """Universal Graph Neural Network for any domain knowledge graph"""
 
-    def __init__(self,
-                 num_node_features: int,
-                 num_classes: int,
-                 hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
-                 num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
-                 dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
-                 conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE):
+    def __init__(
+        self,
+        num_node_features: int,
+        num_classes: int,
+        hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
+        num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
+        dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
+        conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE,
+    ):
         """
         Initialize Universal GNN
 
@@ -71,11 +73,17 @@ class UniversalGNN(nn.Module):
         # Global pooling layer
         self.global_pool = nn.AdaptiveAvgPool1d(1)
 
-        logger.info(f"UniversalGNN initialized: {conv_type}, {num_layers} layers, "
-                   f"hidden_dim={hidden_dim}, dropout={dropout}")
+        logger.info(
+            f"UniversalGNN initialized: {conv_type}, {num_layers} layers, "
+            f"hidden_dim={hidden_dim}, dropout={dropout}"
+        )
 
-    def forward(self, x: torch.Tensor, edge_index: torch.Tensor,
-                batch: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self,
+        x: torch.Tensor,
+        edge_index: torch.Tensor,
+        batch: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
         """
         Forward pass through the GNN
 
@@ -114,7 +122,7 @@ class UniversalGNN(nn.Module):
         pooled_features = []
 
         for batch_idx in unique_batches:
-            mask = (batch == batch_idx)
+            mask = batch == batch_idx
             batch_features = x[mask]
             # Mean pooling for each batch
             batch_pooled = torch.mean(batch_features, dim=0)
@@ -133,7 +141,9 @@ class UniversalGNN(nn.Module):
 
         return x
 
-    def predict_node_classes(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
+    def predict_node_classes(
+        self, x: torch.Tensor, edge_index: torch.Tensor
+    ) -> torch.Tensor:
         """Predict node-level classes"""
         embeddings = self.get_embeddings(x, edge_index)
         return self.classifier(embeddings)
@@ -142,13 +152,15 @@ class UniversalGNN(nn.Module):
 class UniversalGNNConfig:
     """Configuration for Universal GNN model"""
 
-    def __init__(self,
-                 hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
-                 num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
-                 dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
-                 conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE,
-                 learning_rate: float = MLModelConstants.DEFAULT_LEARNING_RATE,
-                 weight_decay: float = MLModelConstants.DEFAULT_WEIGHT_DECAY):
+    def __init__(
+        self,
+        hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
+        num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
+        dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
+        conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE,
+        learning_rate: float = MLModelConstants.DEFAULT_LEARNING_RATE,
+        weight_decay: float = MLModelConstants.DEFAULT_WEIGHT_DECAY,
+    ):
         """
         Initialize GNN configuration
 
@@ -175,25 +187,33 @@ class UniversalGNNConfig:
             "dropout": self.dropout,
             "conv_type": self.conv_type,
             "learning_rate": self.learning_rate,
-            "weight_decay": self.weight_decay
+            "weight_decay": self.weight_decay,
         }
 
     @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any]) -> 'UniversalGNNConfig':
+    def from_dict(cls, config_dict: Dict[str, Any]) -> "UniversalGNNConfig":
         """Create config from dictionary"""
         return cls(
-            hidden_dim=config_dict.get("hidden_dim", MLModelConstants.DEFAULT_HIDDEN_DIM),
-            num_layers=config_dict.get("num_layers", MLModelConstants.DEFAULT_NUM_LAYERS),
+            hidden_dim=config_dict.get(
+                "hidden_dim", MLModelConstants.DEFAULT_HIDDEN_DIM
+            ),
+            num_layers=config_dict.get(
+                "num_layers", MLModelConstants.DEFAULT_NUM_LAYERS
+            ),
             dropout=config_dict.get("dropout", MLModelConstants.DEFAULT_DROPOUT_RATE),
             conv_type=config_dict.get("conv_type", MLModelConstants.DEFAULT_CONV_TYPE),
-            learning_rate=config_dict.get("learning_rate", MLModelConstants.DEFAULT_LEARNING_RATE),
-            weight_decay=config_dict.get("weight_decay", MLModelConstants.DEFAULT_WEIGHT_DECAY)
+            learning_rate=config_dict.get(
+                "learning_rate", MLModelConstants.DEFAULT_LEARNING_RATE
+            ),
+            weight_decay=config_dict.get(
+                "weight_decay", MLModelConstants.DEFAULT_WEIGHT_DECAY
+            ),
         )
 
 
-def create_gnn_model(num_node_features: int,
-                    num_classes: int,
-                    config: UniversalGNNConfig) -> UniversalGNN:
+def create_gnn_model(
+    num_node_features: int, num_classes: int, config: UniversalGNNConfig
+) -> UniversalGNN:
     """
     Factory function to create Universal GNN model
 
@@ -211,5 +231,5 @@ def create_gnn_model(num_node_features: int,
         hidden_dim=config.hidden_dim,
         num_layers=config.num_layers,
         dropout=config.dropout,
-        conv_type=config.conv_type
+        conv_type=config.conv_type,
     )

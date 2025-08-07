@@ -28,7 +28,9 @@ class SimpleQueryService:
         self.agents[agent_name] = agent_instance
         logger.info(f"Query agent registered: {agent_name}")
 
-    async def process_query(self, query: str, agent_name: str = "default", domain: str = "general") -> Dict[str, Any]:
+    async def process_query(
+        self, query: str, agent_name: str = "default", domain: str = "general"
+    ) -> Dict[str, Any]:
         """Process query using simple approach"""
         try:
             # Check cache first
@@ -43,27 +45,23 @@ class SimpleQueryService:
                     "success": False,
                     "error": f"Agent not found: {agent_name}",
                     "query": query,
-                    "agent_name": agent_name
+                    "agent_name": agent_name,
                 }
 
             agent = self.agents[agent_name]
 
             # Process query
-            request = {
-                "query": query,
-                "domain": domain,
-                "agent_name": agent_name
-            }
+            request = {"query": query, "domain": domain, "agent_name": agent_name}
 
-            if hasattr(agent, 'process_query'):
+            if hasattr(agent, "process_query"):
                 result = await agent.process_query(request)
-            elif hasattr(agent, 'process_request'):
+            elif hasattr(agent, "process_request"):
                 result = await agent.process_request(request)
             else:
                 return {
                     "success": False,
                     "error": f"Agent {agent_name} has no query processing method",
-                    "query": query
+                    "query": query,
                 }
 
             # Cache successful results
@@ -72,11 +70,11 @@ class SimpleQueryService:
                 "query": query,
                 "agent_name": agent_name,
                 "domain": domain,
-                "result": result
+                "result": result,
             }
-            
+
             self.query_cache[cache_key] = response
-            
+
             return response
 
         except Exception as e:
@@ -85,10 +83,12 @@ class SimpleQueryService:
                 "success": False,
                 "error": str(e),
                 "query": query,
-                "agent_name": agent_name
+                "agent_name": agent_name,
             }
 
-    async def search_documents(self, query: str, domain: str = "general", limit: int = 10) -> Dict[str, Any]:
+    async def search_documents(
+        self, query: str, domain: str = "general", limit: int = 10
+    ) -> Dict[str, Any]:
         """Search documents using simple approach"""
         try:
             # Use search agent if available
@@ -97,25 +97,23 @@ class SimpleQueryService:
                     "query": query,
                     "domain": domain,
                     "limit": limit,
-                    "search_type": "documents"
+                    "search_type": "documents",
                 }
                 return await self.process_query(query, "search", domain)
             else:
                 return {
                     "success": False,
                     "error": "Search agent not available",
-                    "query": query
+                    "query": query,
                 }
 
         except Exception as e:
             logger.error(f"Document search failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "query": query
-            }
+            return {"success": False, "error": str(e), "query": query}
 
-    async def extract_knowledge(self, text: str, domain: str = "general") -> Dict[str, Any]:
+    async def extract_knowledge(
+        self, text: str, domain: str = "general"
+    ) -> Dict[str, Any]:
         """Extract knowledge using simple approach"""
         try:
             # Use knowledge extraction agent if available
@@ -123,14 +121,14 @@ class SimpleQueryService:
                 extraction_request = {
                     "text": text,
                     "domain": domain,
-                    "operation": "extract_knowledge"
+                    "operation": "extract_knowledge",
                 }
                 return await self.process_query(text, "knowledge_extraction", domain)
             else:
                 return {
                     "success": False,
                     "error": "Knowledge extraction agent not available",
-                    "text": text[:100] + "..." if len(text) > 100 else text
+                    "text": text[:100] + "..." if len(text) > 100 else text,
                 }
 
         except Exception as e:
@@ -138,7 +136,7 @@ class SimpleQueryService:
             return {
                 "success": False,
                 "error": str(e),
-                "text": text[:100] + "..." if len(text) > 100 else text
+                "text": text[:100] + "..." if len(text) > 100 else text,
             }
 
     def clear_cache(self) -> Dict[str, Any]:
@@ -148,14 +146,14 @@ class SimpleQueryService:
         logger.info(f"Query cache cleared: {cache_size} entries removed")
         return {
             "success": True,
-            "message": f"Cache cleared: {cache_size} entries removed"
+            "message": f"Cache cleared: {cache_size} entries removed",
         }
 
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
         return {
             "cache_size": len(self.query_cache),
-            "cache_keys": list(self.query_cache.keys())[:10]  # Show first 10 keys
+            "cache_keys": list(self.query_cache.keys())[:10],  # Show first 10 keys
         }
 
     def get_service_status(self) -> Dict[str, Any]:
@@ -164,29 +162,38 @@ class SimpleQueryService:
             "status": "healthy",
             "registered_agents": list(self.agents.keys()),
             "cache_size": len(self.query_cache),
-            "total_agents": len(self.agents)
+            "total_agents": len(self.agents),
         }
 
 
 # Backward compatibility - Global instance
 _query_service = SimpleQueryService()
 
+
 # Backward compatibility functions
-async def process_query(query: str, agent_name: str = "default", domain: str = "general") -> Dict[str, Any]:
+async def process_query(
+    query: str, agent_name: str = "default", domain: str = "general"
+) -> Dict[str, Any]:
     """Backward compatibility function"""
     return await _query_service.process_query(query, agent_name, domain)
 
-async def search_documents(query: str, domain: str = "general", limit: int = 10) -> Dict[str, Any]:
+
+async def search_documents(
+    query: str, domain: str = "general", limit: int = 10
+) -> Dict[str, Any]:
     """Backward compatibility function"""
     return await _query_service.search_documents(query, domain, limit)
+
 
 async def extract_knowledge(text: str, domain: str = "general") -> Dict[str, Any]:
     """Backward compatibility function"""
     return await _query_service.extract_knowledge(text, domain)
 
+
 def register_query_agent(agent_name: str, agent_instance: Any) -> None:
     """Backward compatibility function"""
     _query_service.register_agent(agent_name, agent_instance)
+
 
 # Backward compatibility aliases
 QueryService = SimpleQueryService

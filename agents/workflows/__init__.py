@@ -11,6 +11,6 @@ from .state_persistence import WorkflowStateManager
 
 __all__ = [
     "ConfigExtractionWorkflow",
-    "SearchWorkflow", 
+    "SearchWorkflow",
     "WorkflowStateManager",
 ]

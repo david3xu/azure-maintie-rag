@@ -26,7 +26,11 @@ from typing import Any, Dict, List, Optional
 from agents.core.constants import ProcessingConstants
 from agents.core.math_expressions import EXPR
 from agents.core.data_models import MemoryStatus
-from infrastructure.constants import MemoryConstants, MLModelConstants, ValidationConstants
+from infrastructure.constants import (
+    MemoryConstants,
+    MLModelConstants,
+    ValidationConstants,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +45,11 @@ class UnifiedMemoryManager:
     while reducing complexity.
     """
 
-    def __init__(self, memory_limit_mb: float = ProcessingConstants.DEFAULT_MEMORY_LIMIT_MB, cleanup_threshold: float = ProcessingConstants.MEMORY_CLEANUP_THRESHOLD):
+    def __init__(
+        self,
+        memory_limit_mb: float = ProcessingConstants.DEFAULT_MEMORY_LIMIT_MB,
+        cleanup_threshold: float = ProcessingConstants.MEMORY_CLEANUP_THRESHOLD,
+    ):
         """
         Initialize unified memory manager
 
@@ -51,7 +59,9 @@ class UnifiedMemoryManager:
         """
         self.memory_limit_mb = memory_limit_mb
         self.cleanup_threshold = cleanup_threshold
-        self.cleanup_target = cleanup_threshold * ProcessingConstants.MEMORY_CLEANUP_THRESHOLD  # Clean down to proportion of threshold
+        self.cleanup_target = (
+            cleanup_threshold * ProcessingConstants.MEMORY_CLEANUP_THRESHOLD
+        )  # Clean down to proportion of threshold
 
         # Memory tracking
         self._items: Dict[str, Any] = {}
@@ -122,7 +132,9 @@ class UnifiedMemoryManager:
 
     def _should_cleanup(self) -> bool:
         """Check if cleanup is needed based on utilization"""
-        return self.status.utilization_percent >= (self.cleanup_threshold * CacheConstants.PERCENTAGE_MULTIPLIER)
+        return self.status.utilization_percent >= (
+            self.cleanup_threshold * CacheConstants.PERCENTAGE_MULTIPLIER
+        )
 
     async def _perform_cleanup(self) -> int:
         """Perform LRU-based cleanup to free memory"""
@@ -162,7 +174,9 @@ class UnifiedMemoryManager:
     def _update_status(self):
         """Update memory status and metrics"""
         self.status.total_items = len(self._items)
-        self.status.estimated_usage_mb = EXPR.bytes_to_mb(sum(self._item_sizes.values()))
+        self.status.estimated_usage_mb = EXPR.bytes_to_mb(
+            sum(self._item_sizes.values())
+        )
         self.status.evictions = self.metrics["total_evictions"]
         self.status.last_cleanup = time.time()
         self.status.update_health_status()
@@ -188,7 +202,9 @@ class UnifiedMemoryManager:
 
                 # Check if storing would exceed memory limits
                 current_usage = sum(self._item_sizes.values())
-                projected_usage_mb = EXPR.calculate_projected_usage_mb(current_usage, item_size)
+                projected_usage_mb = EXPR.calculate_projected_usage_mb(
+                    current_usage, item_size
+                )
 
                 if projected_usage_mb > self.memory_limit_mb:
                     # Try cleanup first
@@ -197,7 +213,9 @@ class UnifiedMemoryManager:
 
                     # Check again after cleanup
                     current_usage = sum(self._item_sizes.values())
-                    projected_usage_mb = EXPR.calculate_projected_usage_mb(current_usage, item_size)
+                    projected_usage_mb = EXPR.calculate_projected_usage_mb(
+                        current_usage, item_size
+                    )
 
                     if projected_usage_mb > self.memory_limit_mb:
                         logger.warning(
@@ -366,13 +384,17 @@ class UnifiedMemoryManager:
                 "cache_misses": self.metrics["cache_misses"],
                 "hit_rate_percent": hit_rate,
                 "total_evictions": self.metrics["total_evictions"],
-                "avg_store_time_ms": self.metrics["avg_store_time"] * CacheConstants.MS_PER_SECOND,
-                "avg_retrieval_time_ms": self.metrics["avg_retrieval_time"] * CacheConstants.MS_PER_SECOND,
+                "avg_store_time_ms": self.metrics["avg_store_time"]
+                * CacheConstants.MS_PER_SECOND,
+                "avg_retrieval_time_ms": self.metrics["avg_retrieval_time"]
+                * CacheConstants.MS_PER_SECOND,
             },
             "category_breakdown": self._get_category_breakdown(),
             "cleanup_configuration": {
-                "cleanup_threshold_percent": self.cleanup_threshold * CacheConstants.PERCENTAGE_MULTIPLIER,
-                "cleanup_target_percent": self.cleanup_target * CacheConstants.PERCENTAGE_MULTIPLIER,
+                "cleanup_threshold_percent": self.cleanup_threshold
+                * CacheConstants.PERCENTAGE_MULTIPLIER,
+                "cleanup_target_percent": self.cleanup_target
+                * CacheConstants.PERCENTAGE_MULTIPLIER,
             },
         }
 
@@ -382,7 +404,8 @@ class UnifiedMemoryManager:
 
         return {
             "status": self.status.health_status,
-            "memory_healthy": self.status.utilization_percent < ValidationConstants.MEMORY_HEALTH_THRESHOLD_PERCENT,
+            "memory_healthy": self.status.utilization_percent
+            < ValidationConstants.MEMORY_HEALTH_THRESHOLD_PERCENT,
             "utilization_percent": self.status.utilization_percent,
             "total_items": self.status.total_items,
             "within_limits": self.status.estimated_usage_mb < self.memory_limit_mb,

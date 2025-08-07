@@ -17,25 +17,27 @@ from agents.core.azure_service_container import ConsolidatedAzureServices
 async def validate_azure_services():
     """Simple Azure services validation"""
     print("🔍 Validating Azure Services...")
-    
+
     try:
         # Initialize consolidated services
         azure_services = ConsolidatedAzureServices()
-        
+
         # Test all services
         service_status = await azure_services.initialize_all_services()
-        
+
         print("\n📊 Results:")
         for service, status in service_status.items():
             status_icon = "✅" if status else "❌"
             print(f"   {status_icon} {service}")
-        
+
         # Get overall health
         health = azure_services.get_service_status()
-        print(f"\n🎯 Overall: {health['successful_services']}/{health['total_services']} services ready")
-        
-        return health['overall_health']
-        
+        print(
+            f"\n🎯 Overall: {health['successful_services']}/{health['total_services']} services ready"
+        )
+
+        return health["overall_health"]
+
     except Exception as e:
         print(f"❌ Validation failed: {e}")
         return False

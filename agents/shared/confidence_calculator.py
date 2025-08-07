@@ -19,10 +19,10 @@ from enum import Enum
 
 # Import consolidated data models
 from agents.core.data_models import (
-    ConfidenceScore, 
+    ConfidenceScore,
     # AggregatedConfidence, EntityConfidenceFactors deleted - using simple calculations
     RelationshipConfidenceFactors,
-    ConfidenceMethod
+    ConfidenceMethod,
 )
 
 
@@ -31,5 +31,5 @@ def calculate_adaptive_confidence(data: Dict[str, Any]) -> float:
     """Stub for adaptive confidence calculation"""
     return 0.8
 
-# ConfidenceScore and other models imported from data_models.py above
 
+# ConfidenceScore and other models imported from data_models.py above

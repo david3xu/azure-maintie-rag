@@ -18,24 +18,24 @@ class AzureServiceCostTracker:
     def __init__(self):
         self.cost_per_service = {
             "azure_openai": {
-                "per_token": AzurePricingConstants.AZURE_OPENAI_PER_TOKEN, 
-                "per_request": AzurePricingConstants.AZURE_OPENAI_PER_REQUEST
+                "per_token": AzurePricingConstants.AZURE_OPENAI_PER_TOKEN,
+                "per_request": AzurePricingConstants.AZURE_OPENAI_PER_REQUEST,
             },
             "cognitive_search": {
-                "per_document": AzurePricingConstants.COGNITIVE_SEARCH_PER_DOCUMENT, 
-                "per_query": AzurePricingConstants.COGNITIVE_SEARCH_PER_QUERY
+                "per_document": AzurePricingConstants.COGNITIVE_SEARCH_PER_DOCUMENT,
+                "per_query": AzurePricingConstants.COGNITIVE_SEARCH_PER_QUERY,
             },
             "cosmos_db": {
-                "per_operation": AzurePricingConstants.COSMOS_DB_PER_OPERATION, 
-                "per_ru": AzurePricingConstants.COSMOS_DB_PER_RU
+                "per_operation": AzurePricingConstants.COSMOS_DB_PER_OPERATION,
+                "per_ru": AzurePricingConstants.COSMOS_DB_PER_RU,
             },
             "blob_storage": {
-                "per_gb_month": AzurePricingConstants.BLOB_STORAGE_PER_GB_MONTH, 
-                "per_operation": AzurePricingConstants.BLOB_STORAGE_PER_OPERATION
+                "per_gb_month": AzurePricingConstants.BLOB_STORAGE_PER_GB_MONTH,
+                "per_operation": AzurePricingConstants.BLOB_STORAGE_PER_OPERATION,
             },
             "azure_ml": {
-                "per_training_hour": AzurePricingConstants.AZURE_ML_PER_TRAINING_HOUR, 
-                "per_inference": AzurePricingConstants.AZURE_ML_PER_INFERENCE
+                "per_training_hour": AzurePricingConstants.AZURE_ML_PER_TRAINING_HOUR,
+                "per_inference": AzurePricingConstants.AZURE_ML_PER_INFERENCE,
             },
         }
 

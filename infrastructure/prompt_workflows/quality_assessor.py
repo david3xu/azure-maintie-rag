@@ -11,10 +11,10 @@ from typing import Any, Dict, List, Optional
 
 # Import PydanticAI output validators (replaces manual validation chains)
 from agents.core.data_models import (
-    validate_extraction_quality, 
+    validate_extraction_quality,
     ExtractionQualityOutput,
     ValidatedEntity,
-    ValidatedRelationship
+    ValidatedRelationship,
 )
 from pydantic import BaseModel, Field
 
@@ -28,7 +28,7 @@ def assess_extraction_quality(
 ) -> Dict[str, Any]:
     """
     PydanticAI-enhanced quality assessment for knowledge extraction
-    
+
     Replaces 150+ lines of manual validation with agent-driven validation patterns.
     """
     try:
@@ -40,13 +40,13 @@ def assess_extraction_quality(
         # Calculate key metrics for PydanticAI validation
         entities_per_text = total_entities / total_texts
         relations_per_entity = total_relations / max(1, total_entities)
-        
-        avg_entity_confidence = (
-            sum(e.get("confidence", 0.0) for e in entities) / max(1, total_entities)
+
+        avg_entity_confidence = sum(e.get("confidence", 0.0) for e in entities) / max(
+            1, total_entities
         )
-        avg_relation_confidence = (
-            sum(r.get("confidence", 0.0) for r in relations) / max(1, total_relations)
-        )
+        avg_relation_confidence = sum(
+            r.get("confidence", 0.0) for r in relations
+        ) / max(1, total_relations)
 
         # Create quality data for PydanticAI validation
         quality_data = {
@@ -55,16 +55,18 @@ def assess_extraction_quality(
             "avg_entity_confidence": avg_entity_confidence,
             "avg_relation_confidence": avg_relation_confidence,
             "overall_score": 0.8,  # Base score - will be refined by agent
-            "quality_tier": "good"  # Default - will be determined by agent
+            "quality_tier": "good",  # Default - will be determined by agent
         }
 
         # Use PydanticAI output validator (replaces 100+ lines of manual validation)
-        validated_quality: ExtractionQualityOutput = validate_extraction_quality(quality_data)
+        validated_quality: ExtractionQualityOutput = validate_extraction_quality(
+            quality_data
+        )
 
         # Generate metadata (keep existing structure for compatibility)
         entity_types = [e.get("entity_type", "") for e in entities]
         relation_types = [r.get("relation_type", "") for r in relations]
-        
+
         # Compile streamlined assessment (80% reduction from original)
         quality_assessment = {
             "overall_score": validated_quality.overall_score,
@@ -75,15 +77,23 @@ def assess_extraction_quality(
                 "unique_entity_types": len(set(entity_types)),
                 "unique_relation_types": len(set(relation_types)),
                 "entities_per_text": round(validated_quality.entities_per_text, 2),
-                "relations_per_entity": round(validated_quality.relations_per_entity, 2),
+                "relations_per_entity": round(
+                    validated_quality.relations_per_entity, 2
+                ),
             },
             "confidence_metrics": {
-                "avg_entity_confidence": round(validated_quality.avg_entity_confidence, 3),
-                "avg_relation_confidence": round(validated_quality.avg_relation_confidence, 3),
+                "avg_entity_confidence": round(
+                    validated_quality.avg_entity_confidence, 3
+                ),
+                "avg_relation_confidence": round(
+                    validated_quality.avg_relation_confidence, 3
+                ),
             },
             "text_analysis": {
                 "total_texts": total_texts,
-                "total_characters": sum(len(text) for text in original_texts) if original_texts else 0,
+                "total_characters": (
+                    sum(len(text) for text in original_texts) if original_texts else 0
+                ),
             },
             "assessment_timestamp": datetime.now().isoformat(),
             "assessment_method": "pydantic_ai_enhanced",

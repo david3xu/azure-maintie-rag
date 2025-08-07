@@ -9,6 +9,7 @@ from enum import Enum
 
 class WorkflowState(Enum):
     """Workflow execution states"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -18,6 +19,7 @@ class WorkflowState(Enum):
 
 class NodeState(Enum):
     """Individual node execution states"""
+
     READY = "ready"
     EXECUTING = "executing"
     COMPLETED = "completed"

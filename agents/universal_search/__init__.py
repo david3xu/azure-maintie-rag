@@ -16,7 +16,7 @@ from .orchestrators.consolidated_search_orchestrator import (
     ConsolidatedSearchOrchestrator,
     TriModalSearchResult,
     SearchResult,
-    ModalityResult
+    ModalityResult,
 )
 
 # Import consolidated agent
@@ -25,12 +25,13 @@ from .agent import (
     universal_search_agent,
     execute_universal_search,
     QueryRequest,
-    SearchResponse
+    SearchResponse,
 )
 
 # Import search workflow orchestrator (single source of truth)
 try:
     from ..workflows.search_workflow_graph import SearchWorkflow
+
     WORKFLOW_ORCHESTRATOR_AVAILABLE = True
 except ImportError:
     WORKFLOW_ORCHESTRATOR_AVAILABLE = False
@@ -39,7 +40,7 @@ except ImportError:
 __all__ = [
     # Consolidated orchestrator
     "ConsolidatedSearchOrchestrator",
-    "TriModalSearchResult", 
+    "TriModalSearchResult",
     "SearchResult",
     "ModalityResult",
     # Consolidated agent

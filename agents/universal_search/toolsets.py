@@ -21,15 +21,18 @@ from agents.core.data_models import (
     TriModalSearchResult,
     SearchResponse as AgentResponse,
     DomainDetectionResult,
-    UniversalSearchDeps
+    UniversalSearchDeps,
 )
-from agents.core.constants import UniversalSearchConstants, UniversalSearchToolsetConstants
+from agents.core.constants import (
+    UniversalSearchConstants,
+    UniversalSearchToolsetConstants,
+)
 
 
 class UniversalSearchToolset(FunctionToolset):
     """
     🎯 PydanticAI-Compliant Universal Search Toolset
-    
+
     Following AGENT_BOUNDARY_FIXES_IMPLEMENTATION.md target architecture:
     - Search-specific Toolset class in universal_search/toolsets.py
     - Replaces scattered @universal_agent.tool decorators
@@ -38,11 +41,15 @@ class UniversalSearchToolset(FunctionToolset):
 
     def __init__(self):
         super().__init__()
-        
+
         # Register core universal search tools
-        self.add_function(self.detect_domain, name='detect_domain')
-        self.add_function(self.execute_tri_modal_search, name='execute_tri_modal_search')
-        self.add_function(self.process_intelligent_query, name='process_intelligent_query')
+        self.add_function(self.detect_domain, name="detect_domain")
+        self.add_function(
+            self.execute_tri_modal_search, name="execute_tri_modal_search"
+        )
+        self.add_function(
+            self.process_intelligent_query, name="process_intelligent_query"
+        )
 
     async def detect_domain(
         self, ctx: RunContext[UniversalSearchDeps], query: str
@@ -51,19 +58,24 @@ class UniversalSearchToolset(FunctionToolset):
         try:
             # Import here to avoid circular imports during lazy initialization
             from ..domain_intelligence.agent import get_domain_intelligence_agent
-            
+
             domain_agent = get_domain_intelligence_agent()
-            
+
             # Delegate to Domain Intelligence Agent
             result = await domain_agent.run(
                 "detect_domain_from_query",
                 message_history=[
-                    {"role": "user", "content": f"Detect domain from this query: {query}"}
-                ]
+                    {
+                        "role": "user",
+                        "content": f"Detect domain from this query: {query}",
+                    }
+                ],
             )
 
             # Extract result data
-            if hasattr(result, "data") and isinstance(result.data, DomainDetectionResult):
+            if hasattr(result, "data") and isinstance(
+                result.data, DomainDetectionResult
+            ):
                 return result.data
             else:
                 # Use fallback values from centralized configuration
@@ -81,7 +93,9 @@ class UniversalSearchToolset(FunctionToolset):
                 domain=UniversalSearchToolsetConstants.FALLBACK_DOMAIN,
                 confidence=UniversalSearchToolsetConstants.FALLBACK_CONFIDENCE_ERROR,
                 matched_patterns=[],
-                reasoning=UniversalSearchToolsetConstants.ERROR_REASONING_TEMPLATE.format(error=str(e)),
+                reasoning=UniversalSearchToolsetConstants.ERROR_REASONING_TEMPLATE.format(
+                    error=str(e)
+                ),
                 discovered_entities=[],
             )
 
@@ -91,28 +105,33 @@ class UniversalSearchToolset(FunctionToolset):
         """Execute tri-modal search (Vector + Graph + GNN) with optimal performance"""
         try:
             import time
+
             start_time = time.time()
-            
+
             # Real tri-modal search orchestration using actual Azure services
-            from agents.universal_search.orchestrators.consolidated_search_orchestrator import ConsolidatedSearchOrchestrator
+            from agents.universal_search.orchestrators.consolidated_search_orchestrator import (
+                ConsolidatedSearchOrchestrator,
+            )
             from config.centralized_config import get_search_config
-            
+
             # Get dynamic search configuration for domain
-            search_config = get_search_config(request.domain or "general", request.query)
-            
+            search_config = get_search_config(
+                request.domain or "general", request.query
+            )
+
             # Initialize real search orchestrator
             orchestrator = ConsolidatedSearchOrchestrator()
-            
+
             # Execute actual tri-modal search with learned parameters
             search_result = await orchestrator.execute_tri_modal_search(
                 query=request.query,
                 domain=request.domain or "general",
                 search_types=request.search_types or ["vector", "graph", "gnn"],
-                max_results=request.max_results or 10
+                max_results=request.max_results or 10,
             )
-            
+
             execution_time = time.time() - start_time
-            
+
             return TriModalSearchResult(
                 query=request.query,
                 domain=request.domain,
@@ -136,34 +155,39 @@ class UniversalSearchToolset(FunctionToolset):
             )
 
     async def process_intelligent_query(
-        self, ctx: RunContext[UniversalSearchDeps], query: str, domain: Optional[str] = None
+        self,
+        ctx: RunContext[UniversalSearchDeps],
+        query: str,
+        domain: Optional[str] = None,
     ) -> AgentResponse:
         """Process query with intelligent domain detection and tri-modal search"""
         try:
             import time
+
             start_time = time.time()
-            
+
             # Step 1: Detect domain if not provided
             if not domain:
                 domain_result = await self.detect_domain(ctx, query)
                 domain = domain_result.domain
-            
+
             # Step 2: Execute tri-modal search with domain-optimized parameters
             # Load search configuration from centralized system
             from config.centralized_config import get_search_config
+
             search_config = get_search_config(domain, query)
-            
+
             search_request = TriModalSearchRequest(
                 query=query,
                 domain=domain,
                 search_types=search_config.enabled_search_types,
-                max_results=search_config.max_results_per_query
+                max_results=search_config.max_results_per_query,
             )
-            
+
             search_result = await self.execute_tri_modal_search(ctx, search_request)
-            
+
             execution_time = time.time() - start_time
-            
+
             return AgentResponse(
                 success=True,
                 result=search_result,
@@ -173,8 +197,10 @@ class UniversalSearchToolset(FunctionToolset):
             )
 
         except Exception as e:
-            execution_time = time.time() - start_time if 'start_time' in locals() else 0.0
-            
+            execution_time = (
+                time.time() - start_time if "start_time" in locals() else 0.0
+            )
+
             return AgentResponse(
                 success=False,
                 result=None,

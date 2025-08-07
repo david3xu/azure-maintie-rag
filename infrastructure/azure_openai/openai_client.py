@@ -70,7 +70,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         """Initialize Azure OpenAI client (CODING_STANDARDS: Clean configuration)"""
         # Get clean configuration (bootstrap version to avoid circular dependencies)
         model_config = get_model_config_bootstrap()
-        
+
         if self.use_managed_identity:
             # Use managed identity for azd deployments
             from azure.identity import DefaultAzureCredential, get_bearer_token_provider
@@ -79,7 +79,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
             token_provider = get_bearer_token_provider(
                 credential, "https://cognitiveservices.azure.com/.default"
             )
-            
+
             self._client = AzureOpenAI(
                 azure_ad_token_provider=token_provider,
                 api_version=model_config.openai_api_version,
@@ -104,11 +104,12 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         try:
             self.ensure_initialized()
 
-            # Simple test request to verify connectivity  
+            # Simple test request to verify connectivity
             model_config = get_model_config_bootstrap()
             response = await asyncio.to_thread(
                 self._client.chat.completions.create,
-                model=azure_settings.openai_deployment_name or model_config.gpt4o_deployment_name,
+                model=azure_settings.openai_deployment_name
+                or model_config.gpt4o_deployment_name,
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=5,  # Minimal test request
             )
@@ -258,7 +259,9 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                 text_content=text, domain_name=domain
             )
         except Exception as e:
-            logger.warning(f"Failed to load template prompt, using dynamic fallback: {e}")
+            logger.warning(
+                f"Failed to load template prompt, using dynamic fallback: {e}"
+            )
             # Dynamic fallback using domain-specific extraction focus
             extraction_focus = f"entities, relationships, {domain}-specific concepts"
             return f"""You are a knowledge extraction system. Extract entities and relationships from this {domain} text.
@@ -483,12 +486,16 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
                 def __init__(self, ml_config):
                     # Get model name from Azure settings or use dynamic configuration
                     from config.settings import azure_settings
+
                     self.model_name = azure_settings.openai_deployment_name or "gpt-4o"
                     # Use centralized constants - validated by PydanticAI Field constraints elsewhere
                     from infrastructure.constants import AzureServiceLimits
+
                     self.temperature = AzureServiceLimits.DEFAULT_TEMPERATURE
                     self.max_tokens = AzureServiceLimits.DEFAULT_MAX_TOKENS
-                    self.requests_per_minute = AzureServiceLimits.DEFAULT_REQUESTS_PER_MINUTE
+                    self.requests_per_minute = (
+                        AzureServiceLimits.DEFAULT_REQUESTS_PER_MINUTE
+                    )
                     self.chunk_size = AzureServiceLimits.DEFAULT_CHUNK_SIZE
                     self.extraction_focus = (
                         f"entities, relationships, {domain}-specific concepts"
@@ -504,9 +511,11 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
             class FallbackPrompts:
                 # Get model name from Azure settings
                 from config.settings import azure_settings
+
                 model_name = azure_settings.openai_deployment_name or "gpt-4o"
-                # Use centralized constants - validated by PydanticAI Field constraints elsewhere  
+                # Use centralized constants - validated by PydanticAI Field constraints elsewhere
                 from infrastructure.constants import AzureServiceLimits
+
                 temperature = AzureServiceLimits.DEFAULT_TEMPERATURE
                 max_tokens = AzureServiceLimits.DEFAULT_MAX_TOKENS
                 requests_per_minute = AzureServiceLimits.DEFAULT_REQUESTS_PER_MINUTE

@@ -29,16 +29,12 @@ class SimpleMLService:
             return {
                 "success": True,
                 "ml_capabilities": True,
-                "message": "ML service ready"
+                "message": "ML service ready",
             }
 
         except Exception as e:
             logger.error(f"ML service test failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "ml_capabilities": False
-            }
+            return {"success": False, "error": str(e), "ml_capabilities": False}
 
     def get_service_status(self) -> Dict[str, Any]:
         """Get ML service status"""
@@ -48,16 +44,16 @@ class SimpleMLService:
                 "service_name": "ml_service",
                 "status": "healthy",
                 "loaded_models": len(self.models),
-                "message": "ML service operational"
+                "message": "ML service operational",
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get ML service status: {e}")
             return {
                 "success": False,
                 "service_name": "ml_service",
                 "status": "unhealthy",
-                "error": str(e)
+                "error": str(e),
             }
 
     def list_models(self) -> Dict[str, Any]:
@@ -66,32 +62,33 @@ class SimpleMLService:
             return {
                 "success": True,
                 "models": list(self.models.keys()),
-                "model_count": len(self.models)
+                "model_count": len(self.models),
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to list models: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
 
 # Backward compatibility - Global instance
 _ml_service = SimpleMLService()
+
 
 # Backward compatibility functions
 async def test_ml_connection() -> Dict[str, Any]:
     """Backward compatibility function"""
     return await _ml_service.test_connection()
 
+
 def get_ml_status() -> Dict[str, Any]:
     """Backward compatibility function"""
     return _ml_service.get_service_status()
 
+
 def list_ml_models() -> Dict[str, Any]:
     """Backward compatibility function"""
     return _ml_service.list_models()
+
 
 # Backward compatibility aliases
 MLService = SimpleMLService

@@ -63,18 +63,20 @@ from .domain_intelligence.agent import (  # Agent tools
 
 # Import structured models from centralized data models
 from agents.core.data_models import (
-    QueryRequest, 
+    QueryRequest,
     SearchResponse as TriModalSearchResult,
     DomainDetectionResult as ModelDomainDetectionResult,
     SearchResult as SearchDocument,
-    HealthStatus as ConfidenceLevel  # Temporary mapping
+    HealthStatus as ConfidenceLevel,  # Temporary mapping
 )
+
 
 # Define SearchResultType for backward compatibility
 class SearchResultType:
     VECTOR = "vector"
-    GRAPH = "graph" 
+    GRAPH = "graph"
     GNN = "gnn"
+
 
 # Import simplified interface
 # Note: simple_universal_agent temporarily commented out during restructuring
@@ -140,6 +142,7 @@ try:
 except ImportError:
     # Use consolidated versions
     from .shared import UnifiedMemoryManager
+
     SimpleCache = UnifiedCacheManager
     SimpleErrorHandler = None  # Will be handled by core error handling
     SimpleToolChain = None  # Replaced by consolidated tools
@@ -172,7 +175,7 @@ __all__ = [
     "extract_knowledge_from_documents",
     # Simplified interface (recommended)
     # "SimplifiedUniversalAgent",  # Temporarily disabled during restructuring
-    "get_universal_search_agent",     # ✅ Consolidated agent function
+    "get_universal_search_agent",  # ✅ Consolidated agent function
     "SimpleQueryRequest",
     "AgentResponse",
     # Search Workflow Orchestrator (Single source of truth)
@@ -187,7 +190,7 @@ __all__ = [
     "cached_operation",
     # Consolidated intelligence (new unified architecture)
     "UnifiedContentAnalyzer",
-    "DomainAnalysisResult", 
+    "DomainAnalysisResult",
     "DomainIntelligenceConfig",
     "HybridConfigurationGenerator",
     # "ConfigurationRecommendations" deleted
@@ -200,7 +203,7 @@ __all__ = [
     # "execute_tri_modal_search",
     # "execute_domain_intelligence",
     # "get_tool_manager",
-    # "execute_search_chain", 
+    # "execute_search_chain",
     # "SearchRequest",
     # "ToolResponse",
     # Structured models

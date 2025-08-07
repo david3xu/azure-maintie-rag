@@ -18,7 +18,10 @@ from urllib.parse import urlparse
 
 # Import consolidated data models
 from agents.core.data_models import (
-    TextCleaningOptions, CleanedContent, ContentChunker, ContentChunk
+    TextCleaningOptions,
+    CleanedContent,
+    ContentChunker,
+    ContentChunk,
 )
 
 
@@ -27,22 +30,28 @@ def clean_text_content(text: str, options=None) -> Dict[str, Any]:
     """Stub for text cleaning"""
     return {"cleaned_text": text.strip(), "original_length": len(text)}
 
+
 def split_into_sentences(text: str) -> List[str]:
     """Stub for sentence splitting"""
-    return text.split('.')
+    return text.split(".")
+
 
 def detect_structured_content(text: str) -> Dict[str, Any]:
     """Stub for structured content detection"""
     return {"has_structure": False}
 
+
 # Stub classes
 class TextCleaningOptions:
     """Stub for text cleaning options"""
+
     pass
+
 
 class CleanedContent:
     """Stub for cleaned content"""
+
     pass
 
-# Models consolidated to agents.core.data_models
 
+# Models consolidated to agents.core.data_models

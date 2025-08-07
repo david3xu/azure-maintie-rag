@@ -11,18 +11,33 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 # Import consolidated data models
-from agents.core.data_models import ExtractedPatterns, InfrastructureConfig, MLModelConfig, CompleteDomainConfig, DomainConfig
+from agents.core.data_models import (
+    ExtractedPatterns,
+    InfrastructureConfig,
+    MLModelConfig,
+    CompleteDomainConfig,
+    DomainConfig,
+)
+
 
 # Clean configuration (CODING_STANDARDS compliant)
 # Simple ML configurations
 class MLConfig:
     simple_gnn_config = {"layers": 2, "hidden_dim": 64}
-    medium_gnn_config = {"layers": 4, "hidden_dim": 128}  # GNN_NUM_LAYERS=3, GNN_HIDDEN_DIM=128
-    complex_gnn_config = {"layers": 5, "hidden_dim": 256}  # More layers and dimensions for complex domains
+    medium_gnn_config = {
+        "layers": 4,
+        "hidden_dim": 128,
+    }  # GNN_NUM_LAYERS=3, GNN_HIDDEN_DIM=128
+    complex_gnn_config = {
+        "layers": 5,
+        "hidden_dim": 256,
+    }  # More layers and dimensions for complex domains
+
 
 class ConfigGenConfig:
     primary_concepts_fallback_limit = 10
     primary_concepts_main_limit = 15
+
 
 # Backward compatibility
 get_ml_hyperparameters_config = lambda: MLConfig()
@@ -38,7 +53,7 @@ class ConfigGenerator:
     def __init__(self):
         # Get centralized configuration
         self.config_gen_config = get_config_generator_config()
-        
+
         # Base configurations for different domain complexities (from centralized configuration)
         ml_config = get_ml_hyperparameters_config()
         self.ml_config_templates = {
@@ -55,11 +70,16 @@ class ConfigGenerator:
         # Extract primary concepts for naming
         primary_concepts = [
             p.pattern_text for p in patterns.entity_patterns if p.is_high_confidence()
-        ][:self.config_gen_config.primary_concepts_fallback_limit]
+        ][: self.config_gen_config.primary_concepts_fallback_limit]
 
         if not primary_concepts:
             # Fallback to most frequent patterns
-            primary_concepts = [p.pattern_text for p in patterns.entity_patterns[:self.config_gen_config.primary_concepts_main_limit]]
+            primary_concepts = [
+                p.pattern_text
+                for p in patterns.entity_patterns[
+                    : self.config_gen_config.primary_concepts_main_limit
+                ]
+            ]
 
         # Generate resource names based on learned concepts
         primary_concept = (
@@ -100,10 +120,14 @@ class ConfigGenerator:
 
         # Extract entity and relationship types from patterns
         entity_types = [
-            p.pattern_text for p in patterns.entity_patterns if p.confidence > self.config_gen_config.relationship_confidence_threshold
+            p.pattern_text
+            for p in patterns.entity_patterns
+            if p.confidence > self.config_gen_config.relationship_confidence_threshold
         ][:20]
         relationship_types = [
-            p.pattern_text for p in patterns.relationship_patterns if p.confidence > self.config_gen_config.relationship_fallback_confidence
+            p.pattern_text
+            for p in patterns.relationship_patterns
+            if p.confidence > self.config_gen_config.relationship_fallback_confidence
         ]
 
         # Learn relationship types from data if none found with sufficient confidence
@@ -114,7 +138,9 @@ class ConfigGenerator:
                 all_patterns
             )
             relationship_types = (
-                inferred_relationships if inferred_relationships else [self.config_gen_config.relationship_type_connects]
+                inferred_relationships
+                if inferred_relationships
+                else [self.config_gen_config.relationship_type_connects]
             )
 
         # Adjust configuration based on pattern count and confidence
@@ -125,22 +151,36 @@ class ConfigGenerator:
 
         # Scale dimensions based on complexity
         node_feature_dim = min(
-            self.config_gen_config.node_feature_dim_max, 
-            max(self.config_gen_config.node_feature_dim_min, entity_count * self.config_gen_config.entity_count_node_feature_multiplier)
+            self.config_gen_config.node_feature_dim_max,
+            max(
+                self.config_gen_config.node_feature_dim_min,
+                entity_count
+                * self.config_gen_config.entity_count_node_feature_multiplier,
+            ),
         )
         hidden_dim = min(
-            self.config_gen_config.hidden_dim_max, 
-            max(self.config_gen_config.hidden_dim_min, entity_count * self.config_gen_config.entity_count_hidden_dim_multiplier)
+            self.config_gen_config.hidden_dim_max,
+            max(
+                self.config_gen_config.hidden_dim_min,
+                entity_count
+                * self.config_gen_config.entity_count_hidden_dim_multiplier,
+            ),
         )
         num_layers = min(
-            self.config_gen_config.num_layers_max, 
-            max(self.config_gen_config.num_layers_min, len(entity_types) // self.config_gen_config.entity_types_layers_divisor + self.config_gen_config.entity_types_layers_base)
+            self.config_gen_config.num_layers_max,
+            max(
+                self.config_gen_config.num_layers_min,
+                len(entity_types) // self.config_gen_config.entity_types_layers_divisor
+                + self.config_gen_config.entity_types_layers_base,
+            ),
         )
 
         # Adjust learning rate based on confidence
         learning_rate = base_config["learning_rate"]
         if avg_confidence < self.config_gen_config.low_confidence_threshold:
-            learning_rate *= self.config_gen_config.low_confidence_learning_rate_factor  # Lower learning rate for uncertain patterns
+            learning_rate *= (
+                self.config_gen_config.low_confidence_learning_rate_factor
+            )  # Lower learning rate for uncertain patterns
 
         return MLModelConfig(
             domain=domain,
@@ -189,20 +229,31 @@ class ConfigGenerator:
         elif entity_count > self.config_gen_config.entity_count_medium_threshold:
             complexity_score += 1
 
-        if high_confidence_count > self.config_gen_config.high_confidence_count_high_threshold:
+        if (
+            high_confidence_count
+            > self.config_gen_config.high_confidence_count_high_threshold
+        ):
             complexity_score += 2
-        elif high_confidence_count > self.config_gen_config.high_confidence_count_medium_threshold:
+        elif (
+            high_confidence_count
+            > self.config_gen_config.high_confidence_count_medium_threshold
+        ):
             complexity_score += 1
 
         if relationship_count > self.config_gen_config.relationship_count_threshold:
             complexity_score += 1
 
-        if patterns.extraction_confidence > self.config_gen_config.extraction_confidence_threshold:
+        if (
+            patterns.extraction_confidence
+            > self.config_gen_config.extraction_confidence_threshold
+        ):
             complexity_score += 1
 
         if complexity_score >= self.config_gen_config.complexity_score_simple_threshold:
             return "complex"
-        elif complexity_score >= self.config_gen_config.complexity_score_medium_threshold:
+        elif (
+            complexity_score >= self.config_gen_config.complexity_score_medium_threshold
+        ):
             return "medium"
         else:
             return "simple"
@@ -227,9 +278,13 @@ class ConfigGenerator:
         if len(cleaned) < self.config_gen_config.min_resource_name_length:
             cleaned = f"{cleaned}-{self.config_gen_config.fallback_secondary_concept}"
         if len(cleaned) > self.config_gen_config.max_resource_name_length:
-            cleaned = cleaned[:self.config_gen_config.max_resource_name_length].rstrip("-")
+            cleaned = cleaned[: self.config_gen_config.max_resource_name_length].rstrip(
+                "-"
+            )
 
-        return cleaned or self.config_gen_config.resource_name_fallback  # Fallback if everything gets stripped
+        return (
+            cleaned or self.config_gen_config.resource_name_fallback
+        )  # Fallback if everything gets stripped
 
     def _infer_relationships_from_patterns(self, patterns) -> List[str]:
         """Infer relationship types from entity and action patterns (data-driven approach)"""
@@ -240,18 +295,46 @@ class ConfigGenerator:
             text = pattern.pattern_text.lower()
 
             # Look for verbs that indicate relationships
-            if any(verb in text for verb in self.config_gen_config.relationship_verbs_connect):
-                relationship_candidates.append(self.config_gen_config.relationship_type_connects)
-            if any(verb in text for verb in self.config_gen_config.relationship_verbs_contain):
-                relationship_candidates.append(self.config_gen_config.relationship_type_contains)
-            if any(verb in text for verb in self.config_gen_config.relationship_verbs_use):
-                relationship_candidates.append(self.config_gen_config.relationship_type_uses)
-            if any(verb in text for verb in self.config_gen_config.relationship_verbs_create):
-                relationship_candidates.append(self.config_gen_config.relationship_type_creates)
-            if any(verb in text for verb in self.config_gen_config.relationship_verbs_part):
-                relationship_candidates.append(self.config_gen_config.relationship_type_part_of)
-            if any(verb in text for verb in self.config_gen_config.relationship_verbs_depend):
-                relationship_candidates.append(self.config_gen_config.relationship_type_relates_to)
+            if any(
+                verb in text
+                for verb in self.config_gen_config.relationship_verbs_connect
+            ):
+                relationship_candidates.append(
+                    self.config_gen_config.relationship_type_connects
+                )
+            if any(
+                verb in text
+                for verb in self.config_gen_config.relationship_verbs_contain
+            ):
+                relationship_candidates.append(
+                    self.config_gen_config.relationship_type_contains
+                )
+            if any(
+                verb in text for verb in self.config_gen_config.relationship_verbs_use
+            ):
+                relationship_candidates.append(
+                    self.config_gen_config.relationship_type_uses
+                )
+            if any(
+                verb in text
+                for verb in self.config_gen_config.relationship_verbs_create
+            ):
+                relationship_candidates.append(
+                    self.config_gen_config.relationship_type_creates
+                )
+            if any(
+                verb in text for verb in self.config_gen_config.relationship_verbs_part
+            ):
+                relationship_candidates.append(
+                    self.config_gen_config.relationship_type_part_of
+                )
+            if any(
+                verb in text
+                for verb in self.config_gen_config.relationship_verbs_depend
+            ):
+                relationship_candidates.append(
+                    self.config_gen_config.relationship_type_relates_to
+                )
 
         # Remove duplicates and return most common inferred relationships
         from collections import Counter
@@ -259,4 +342,9 @@ class ConfigGenerator:
         relationship_counts = Counter(relationship_candidates)
 
         # Return top most common inferred relationships
-        return [rel for rel, count in relationship_counts.most_common(self.config_gen_config.top_relationships_limit)]
+        return [
+            rel
+            for rel, count in relationship_counts.most_common(
+                self.config_gen_config.top_relationships_limit
+            )
+        ]

@@ -27,8 +27,10 @@ class BaseAzureClient(ABC):
         self.key = None
         self.use_managed_identity = azure_settings.use_managed_identity
         self._client = None
-        
-        logger.info(f"Azure client initialized with managed identity: {self.use_managed_identity}")
+
+        logger.info(
+            f"Azure client initialized with managed identity: {self.use_managed_identity}"
+        )
 
     @abstractmethod
     def _get_default_endpoint(self) -> str:
@@ -52,54 +54,48 @@ class BaseAzureClient(ABC):
 
         # Simple initialization
         self.endpoint = (
-            self.config.get("endpoint") or 
-            azure_settings.azure_openai_endpoint or 
-            self._get_default_endpoint()
+            self.config.get("endpoint")
+            or azure_settings.azure_openai_endpoint
+            or self._get_default_endpoint()
         )
-        
+
         if not self.use_managed_identity:
             self.key = self.config.get("api_key") or azure_settings.azure_openai_api_key
 
         self._initialize_client()
-        
+
         # Simple health check
         if not self._health_check():
             logger.warning(f"Health check failed for {self.__class__.__name__}")
 
     def create_success_response(self, operation: str, data: Any) -> Dict[str, Any]:
         """Create simple success response"""
-        return {
-            "success": True,
-            "operation": operation,
-            "data": data
-        }
+        return {"success": True, "operation": operation, "data": data}
 
     def handle_azure_error(self, operation: str, error: Exception) -> Dict[str, Any]:
         """Simple error handling without over-engineering"""
         error_msg = f"{operation} failed: {str(error)}"
         logger.error(error_msg)
-        
-        return {
-            "success": False,
-            "operation": operation,
-            "error": error_msg
-        }
+
+        return {"success": False, "operation": operation, "error": error_msg}
 
     def get_service_status(self) -> Dict[str, Any]:
         """Get simple service status"""
         try:
             self.ensure_initialized()
             is_healthy = self._health_check()
-            
+
             return {
                 "service": self.__class__.__name__,
                 "status": "healthy" if is_healthy else "unhealthy",
                 "endpoint": self.endpoint,
-                "auth_type": "managed_identity" if self.use_managed_identity else "api_key"
+                "auth_type": (
+                    "managed_identity" if self.use_managed_identity else "api_key"
+                ),
             }
         except Exception as e:
             return {
                 "service": self.__class__.__name__,
                 "status": "error",
-                "error": str(e)
+                "error": str(e),
             }

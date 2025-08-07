@@ -7,6 +7,7 @@ Graph communication models are now available from agents.shared.graph_communicat
 
 # Import from new location for backward compatibility
 from agents.shared.graph_communication import MessageType
+
 # GraphMessage, GraphStatus deleted in Phase 1
 
 __all__ = [

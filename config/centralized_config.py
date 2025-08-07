@@ -2,11 +2,11 @@
 Clean Configuration - Essential Parameters Only
 ============================================
 
-This module contains the dramatically simplified configuration with only ~60 essential parameters 
+This module contains the dramatically simplified configuration with only ~60 essential parameters
 (reduced from 925+ parameters - 93% reduction).
 
 Based on systematic analysis against CODING_STANDARDS.md:
-- ✅ Infrastructure/Azure requirements (80% of parameters)  
+- ✅ Infrastructure/Azure requirements (80% of parameters)
 - ✅ Security/validation constraints (20% of parameters)
 - ❌ Removed all hardcoded domain assumptions (470+ parameters)
 - ❌ Removed all over-engineering (300+ parameters)
@@ -28,17 +28,18 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SystemConfiguration:
     """Core system constraints and infrastructure limits"""
+
     # Resource management
     max_workers: int = 4
     max_concurrent_requests: int = 5
     max_batch_size: int = 10
-    
-    # Network and timeouts  
+
+    # Network and timeouts
     openai_timeout: int = 60
     search_timeout: int = 30
     cosmos_timeout: int = 45
     max_retries: int = 3
-    
+
     # Security boundaries
     max_query_length: int = 1000
     max_execution_time_seconds: float = 300.0
@@ -48,28 +49,31 @@ class SystemConfiguration:
 @dataclass
 class ExtractionConfiguration:
     """Extraction parameters learned from Domain Intelligence Agent - ZERO HARDCODED VALUES"""
+
     # All critical extraction parameters come from Domain Intelligence Agent corpus analysis
     entity_confidence_threshold: float  # Learned from domain-specific corpus analysis
-    relationship_confidence_threshold: float  # Learned from relationship quality analysis
+    relationship_confidence_threshold: (
+        float  # Learned from relationship quality analysis
+    )
     chunk_size: int  # Learned from document characteristics analysis
     chunk_overlap: int  # Calculated from chunk_size and content density
     batch_size: int  # Scaled based on corpus size
     max_entities_per_chunk: int  # Learned from entity density analysis
     min_relationship_strength: float  # Learned from relationship pattern analysis
     quality_validation_threshold: float  # Learned from domain complexity analysis
-    
+
     # Domain metadata (from analysis)
     domain_name: str
     technical_vocabulary: List[str] = None
     key_concepts: List[str] = None
     expected_entity_types: List[str] = None
-    
+
     # Input validation constraints (infrastructure, not business logic)
     min_entity_length: int = 2
     max_entity_length: int = 100
     min_relationship_confidence: float = 0.2
     max_relationship_confidence: float = 1.0
-    
+
     # Azure endpoint configuration (infrastructure)
     azure_endpoint: str = os.getenv("AZURE_OPENAI_ENDPOINT", "")
     api_version: str = os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
@@ -82,12 +86,12 @@ def get_extraction_configuration(domain_name: str = None) -> Dict[str, Any]:
     # For now, return reasonable defaults that match the constants
     return {
         "entity_confidence_threshold": 0.8,
-        "relationship_confidence_threshold": 0.7, 
+        "relationship_confidence_threshold": 0.7,
         "chunk_size": 1000,
         "chunk_overlap": 200,
         "domain_name": domain_name or "default",
         "technical_vocabulary": [],
-        "expected_entity_types": ["CONCEPT", "TERM", "PROCEDURE"]
+        "expected_entity_types": ["CONCEPT", "TERM", "PROCEDURE"],
     }
 
 
@@ -101,12 +105,8 @@ def get_search_configuration(domain_name: str = None) -> Dict[str, Any]:
         "graph_hop_count": 2,
         "graph_min_relationship_strength": 0.5,
         "gnn_prediction_confidence": 0.6,
-        "tri_modal_weights": {
-            "vector": 0.4,
-            "graph": 0.3,
-            "gnn": 0.3
-        },
-        "domain_name": domain_name or "default"
+        "tri_modal_weights": {"vector": 0.4, "graph": 0.3, "gnn": 0.3},
+        "domain_name": domain_name or "default",
     }
 
 
@@ -124,13 +124,14 @@ def get_azure_configuration() -> Dict[str, Any]:
         "openai_timeout": 60,
         "search_timeout": 30,
         "cosmos_timeout": 45,
-        "max_retries": 3
+        "max_retries": 3,
     }
 
 
 @dataclass
 class SearchConfiguration:
     """Tri-modal search parameters learned from Domain Intelligence Agent - ZERO HARDCODED VALUES"""
+
     # All search parameters learned from domain analysis and query complexity assessment
     vector_similarity_threshold: float  # Domain-specific from corpus analysis
     vector_top_k: int  # Query-complexity driven
@@ -140,31 +141,31 @@ class SearchConfiguration:
     gnn_node_embeddings: int  # Optimized for domain complexity
     tri_modal_weights: Dict[str, float]  # Domain-optimized weights for vector/graph/gnn
     result_synthesis_threshold: float  # Quality threshold learned from domain
-    
+
     # Query complexity adaptation
     query_complexity_weights: Dict[str, float]  # Learned complexity multipliers
-    
+
     # Domain metadata
     domain_name: str
     learned_at: Any  # datetime when configuration was generated
 
 
-@dataclass  
+@dataclass
 class ModelConfiguration:
     """Azure OpenAI model configuration using dynamic model management"""
-    
+
     # Model deployment names loaded from dynamic model management
     gpt4o_deployment_name: str = "gpt-4o"
     gpt4o_mini_deployment_name: str = "gpt-4o-mini"
     text_embedding_deployment_name: str = "text-embedding-ada-002"
     deployment_name: str = "gpt-4o"
-    
+
     # API configuration (infrastructure, not model selection)
     openai_api_version: str = "2024-08-01-preview"
     api_version: str = os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
     default_temperature: float = 0.0
     default_max_tokens: int = 4000
-    
+
     # Azure endpoint (data-driven from environment)
     azure_endpoint: str = os.getenv("AZURE_OPENAI_ENDPOINT", "")
 
@@ -172,8 +173,9 @@ class ModelConfiguration:
 @dataclass
 class CacheConfiguration:
     """Caching parameters"""
+
     default_ttl_seconds: int = 3600  # 1 hour
-    redis_ttl_seconds: int = 300     # 5 minutes
+    redis_ttl_seconds: int = 300  # 5 minutes
     enable_caching: bool = True
     max_cache_entries: int = 10000
     max_entries_per_namespace: int = 10000
@@ -183,11 +185,12 @@ class CacheConfiguration:
 @dataclass
 class ProcessingConfiguration:
     """Processing and performance constraints"""
+
     max_workers: int = 4
     max_concurrent_chunks: int = 5
     max_features_vectorizer: int = 1000
     timeout_base_seconds: int = 30
-    
+
     # Statistical constants (universal)
     statistical_significance_alpha: float = 0.05
     random_state: int = 42
@@ -197,6 +200,7 @@ class ProcessingConfiguration:
 @dataclass
 class WorkflowConfiguration:
     """Workflow timeouts and SLA requirements"""
+
     extraction_timeout_seconds: int = 300
     search_timeout_seconds: int = 120
     analysis_timeout_seconds: int = 180
@@ -210,15 +214,16 @@ class WorkflowConfiguration:
 @dataclass
 class SecurityConfiguration:
     """Security and validation constraints"""
+
     # Input validation
     max_query_length: int = 1000
     max_document_size_mb: int = 50
     max_batch_size: int = 10
-    
+
     # Rate limiting
     max_requests_per_minute: int = 100
     max_concurrent_users: int = 50
-    
+
     # Resource limits
     max_memory_usage_mb: int = 2048
     max_cpu_usage_percent: int = 80
@@ -245,7 +250,7 @@ def get_system_config() -> SystemConfiguration:
             openai_timeout=int(os.getenv("OPENAI_TIMEOUT", "60")),
             max_query_length=int(os.getenv("MAX_QUERY_LENGTH", "1000")),
             max_execution_time_seconds=float(os.getenv("MAX_EXECUTION_TIME", "300.0")),
-            max_azure_cost_usd=float(os.getenv("MAX_AZURE_COST", "10.0"))
+            max_azure_cost_usd=float(os.getenv("MAX_AZURE_COST", "10.0")),
         )
     return _system_config
 
@@ -254,11 +259,13 @@ def get_extraction_config(domain_name: str = "general") -> ExtractionConfigurati
     """Get extraction configuration from Domain Intelligence Agent analysis - ZERO HARDCODED VALUES"""
     # Import here to avoid circular imports
     from agents.core.dynamic_config_manager import dynamic_config_manager
-    
+
     try:
         # Get dynamic configuration learned from corpus analysis
-        dynamic_config = asyncio.run(dynamic_config_manager.get_extraction_config(domain_name))
-        
+        dynamic_config = asyncio.run(
+            dynamic_config_manager.get_extraction_config(domain_name)
+        )
+
         return ExtractionConfiguration(
             entity_confidence_threshold=dynamic_config.entity_confidence_threshold,
             relationship_confidence_threshold=dynamic_config.relationship_confidence_threshold,
@@ -269,9 +276,13 @@ def get_extraction_config(domain_name: str = "general") -> ExtractionConfigurati
             min_relationship_strength=dynamic_config.min_relationship_strength,
             quality_validation_threshold=dynamic_config.quality_validation_threshold,
             domain_name=dynamic_config.domain_name,
-            technical_vocabulary=dynamic_config.corpus_stats.get('technical_vocabulary', []),
-            key_concepts=dynamic_config.corpus_stats.get('key_concepts', []),
-            expected_entity_types=dynamic_config.corpus_stats.get('expected_entity_types', [])
+            technical_vocabulary=dynamic_config.corpus_stats.get(
+                "technical_vocabulary", []
+            ),
+            key_concepts=dynamic_config.corpus_stats.get("key_concepts", []),
+            expected_entity_types=dynamic_config.corpus_stats.get(
+                "expected_entity_types", []
+            ),
         )
     except Exception as e:
         raise RuntimeError(
@@ -280,15 +291,19 @@ def get_extraction_config(domain_name: str = "general") -> ExtractionConfigurati
         )
 
 
-def get_search_config(domain_name: str = "general", query: str = None) -> SearchConfiguration:
+def get_search_config(
+    domain_name: str = "general", query: str = None
+) -> SearchConfiguration:
     """Get search configuration from Domain Intelligence Agent analysis - ZERO HARDCODED VALUES"""
-    # Import here to avoid circular imports  
+    # Import here to avoid circular imports
     from agents.core.dynamic_config_manager import dynamic_config_manager
-    
+
     try:
         # Get dynamic configuration learned from domain analysis
-        dynamic_config = asyncio.run(dynamic_config_manager.get_search_config(domain_name, query))
-        
+        dynamic_config = asyncio.run(
+            dynamic_config_manager.get_search_config(domain_name, query)
+        )
+
         return SearchConfiguration(
             vector_similarity_threshold=dynamic_config.vector_similarity_threshold,
             vector_top_k=dynamic_config.vector_top_k,
@@ -300,7 +315,7 @@ def get_search_config(domain_name: str = "general", query: str = None) -> Search
             result_synthesis_threshold=dynamic_config.result_synthesis_threshold,
             query_complexity_weights=dynamic_config.query_complexity_weights,
             domain_name=dynamic_config.domain_name,
-            learned_at=dynamic_config.learned_at
+            learned_at=dynamic_config.learned_at,
         )
     except Exception as e:
         raise RuntimeError(
@@ -309,7 +324,9 @@ def get_search_config(domain_name: str = "general", query: str = None) -> Search
         )
 
 
-def get_model_config(domain_name: str = "general", query: str = None, optimization_goal: str = "balanced") -> ModelConfiguration:
+def get_model_config(
+    domain_name: str = "general", query: str = None, optimization_goal: str = "balanced"
+) -> ModelConfiguration:
     """Static model configuration - no dynamic selection needed for development environment"""
     config = ModelConfiguration()
     config.gpt4o_deployment_name = "gpt-4o"
@@ -326,10 +343,14 @@ def get_model_config_bootstrap() -> ModelConfiguration:
     # Uses environment variables (infrastructure configuration, not model selection)
     return ModelConfiguration(
         gpt4o_deployment_name=os.getenv("GPT4O_DEPLOYMENT", "gpt-4o-deployment"),
-        gpt4o_mini_deployment_name=os.getenv("GPT4O_MINI_DEPLOYMENT", "gpt-4o-mini-deployment"),
-        text_embedding_deployment_name=os.getenv("EMBEDDING_DEPLOYMENT", "text-embedding-ada-002"),
+        gpt4o_mini_deployment_name=os.getenv(
+            "GPT4O_MINI_DEPLOYMENT", "gpt-4o-mini-deployment"
+        ),
+        text_embedding_deployment_name=os.getenv(
+            "EMBEDDING_DEPLOYMENT", "text-embedding-ada-002"
+        ),
         deployment_name=os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o-deployment"),
-        openai_api_version=os.getenv("OPENAI_API_VERSION", "2024-08-01-preview")
+        openai_api_version=os.getenv("OPENAI_API_VERSION", "2024-08-01-preview"),
     )
 
 
@@ -369,6 +390,7 @@ def get_security_config() -> SecurityConfiguration:
 @dataclass
 class DomainConfiguration:
     """Generated by Domain Intelligence Agent based on corpus analysis"""
+
     domain_name: str
     entity_confidence_threshold: float
     relationship_confidence_threshold: float
@@ -379,28 +401,34 @@ class DomainConfiguration:
     chunk_overlap_ratio: float
     max_entities_per_chunk: int
     minimum_quality_score: float
-    
+
     # Statistical evidence for transparency
     statistical_basis: Dict[str, Any]
     confidence_in_analysis: float
 
 
-def update_extraction_config_from_domain_analysis(domain_config: DomainConfiguration) -> ExtractionConfiguration:
+def update_extraction_config_from_domain_analysis(
+    domain_config: DomainConfiguration,
+) -> ExtractionConfiguration:
     """Update extraction configuration with Domain Intelligence Agent output - ZERO HARDCODED VALUES"""
     return ExtractionConfiguration(
         entity_confidence_threshold=domain_config.entity_confidence_threshold,
         relationship_confidence_threshold=domain_config.relationship_confidence_threshold,
         chunk_size=domain_config.chunk_size,
         chunk_overlap=int(domain_config.chunk_size * domain_config.chunk_overlap_ratio),
-        batch_size=max(1, int(len(domain_config.technical_vocabulary) / 10)),  # Scale with vocabulary
+        batch_size=max(
+            1, int(len(domain_config.technical_vocabulary) / 10)
+        ),  # Scale with vocabulary
         max_entities_per_chunk=domain_config.max_entities_per_chunk,
-        min_relationship_strength=domain_config.minimum_quality_score * 0.8,  # Derived relationship
+        min_relationship_strength=domain_config.minimum_quality_score
+        * 0.8,  # Derived relationship
         quality_validation_threshold=domain_config.minimum_quality_score,
         domain_name=domain_config.domain_name,
         technical_vocabulary=domain_config.technical_vocabulary,
         key_concepts=domain_config.key_concepts,
-        expected_entity_types=domain_config.expected_entity_types
+        expected_entity_types=domain_config.expected_entity_types,
     )
+
 
 # WORKFLOW INTEGRATION FUNCTIONS - IMPLEMENTED
 def load_extraction_config_from_workflow(domain_name: str) -> ExtractionConfiguration:
@@ -409,7 +437,9 @@ def load_extraction_config_from_workflow(domain_name: str) -> ExtractionConfigur
     return get_extraction_config(domain_name)
 
 
-def load_search_config_from_workflow(domain_name: str, query: str = None) -> SearchConfiguration:
+def load_search_config_from_workflow(
+    domain_name: str, query: str = None
+) -> SearchConfiguration:
     """Load search configuration from domain analysis and workflow intelligence"""
     # This function now integrates with Dynamic Configuration Manager
     return get_search_config(domain_name, query)
@@ -418,14 +448,17 @@ def load_search_config_from_workflow(domain_name: str, query: str = None) -> Sea
 def force_dynamic_config_loading() -> Dict[str, Any]:
     """Force regeneration of all dynamic configurations"""
     # Import here to avoid circular imports
-    from agents.core.dynamic_config_manager import force_dynamic_config_loading as force_loading
-    
+    from agents.core.dynamic_config_manager import (
+        force_dynamic_config_loading as force_loading,
+    )
+
     return asyncio.run(force_loading())
 
 
 # Legacy compatibility - simplified
 def get_config():
     """Legacy compatibility function for gradual migration"""
+
     class LegacyConfig:
         def __init__(self):
             self.system = get_system_config()
@@ -436,7 +469,7 @@ def get_config():
             self.processing = get_processing_config()
             self.workflow = get_workflow_config()
             self.security = get_security_config()
-    
+
     return LegacyConfig()
 
 
@@ -471,7 +504,7 @@ def get_azure_services_config():
 
 
 def get_capability_patterns_config():
-    """Legacy compatibility - returns cache config"""  
+    """Legacy compatibility - returns cache config"""
     return get_cache_config()
 
 
