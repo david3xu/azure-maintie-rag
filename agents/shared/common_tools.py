@@ -8,8 +8,12 @@ but don't require agent context or toolset registration.
 import time
 import hashlib
 import json
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
+from agents.core.math_expressions import EXPR
 from datetime import datetime, timezone
+
+# Import constants for zero-hardcoded-values compliance
+from agents.core.constants import CacheConstants, ContentAnalysisConstants, SecurityConstants
 
 
 def generate_cache_key(*args: Any) -> str:
@@ -26,15 +30,15 @@ def generate_cache_key(*args: Any) -> str:
     key_parts = []
     for arg in args:
         if isinstance(arg, (dict, list)):
-            key_parts.append(json.dumps(arg, sort_keys=True))
+            key_parts.append(json.dumps(arg, sort_keys=SecurityConstants.JSON_SORT_KEYS))
         else:
             key_parts.append(str(arg))
     
     # Create combined key
-    combined_key = "|".join(key_parts)
+    combined_key = SecurityConstants.CACHE_KEY_SEPARATOR.join(key_parts)
     
     # Generate hash
-    return hashlib.sha256(combined_key.encode()).hexdigest()
+    return getattr(hashlib, SecurityConstants.DEFAULT_HASH_ALGORITHM)(combined_key.encode(SecurityConstants.HASH_ENCODING)).hexdigest()
 
 
 def get_current_timestamp() -> str:
@@ -61,25 +65,7 @@ def calculate_confidence_score(
     Returns:
         float: Weighted confidence score (0.0-1.0)
     """
-    if not individual_scores:
-        return 0.0
-    
-    # Default to equal weights if not provided
-    if weights is None:
-        weights = [1.0] * len(individual_scores)
-    
-    # Ensure weights and scores have same length
-    if len(weights) != len(individual_scores):
-        weights = weights[:len(individual_scores)] + [1.0] * (len(individual_scores) - len(weights))
-    
-    # Calculate weighted average
-    weighted_sum = sum(score * weight for score, weight in zip(individual_scores, weights))
-    total_weight = sum(weights)
-    
-    if total_weight == 0:
-        return 0.0
-    
-    return min(1.0, max(0.0, weighted_sum / total_weight))
+    return EXPR.calculate_weighted_confidence(individual_scores, weights)
 
 
 def format_processing_time(start_time: float, end_time: Optional[float] = None) -> Dict[str, Any]:
@@ -100,31 +86,21 @@ def format_processing_time(start_time: float, end_time: Optional[float] = None) 
     
     return {
         "processing_time_seconds": round(processing_time, 3),
-        "processing_time_ms": round(processing_time * 1000, 1),
+        "processing_time_ms": round(processing_time * CacheConstants.MS_PER_SECOND, CacheConstants.TIME_PRECISION_DECIMAL),
         "start_timestamp": datetime.fromtimestamp(start_time, timezone.utc).isoformat(),
         "end_timestamp": datetime.fromtimestamp(end_time, timezone.utc).isoformat(),
         "performance_category": (
-            "excellent" if processing_time < 1.0 else
-            "good" if processing_time < 3.0 else
-            "acceptable" if processing_time < 10.0 else
+            "excellent" if processing_time < ContentAnalysisConstants.EXCELLENT_RESPONSE_TIME else
+            "good" if processing_time < ContentAnalysisConstants.GOOD_RESPONSE_TIME else
+            "acceptable" if processing_time < CacheConstants.ACCEPTABLE_PROCESSING_TIME else
             "slow"
         )
     }
 
 
-def validate_confidence_threshold(value: float, min_threshold: float = 0.0, max_threshold: float = 1.0) -> bool:
-    """
-    Validate that a confidence value is within acceptable thresholds.
-    
-    Args:
-        value: Confidence value to validate
-        min_threshold: Minimum acceptable threshold
-        max_threshold: Maximum acceptable threshold
-        
-    Returns:
-        bool: True if value is within thresholds
-    """
-    return min_threshold <= value <= max_threshold
+# validate_confidence_threshold() function eliminated - replaced with PydanticAI Field constraints
+# Use: confidence: float = Field(ge=CacheConstants.MIN_CONFIDENCE, le=CacheConstants.MAX_CONFIDENCE)
+# This provides the same validation with built-in PydanticAI patterns
 
 
 def extract_domain_from_path(file_path: str) -> str:
@@ -253,7 +229,7 @@ __all__ = [
     "get_current_timestamp",
     "calculate_confidence_score",
     "format_processing_time",
-    "validate_confidence_threshold",
+    # "validate_confidence_threshold",  # ELIMINATED: Use Field(ge=, le=) constraints instead
     "extract_domain_from_path",
     "merge_dictionaries",
     "truncate_text",

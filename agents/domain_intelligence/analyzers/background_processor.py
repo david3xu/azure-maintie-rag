@@ -22,53 +22,18 @@ from typing import Dict, List, Optional
 
 # Clean configuration imports (CODING_STANDARDS compliant)
 from config.centralized_config import get_processing_config, get_cache_config
+from agents.core.constants import CacheConstants
 
 from ...core.cache_manager import UnifiedCacheManager as DomainCache
 from .config_generator import ConfigGenerator, DomainConfig
-from .unified_content_analyzer import UnifiedAnalysis, UnifiedContentAnalyzer
+from .unified_content_analyzer import DomainAnalysisResult, UnifiedContentAnalyzer
 from .pattern_engine import create_pattern_engine
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class DomainSignature:
-    """Clean domain signature (CODING_STANDARDS: Essential data only)"""
-    domain: str
-    patterns: Dict  # Simplified pattern storage
-    config: DomainConfig
-    content_analysis: UnifiedAnalysis
-    processing_timestamp: float
-    cache_key: str
-
-
-@dataclass
-class ProcessingStats:
-    """Simple processing statistics (CODING_STANDARDS: Real metrics only)"""
-    start_time: float = 0.0
-    end_time: float = 0.0
-    domains_processed: int = 0
-    files_processed: int = 0
-    processing_errors: int = 0
-
-    @property
-    def total_time(self) -> float:
-        return self.end_time - self.start_time if self.end_time > 0 else 0.0
-
-    @property
-    def files_per_second(self) -> float:
-        return self.files_processed / self.total_time if self.total_time > 0 else 0.0
-
-    def to_dict(self) -> Dict:
-        """Get simple statistics (CODING_STANDARDS: No fake calculations)"""
-        return {
-            "total_time": self.total_time,
-            "domains_processed": self.domains_processed,
-            "files_processed": self.files_processed,
-            "files_per_second": self.files_per_second,
-            "processing_errors": self.processing_errors,
-            "success_rate": (self.files_processed - self.processing_errors) / max(1, self.files_processed)
-        }
+# Import consolidated data models  
+from agents.core.data_models import ProcessingStats, DomainSignature
 
 
 class CleanDomainBackgroundProcessor:
@@ -228,7 +193,7 @@ class CleanDomainBackgroundProcessor:
             self.stats.processing_errors += 1
             raise
 
-    async def _process_file_for_domain(self, domain: str, file_path: Path) -> Optional[UnifiedAnalysis]:
+    async def _process_file_for_domain(self, domain: str, file_path: Path) -> Optional[DomainAnalysisResult]:
         """Process single file using unified content analyzer (CODING_STANDARDS: Agent delegation)"""
         try:
             # Use unified content analyzer for all statistical processing
@@ -245,7 +210,7 @@ class CleanDomainBackgroundProcessor:
             logger.error(f"Failed to process file {file_path}: {e}")
             raise
 
-    async def _create_domain_signature(self, domain: str, all_analyses: List[UnifiedAnalysis]) -> DomainSignature:
+    async def _create_domain_signature(self, domain: str, all_analyses: List[DomainAnalysisResult]) -> DomainSignature:
         """Create domain signature from content analyses (CODING_STANDARDS: Mathematical Foundation)"""
         
         # Aggregate statistical features from all analyses

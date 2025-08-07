@@ -39,6 +39,7 @@ from pydantic_ai import Agent, RunContext
 
 # Clean configuration imports (CODING_STANDARDS compliant)
 from config.centralized_config import get_extraction_config
+from agents.core.constants import KnowledgeExtractionConstants, ProcessingConstants, CacheConstants, AzureServiceConstants
 
 # Lazy configuration loading - will be loaded when needed
 _config = None
@@ -52,10 +53,10 @@ def _get_config(domain_name: str = "general"):
         from types import SimpleNamespace
         return SimpleNamespace(
             azure_endpoint="https://example.openai.azure.com/",
-            api_version="2024-08-01-preview", 
+            api_version=AzureServiceConstants.OPENAI_API_VERSION, 
             # deployment_name="gpt-4o",  # ❌ HARDCODED - Removed to force Dynamic Model Manager
             deployment_name=None,  # Must be loaded from Dynamic Model Manager
-            confidence_default=0.8,
+            confidence_default=KnowledgeExtractionConstants.DEFAULT_CONFIDENCE_THRESHOLD,
             processing_time_initial=1.0,
             max_successful_extractions=1,
             entity_precision_multiplier=1.0,
@@ -63,81 +64,25 @@ def _get_config(domain_name: str = "general"):
             relationship_precision_multiplier=1.0,
             relationship_recall_multiplier=1.0,
             max_documents_divisor=1,
-            memory_usage_default_mb=256,
+            memory_usage_default_mb=KnowledgeExtractionConstants.DEFAULT_MEMORY_USAGE_MB,
             cpu_utilization_default_percent=50,
-            cache_hit_rate_default=0.6,
-            cache_hit_rate_disabled=0.0
+            cache_hit_rate_default=KnowledgeExtractionConstants.DEFAULT_CACHE_HIT_RATE,
+            cache_hit_rate_disabled=CacheConstants.ZERO_FLOAT
         )
 
-# Import models from interfaces
-try:
-    from services.interfaces.extraction_interface import (
-        ConfigurationFeedback,
-        ExtractionConfiguration,
-        ExtractionResults,
-        ExtractionStrategy,
-    )
-except ImportError:
-    # Fallback models if interface not available
-    class ExtractionConfiguration(BaseModel):
-        domain_name: str = "general"
-        entity_confidence_threshold: float = 0.7  # Will be overridden by domain config
-        relationship_confidence_threshold: float = 0.65  # Will be overridden by domain config
-        expected_entity_types: List[str] = []
-        technical_vocabulary: List[str] = []
-        key_concepts: List[str] = []
-        minimum_quality_score: float = 0.8  # Will be overridden by domain config
-        enable_caching: bool = True
-        cache_ttl_seconds: int = 3600
-        max_concurrent_chunks: int = 5
-        extraction_timeout_seconds: int = 300
-        enable_monitoring: bool = True
-        validation_criteria: Dict[str, Any] = {}
+# Import models from centralized data models
+from agents.core.data_models import (
+    # Legacy models (maintained for compatibility)
+    ExtractionConfiguration,
+    ExtractionResults,
+    ExtractedKnowledge,
     
-    class ExtractionResults(BaseModel):
-        domain_name: str
-        documents_processed: int = 0
-        total_processing_time_seconds: float = 0.0
-        extraction_accuracy: float = 0.0
-        entity_precision: float = 0.0
-        entity_recall: float = 0.0
-        relationship_precision: float = 0.0
-        relationship_recall: float = 0.0
-        average_processing_time_per_document: float = 0.0
-        memory_usage_mb: float = 50.0  # Reasonable default
-        cpu_utilization_percent: float = 60.0  # Reasonable default
-        cache_hit_rate: float = 0.0
-        total_entities_extracted: int = 0
-        total_relationships_extracted: int = 0
-        unique_entity_types_found: int = 0
-        unique_relationship_types_found: int = 0
-        extraction_passed_validation: bool = False
-        validation_error_count: int = 0
-        validation_warnings: List[str] = []
-
-
-class ExtractedKnowledge(BaseModel):
-    """Structured knowledge extracted from a document"""
-
-    # Source information
-    source_document: str = Field(..., description="Source document identifier")
-    extraction_timestamp: datetime = Field(default_factory=datetime.now)
-    processing_time_seconds: float = Field(..., ge=0.0)
-
-    # Extracted content
-    entities: List[Dict[str, Any]] = Field(default_factory=list)
-    relationships: List[Dict[str, Any]] = Field(default_factory=list)
-    key_concepts: List[str] = Field(default_factory=list)
-    technical_terms: List[str] = Field(default_factory=list)
-
-    # Quality metrics
-    extraction_confidence: float = Field(..., ge=0.0, le=1.0)
-    entity_count: int = Field(..., ge=0)
-    relationship_count: int = Field(..., ge=0)
-
-    # Validation results
-    passed_validation: bool = Field(...)
-    validation_warnings: List[str] = Field(default_factory=list)
+    # NEW: Enhanced models with PydanticAI integration and dynamic configuration
+    ConsolidatedExtractionConfiguration,
+    # EnhancedKnowledgeExtractionContract deleted - use KnowledgeExtractionContract
+    ConfigurationResolver,
+    PydanticAIContextualModel
+)
 
 
 # Lazy initialization to avoid import-time Azure connection requirements
@@ -307,7 +252,7 @@ async def extract_knowledge_from_document(
             relationships=[],
             key_concepts=[],
             technical_terms=[],
-            extraction_confidence=0.0,
+            extraction_confidence=CacheConstants.ZERO_FLOAT,
             entity_count=0,
             relationship_count=0,
             passed_validation=False,
@@ -390,16 +335,16 @@ async def extract_knowledge_from_documents(
         return ExtractionResults(
             domain_name=config.domain_name,
             documents_processed=0,
-            total_processing_time_seconds=0.0,
-            extraction_accuracy=0.0,
-            entity_precision=0.0,
-            entity_recall=0.0,
-            relationship_precision=0.0,
-            relationship_recall=0.0,
-            average_processing_time_per_document=0.0,
-            memory_usage_mb=50.0,
-            cpu_utilization_percent=60.0,
-            cache_hit_rate=0.0,
+            total_processing_time_seconds=CacheConstants.ZERO_FLOAT,
+            extraction_accuracy=CacheConstants.ZERO_FLOAT,
+            entity_precision=CacheConstants.ZERO_FLOAT,
+            entity_recall=CacheConstants.ZERO_FLOAT,
+            relationship_precision=CacheConstants.ZERO_FLOAT,
+            relationship_recall=CacheConstants.ZERO_FLOAT,
+            average_processing_time_per_document=CacheConstants.ZERO_FLOAT,
+            memory_usage_mb=KnowledgeExtractionConstants.DEFAULT_CPU_UTILIZATION_PERCENT,
+            cpu_utilization_percent=KnowledgeExtractionConstants.DEFAULT_CPU_UTILIZATION_PERCENT,
+            cache_hit_rate=CacheConstants.ZERO_FLOAT,
             total_entities_extracted=0,
             total_relationships_extracted=0,
             unique_entity_types_found=0,

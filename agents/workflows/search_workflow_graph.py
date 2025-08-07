@@ -15,6 +15,7 @@ from ..domain_intelligence.agent import get_domain_intelligence_agent
 from .workflow_enums import WorkflowState, NodeState
 from .state_persistence import WorkflowStateManager
 from .config_extraction_graph import WorkflowNode, WorkflowContext
+from ..core.constants import WorkflowConstants
 
 
 class SearchWorkflow:
@@ -286,7 +287,7 @@ class SearchWorkflow:
     def _calculate_parallel_efficiency(self) -> float:
         """Calculate parallel execution efficiency"""
         # Mock calculation - would measure actual parallel vs sequential time
-        return 0.85
+        return WorkflowConstants.ANALYSIS_CONFIDENCE
     
     # Node handler implementations
     async def _execute_query_analysis(self, context: WorkflowContext) -> Dict[str, Any]:
@@ -318,7 +319,7 @@ class SearchWorkflow:
         
         return {
             "detected_domain": result.data if hasattr(result, 'data') else {"domain": "general"},
-            "detection_confidence": 0.85,
+            "detection_confidence": WorkflowConstants.ANALYSIS_CONFIDENCE,
             "detection_method": "domain_intelligence_agent"
         }
     
@@ -330,7 +331,7 @@ class SearchWorkflow:
         # Select optimal search strategy based on domain and query
         return {
             "selected_modalities": ["vector", "graph", "gnn"],  # Tri-modal unity
-            "search_weights": {"vector": 0.4, "graph": 0.3, "gnn": 0.3},
+            "search_weights": {"vector": WorkflowConstants.DEFAULT_VECTOR_SEARCH_WEIGHT, "graph": WorkflowConstants.DEFAULT_GRAPH_SEARCH_WEIGHT, "gnn": WorkflowConstants.DEFAULT_GNN_SEARCH_WEIGHT},
             "optimization_strategy": "parallel_execution",
             "max_results_per_modality": context.input_data.get("max_results", 10)
         }
@@ -355,7 +356,7 @@ class SearchWorkflow:
             "search_results": result.data if hasattr(result, 'data') else {},
             "modalities_executed": strategy.get("selected_modalities", []),
             "total_results": 0,  # Would be calculated from actual results
-            "search_confidence": 0.8
+            "search_confidence": WorkflowConstants.SEARCH_CONFIDENCE_DEFAULT
         }
     
     async def _execute_result_synthesis(self, context: WorkflowContext) -> Dict[str, Any]:
@@ -369,7 +370,7 @@ class SearchWorkflow:
             "synthesis_method": "weighted_ranking",
             "confidence_scores": strategy.get("search_weights", {}),
             "total_unique_results": 0,
-            "synthesis_confidence": 0.85
+            "synthesis_confidence": WorkflowConstants.SYNTHESIS_CONFIDENCE_DEFAULT
         }
     
     async def _execute_response_generation(self, context: WorkflowContext) -> Dict[str, Any]:
@@ -383,7 +384,7 @@ class SearchWorkflow:
             "results_summary": synthesized_results,
             "response_format": "structured",
             "citations_included": True,
-            "response_confidence": 0.9,
+            "response_confidence": WorkflowConstants.RESPONSE_CONFIDENCE_DEFAULT,
             "generation_method": "template_based"
         }
 

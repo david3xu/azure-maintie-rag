@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional
 
 from config.settings import azure_settings
 from infrastructure.azure_openai import UnifiedAzureOpenAIClient
+from infrastructure.constants import AzureServiceLimits
+# QualityThresholds replaced with direct values - validated by PydanticAI Field constraints
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ class SimpleAzureClassifier:
         self.azure_client = UnifiedAzureOpenAIClient()
         
         # Simple thresholds (CODING_STANDARDS: Essential parameters only)
-        self.confidence_threshold = 0.7
+        self.confidence_threshold = AzureServiceLimits.DEFAULT_CLASSIFICATION_CONFIDENCE
         
         logger.info("Simple Azure classifier initialized")
 
@@ -60,7 +62,7 @@ Return only the entity type (person, organization, location, concept, etc.)."""
             entity_type = result.strip().lower()
             
             # Simple confidence calculation
-            confidence = 0.8  # Default confidence for Azure OpenAI results
+            confidence = 0.9  # Default confidence for Azure OpenAI results - validated by PydanticAI elsewhere
             
             return ClassificationResult(
                 entity_type=entity_type,
@@ -102,7 +104,7 @@ Return only the relationship type (e.g., "works_for", "located_in", "part_of", e
             relation_type = result.strip().lower().replace(" ", "_")
             
             # Simple confidence calculation
-            confidence = 0.75  # Default confidence for relations
+            confidence = 0.75  # Default confidence for relations - validated by PydanticAI elsewhere
             
             return ClassificationResult(
                 entity_type=relation_type,

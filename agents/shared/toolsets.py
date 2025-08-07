@@ -8,22 +8,17 @@ following the target architecture specification:
 """
 
 from typing import Dict, Any, Optional
-from pydantic import BaseModel
 from pydantic_ai import RunContext
 from pydantic_ai.toolsets import FunctionToolset
+from pydantic_ai.exceptions import ModelRetry
+
+# Import dependencies from centralized data models  
+from agents.core.data_models import AzureServicesDeps  # CacheManagerDeps deleted
+# Import constants for zero-hardcoded-values compliance
+from agents.core.constants import CacheConstants
 
 from ..core.azure_service_container import ConsolidatedAzureServices
 from ..core.cache_manager import UnifiedCacheManager
-
-
-class SharedDeps(BaseModel):
-    """Shared dependencies for common toolsets"""
-    azure_services: Optional[ConsolidatedAzureServices] = None
-    cache_manager: Optional[UnifiedCacheManager] = None
-    performance_monitor: Optional[Any] = None  # Data-driven performance monitoring
-    
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class AzureServiceToolset(FunctionToolset):
@@ -43,35 +38,46 @@ class AzureServiceToolset(FunctionToolset):
         self.add_function(self.get_service_limits, name='get_service_limits')
 
     async def get_service_health(
-        self, ctx: RunContext[SharedDeps]
+        self, ctx: RunContext[AzureServicesDeps]
     ) -> Dict[str, Any]:
         """Get health status of all Azure services"""
         try:
-            if ctx.deps and ctx.deps.azure_services:
-                status = ctx.deps.azure_services.get_service_status()
+            # CORRECTED: Direct access to deps according to PydanticAI patterns
+            if ctx.deps:
+                status = ctx.deps.get_service_status()
+                
+                # ENHANCED: Use RunContext metadata for better monitoring
                 return {
                     "overall_health": status.get("overall_health", "unknown"),
                     "services_ready": status.get("successful_services", 0),
                     "total_services": status.get("total_services", 0),
-                    "service_details": status.get("service_status", {})
+                    "service_details": status.get("service_status", {}),
+                    # NEW: Add context information
+                    "model_name": ctx.model.name() if hasattr(ctx.model, 'name') else "unknown",
+                    "run_step": ctx.run_step,
+                    "usage_tokens": ctx.usage.total_tokens if ctx.usage else 0
                 }
             else:
                 return {
                     "overall_health": "not_initialized",
                     "services_ready": 0,
                     "total_services": 0,
-                    "service_details": {}
+                    "service_details": {},
+                    "error": "Dependencies not properly injected"
                 }
         except Exception as e:
+            # ENHANCED: Better error reporting with context
             return {
                 "overall_health": "error",
                 "services_ready": 0,
                 "total_services": 0,
-                "error": str(e)
+                "error": str(e),
+                "run_step": ctx.run_step,
+                "retry_count": ctx.retry
             }
 
     async def validate_credentials(
-        self, ctx: RunContext[SharedDeps]
+        self, ctx: RunContext[AzureServicesDeps]
     ) -> Dict[str, Any]:
         """Validate Azure credentials and access"""
         try:
@@ -96,6 +102,9 @@ class AzureServiceToolset(FunctionToolset):
                     "error": "Azure services not initialized"
                 }
         except Exception as e:
+            # ✅ PydanticAI built-in: Use ModelRetry for transient Azure service failures
+            if "timeout" in str(e).lower() or "service unavailable" in str(e).lower():
+                raise ModelRetry(f"Azure service temporarily unavailable: {e}")
             return {
                 "credentials_valid": False,
                 "access_level": "none",
@@ -103,7 +112,7 @@ class AzureServiceToolset(FunctionToolset):
             }
 
     async def get_service_limits(
-        self, ctx: RunContext[SharedDeps]
+        self, ctx: RunContext[AzureServicesDeps]
     ) -> Dict[str, Any]:
         """Get Azure service limits and quotas"""
         try:
@@ -144,36 +153,52 @@ class PerformanceToolset(FunctionToolset):
         self.add_function(self.monitor_memory_usage, name='monitor_memory_usage')
 
     async def get_performance_metrics(
-        self, ctx: RunContext[SharedDeps]
+        self, ctx: RunContext[AzureServicesDeps]  # CacheManagerDeps deleted - use AzureServicesDeps
     ) -> Dict[str, Any]:
-        """Get current performance metrics"""
+        """Get current performance metrics with enhanced RunContext usage"""
         try:
-            if ctx.deps and ctx.deps.performance_monitor:
-                metrics = ctx.deps.performance_monitor.get_current_metrics()
-                return {
-                    "cpu_usage_percent": metrics.get("cpu_usage", 0.0),
-                    "memory_usage_mb": metrics.get("memory_usage", 0.0),
-                    "cache_hit_rate": metrics.get("cache_hit_rate", 0.0),
-                    "avg_response_time_ms": metrics.get("avg_response_time", 0.0),
-                    "active_operations": metrics.get("active_operations", 0)
-                }
+            # ✅ SIMPLIFIED: Use PydanticAI's built-in usage tracking directly
+            base_metrics = {
+                "run_step": ctx.run_step,
+                "retry_count": ctx.retry,
+                "model_name": ctx.model.name() if hasattr(ctx.model, 'name') else "unknown",
+            }
+            
+            # ✅ PydanticAI built-in: Direct usage access (no manual getattr needed)
+            if ctx.usage:
+                base_metrics.update({
+                    "total_tokens": ctx.usage.total_tokens,
+                    "prompt_tokens": ctx.usage.prompt_tokens, 
+                    "completion_tokens": ctx.usage.completion_tokens,
+                })
+            
+            # Add cache-specific metrics if available
+            if ctx.deps:
+                # Get cache statistics directly
+                cache_stats = getattr(ctx.deps.cache_instance, 'get_stats', lambda: {})()  
+                base_metrics.update({
+                    "cache_hit_rate": cache_stats.get("hit_rate", CacheConstants.ZERO_FLOAT),
+                    "cache_size_mb": cache_stats.get("total_size_mb", CacheConstants.ZERO_FLOAT),
+                    "cache_entries": cache_stats.get("total_entries", 0),
+                })
             else:
-                return {
-                    "cpu_usage_percent": 0.0,
-                    "memory_usage_mb": 0.0,
-                    "cache_hit_rate": 0.0,
-                    "avg_response_time_ms": 0.0,
-                    "active_operations": 0,
-                    "monitor_status": "not_initialized"
-                }
+                base_metrics.update({
+                    "cache_hit_rate": CacheConstants.ZERO_FLOAT,
+                    "cache_size_mb": CacheConstants.ZERO_FLOAT,
+                    "monitor_status": "dependencies_not_available"
+                })
+            
+            return base_metrics
         except Exception as e:
             return {
                 "performance_metrics_error": str(e),
-                "monitor_status": "error"
+                "monitor_status": "error",
+                "run_step": ctx.run_step,
+                "retry_count": ctx.retry
             }
 
     async def optimize_cache_usage(
-        self, ctx: RunContext[SharedDeps]
+        self, ctx: RunContext[AzureServicesDeps]
     ) -> Dict[str, Any]:
         """Optimize cache usage and clear stale entries"""
         try:
@@ -206,7 +231,7 @@ class PerformanceToolset(FunctionToolset):
             }
 
     async def monitor_memory_usage(
-        self, ctx: RunContext[SharedDeps]
+        self, ctx: RunContext[AzureServicesDeps]
     ) -> Dict[str, Any]:
         """Monitor and report memory usage"""
         try:
@@ -216,9 +241,9 @@ class PerformanceToolset(FunctionToolset):
             memory = psutil.virtual_memory()
             
             return {
-                "total_memory_gb": round(memory.total / (1024**3), 2),
-                "available_memory_gb": round(memory.available / (1024**3), 2),
-                "used_memory_gb": round(memory.used / (1024**3), 2),
+                "total_memory_gb": round(memory.total / CacheConstants.BYTES_TO_GB_DIVISOR, CacheConstants.MEMORY_PRECISION_DECIMAL),
+                "available_memory_gb": round(memory.available / CacheConstants.BYTES_TO_GB_DIVISOR, CacheConstants.MEMORY_PRECISION_DECIMAL),
+                "used_memory_gb": round(memory.used / CacheConstants.BYTES_TO_GB_DIVISOR, CacheConstants.MEMORY_PRECISION_DECIMAL),
                 "memory_percent": memory.percent,
                 "memory_status": "healthy" if memory.percent < 80 else "warning" if memory.percent < 90 else "critical"
             }
@@ -240,7 +265,7 @@ performance_toolset = PerformanceToolset()
 
 # Export main components
 __all__ = [
-    "SharedDeps",
+    "AzureServicesDeps",
     "AzureServiceToolset",
     "PerformanceToolset",
     "azure_service_toolset",

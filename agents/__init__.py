@@ -32,24 +32,28 @@ Competitive Advantages Maintained:
 from .core import (
     ConsolidatedAzureServices,
     UnifiedCacheManager,
-    UnifiedMemoryManager,
     cached_operation,
     create_azure_service_container,
     get_cache_manager,
+)
+
+# Import moved utilities from shared
+from .shared import (
+    UnifiedMemoryManager,
     get_memory_manager,
 )
 
 # Import consolidated intelligence
 from .domain_intelligence import (
     UnifiedContentAnalyzer,
-    UnifiedAnalysis,
-    ContentQuality,
+    DomainAnalysisResult,
+    DomainIntelligenceConfig,
     HybridConfigurationGenerator,
-    ConfigurationRecommendations,
+    # ConfigurationRecommendations deleted
     # Note: DomainAnalyzer and DomainClassification moved to compatibility module
     ExtractedPatterns,
     LearnedPattern,
-    PatternEngine,
+    DataDrivenPatternEngine,
 )
 from .domain_intelligence.agent import (  # Agent tools
     DomainDetectionResult,
@@ -57,10 +61,20 @@ from .domain_intelligence.agent import (  # Agent tools
     get_domain_intelligence_agent,  # ✅ Lazy function
 )
 
-# Import structured models
-from .models import ConfidenceLevel
-from .models import DomainDetectionResult as ModelDomainDetectionResult
-from .models import QueryRequest, SearchDocument, SearchResultType, TriModalSearchResult
+# Import structured models from centralized data models
+from agents.core.data_models import (
+    QueryRequest, 
+    SearchResponse as TriModalSearchResult,
+    DomainDetectionResult as ModelDomainDetectionResult,
+    SearchResult as SearchDocument,
+    HealthStatus as ConfidenceLevel  # Temporary mapping
+)
+
+# Define SearchResultType for backward compatibility
+class SearchResultType:
+    VECTOR = "vector"
+    GRAPH = "graph" 
+    GNN = "gnn"
 
 # Import simplified interface
 # Note: simple_universal_agent temporarily commented out during restructuring
@@ -125,6 +139,7 @@ try:
     )
 except ImportError:
     # Use consolidated versions
+    from .shared import UnifiedMemoryManager
     SimpleCache = UnifiedCacheManager
     SimpleErrorHandler = None  # Will be handled by core error handling
     SimpleToolChain = None  # Replaced by consolidated tools
@@ -172,13 +187,13 @@ __all__ = [
     "cached_operation",
     # Consolidated intelligence (new unified architecture)
     "UnifiedContentAnalyzer",
-    "UnifiedAnalysis", 
-    "ContentQuality",
+    "DomainAnalysisResult", 
+    "DomainIntelligenceConfig",
     "HybridConfigurationGenerator",
-    "ConfigurationRecommendations",
+    # "ConfigurationRecommendations" deleted
     # Note: DomainAnalyzer and DomainClassification available in .domain_intelligence.compatibility
     # Pattern learning
-    "PatternEngine",
+    "DataDrivenPatternEngine",
     "ExtractedPatterns",
     "LearnedPattern",
     # Consolidated tools moved to toolsets.py following target architecture
@@ -245,7 +260,7 @@ def get_architecture_info() -> dict:
                 "UnifiedCacheManager",
                 "UnifiedMemoryManager",
             ],
-            "intelligence": ["DomainAnalyzer", "PatternEngine"],
+            "intelligence": ["DomainAnalyzer", "DataDrivenPatternEngine"],
             "tools": ["ConsolidatedToolManager"],
             "search": ["TriModalOrchestrator"],
         },

@@ -6,18 +6,22 @@ Analysis and processing engines for the domain intelligence system.
 
 from .unified_content_analyzer import (
     UnifiedContentAnalyzer,
-    UnifiedAnalysis,
-    ContentQuality,
+    DomainAnalysisResult,
+    DomainIntelligenceConfig,
 )
 
 from .hybrid_configuration_generator import (
     HybridConfigurationGenerator,
-    ConfigurationRecommendations,
+    # ConfigurationRecommendations deleted - now returns Dict[str, Any]
     LLMExtraction,
 )
 
 from .pattern_engine import (
-    PatternEngine,
+    DataDrivenPatternEngine,
+)
+
+# Import consolidated data models
+from agents.core.data_models import (
     LearnedPattern,
     ExtractedPatterns,
 )
@@ -35,11 +39,11 @@ from .background_processor import (
 __all__ = [
     # Unified content analysis
     "UnifiedContentAnalyzer",
-    "UnifiedAnalysis", 
-    "ContentQuality",
+    "DomainAnalysisResult", 
+    "DomainIntelligenceConfig",
     # Configuration generation
     "HybridConfigurationGenerator",
-    "ConfigurationRecommendations",
+    # "ConfigurationRecommendations" deleted - now returns Dict[str, Any]
     "LLMExtraction",
     # Pattern learning
     "PatternEngine",

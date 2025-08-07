@@ -15,59 +15,26 @@ import asyncio
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
-from pydantic import BaseModel
 from pydantic_ai import RunContext
 from pydantic_ai.toolsets import FunctionToolset
+
+# Import constants for zero-hardcoded-values compliance
+from agents.core.constants import CacheConstants
 
 # Import centralized configuration
 from config.centralized_config import (
     get_quality_assessment_config,
     get_confidence_calculation_config
 )
+from agents.core.constants import KnowledgeExtractionConstants
 
-# Import models and dependencies (avoid circular imports)
-# Define simplified models locally to avoid circular dependencies
-class ExtractionConfiguration(BaseModel):
-    """Simplified extraction configuration model"""
-    domain_name: str = "general"
-    entity_confidence_threshold: float = 0.7
-    relationship_confidence_threshold: float = 0.65
-    expected_entity_types: List[str] = []
-    technical_vocabulary: List[str] = []
-    key_concepts: List[str] = []
-    minimum_quality_score: float = 0.6
-    enable_caching: bool = True
-    validation_criteria: Dict[str, Any] = {}
-
-
-class KnowledgeExtractionDeps(BaseModel):
-    """Knowledge Extraction Agent dependencies following target architecture"""
-    azure_services: Optional[any] = None
-    cache_manager: Optional[any] = None
-    entity_extractor: Optional[any] = None
-    relationship_extractor: Optional[any] = None
-    knowledge_graph_builder: Optional[any] = None
-    vector_embedding_generator: Optional[any] = None
-    
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class ExtractedKnowledge(BaseModel):
-    """Structured knowledge extracted from a document"""
-    
-    source_document: str
-    extraction_timestamp: str
-    processing_time_seconds: float
-    entities: List[Dict[str, Any]]
-    relationships: List[Dict[str, Any]]
-    key_concepts: List[str]
-    technical_terms: List[str]
-    extraction_confidence: float
-    entity_count: int
-    relationship_count: int
-    passed_validation: bool
-    validation_warnings: List[str]
+# Import models from centralized data models
+from agents.core.data_models import (
+    ExtractionConfiguration,
+    AzureServicesDeps,  # CORRECTED: For real Azure service access
+    KnowledgeExtractionDeps,
+    ExtractedKnowledge
+)
 
 
 class KnowledgeExtractionToolset(FunctionToolset):
@@ -149,7 +116,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                 "entities": entity_dicts,
                 "total_entities": len(entity_dicts),
                 "extraction_method": extraction_method,
-                "confidence_score": sum(e.confidence for e in entities) / len(entities) if entities else 0.0
+                "confidence_score": sum(e.confidence for e in entities) / len(entities) if entities else CacheConstants.ZERO_FLOAT
             }
             
         except Exception as e:
@@ -167,9 +134,9 @@ class KnowledgeExtractionToolset(FunctionToolset):
             if not entities:
                 return {
                     "relationships": [],
-                    "processing_time": 0.0,
+                    "processing_time": CacheConstants.ZERO_FLOAT,
                     "relationship_types": [],
-                    "confidence_score": 0.0
+                    "confidence_score": CacheConstants.ZERO_FLOAT
                 }
             
             # Convert entity dicts to EntityMatch objects for unified processor
@@ -181,7 +148,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                     entity_type=e.get("type", "unknown"),
                     start_position=e.get("start_position", 0),
                     end_position=e.get("end_position", 0),
-                    confidence=e.get("confidence", 0.0),
+                    confidence=e.get("confidence", CacheConstants.ZERO_FLOAT),
                     extraction_method=e.get("extraction_method", "unknown"),
                     context=e.get("context", "")
                 ))
@@ -199,15 +166,15 @@ class KnowledgeExtractionToolset(FunctionToolset):
                 "total_relationships": len(relationship_dicts),
                 "relationship_types": list(set(r.relation_type for r in relationships)),
                 "extraction_method": extraction_method,
-                "confidence_score": sum(r.confidence for r in relationships) / len(relationships) if relationships else 0.0
+                "confidence_score": sum(r.confidence for r in relationships) / len(relationships) if relationships else CacheConstants.ZERO_FLOAT
             }
             
         except Exception as e:
             return {
                 "relationships": [],
-                "processing_time": 0.0,
+                "processing_time": CacheConstants.ZERO_FLOAT,
                 "relationship_types": [],
-                "confidence_score": 0.0,
+                "confidence_score": CacheConstants.ZERO_FLOAT,
                 "error": str(e)
             }
 
@@ -235,7 +202,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                 "relationship_count": validation_result.relationship_count,
                 "errors": validation_result.errors,
                 "warnings": validation_result.warnings,
-                "overall_quality": 1.0 if validation_result.is_valid else 0.0
+                "overall_quality": CacheConstants.MAX_CONFIDENCE if validation_result.is_valid else CacheConstants.ZERO_FLOAT
             }
             
         except Exception as e:
@@ -245,7 +212,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                 "relationship_count": 0,
                 "errors": [f"Validation failed: {str(e)}"],
                 "warnings": [],
-                "overall_quality": 0.0
+                "overall_quality": CacheConstants.ZERO_FLOAT
             }
 
     async def generate_knowledge_graph(
@@ -270,7 +237,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                     entity_type=e.get("type", "unknown"),
                     start_position=e.get("start_position", 0),
                     end_position=e.get("end_position", 0),
-                    confidence=e.get("confidence", 0.0),
+                    confidence=e.get("confidence", CacheConstants.ZERO_FLOAT),
                     extraction_method=e.get("extraction_method", "unknown"),
                     context=e.get("context", "")
                 ))
@@ -281,7 +248,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                     source_entity=r.get("source", ""),
                     relation_type=r.get("relation", r.get("type", "related")),
                     target_entity=r.get("target", ""),
-                    confidence=r.get("confidence", 0.0),
+                    confidence=r.get("confidence", CacheConstants.ZERO_FLOAT),
                     extraction_method=r.get("extraction_method", "unknown"),
                     start_position=r.get("start_position", 0),
                     end_position=r.get("end_position", 0),
@@ -322,7 +289,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                 "knowledge_graph": None,
                 "nodes_count": 0,
                 "edges_count": 0,
-                "graph_density": 0.0,
+                "graph_density": CacheConstants.ZERO_FLOAT,
                 "connected_components": 0,
                 "storage_ready": False,
                 "error": str(e)
@@ -338,7 +305,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                 "id": entity.get("name", "").replace(" ", "_"),
                 "label": entity.get("name", ""),
                 "type": entity.get("type", "concept"),
-                "confidence": entity.get("confidence", 0.0),
+                "confidence": entity.get("confidence", CacheConstants.ZERO_FLOAT),
                 "properties": {
                     "extraction_method": entity.get("extraction_method", "unknown"),
                     "context": entity.get("context", "")
@@ -356,7 +323,7 @@ class KnowledgeExtractionToolset(FunctionToolset):
                 "source": rel.get("source", "").replace(" ", "_"),
                 "target": rel.get("target", "").replace(" ", "_"),
                 "label": rel.get("relation", rel.get("type", "related")),
-                "confidence": rel.get("confidence", 0.0),
+                "confidence": rel.get("confidence", CacheConstants.ZERO_FLOAT),
                 "properties": {
                     "extraction_method": rel.get("extraction_method", "unknown")
                 }

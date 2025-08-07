@@ -1,5 +1,6 @@
-# Azure Universal RAG - Enterprise Infrastructure with Clean Session Management
-# Implements session replacement pattern - no log accumulation
+# Azure Universal RAG - Production Multi-Agent System with PydanticAI
+# Real Azure services integration with comprehensive health monitoring
+# Implements clean session management - no log accumulation
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
@@ -59,26 +60,33 @@ endef
 
 .PHONY: help setup dev azure-deploy azure-status health clean session-report sync-env
 
-help: ## Azure Universal RAG Enterprise Commands (Clean Session Management)
-	@echo "🏗️  Azure Universal RAG - Enterprise Infrastructure Orchestration"
-	@echo "================================================================"
+help: ## Azure Universal RAG Multi-Agent Commands (Production Ready)
+	@echo "🤖 Azure Universal RAG - Multi-Agent System with PydanticAI"
+	@echo "============================================================="
 	@echo ""
-	@echo "☁️  Azure Infrastructure:"
-	@echo "  make azure-deploy     - Deploy Azure services with session tracking"
-	@echo "  make azure-status     - Check Azure infrastructure status"
-	@echo "  make azure-teardown   - Clean Azure resources with session logging"
-	@echo "  make sync-env         - Sync backend with current azd environment"
+	@echo "🎯 Multi-Agent Development:"
+	@echo "  make setup           - Setup PydanticAI agents + Azure services"
+	@echo "  make dev             - Start API (8000) + UI (5174) + agent monitoring"
+	@echo "  make health          - Azure services + agent health validation"
+	@echo "  make test            - Run tests against real Azure services (no mocks)"
 	@echo ""
-	@echo "🔄 Service Orchestration:"
-	@echo "  make setup           - Setup both services with session management"
-	@echo "  make dev             - Start development with performance tracking"
-	@echo "  make health          - Comprehensive service health check"
+	@echo "☁️  Azure Service Integration:"
+	@echo "  make azure-deploy    - Deploy complete Azure infrastructure (9 services)"
+	@echo "  make azure-status    - Azure service container health check"
+	@echo "  make sync-env        - Sync with azd environment (development/staging/production)"
 	@echo ""
-	@echo "📊 Enterprise Operations:"
-	@echo "  make session-report  - Generate current session report"
+	@echo "🧠 Data Processing Pipeline:"
+	@echo "  make data-prep-full  - Complete pipeline: upload → extract → index"
+	@echo "  make knowledge-extract - Knowledge Extraction Agent processing"
+	@echo "  make query-demo      - Universal Search Agent demonstration"
+	@echo "  make unified-search-demo - Tri-modal search (Vector + Graph + GNN)"
+	@echo ""
+	@echo "📊 Production Operations:"
+	@echo "  make session-report  - Performance metrics and Azure status"
 	@echo "  make clean           - Clean session with log replacement"
 	@echo ""
 	@echo "Current Session: $(shell cat $(CURRENT_SESSION) 2>/dev/null || echo 'No active session')"
+	@echo "Architecture: 3 PydanticAI Agents + 471-line Azure Service Container + 1,536-line Data Models"
 
 setup: ## Enterprise setup with clean session management
 	@$(call start_clean_session)

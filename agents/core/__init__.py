@@ -11,10 +11,14 @@ This module provides consolidated core services following clean architecture pri
 All services follow dependency injection patterns and layer boundary rules.
 """
 
-from .azure_service_container import ConsolidatedAzureServices, create_azure_service_container
+from .azure_service_container import (
+    ConsolidatedAzureServices,
+    create_azure_service_container,
+)
 from .cache_manager import UnifiedCacheManager, cached_operation, get_cache_manager
 from .error_handler import UnifiedErrorHandler
-from .memory_manager import UnifiedMemoryManager, get_memory_manager
+
+# memory_manager moved to agents.shared
 from .pydantic_ai_provider import (
     create_azure_pydantic_provider,
     create_azure_pydantic_provider_async,
@@ -34,8 +38,7 @@ __all__ = [
     "UnifiedCacheManager",
     "get_cache_manager",
     "cached_operation",
-    "UnifiedMemoryManager",
-    "get_memory_manager",
+    # UnifiedMemoryManager moved to agents.shared
     "UnifiedErrorHandler",
     # PydanticAI Integration
     "create_azure_pydantic_provider",

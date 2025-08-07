@@ -10,14 +10,15 @@ Generates domain-specific configurations:
 from dataclasses import dataclass
 from typing import Dict, List
 
-from .pattern_engine import ExtractedPatterns
+# Import consolidated data models
+from agents.core.data_models import ExtractedPatterns, InfrastructureConfig, MLModelConfig, CompleteDomainConfig, DomainConfig
 
 # Clean configuration (CODING_STANDARDS compliant)
 # Simple ML configurations
 class MLConfig:
     simple_gnn_config = {"layers": 2, "hidden_dim": 64}
-    medium_gnn_config = {"layers": 3, "hidden_dim": 128}
-    complex_gnn_config = {"layers": 4, "hidden_dim": 256}
+    medium_gnn_config = {"layers": 4, "hidden_dim": 128}  # GNN_NUM_LAYERS=3, GNN_HIDDEN_DIM=128
+    complex_gnn_config = {"layers": 5, "hidden_dim": 256}  # More layers and dimensions for complex domains
 
 class ConfigGenConfig:
     primary_concepts_fallback_limit = 10
@@ -28,42 +29,7 @@ get_ml_hyperparameters_config = lambda: MLConfig()
 get_config_generator_config = lambda: ConfigGenConfig()
 
 
-@dataclass
-class InfrastructureConfig:
-    """Domain-specific Azure infrastructure configuration"""
-
-    domain: str
-    search_index: str
-    storage_container: str
-    cosmos_graph: str
-    ml_endpoint: str
-    confidence: float
-    primary_concepts: List[str]
-
-
-@dataclass
-class MLModelConfig:
-    """Domain-specific ML model configuration"""
-
-    domain: str
-    node_feature_dim: int
-    hidden_dim: int
-    num_layers: int
-    learning_rate: float
-    entity_types: List[str]
-    relationship_types: List[str]
-    confidence: float
-
-
-@dataclass
-class DomainConfig:
-    """Complete domain configuration"""
-
-    domain: str
-    infrastructure: InfrastructureConfig
-    ml_model: MLModelConfig
-    patterns: ExtractedPatterns
-    generation_confidence: float
+# InfrastructureConfig, MLModelConfig, and CompleteDomainConfig now imported from agents.core.data_models
 
 
 class ConfigGenerator:
@@ -198,7 +164,7 @@ class ConfigGenerator:
         # Overall confidence is minimum of infrastructure and ML confidence
         generation_confidence = min(infrastructure.confidence, ml_model.confidence)
 
-        return DomainConfig(
+        return CompleteDomainConfig(
             domain=domain,
             infrastructure=infrastructure,
             ml_model=ml_model,

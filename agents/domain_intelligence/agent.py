@@ -8,10 +8,22 @@ Replaces the scattered @domain_agent.tool approach with proper FunctionToolset.
 
 import os
 from typing import Dict, List, Optional
-from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
-from agents.models.domain_models import DomainDeps
+# Import models from centralized data models (NEW CONSOLIDATED MODELS)
+from agents.core.data_models import (
+    # Legacy compatibility
+    DomainIntelligenceDeps as DomainDeps,
+    DomainDetectionResult,
+    AnalysisResult as AvailableDomainsResult,
+    AnalysisResult as DomainAnalysisResult,
+    
+    # Enhanced models deleted - use basic DomainAnalysisContract instead
+    ConsolidatedExtractionConfiguration,
+    ConfigurationResolver,
+    PydanticAIContextualModel
+)
+
 from agents.domain_intelligence.toolsets import domain_intelligence_toolset
 # Clean configuration imports (CODING_STANDARDS compliant)
 from config.centralized_config import get_model_config
@@ -24,33 +36,6 @@ class AgentConfig:
         self.default_model_deployment = model_config.deployment_name
 
 get_agent_config = lambda: AgentConfig()
-
-
-# Required models for backward compatibility
-class DomainDetectionResult(BaseModel):
-    """Result of domain detection from query"""
-    domain: str = Field(description="Detected domain name")
-    confidence: float = Field(description="Confidence score (0.0-1.0)")
-    matched_patterns: List[str] = Field(description="Patterns that matched the query")
-    reasoning: str = Field(description="Explanation of domain detection")
-    discovered_entities: List[str] = Field(description="Entity types discovered for this domain")
-    ml_config: Optional[Dict] = Field(description="ML configuration for the domain", default=None)
-
-
-class AvailableDomainsResult(BaseModel):
-    """Result of domain discovery"""
-    domains: List[str] = Field(description="List of discovered domain names")
-    source: str = Field(description="Source of domain discovery (filesystem, cache, etc.)")
-    total_patterns: int = Field(description="Total patterns available across all domains")
-
-
-class DomainAnalysisResult(BaseModel):
-    """Result of complete domain analysis"""
-    domain: str = Field(description="Domain name")
-    classification: Dict = Field(description="Domain classification details")
-    patterns_extracted: int = Field(description="Number of patterns extracted")
-    config_generated: bool = Field(description="Whether configuration was generated")
-    confidence: float = Field(description="Overall confidence score")
 
 
 def get_azure_openai_model():

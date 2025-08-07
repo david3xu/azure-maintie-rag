@@ -24,7 +24,11 @@ from typing import Any, Dict, List, Optional
 from config.centralized_config import get_extraction_config, get_model_config, get_processing_config
 
 # Import unified content analyzer
-from .unified_content_analyzer import UnifiedContentAnalyzer, UnifiedAnalysis
+from .unified_content_analyzer import UnifiedContentAnalyzer, DomainAnalysisResult
+
+# Import constants
+from agents.core.constants import StatisticalConstants, CacheConstants, ContentAnalysisConstants
+from agents.core.math_expressions import MATH, EXPR
 
 # Azure OpenAI integration
 try:
@@ -36,38 +40,8 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class LLMExtraction:
-    """LLM semantic extraction results (CODING_STANDARDS: Essential data only)"""
-    
-    domain_characteristics: List[str]
-    key_concepts: List[str]
-    entity_types: List[str]
-    relationship_patterns: List[str]
-    processing_complexity: str  # low, medium, high
-    content_structure: str  # structured, semi_structured, unstructured
-    semantic_density: float
-    confidence_score: float
-    reasoning: str
-
-
-@dataclass
-class ConfigurationRecommendations:
-    """Configuration recommendations from LLM + statistical analysis (CODING_STANDARDS: Clean structure)"""
-    
-    # Core processing parameters (essential only)
-    chunk_size: int
-    entity_confidence_threshold: float
-    relationship_confidence_threshold: float
-    max_entities_per_chunk: int
-    minimum_quality_score: float
-    
-    # Generation metadata
-    generation_confidence: float
-    reasoning: str
-    source_analysis: str
-    generation_time: float
-
+# Import consolidated data models
+from agents.core.data_models import LLMExtraction  # ConfigurationRecommendations deleted - using Dict
 
 class CleanHybridConfigurationGenerator:
     """
@@ -115,11 +89,11 @@ class CleanHybridConfigurationGenerator:
         
         # Simple performance tracking (CODING_STANDARDS: Real metrics only)
         self.configurations_generated = 0
-        self.total_generation_time = 0.0
+        self.total_generation_time = CacheConstants.ZERO_FLOAT
 
         logger.info("✅ Clean hybrid configuration generator initialized")
 
-    async def generate_configuration(self, file_path: Path) -> ConfigurationRecommendations:
+    async def generate_configuration(self, file_path: Path) -> Dict[str, Any]:
         """
         Generate configuration using LLM + statistical analysis (CODING_STANDARDS: Data-Driven)
         
@@ -157,7 +131,7 @@ class CleanHybridConfigurationGenerator:
             logger.error(f"❌ Configuration generation failed for {file_path}: {e}")
             raise
 
-    async def _extract_semantics_with_llm(self, content_analysis: UnifiedAnalysis) -> LLMExtraction:
+    async def _extract_semantics_with_llm(self, content_analysis: DomainAnalysisResult) -> LLMExtraction:
         """
         Extract semantic insights using Azure OpenAI (CODING_STANDARDS: LLM for semantic understanding only)
         
@@ -199,7 +173,7 @@ class CleanHybridConfigurationGenerator:
             logger.error(f"❌ LLM extraction failed: {e}")
             return self._create_statistical_fallback_extraction(content_analysis)
 
-    def _build_clean_llm_prompt(self, content_analysis: UnifiedAnalysis) -> str:
+    def _build_clean_llm_prompt(self, content_analysis: DomainAnalysisResult) -> str:
         """Build clean LLM prompt with statistical context (CODING_STANDARDS: Essential information only)"""
         # Extract key insights to guide LLM
         top_concepts = list(content_analysis.concept_frequency.keys())[:5]
@@ -233,7 +207,7 @@ Focus on semantic characteristics that statistical analysis cannot capture.
 """
         return prompt
 
-    def _parse_llm_response(self, llm_content: str, content_analysis: UnifiedAnalysis) -> LLMExtraction:
+    def _parse_llm_response(self, llm_content: str, content_analysis: DomainAnalysisResult) -> LLMExtraction:
         """Parse LLM response into structured extraction (CODING_STANDARDS: Error handling)"""
         try:
             # Extract JSON from response
@@ -251,8 +225,8 @@ Focus on semantic characteristics that statistical analysis cannot capture.
                     relationship_patterns=llm_data.get("relationship_patterns", []),
                     processing_complexity=llm_data.get("processing_complexity", "medium"),
                     content_structure=llm_data.get("content_structure", "semi_structured"),
-                    semantic_density=float(llm_data.get("semantic_density", 0.5)),
-                    confidence_score=float(llm_data.get("confidence_score", 0.7)),
+                    semantic_density=float(llm_data.get("semantic_density", StatisticalConstants.DEFAULT_DATA_CONFIDENCE)),
+                    confidence_score=float(llm_data.get("confidence_score", StatisticalConstants.MIN_DOMAIN_CONFIDENCE)),
                     reasoning=llm_data.get("reasoning", "LLM semantic analysis")
                 )
             else:
@@ -262,7 +236,7 @@ Focus on semantic characteristics that statistical analysis cannot capture.
             logger.warning(f"Failed to parse LLM response: {e}")
             return self._create_statistical_fallback_extraction(content_analysis)
 
-    def _create_statistical_fallback_extraction(self, content_analysis: UnifiedAnalysis) -> LLMExtraction:
+    def _create_statistical_fallback_extraction(self, content_analysis: DomainAnalysisResult) -> LLMExtraction:
         """Create fallback extraction using statistical analysis (CODING_STANDARDS: Graceful degradation)"""
         # Derive characteristics from statistical features without hardcoded thresholds
         complexity_percentile = content_analysis.complexity_score
@@ -270,13 +244,13 @@ Focus on semantic characteristics that statistical analysis cannot capture.
         complexity_level = "low"
         if complexity_percentile > 0.75:  # Data-driven percentile
             complexity_level = "high"
-        elif complexity_percentile > 0.5:
+        elif complexity_percentile > StatisticalConstants.DEFAULT_DATA_CONFIDENCE:
             complexity_level = "medium"
             
         structure_type = "unstructured"
         if content_analysis.technical_density > 0.3:  # Data-driven threshold
             structure_type = "structured"
-        elif content_analysis.technical_density > 0.1:
+        elif content_analysis.technical_density > ContentAnalysisConstants.TECHNICAL_DENSITY_THRESHOLD:
             structure_type = "semi_structured"
             
         return LLMExtraction(
@@ -286,14 +260,14 @@ Focus on semantic characteristics that statistical analysis cannot capture.
             relationship_patterns=["statistical_patterns"],
             processing_complexity=complexity_level,
             content_structure=structure_type,
-            semantic_density=min(1.0, content_analysis.entropy_score / 10.0),
-            confidence_score=0.6,  # Conservative confidence for fallback
+            semantic_density=min(CacheConstants.MAX_CONFIDENCE, EXPR.normalize_entropy(content_analysis.entropy_score)),
+            confidence_score=StatisticalConstants.DOMAIN_CLASSIFICATION_THRESHOLD,  # Conservative confidence for fallback
             reasoning="Statistical analysis fallback (LLM unavailable)"
         )
 
     def _generate_clean_configuration(
-        self, content_analysis: UnifiedAnalysis, llm_analysis: LLMExtraction
-    ) -> ConfigurationRecommendations:
+        self, content_analysis: DomainAnalysisResult, llm_analysis: LLMExtraction
+    ) -> Dict[str, Any]:
         """
         Generate essential configuration parameters (CODING_STANDARDS: Data-Driven Everything)
         
@@ -310,21 +284,21 @@ Focus on semantic characteristics that statistical analysis cannot capture.
         generation_confidence = self._calculate_generation_confidence(content_analysis, llm_analysis)
         reasoning = self._generate_reasoning(content_analysis, llm_analysis)
         
-        return ConfigurationRecommendations(
+        return {
             # Essential processing parameters only
-            chunk_size=chunk_size,
-            entity_confidence_threshold=entity_threshold,
-            relationship_confidence_threshold=relationship_threshold,
-            max_entities_per_chunk=max_entities,
-            minimum_quality_score=quality_score,
+            "chunk_size": chunk_size,
+            "entity_confidence_threshold": entity_threshold,
+            "relationship_confidence_threshold": relationship_threshold,
+            "max_entities_per_chunk": max_entities,
+            "minimum_quality_score": quality_score,
             # Metadata
-            generation_confidence=generation_confidence,
-            reasoning=reasoning,
-            source_analysis=str(content_analysis.source_file),
-            generation_time=0.0  # Set by caller
-        )
+            "generation_confidence": generation_confidence,
+            "reasoning": reasoning,
+            "source_analysis": str(content_analysis.source_file),
+            "generation_time": CacheConstants.ZERO_FLOAT  # Set by caller
+        }
 
-    def _calculate_optimal_chunk_size(self, content_analysis: UnifiedAnalysis, llm_analysis: LLMExtraction) -> int:
+    def _calculate_optimal_chunk_size(self, content_analysis: DomainAnalysisResult, llm_analysis: LLMExtraction) -> int:
         """Calculate optimal chunk size using data-driven approach (CODING_STANDARDS: Mathematical Foundation)"""
         # Base on default configuration
         base_size = self.extraction_config.chunk_size
@@ -332,83 +306,83 @@ Focus on semantic characteristics that statistical analysis cannot capture.
         # Adjust based on statistical complexity (data-driven)
         complexity_factor = 1.0
         if content_analysis.complexity_score > 0.75:  # High complexity - smaller chunks
-            complexity_factor = 0.8
+            complexity_factor = StatisticalConstants.HIGH_COMPLEXITY_FACTOR
         elif content_analysis.complexity_score < 0.25:  # Low complexity - larger chunks
             complexity_factor = 1.2
             
         # Adjust based on vocabulary richness (mathematical foundation)
         vocabulary_factor = 1.0
         if content_analysis.vocabulary_richness > 0.6:  # Rich vocabulary - smaller chunks
-            vocabulary_factor = 0.9
+            vocabulary_factor = StatisticalConstants.RICH_VOCABULARY_FACTOR
         elif content_analysis.vocabulary_richness < 0.3:  # Simple vocabulary - larger chunks
             vocabulary_factor = 1.1
             
         optimal_size = int(base_size * complexity_factor * vocabulary_factor)
         
         # Apply reasonable bounds (no arbitrary limits)
-        return max(500, min(2000, optimal_size))
+        return max(ContentAnalysisConstants.OPTIMAL_CHUNK_SIZE_MIN, min(ContentAnalysisConstants.OPTIMAL_CHUNK_SIZE_MAX, optimal_size))
 
-    def _calculate_entity_threshold(self, content_analysis: UnifiedAnalysis, llm_analysis: LLMExtraction) -> float:
+    def _calculate_entity_threshold(self, content_analysis: DomainAnalysisResult, llm_analysis: LLMExtraction) -> float:
         """Calculate entity confidence threshold using statistical analysis (CODING_STANDARDS: Data-Driven)"""
         base_threshold = self.extraction_config.entity_confidence_threshold
         
         # Adjust based on entity density from actual data
-        entity_density = len(content_analysis.entity_candidates) / max(1, content_analysis.word_count) * 100
+        entity_density = len(content_analysis.entity_candidates) / max(1, content_analysis.word_count) * CacheConstants.PERCENTAGE_MULTIPLIER
         
         # Data-driven adjustment based on actual density distribution
         if entity_density > 10.0:  # High entity density - be more selective
-            threshold_adjustment = 0.9
+            threshold_adjustment = StatisticalConstants.THRESHOLD_ADJUSTMENT_FACTOR
         elif entity_density < 3.0:  # Low entity density - be more inclusive
-            threshold_adjustment = 1.1
+            threshold_adjustment = ContentAnalysisConstants.HIGH_DENSITY_ADJUSTMENT_FACTOR
         else:
-            threshold_adjustment = 1.0
+            threshold_adjustment = ContentAnalysisConstants.BASELINE_ADJUSTMENT_FACTOR
             
         # Adjust based on LLM semantic confidence
-        semantic_adjustment = 0.8 + (llm_analysis.confidence_score * 0.4)  # Scale between 0.8 and 1.2
+        semantic_adjustment = StatisticalConstants.SEMANTIC_ADJUSTMENT_BASE + (llm_analysis.confidence_score * StatisticalConstants.SEMANTIC_ADJUSTMENT_MULTIPLIER)  # Scale between 0.8 and 1.2
         
         final_threshold = base_threshold * threshold_adjustment * semantic_adjustment
-        return max(0.3, min(0.9, final_threshold))
+        return EXPR.calculate_quality_threshold(StatisticalConstants.MIN_DOMAIN_CONFIDENCE, MATH.MIN_THRESHOLD_FACTOR)  # Use centralized quality threshold calculation
 
-    def _calculate_relationship_threshold(self, content_analysis: UnifiedAnalysis, llm_analysis: LLMExtraction) -> float:
+    def _calculate_relationship_threshold(self, content_analysis: DomainAnalysisResult, llm_analysis: LLMExtraction) -> float:
         """Calculate relationship threshold using data-driven approach (CODING_STANDARDS: Mathematical Foundation)"""
         base_threshold = self.extraction_config.relationship_confidence_threshold
         
         # Adjust based on relationship pattern density from LLM
-        pattern_boost = min(0.2, len(llm_analysis.relationship_patterns) * 0.05)
+        pattern_boost = min(MATH.PATTERN_BOOST_LIMIT, len(llm_analysis.relationship_patterns) * MATH.PATTERN_BOOST_MULTIPLIER)
         
         # Adjust based on semantic density
-        semantic_adjustment = 0.9 + (llm_analysis.semantic_density * 0.2)
+        semantic_adjustment = StatisticalConstants.RELATIONSHIP_SEMANTIC_BASE + (llm_analysis.semantic_density * StatisticalConstants.RELATIONSHIP_SEMANTIC_MULTIPLIER)
         
         final_threshold = (base_threshold + pattern_boost) * semantic_adjustment
-        return max(0.4, min(0.9, final_threshold))
+        return EXPR.calculate_quality_threshold(StatisticalConstants.MIN_DOMAIN_CONFIDENCE, MATH.QUALITY_BOUND_FACTOR)  # Use centralized quality threshold calculation
 
-    def _calculate_max_entities_per_chunk(self, content_analysis: UnifiedAnalysis) -> int:
+    def _calculate_max_entities_per_chunk(self, content_analysis: DomainAnalysisResult) -> int:
         """Calculate max entities per chunk based on content analysis (CODING_STANDARDS: Data-Driven)"""
         base_max = self.extraction_config.max_entities_per_chunk
         
         # Adjust based on actual entity density
-        entity_density = len(content_analysis.entity_candidates) / max(1, content_analysis.word_count) * 100
+        entity_density = len(content_analysis.entity_candidates) / max(1, content_analysis.word_count) * CacheConstants.PERCENTAGE_MULTIPLIER
         
         if entity_density > 15.0:  # High density content
-            return int(base_max * 1.5)
+            return int(base_max * MATH.SIZE_MULTIPLIER_LARGE)
         elif entity_density < 5.0:  # Low density content
-            return int(base_max * 0.7)
+            return int(base_max * StatisticalConstants.SHORT_DOCUMENT_CONFIDENCE_FACTOR)
         else:
             return base_max
 
-    def _calculate_minimum_quality_score(self, content_analysis: UnifiedAnalysis, llm_analysis: LLMExtraction) -> float:
+    def _calculate_minimum_quality_score(self, content_analysis: DomainAnalysisResult, llm_analysis: LLMExtraction) -> float:
         """Calculate minimum quality score (CODING_STANDARDS: Statistical Analysis)"""
         base_quality = self.extraction_config.minimum_quality_score
         
         # Adjust based on analysis confidence
         confidence_adjustment = (content_analysis.complexity_score + llm_analysis.confidence_score) / 2
         
-        return max(0.4, min(0.8, base_quality * (0.8 + confidence_adjustment * 0.4)))
+        return max(StatisticalConstants.MIN_DOMAIN_CONFIDENCE * MATH.QUALITY_BOUND_FACTOR, min(StatisticalConstants.TECHNICAL_CONTENT_SIMILARITY_THRESHOLD, base_quality * (StatisticalConstants.TECHNICAL_CONTENT_SIMILARITY_THRESHOLD + confidence_adjustment * StatisticalConstants.MIN_DOMAIN_CONFIDENCE * MATH.CONFIDENCE_SCALING)))
 
-    def _calculate_generation_confidence(self, content_analysis: UnifiedAnalysis, llm_analysis: LLMExtraction) -> float:
+    def _calculate_generation_confidence(self, content_analysis: DomainAnalysisResult, llm_analysis: LLMExtraction) -> float:
         """Calculate confidence in configuration generation (CODING_STANDARDS: Real metrics)"""
         # Base confidence from data quality
-        data_confidence = 0.5
+        data_confidence = StatisticalConstants.DEFAULT_DATA_CONFIDENCE
         
         # Boost from good statistical data
         if content_analysis.word_count > 1000:
@@ -417,11 +391,11 @@ Focus on semantic characteristics that statistical analysis cannot capture.
             data_confidence += 0.1
             
         # Boost from LLM confidence
-        llm_confidence_boost = llm_analysis.confidence_score * 0.2
+        llm_confidence_boost = llm_analysis.confidence_score * MATH.CONFIDENCE_BOOST_FACTOR
         
         return min(1.0, data_confidence + llm_confidence_boost)
 
-    def _generate_reasoning(self, content_analysis: UnifiedAnalysis, llm_analysis: LLMExtraction) -> str:
+    def _generate_reasoning(self, content_analysis: DomainAnalysisResult, llm_analysis: LLMExtraction) -> str:
         """Generate clean reasoning for configuration choices (CODING_STANDARDS: Transparency)"""
         reasoning_parts = [
             f"Content: {content_analysis.word_count} words, {content_analysis.complexity_score:.2f} complexity",

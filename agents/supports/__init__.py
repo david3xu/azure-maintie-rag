@@ -1,24 +1,15 @@
 """
-Supporting Infrastructure for Dual-Graph Communication
+Supporting Infrastructure - Migration Notice
 
-This module contains the core communication and coordination components
-for the dual-graph workflow architecture.
+This module is being migrated to agents/shared/ for better organization.
+Graph communication models are now available from agents.shared.graph_communication.
 """
 
-from .graph_comm import GraphComm, GraphMessage, GraphStatus
-from .config_nego import ConfigNego, ConfigRequirements
-from .learn_feedback import LearnFeedback, PerformanceMetrics, ConfigFeedback
-from .perf_monitor import PerfMonitor, ConfigPerformanceInsights
+# Import from new location for backward compatibility
+from agents.shared.graph_communication import MessageType
+# GraphMessage, GraphStatus deleted in Phase 1
 
 __all__ = [
-    "GraphComm",
-    "GraphMessage", 
-    "GraphStatus",
-    "ConfigNego",
-    "ConfigRequirements",
-    "LearnFeedback",
-    "PerformanceMetrics",
-    "ConfigFeedback", 
-    "PerfMonitor",
-    "ConfigPerformanceInsights",
+    "MessageType",
+    # GraphMessage, GraphStatus deleted in Phase 1
 ]

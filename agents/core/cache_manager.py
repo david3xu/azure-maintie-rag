@@ -28,95 +28,15 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-# Import centralized configuration
-# Clean configuration (CODING_STANDARDS compliant)
-# Sub-millisecond threshold for performance tracking
-SUB_MILLISECOND_THRESHOLD = 0.001  # 1 millisecond
+# Import centralized configuration and models
+from agents.core.constants import MathematicalConstants, PerformanceAdaptiveConstants, SystemBoundaryConstants
+from agents.core.math_expressions import EXPR
+from agents.core.data_models import CacheEntry, CachePerformanceMetrics
+
+# Use centralized constant for performance tracking
+SUB_MILLISECOND_THRESHOLD = PerformanceAdaptiveConstants.SUB_MILLISECOND_THRESHOLD
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class CacheEntry:
-    """Unified cache entry with comprehensive metadata"""
-
-    data: Any
-    created_at: float
-    accessed_at: float
-    access_count: int
-    ttl: int
-    cache_type: str = (
-        "general"  # general, domain_signature, domain_config, query_mapping
-    )
-
-    def is_expired(self) -> bool:
-        """Check if cache entry has expired"""
-        return time.time() - self.created_at > self.ttl
-
-    def update_access(self):
-        """Update access statistics for LRU and performance tracking"""
-        self.accessed_at = time.time()
-        self.access_count += 1
-
-
-@dataclass
-class CachePerformanceMetrics:
-    """Comprehensive performance metrics for monitoring"""
-
-    total_requests: int = 0
-    cache_hits: int = 0
-    cache_misses: int = 0
-    fast_lookups: int = 0  # Sub-millisecond lookups
-    pattern_index_hits: int = 0
-    query_cache_hits: int = 0
-    domain_signature_hits: int = 0
-    evictions: int = 0
-    average_lookup_time: float = 0.0
-
-    @property
-    def hit_rate_percent(self) -> float:
-        """Calculate cache hit rate percentage"""
-        if self.total_requests == 0:
-            return 0.0
-        return (self.cache_hits / self.total_requests) * 100
-
-    @property
-    def fast_lookup_percent(self) -> float:
-        """Calculate percentage of fast lookups"""
-        if self.total_requests == 0:
-            return 0.0
-        return (self.fast_lookups / self.total_requests) * 100
-
-    def record_request(
-        self, is_hit: bool, lookup_time: float, lookup_type: str = "general"
-    ):
-        """Record a cache request and its performance characteristics"""
-        self.total_requests += 1
-
-        if is_hit:
-            self.cache_hits += 1
-
-            # Track specific hit types
-            if lookup_type == "pattern_index":
-                self.pattern_index_hits += 1
-            elif lookup_type == "query_cache":
-                self.query_cache_hits += 1
-            elif lookup_type == "domain_signature":
-                self.domain_signature_hits += 1
-        else:
-            self.cache_misses += 1
-
-        # Track lookup performance (CODING_STANDARDS: Simple constant)
-        if lookup_time < SUB_MILLISECOND_THRESHOLD:  # Sub-millisecond
-            self.fast_lookups += 1
-
-        # Update average lookup time (weighted moving average)
-        if self.total_requests == 1:
-            self.average_lookup_time = lookup_time
-        else:
-            self.average_lookup_time = (self.average_lookup_time * 0.9) + (
-                lookup_time * 0.1
-            )
 
 
 class QueryPatternIndex:
@@ -136,7 +56,7 @@ class QueryPatternIndex:
             # Index entity patterns
             for pattern_dict in entity_patterns:
                 pattern_text = pattern_dict.get("pattern_text", "").lower()
-                confidence = pattern_dict.get("confidence", 0.0)
+                confidence = pattern_dict.get("confidence", MathematicalConstants.CONFIDENCE_MIN)
 
                 if pattern_text:
                     self.phrase_to_domains[pattern_text].append((domain, confidence))
@@ -144,20 +64,20 @@ class QueryPatternIndex:
 
                     # Add words to word index
                     for word in pattern_text.split():
-                        if len(word) > 2:
+                        if len(word) > SystemBoundaryConstants.MIN_WORD_LENGTH_FOR_INDEXING:
                             self.word_to_domains[word].add(domain)
 
             # Index action patterns
             for pattern_dict in action_patterns:
                 pattern_text = pattern_dict.get("pattern_text", "").lower()
-                confidence = pattern_dict.get("confidence", 0.0)
+                confidence = pattern_dict.get("confidence", MathematicalConstants.CONFIDENCE_MIN)
 
                 if pattern_text:
                     self.phrase_to_domains[pattern_text].append((domain, confidence))
                     self.pattern_frequencies[pattern_text] += 1
 
                     for word in pattern_text.split():
-                        if len(word) > 2:
+                        if len(word) > SystemBoundaryConstants.MIN_WORD_LENGTH_FOR_INDEXING:
                             self.word_to_domains[word].add(domain)
 
     def find_matching_domains(self, query: str) -> List[Tuple[str, float]]:
@@ -170,22 +90,22 @@ class QueryPatternIndex:
             # 1. Exact phrase matches (highest priority)
             for phrase, domain_confidences in self.phrase_to_domains.items():
                 if phrase in query_lower:
-                    phrase_score = 2.0 * self.pattern_frequencies.get(phrase, 1)
+                    phrase_score = SystemBoundaryConstants.PHRASE_MATCH_SCORE_MULTIPLIER * self.pattern_frequencies.get(phrase, 1)
                     for domain, confidence in domain_confidences:
                         domain_scores[domain] += phrase_score * confidence
 
             # 2. Word-level matches
             for word in query_words:
                 if word in self.word_to_domains:
-                    word_score = 1.0 / len(query_words)
+                    word_score = MathematicalConstants.CONFIDENCE_MAX / max(1, len(query_words))
                     for domain in self.word_to_domains[word]:
-                        domain_scores[domain] += word_score * 0.5
+                        domain_scores[domain] += word_score * SystemBoundaryConstants.CACHE_PATTERN_SCORE_THRESHOLD
 
             # Return top 5 matches sorted by score
             sorted_domains = sorted(
                 domain_scores.items(), key=lambda x: x[1], reverse=True
             )
-            return sorted_domains[:5]
+            return sorted_domains[:SystemBoundaryConstants.DOMAIN_MATCH_TOP_RESULTS]
 
     def get_stats(self) -> Dict[str, int]:
         """Get pattern index statistics"""
@@ -214,8 +134,8 @@ class UnifiedCacheManager:
 
     def __init__(
         self,
-        max_size: int = 2000,
-        default_ttl: int = 3600,
+        max_size: int = PerformanceAdaptiveConstants.CACHE_OPTIMIZATION_MAX_SIZE,
+        default_ttl: int = PerformanceAdaptiveConstants.DEFAULT_CACHE_TTL,
         cache_dir: Optional[Path] = None,
     ):
         """
@@ -244,7 +164,7 @@ class UnifiedCacheManager:
         self._query_cache: Dict[
             str, Tuple[str, float, float]
         ] = {}  # hash -> (domain, confidence, timestamp)
-        self._query_cache_ttl = 1800  # 30 minutes
+        self._query_cache_ttl = PerformanceAdaptiveConstants.CACHE_CLEANUP_INTERVAL  # Use centralized TTL
 
         # Performance metrics
         self.metrics = CachePerformanceMetrics()
@@ -283,7 +203,7 @@ class UnifiedCacheManager:
     async def _evict_lru_entries(self, target_count: int = None):
         """Evict least recently used entries"""
         if target_count is None:
-            target_count = self.max_size // 4  # Evict 25% when full
+            target_count = int(self.max_size * SystemBoundaryConstants.CACHE_EVICTION_PERCENTAGE)  # Evict 25% when full
 
         evicted = 0
         while (
@@ -351,7 +271,7 @@ class UnifiedCacheManager:
                 data=data,
                 created_at=time.time(),
                 accessed_at=time.time(),
-                access_count=1,
+                access_count=SystemBoundaryConstants.FIRST_ACCESS_COUNT,
                 ttl=ttl,
                 cache_type=cache_type,
             )
@@ -425,7 +345,7 @@ class UnifiedCacheManager:
             # Fallback
             lookup_time = time.time() - start_time
             self.metrics.record_request(False, lookup_time, "fallback")
-            return "general", 0.3
+            return SystemBoundaryConstants.DEFAULT_FALLBACK_DOMAIN, SystemBoundaryConstants.DEFAULT_FALLBACK_CONFIDENCE
 
     # Performance and maintenance methods
 
@@ -449,7 +369,7 @@ class UnifiedCacheManager:
 
         await self.set(operation, params, result, ttl)
 
-        logger.debug(f"Executed and cached {operation} ({execution_time*1000:.2f}ms)")
+        logger.debug(f"Executed and cached {operation} ({execution_time*MathematicalConstants.MS_PER_SECOND:.2f}ms)")
         return result
 
     async def clear_expired(self):
@@ -498,7 +418,7 @@ class UnifiedCacheManager:
                     "cache_misses": self.metrics.cache_misses,
                     "hit_rate_percent": self.metrics.hit_rate_percent,
                     "fast_lookup_percent": self.metrics.fast_lookup_percent,
-                    "average_lookup_time_ms": self.metrics.average_lookup_time * 1000,
+                    "average_lookup_time_ms": self.metrics.average_lookup_time * MathematicalConstants.MS_PER_SECOND,
                     "pattern_index_hits": self.metrics.pattern_index_hits,
                     "domain_signature_hits": self.metrics.domain_signature_hits,
                     "evictions": self.metrics.evictions,
@@ -510,11 +430,11 @@ class UnifiedCacheManager:
     def _get_health_status(self) -> str:
         """Determine cache health status"""
         hit_rate = self.metrics.hit_rate_percent
-        utilization = (len(self._cache) / self.max_size) * 100
+        utilization = EXPR.calculate_percentage(len(self._cache), self.max_size)
 
-        if hit_rate > 70 and utilization < 90:
+        if hit_rate > PerformanceAdaptiveConstants.CACHE_HIGH_PERFORMANCE_THRESHOLD and utilization < PerformanceAdaptiveConstants.CACHE_EXCELLENT_PERFORMANCE_THRESHOLD:
             return "healthy"
-        elif hit_rate > 50 and utilization < 95:
+        elif hit_rate > PerformanceAdaptiveConstants.CACHE_LOW_PERFORMANCE_THRESHOLD and utilization < PerformanceAdaptiveConstants.CACHE_VERY_HIGH_PERFORMANCE_THRESHOLD:
             return "warning"
         else:
             return "degraded"
@@ -555,7 +475,7 @@ class UnifiedCacheManager:
                         ),
                         created_at=cache_data["created_at"],
                         accessed_at=cache_data["created_at"],
-                        access_count=0,
+                        access_count=SystemBoundaryConstants.INITIAL_ACCESS_COUNT,
                         ttl=cache_data["ttl"],
                         cache_type=cache_data.get("cache_type", "general"),
                     )

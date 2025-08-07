@@ -23,11 +23,26 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
 from pydantic_ai import Agent, RunContext
 
 # Clean configuration imports (CODING_STANDARDS compliant) 
 from config.centralized_config import get_model_config, get_search_config
+
+# Import models from centralized data models
+from agents.core.data_models import (
+    # Legacy models (maintained for compatibility)
+    QueryRequest,
+    SearchResponse,
+    UniversalSearchDeps,
+    TriModalSearchResult,
+    
+    # NEW: Enhanced models with PydanticAI integration and dynamic configuration
+    ConsolidatedSearchConfiguration,
+    ConsolidatedAzureConfiguration,
+    # EnhancedUniversalSearchContract deleted - use UniversalSearchContract
+    ConfigurationResolver,
+    PydanticAIContextualModel
+)
 
 # Backward compatibility for gradual migration
 class UniversalSearchAgentConfig:
@@ -42,9 +57,7 @@ get_tri_modal_orchestration_config = get_search_config  # Alias for compatibilit
 
 # Import consolidated orchestrator
 from .orchestrators.consolidated_search_orchestrator import (
-    ConsolidatedSearchOrchestrator,
-    TriModalSearchResult,
-    SearchResult
+    ConsolidatedSearchOrchestrator
 )
 
 # Import domain intelligence integration
@@ -56,37 +69,6 @@ except ImportError:
     get_domain_agent = None
 
 logger = logging.getLogger(__name__)
-
-
-class QueryRequest(BaseModel):
-    """Universal Search query request model"""
-    query: str = Field(..., description="Search query text")
-    domain: Optional[str] = Field(default=None, description="Optional domain specification")
-    search_types: Optional[List[str]] = Field(default=None, description="Search types to execute")
-    max_results: Optional[int] = Field(default=None, description="Maximum results per modality")
-    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
-
-
-class SearchResponse(BaseModel):
-    """Universal Search response model"""
-    success: bool = Field(..., description="Whether the search succeeded")
-    query: str = Field(..., description="Original query")
-    domain: str = Field(..., description="Domain used for search")
-    results: TriModalSearchResult = Field(..., description="Tri-modal search results")
-    execution_time: float = Field(..., description="Total execution time")
-    cached: bool = Field(default=False, description="Whether result was cached")
-    error: Optional[str] = Field(default=None, description="Error message if failed")
-
-
-class UniversalSearchDeps(BaseModel):
-    """Universal Search Agent dependencies"""
-    azure_services: Optional[Any] = None
-    cache_manager: Optional[Any] = None
-    orchestrator: Optional[ConsolidatedSearchOrchestrator] = None
-    domain_agent: Optional[Any] = None
-    
-    class Config:
-        arbitrary_types_allowed = True
 
 
 # Lazy initialization to avoid import-time Azure connection requirements
@@ -240,7 +222,7 @@ async def execute_universal_search(
                 vector_results=[],
                 graph_results=[],
                 gnn_results=[],
-                synthesis_score=0.0,
+                synthesis_score=CacheConstants.ZERO_FLOAT,
                 execution_time=execution_time,
                 modalities_executed=[],
                 vector_execution_time=0.0,

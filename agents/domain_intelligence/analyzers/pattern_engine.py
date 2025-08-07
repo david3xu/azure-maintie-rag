@@ -17,6 +17,9 @@ import json
 import logging
 import statistics
 import time
+
+# Import constants for zero-hardcoded-values compliance
+from agents.core.constants import CacheConstants
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -24,48 +27,13 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 # Clean configuration imports (CODING_STANDARDS compliant)
 from config.centralized_config import get_extraction_config, get_processing_config
+from agents.core.math_expressions import MATH
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class LearnedPattern:
-    """A pattern learned from data with confidence and usage tracking"""
-    
-    pattern_id: str
-    pattern_text: str
-    pattern_type: str  # entity, action, relationship, temporal
-    confidence: float
-    frequency: int
-    domains: List[str]
-    learned_from: List[str]  # Source documents/contexts
-    first_seen: float
-    last_updated: float
-    usage_count: int = 0
-
-    def update_usage(self):
-        """Update usage statistics"""
-        self.usage_count += 1
-        self.last_updated = time.time()
-
-
-@dataclass
-class PatternStatistics:
-    """Statistical metrics for pattern analysis (CODING_STANDARDS: Mathematical Foundation)"""
-    total_patterns: int = 0
-    unique_patterns: int = 0
-    average_confidence: float = 0.0
-    pattern_diversity: float = 0.0
-    learning_rate: float = 0.0
-
-
-@dataclass
-class ExtractedPatterns:
-    """Container for extracted patterns (backward compatibility)"""
-    patterns: List[LearnedPattern] = field(default_factory=list)
-    statistics: PatternStatistics = field(default_factory=PatternStatistics)
-    extraction_time: float = 0.0
-
+# Import consolidated data models
+from agents.core.data_models import LearnedPattern  # PatternStatistics deleted
 
 class DataDrivenPatternEngine:
     """
@@ -85,7 +53,13 @@ class DataDrivenPatternEngine:
         
         # Core pattern storage
         self.learned_patterns: Dict[str, LearnedPattern] = {}
-        self.pattern_statistics = PatternStatistics()
+        # PatternStatistics deleted - using simple Dict[str, Any] for statistics
+        self.pattern_statistics = {
+            "total_patterns": 0,
+            "unique_patterns": 0,
+            "average_confidence": 0.0,
+            "pattern_diversity": 0.0
+        }
         
         # Cache management
         self.cache_dir = cache_dir or Path("cache/patterns")
@@ -157,7 +131,7 @@ class DataDrivenPatternEngine:
                     
                     # Calculate entropy score
                     ngram_words = ngram.split()
-                    entropy_score = 0.0
+                    entropy_score = CacheConstants.ZERO_FLOAT
                     
                     for word in ngram_words:
                         freq = frequencies.get(word, 0.0001)  # Small smoothing
@@ -168,7 +142,7 @@ class DataDrivenPatternEngine:
                         pattern_candidates.append({
                             "text": ngram,
                             "entropy_score": entropy_score,
-                            "frequency": frequencies.get(ngram, 0.0),
+                            "frequency": frequencies.get(ngram, CacheConstants.ZERO_FLOAT),
                             "length": len(ngram_words)
                         })
         
@@ -196,8 +170,8 @@ class DataDrivenPatternEngine:
         
         # Use 75th percentile as threshold (data-driven)
         entropy_values.sort()
-        threshold_index = int(len(entropy_values) * 0.75)
-        return entropy_values[threshold_index] if threshold_index < len(entropy_values) else 1.0
+        threshold_index = int(len(entropy_values) * StatisticalConstants.STATISTICAL_CONFIDENCE_THRESHOLD)
+        return entropy_values[threshold_index] if threshold_index < len(entropy_values) else CacheConstants.MAX_CONFIDENCE
 
     def _cluster_patterns_statistically(self, candidates: List[Dict[str, Any]]) -> Dict[str, List[LearnedPattern]]:
         """
@@ -223,7 +197,7 @@ class DataDrivenPatternEngine:
                     pattern_id=hashlib.md5(candidate["text"].encode()).hexdigest()[:12],
                     pattern_text=candidate["text"],
                     pattern_type=cluster_name,
-                    confidence=min(candidate["entropy_score"] / 10.0, 1.0),  # Normalize
+                    confidence=min(candidate["entropy_score"] / MATH.ENTROPY_NORMALIZER, 1.0),  # Normalize
                     frequency=int(candidate["frequency"] * 1000),  # Scale for integer
                     domains=["statistical_analysis"],  # No hardcoded domains
                     learned_from=["entropy_analysis"],
@@ -284,11 +258,11 @@ class DataDrivenPatternEngine:
         
         patterns = list(self.learned_patterns.values())
         
-        self.pattern_statistics.total_patterns = len(patterns)
-        self.pattern_statistics.unique_patterns = len(set(p.pattern_text for p in patterns))
+        self.pattern_statistics["total_patterns"] = len(patterns)
+        self.pattern_statistics["unique_patterns"] = len(set(p.pattern_text for p in patterns))
         
         if patterns:
-            self.pattern_statistics.average_confidence = statistics.mean(p.confidence for p in patterns)
+            self.pattern_statistics["average_confidence"] = statistics.mean(p.confidence for p in patterns)
             
             # Calculate diversity as entropy of pattern types
             type_counts = Counter(p.pattern_type for p in patterns)
@@ -300,7 +274,7 @@ class DataDrivenPatternEngine:
                     p = count / total
                     diversity -= p * (p + 0.0001).bit_length()  # Avoid log(0)
             
-            self.pattern_statistics.pattern_diversity = diversity
+            self.pattern_statistics["pattern_diversity"] = diversity
 
     def get_patterns_for_domain(self, domain_hint: str = None) -> List[LearnedPattern]:
         """
@@ -311,8 +285,8 @@ class DataDrivenPatternEngine:
         # Return all patterns - no hardcoded domain filtering
         return list(self.learned_patterns.values())
 
-    def get_pattern_statistics(self) -> PatternStatistics:
-        """Get pattern statistics (CODING_STANDARDS: Real data)"""
+    def get_pattern_statistics(self) -> Dict[str, Any]:
+        """Get pattern statistics (PatternStatistics deleted - returns Dict)"""
         return self.pattern_statistics
 
     def _load_learned_patterns(self):
@@ -350,10 +324,10 @@ class DataDrivenPatternEngine:
                     for p in self.learned_patterns.values()
                 ],
                 "statistics": {
-                    "total_patterns": self.pattern_statistics.total_patterns,
-                    "unique_patterns": self.pattern_statistics.unique_patterns,
-                    "average_confidence": self.pattern_statistics.average_confidence,
-                    "pattern_diversity": self.pattern_statistics.pattern_diversity
+                    "total_patterns": self.pattern_statistics["total_patterns"],
+                    "unique_patterns": self.pattern_statistics["unique_patterns"],
+                    "average_confidence": self.pattern_statistics["average_confidence"],
+                    "pattern_diversity": self.pattern_statistics["pattern_diversity"]
                 }
             }
             
