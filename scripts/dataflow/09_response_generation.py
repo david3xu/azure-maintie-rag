@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from agents.universal_search.agent import UniversalSearchAgent
-from agents.core.azure_service_container import ConsolidatedAzureServices
+from infrastructure.azure_openai.openai_client import AzureOpenAIClient
 
 
 async def generate_response(query: str, context: str = ""):

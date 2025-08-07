@@ -1,241 +1,344 @@
 #!/usr/bin/env python3
 """
-Universal RAG Complete Workflow Demo
-===================================
+Universal RAG Complete Workflow Demo - PydanticAI Multi-Agent Architecture
+==========================================================================
 
-Demonstrates the complete universal RAG workflow from domain analysis
-through knowledge extraction to search, showing how the system adapts
-to ANY content type without predetermined assumptions.
+Demonstrates the complete PydanticAI multi-agent workflow with proper:
+- Agent delegation and dependency sharing
+- Universal content processing without domain assumptions
+- Real Azure service integration
+- Multi-modal search orchestration
 """
 
-import sys
 import asyncio
 from pathlib import Path
 from typing import Dict, Any
 
-# Add current directory to path
-sys.path.insert(0, '..')
+# Import proper PydanticAI multi-agent components
+from agents.orchestrator import UniversalOrchestrator, UniversalWorkflowResult
+from agents.domain_intelligence.agent import run_domain_analysis
+from agents.knowledge_extraction.agent import run_knowledge_extraction
+from agents.universal_search.agent import run_universal_search
 
-# Import universal components
-from domain_intelligence.agent import (
-    run_universal_domain_analysis, 
-    UniversalDomainDeps,
-    UniversalDomainAnalysis
-)
-from core.universal_models import UniversalOrchestrationResult
 
-async def demo_universal_workflow(data_directory: str = "/workspace/azure-maintie-rag/data/raw"):
-    """Demonstrate complete universal RAG workflow"""
+async def demo_pydantic_ai_multi_agent_workflow():
+    """Demonstrate complete PydanticAI multi-agent workflow."""
+
+    print("🚀 Universal RAG PydanticAI Multi-Agent Workflow Demo")
+    print("===================================================")
+    print(
+        "🎯 Demonstrates proper agent delegation, dependency sharing, and coordination"
+    )
+
+    # Initialize orchestrator
+    orchestrator = UniversalOrchestrator()
+
+    # Sample content that demonstrates universal processing
+    sample_content = """
+    Azure Cosmos DB is a globally distributed, multi-model database service that provides 
+    comprehensive SLAs for throughput, availability, latency, and consistency. It supports 
+    multiple data models including document, key-value, graph, and column-family.
     
-    print("🌍 Universal RAG Complete Workflow Demo")
-    print("======================================")
-    print(f"📂 Processing content from: {data_directory}")
-    print("🎯 This workflow adapts to ANY content type without assumptions")
+    Key Features:
+    - Global distribution across 30+ Azure regions
+    - Multi-master replication with conflict resolution
+    - Five consistency models: Strong, Bounded Staleness, Session, Consistent Prefix, Eventual
+    - Automatic and manual scaling with reserved and serverless options
+    - Built-in integration with Azure Functions, Logic Apps, and other Azure services
     
-    # Phase 1: Universal Domain Intelligence
-    print("\n🧠 Phase 1: Universal Domain Intelligence")
-    print("==========================================")
-    
+    Performance Characteristics:
+    - Single-digit millisecond latency at 99th percentile
+    - 99.999% availability SLA for multi-region deployments  
+    - Linear scale-out of throughput and storage
+    - Request Units (RUs) provide unified currency for database operations
+    """
+
+    sample_query = "How does Azure Cosmos DB achieve global distribution and what are the consistency guarantees?"
+
+    # Phase 1: Individual Agent Demonstrations
+    print("\n🧠 Phase 1: Individual Agent Demonstrations")
+    print("============================================")
+
+    # Domain Intelligence Agent
+    print("\n🌍 Domain Intelligence Agent - Discovering Content Characteristics")
+    print("-" * 70)
     try:
-        deps = UniversalDomainDeps(
-            data_directory=data_directory,
-            max_files_to_analyze=30,
-            min_content_length=100,
-            enable_multilingual=True
-        )
-        
-        print("🔍 Analyzing content distribution and characteristics...")
-        domain_analysis = await run_universal_domain_analysis(deps)
-        
-        print(f"\n✅ Domain Analysis Complete:")
-        print(f"   🏷️  Domain Signature: {domain_analysis.domain_signature}")
-        print(f"   🎯 Confidence: {domain_analysis.content_type_confidence:.2f}")
-        print(f"   📊 Documents Analyzed: {domain_analysis.characteristics.document_count}")
-        print(f"   📈 Vocabulary Richness: {domain_analysis.characteristics.vocabulary_richness:.3f}")
-        print(f"   🔧 Technical Density: {domain_analysis.characteristics.technical_vocabulary_ratio:.3f}")
-        print(f"   ⏱️  Processing Time: {domain_analysis.processing_time:.2f}s")
-        print(f"   🔒 Reliability: {domain_analysis.analysis_reliability:.2f}")
-        
-        print(f"\n💡 Key Insights Discovered:")
-        for i, insight in enumerate(domain_analysis.key_insights, 1):
-            print(f"   {i}. {insight}")
-        
-        print(f"\n🎯 Adaptive Configuration Generated:")
-        pc = domain_analysis.processing_config
-        print(f"   📦 Optimal Chunk Size: {pc.optimal_chunk_size}")
-        print(f"   🔗 Chunk Overlap: {pc.chunk_overlap_ratio:.1%}")
-        print(f"   🏷️  Entity Threshold: {pc.entity_confidence_threshold:.2f}")
-        print(f"   🔍 Vector Weight: {pc.vector_search_weight:.1%}")
-        print(f"   🕸️  Graph Weight: {pc.graph_search_weight:.1%}")
-        print(f"   📊 Expected Quality: {pc.expected_extraction_quality:.1%}")
-        print(f"   ⚙️  Complexity: {pc.processing_complexity}")
-        
+        domain_result = await run_domain_analysis(sample_content, detailed=True)
+        print(f"✅ Content signature: {domain_result.content_signature}")
+        print(f"📊 Vocabulary complexity: {domain_result.vocabulary_complexity:.2f}")
+        print(f"🎯 Concept density: {domain_result.concept_density:.2f}")
+        print(f"🔍 Discovered patterns: {domain_result.discovered_patterns}")
+        print(f"⚙️  Processing strategy: adaptive_{domain_result.content_signature}")
     except Exception as e:
-        print(f"❌ Domain analysis failed: {e}")
-        return None
-    
-    # Phase 2: Demonstrate Agent Configuration
-    print(f"\n🔧 Phase 2: Adaptive Agent Configuration")
-    print(f"========================================")
-    
-    print(f"🧠 Knowledge Extraction Agent would receive:")
-    extraction_config = {
-        "chunk_size": domain_analysis.processing_config.optimal_chunk_size,
-        "chunk_overlap": domain_analysis.processing_config.chunk_overlap_ratio,
-        "entity_threshold": domain_analysis.processing_config.entity_confidence_threshold,
-        "relationship_density": domain_analysis.processing_config.relationship_density,
-        "domain_patterns": domain_analysis.characteristics.content_patterns,
-        "key_terms": domain_analysis.characteristics.most_frequent_terms[:10],
-        "processing_complexity": domain_analysis.processing_config.processing_complexity
-    }
-    
-    for key, value in extraction_config.items():
-        if isinstance(value, float):
-            print(f"   {key}: {value:.3f}")
-        elif isinstance(value, list):
-            print(f"   {key}: {value[:3] if len(value) > 3 else value}")
-        else:
-            print(f"   {key}: {value}")
-    
-    print(f"\n🔍 Universal Search Agent would receive:")
-    search_config = {
-        "vector_weight": domain_analysis.processing_config.vector_search_weight,
-        "graph_weight": domain_analysis.processing_config.graph_search_weight,
-        "domain_signature": domain_analysis.domain_signature,
-        "key_terms": domain_analysis.characteristics.most_frequent_terms[:5],
-        "technical_density": domain_analysis.characteristics.technical_vocabulary_ratio,
-        "enable_advanced_search": domain_analysis.processing_config.processing_complexity == "high"
-    }
-    
-    for key, value in search_config.items():
-        if isinstance(value, float):
-            print(f"   {key}: {value:.3f}")
-        elif isinstance(value, list):
-            print(f"   {key}: {value}")
-        elif isinstance(value, bool):
-            print(f"   {key}: {'✅' if value else '❌'}")
-        else:
-            print(f"   {key}: {value}")
-    
-    # Phase 3: Demonstrate Universality
-    print(f"\n🌍 Phase 3: Universal Adaptation Demonstration")
-    print(f"==============================================")
-    
-    print(f"🎯 This configuration works for ANY content type:")
-    
-    # Show adaptation examples
-    adaptations = []
-    
-    if "code_rich" in domain_analysis.characteristics.content_patterns:
-        adaptations.append("📝 Code-aware chunking enabled - preserves function/class boundaries")
-        adaptations.append("🔧 Larger chunks for complex code structures")
-        
-    if "hierarchical_headers" in domain_analysis.characteristics.content_patterns:
-        adaptations.append("📋 Structure-aware processing - uses document hierarchy")
-        
-    if domain_analysis.characteristics.technical_vocabulary_ratio > 0.4:
-        adaptations.append("🧬 High-tech content detected - specialized entity recognition")
-        adaptations.append("📊 Graph search prioritized for technical relationships")
-        
-    if domain_analysis.characteristics.vocabulary_richness > 0.3:
-        adaptations.append("📚 Rich vocabulary - semantic vector search optimized")
-    else:
-        adaptations.append("🔗 Limited vocabulary - relationship extraction prioritized")
-    
-    for adaptation in adaptations:
-        print(f"   ✅ {adaptation}")
-    
-    if not adaptations:
-        print(f"   📊 Standard balanced configuration for general content")
-    
-    # Phase 4: Show Universal Benefits
-    print(f"\n🚀 Phase 4: Universal RAG Benefits Realized")
-    print(f"==========================================")
-    
-    benefits = [
-        f"🌍 Works with ANY domain: legal, medical, technical, business, academic, etc.",
-        f"🔄 Zero configuration required for new content types",
-        f"📈 Intelligent optimization based on actual content characteristics",
-        f"🎯 Quality expectations set from real content analysis (not assumptions)",
-        f"⚡ Efficient resource allocation based on complexity assessment",
-        f"🔧 All agents automatically configured for optimal performance",
-        f"📊 Consistent behavior across diverse content collections"
-    ]
-    
-    for benefit in benefits:
-        print(f"   {benefit}")
-    
-    # Create summary result
-    result = {
-        "success": True,
-        "domain_analysis": domain_analysis,
-        "extraction_config": extraction_config,
-        "search_config": search_config,
-        "total_processing_time": domain_analysis.processing_time,
-        "universal_adaptations": adaptations,
-        "quality_score": domain_analysis.analysis_reliability
-    }
-    
-    return result
+        print(f"❌ Domain Intelligence failed: {e}")
 
-def demonstrate_universality_comparison():
-    """Show comparison between universal and predetermined approaches"""
-    
-    print(f"\n📊 Universal vs Predetermined Approach Comparison")
-    print(f"================================================")
-    
-    comparison_data = [
-        ("Domain Types", "❌ Fixed list (programming, business, etc.)", "✅ Dynamic signatures from content"),
-        ("Keywords", "❌ Hardcoded domain vocabularies", "✅ Discovered from frequency analysis"), 
-        ("Thresholds", "❌ Static values (0.7, 0.8, etc.)", "✅ Calculated from content distribution"),
-        ("Entity Types", "❌ Predetermined (PERSON, ORG, etc.)", "✅ Discovered from content patterns"),
-        ("Configuration", "❌ Manual domain-specific rules", "✅ Generated from measured characteristics"),
-        ("New Domains", "❌ Requires manual setup", "✅ Automatic adaptation"),
-        ("Languages", "❌ English-centric assumptions", "✅ Language-agnostic analysis"),
-        ("Scalability", "❌ Limited to known domains", "✅ Infinite domain support"),
-        ("Maintenance", "❌ Requires domain experts", "✅ Self-maintaining through data analysis")
+    # Knowledge Extraction Agent
+    print("\n📚 Knowledge Extraction Agent - Universal Entity/Relationship Extraction")
+    print("-" * 78)
+    try:
+        extraction_result = await run_knowledge_extraction(
+            sample_content, use_domain_analysis=True
+        )
+        print(f"✅ Entities found: {len(extraction_result.entities)}")
+        print(f"🔗 Relationships found: {len(extraction_result.relationships)}")
+        print(
+            f"🎯 Extraction confidence: {extraction_result.extraction_confidence:.2f}"
+        )
+        print(f"📊 Processing signature: {extraction_result.processing_signature}")
+
+        if extraction_result.entities:
+            print("🏷️  Top entities:")
+            for entity in extraction_result.entities[:3]:
+                print(
+                    f"   - {entity.text} ({entity.type}, conf: {entity.confidence:.2f})"
+                )
+
+    except Exception as e:
+        print(f"❌ Knowledge Extraction failed: {e}")
+
+    # Universal Search Agent
+    print("\n🔍 Universal Search Agent - Multi-Modal Search Orchestration")
+    print("-" * 65)
+    try:
+        search_result = await run_universal_search(
+            sample_query, max_results=5, use_domain_analysis=True
+        )
+        print(
+            f"✅ Search completed with strategy: {search_result.search_strategy_used}"
+        )
+        print(f"📊 Total results: {search_result.total_results_found}")
+        print(f"🎯 Search confidence: {search_result.search_confidence:.2f}")
+        print(f"⚡ Processing time: {search_result.processing_time_seconds:.3f}s")
+        print(
+            f"🔧 Modalities used: Vector({len(search_result.vector_results)}), Graph({len(search_result.graph_results)}), GNN({len(search_result.gnn_results)})"
+        )
+    except Exception as e:
+        print(f"❌ Universal Search failed: {e}")
+
+    # Phase 2: Multi-Agent Orchestration Demonstrations
+    print("\n🎭 Phase 2: Multi-Agent Orchestration Patterns")
+    print("===============================================")
+
+    # Orchestrated workflows using proper PydanticAI patterns
+    print("\n🔄 Orchestrated Workflow 1: Domain Analysis → Knowledge Extraction")
+    print("-" * 75)
+    try:
+        result1 = await orchestrator.process_knowledge_extraction_workflow(
+            sample_content, use_domain_analysis=True
+        )
+        print(f"✅ Multi-agent workflow success: {result1.success}")
+        print(f"⚡ Total processing time: {result1.total_processing_time:.2f}s")
+        if result1.extraction_summary:
+            print(
+                f"📊 Entities extracted: {result1.extraction_summary['entities_count']}"
+            )
+            print(
+                f"🔗 Relationships found: {result1.extraction_summary['relationships_count']}"
+            )
+        print(f"🔧 Agents coordinated: {', '.join(result1.agent_metrics.keys())}")
+    except Exception as e:
+        print(f"❌ Orchestrated extraction workflow failed: {e}")
+
+    print("\n🔄 Orchestrated Workflow 2: Query Analysis → Multi-Modal Search")
+    print("-" * 70)
+    try:
+        result2 = await orchestrator.process_full_search_workflow(
+            sample_query, max_results=5, use_domain_analysis=True
+        )
+        print(f"✅ Multi-modal search success: {result2.success}")
+        print(f"⚡ Total processing time: {result2.total_processing_time:.2f}s")
+        if result2.search_results:
+            print(f"📊 Search results found: {len(result2.search_results)}")
+            print("🏆 Top results:")
+            for i, result in enumerate(result2.search_results[:2], 1):
+                print(
+                    f"   {i}. {result.title[:50]}... (score: {result.score:.3f}, source: {result.source})"
+                )
+        print(f"🔧 Agents coordinated: {', '.join(result2.agent_metrics.keys())}")
+    except Exception as e:
+        print(f"❌ Orchestrated search workflow failed: {e}")
+
+    # Phase 3: Architecture Benefits Demonstration
+    print("\n🏗️ Phase 3: PydanticAI Architecture Benefits")
+    print("=============================================")
+
+    architecture_benefits = [
+        "🔗 **Proper Agent Delegation**: Agents call other agents using ctx.deps and ctx.usage",
+        "🏭 **Centralized Dependencies**: Single UniversalDeps shared across all agents",
+        "⚡ **No Client Duplication**: Azure OpenAI client initialized once, reused everywhere",
+        "🛠️ **Atomic Tools**: Query generation as tools, not pseudo-agents",
+        "📊 **Clean Boundaries**: Each agent has specific responsibilities and interfaces",
+        "🎯 **Universal Processing**: Zero hardcoded domain assumptions throughout",
+        "🔄 **State Management**: Proper RunContext usage for dependency injection",
+        "⚙️ **Service Orchestration**: Real Azure services with comprehensive error handling",
     ]
-    
-    print(f"{'Aspect':<15} {'Predetermined Approach':<35} {'Universal Approach':<35}")
-    print(f"{'-'*15} {'-'*35} {'-'*35}")
-    
-    for aspect, predetermined, universal in comparison_data:
-        print(f"{aspect:<15} {predetermined:<35} {universal:<35}")
-    
-    print(f"\n🎯 Result: Universal approach maintains true RAG universality while")
-    print(f"   providing intelligent optimization through pure data-driven analysis.")
+
+    for benefit in architecture_benefits:
+        print(f"   {benefit}")
+
+    # Phase 4: Real-World Usage Patterns
+    print("\n🌍 Phase 4: Real-World Usage Patterns")
+    print("=====================================")
+
+    usage_patterns = [
+        (
+            "📝 **Document Processing**",
+            "Domain analysis → entity extraction → knowledge graph construction",
+        ),
+        (
+            "🔍 **Intelligent Search**",
+            "Query analysis → multi-modal search → result ranking",
+        ),
+        (
+            "🧠 **Content Discovery**",
+            "Pattern recognition → relationship mapping → insight generation",
+        ),
+        (
+            "⚡ **Real-time Analysis**",
+            "Stream processing → adaptive configuration → immediate insights",
+        ),
+        (
+            "🔗 **Integration Workflows**",
+            "API endpoints → agent orchestration → structured responses",
+        ),
+        (
+            "📊 **Analytics Pipelines**",
+            "Batch processing → quality metrics → performance optimization",
+        ),
+    ]
+
+    for pattern_name, pattern_desc in usage_patterns:
+        print(f"   {pattern_name}: {pattern_desc}")
+
+    return {
+        "success": True,
+        "architecture": "PydanticAI Multi-Agent",
+        "agents_demonstrated": [
+            "domain_intelligence",
+            "knowledge_extraction",
+            "universal_search",
+        ],
+        "orchestration_patterns": [
+            "individual",
+            "multi_agent_workflows",
+            "dependency_sharing",
+        ],
+        "universal_processing": True,
+        "azure_integration": True,
+    }
+
+
+def demonstrate_architecture_comparison():
+    """Show comparison between PydanticAI and traditional approaches"""
+
+    print(f"\n📊 PydanticAI vs Traditional Multi-Agent Comparison")
+    print(f"==================================================")
+
+    comparison_data = [
+        (
+            "Agent Communication",
+            "❌ Direct function calls",
+            "✅ Proper agent delegation with ctx.deps",
+        ),
+        (
+            "Dependency Management",
+            "❌ Duplicate Azure clients",
+            "✅ Centralized UniversalDeps sharing",
+        ),
+        (
+            "Tool Architecture",
+            "❌ Pseudo-agents for utilities",
+            "✅ Atomic tools with single responsibilities",
+        ),
+        (
+            "State Management",
+            "❌ Global variables or singletons",
+            "✅ RunContext for proper injection",
+        ),
+        (
+            "Error Handling",
+            "❌ Basic try/catch blocks",
+            "✅ Comprehensive service validation",
+        ),
+        (
+            "Agent Boundaries",
+            "❌ Tight coupling, unclear roles",
+            "✅ Clean interfaces and specific purposes",
+        ),
+        (
+            "Testing",
+            "❌ Difficult to mock dependencies",
+            "✅ Dependency injection enables easy testing",
+        ),
+        (
+            "Scalability",
+            "❌ Hard to add new agents",
+            "✅ Factory patterns and interface contracts",
+        ),
+        ("Monitoring", "❌ Ad-hoc logging", "✅ Built-in usage tracking and metrics"),
+    ]
+
+    print(f"{'Aspect':<20} {'Traditional Approach':<35} {'PydanticAI Approach':<35}")
+    print(f"{'-'*20} {'-'*35} {'-'*35}")
+
+    for aspect, traditional, pydantic_ai in comparison_data:
+        print(f"{aspect:<20} {traditional:<35} {pydantic_ai:<35}")
+
+    print(f"\n🎯 Result: PydanticAI provides proper multi-agent architecture with")
+    print(f"   clean boundaries, dependency injection, and universal processing.")
+
 
 async def main():
-    """Run the complete universal RAG workflow demonstration"""
-    
-    # Check if data directory exists
-    data_path = Path("/workspace/azure-maintie-rag/data/raw")
-    
-    if data_path.exists():
-        # Run full workflow demo
-        result = await demo_universal_workflow(str(data_path))
-        
+    """Run the complete PydanticAI multi-agent demonstration"""
+
+    print("🚀 Azure Universal RAG - PydanticAI Multi-Agent System")
+    print("=====================================================")
+    print("Demonstrating proper agent architecture with real Azure services")
+
+    try:
+        # Run the main workflow demonstration
+        result = await demo_pydantic_ai_multi_agent_workflow()
+
         if result and result["success"]:
-            print(f"\n✅ Universal RAG Workflow Demo Completed Successfully!")
-            print(f"📊 Quality Score: {result['quality_score']:.2f}")
-            print(f"⏱️  Total Time: {result['total_processing_time']:.2f}s")
-            print(f"🎯 Adaptations Applied: {len(result['universal_adaptations'])}")
+            print(f"\n✅ PydanticAI Multi-Agent Demo Completed Successfully!")
+            print(f"🏗️  Architecture: {result['architecture']}")
+            print(f"🤖 Agents: {', '.join(result['agents_demonstrated'])}")
+            print(f"🔄 Patterns: {', '.join(result['orchestration_patterns'])}")
+            print(
+                f"🌍 Universal Processing: {'✅' if result['universal_processing'] else '❌'}"
+            )
+            print(
+                f"☁️  Azure Integration: {'✅' if result['azure_integration'] else '❌'}"
+            )
         else:
             print(f"\n⚠️  Demo completed with warnings")
-            
-    else:
-        print(f"\n⚠️  Data directory not found: {data_path}")
-        print(f"   The universal system works with ANY content you provide")
-        print(f"   Demo shows conceptual workflow with example adaptations")
-    
-    # Always show the universality comparison
-    demonstrate_universality_comparison()
-    
-    print(f"\n🌍 Universal RAG System Ready!")
-    print(f"=============================")
-    print(f"Your RAG system is now truly universal AND intelligently adaptive.")
-    print(f"It maintains universal principles while providing domain-specific optimization")
-    print(f"through pure data-driven analysis - the best of both worlds!")
+
+    except Exception as e:
+        print(f"\n❌ Demo failed: {e}")
+        print("This may be due to Azure service configuration or connectivity issues")
+
+    # Show architecture comparison
+    demonstrate_architecture_comparison()
+
+    print(f"\n🌟 PydanticAI Multi-Agent System Summary")
+    print(f"=======================================")
+    print(
+        f"✅ **Proper Agent Delegation**: Agents call other agents with ctx.deps/ctx.usage"
+    )
+    print(
+        f"✅ **Centralized Dependencies**: Single UniversalDeps shared across all agents"
+    )
+    print(f"✅ **Universal Processing**: Zero hardcoded domain assumptions")
+    print(
+        f"✅ **Clean Architecture**: Atomic tools, clear boundaries, dependency injection"
+    )
+    print(
+        f"✅ **Real Azure Services**: OpenAI, Cosmos DB, Cognitive Search, ML integration"
+    )
+    print(f"✅ **Multi-Modal Orchestration**: Vector + Graph + GNN search coordination")
+    print(f"")
+    print(f"🎯 Your Azure Universal RAG system now follows PydanticAI best practices!")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

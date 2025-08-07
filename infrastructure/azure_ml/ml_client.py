@@ -10,8 +10,10 @@ from azure.core.exceptions import AzureError
 from config.settings import azure_settings
 
 # from infra.models.universal_rag_models import (  # Disabled - models module removed
+# Use local models to avoid circular imports
 try:
-    from agents.models.responses import UniversalTrainingConfig, UniversalTrainingResult
+    # Avoid circular import - use local models instead
+    raise ImportError("Using local models to avoid circular dependencies")
 except ImportError:
     # Fallback models if agents.models not available
     from dataclasses import dataclass

@@ -12,7 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from agents.universal_search.agent import UniversalSearchAgent
-from agents.core.azure_service_container import ConsolidatedAzureServices
+from infrastructure.azure_openai.openai_client import AzureOpenAIClient
+from infrastructure.azure_storage.storage_client import SimpleStorageClient
 
 
 async def retrieve_context(query: str, limit: int = 5):

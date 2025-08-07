@@ -12,7 +12,7 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.core.azure_service_container import ConsolidatedAzureServices
+from infrastructure.azure_storage.storage_client import SimpleStorageClient
 
 
 async def store_to_cosmos(extraction_file: str, domain: str = "maintenance"):

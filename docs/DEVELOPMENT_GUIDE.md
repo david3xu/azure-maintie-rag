@@ -1,25 +1,26 @@
 # Azure Universal RAG - Development Guide
 
-**Real Codebase Development Patterns - Based on Actual Implementation**
+**Universal RAG Development Patterns - Based on Actual Implementation**
 
-Development guide for the Azure Universal RAG system based on verified codebase analysis and actual implementation patterns.
+Development guide for the Azure Universal RAG system with **zero hardcoded domain bias** and PydanticAI framework integration.
 
-## 🔍 Real Architecture Overview
+## 🔍 Universal RAG Philosophy
 
-Based on actual source code analysis:
+This development guide follows the **Universal RAG philosophy** implemented in the actual codebase:
 
-### **Core Implementation Stack**
-- **PydanticAI Agents**: 3 agents with FunctionToolset patterns and lazy initialization
-- **Azure Service Integration**: ConsolidatedAzureServices (471 lines) with DefaultAzureCredential
-- **Data Models**: 1,536-line centralized Pydantic model system (80+ models)
-- **Configuration**: Dynamic configuration with bootstrap patterns
-- **Infrastructure**: Real Azure service clients with managed identity support
+### **Core Implementation Principles**
+- **Domain-Agnostic Design**: No predetermined domain categories (technical, legal, medical, etc.)
+- **Content Discovery**: System analyzes content characteristics dynamically
+- **Universal Models**: All data structures work across ANY domain (`agents/core/universal_models.py`)
+- **Real Azure Integration**: PydanticAI with AsyncAzureOpenAI, Cosmos DB Gremlin, Cognitive Search
+- **Type Safety**: Pydantic models for all agent interfaces with validation
 
-### **Agent Architecture**
+### **Agent Architecture (4 Specialized Agents)**
 ```
-Domain Intelligence (122 lines) → Knowledge Extraction (368 lines) → Universal Search (271 lines)
-        ↓                               ↓                                    ↓
-   lazy initialization           multi-strategy extraction      consolidated orchestrator
+Domain Intelligence → Knowledge Extraction → Universal Search → Query Generation
+        ↓                      ↓                    ↓                 ↓
+Content Discovery      Universal Extraction   Multi-modal Search   SQL-Pattern Queries
+   (Azure OpenAI)        (Cosmos Gremlin)      (Vector+Graph+GNN)    (Specialized)
 ```
 
 ## 🚀 Development Setup
@@ -37,17 +38,22 @@ pip install -r requirements.txt
 ```
 
 ### **Environment Configuration**
-Based on the real configuration system (`config/centralized_config.py`):
+Based on the Universal RAG configuration system (`config/universal_config.py`, `agents/core/simple_config_manager.py`):
 
 ```bash
-# Set environment variables required by azure_service_container.py
+# Environment synchronization (critical for multi-environment support)
+./scripts/deployment/sync-env.sh development    # Switch to development + sync backend
+./scripts/deployment/sync-env.sh staging       # Switch to staging + sync backend
+make sync-env                                   # Sync backend with current azd environment
+
+# Required Azure service endpoints (DefaultAzureCredential)
 export AZURE_OPENAI_ENDPOINT="your-openai-endpoint"
 export AZURE_OPENAI_API_VERSION="2024-08-01-preview"
 export OPENAI_MODEL_DEPLOYMENT="your-gpt-deployment"
 
-# Optional: Set other Azure service endpoints
-export AZURE_SEARCH_ENDPOINT="your-search-endpoint"
-export AZURE_COSMOS_ENDPOINT="your-cosmos-endpoint"
+# Multi-environment support
+export USE_MANAGED_IDENTITY="true"  # Production
+export USE_MANAGED_IDENTITY="false" # Development
 ```
 
 ## 🔧 Real Development Workflows
@@ -66,17 +72,26 @@ curl http://localhost:8000/  # FastAPI root endpoint
 curl http://localhost:8000/health  # Health check endpoint
 ```
 
-### **Test Real Agent Implementations**
+### **Test Universal RAG Agent Implementations**
 
-Based on actual agent implementations:
+Based on actual agent implementations with Universal RAG philosophy:
 
 ```bash
-# Test Domain Intelligence Agent (agents/domain_intelligence/agent.py:122 lines)
-python -c "
-from agents.domain_intelligence.agent import create_domain_intelligence_agent
-agent = create_domain_intelligence_agent()
-print('✅ Domain Intelligence Agent created with lazy initialization')
-"
+# Test Domain Intelligence Agent (content discovery, not domain classification)
+cd agents/domain_intelligence && python agent.py
+# Expected: Content characteristic analysis (vocabulary complexity, concept density)
+
+# Test Knowledge Extraction Agent (universal extraction, domain-agnostic)
+cd agents/knowledge_extraction && python agent.py  
+# Expected: Entity/relationship extraction works for ANY domain
+
+# Test Universal Search Agent (multi-modal search orchestration)
+cd agents/universal_search && python agent.py
+# Expected: Vector + Graph + GNN unified search
+
+# Test Query Generation Agents (SQL-pattern specialization)
+python scripts/dataflow/12_query_generation_showcase.py
+# Expected: Specialized query agents working together
 
 # Test Knowledge Extraction Agent (agents/knowledge_extraction/agent.py:368 lines)
 python -c "
@@ -390,7 +405,8 @@ asyncio.run(performance_test())
 ```bash
 # Test real configuration management
 python -c "
-from config.centralized_config import get_system_config, get_model_config_bootstrap, get_workflow_config
+from config.universal_config import get_universal_config
+from agents.core.simple_config_manager import SimpleConfigManager
 
 try:
     system_config = get_system_config()
@@ -454,7 +470,7 @@ from agents.core.data_models import ExtractionRequest, ExtractionResult
 
 ```python
 # ✅ GOOD: Use centralized configuration
-from config.centralized_config import get_model_config_bootstrap
+from config.universal_config import get_universal_config
 
 # For initialization (avoid circular deps)
 model_config = get_model_config_bootstrap()
@@ -484,7 +500,7 @@ az cognitiveservices account list
 ```bash
 # Test configuration loading
 python -c "
-from config.centralized_config import get_model_config_bootstrap
+from config.universal_config import get_universal_config
 config = get_model_config_bootstrap()
 print('✅ Bootstrap configuration works')
 "
@@ -518,7 +534,7 @@ print('✅ Centralized data models')
 from agents.shared.text_statistics import calculate_text_statistics
 print('✅ Shared infrastructure')
 
-from config.centralized_config import get_system_config
+from config.universal_config import get_universal_config
 print('✅ Configuration system')
 
 print('🎉 All core components loaded successfully')

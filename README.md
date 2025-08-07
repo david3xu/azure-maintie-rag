@@ -8,17 +8,18 @@
 
 ## 🚀 Overview
 
-Azure Universal RAG is a **production-ready multi-agent system** combining PydanticAI framework with Azure services for intelligent document processing, knowledge extraction, and tri-modal search (Vector + Graph + GNN).
+Azure Universal RAG is a **production-ready multi-agent system** combining PydanticAI framework with Azure services for intelligent document processing with **zero hardcoded domain bias**. The system uses tri-modal search (Vector + Graph + GNN) and discovers content characteristics dynamically.
 
 ### **Core Capabilities (Real Implementation)**
-- **Multi-Agent Architecture**: PydanticAI with 3 specialized agents (Domain Intelligence, Knowledge Extraction, Universal Search)
-- **Zero-Hardcoded-Values**: Dynamic configuration management with learned domain patterns
-- **Azure Service Container**: Unified service access with `DefaultAzureCredential` (471 lines)
-- **Centralized Data Models**: 1,536 lines with 80+ Pydantic models and PydanticAI validators
-- **Tri-Modal Search**: Vector + Graph + GNN unified orchestration
+- **Universal RAG Philosophy**: Zero domain assumptions - discovers content characteristics from analysis
+- **Multi-Agent Architecture**: PydanticAI with 4 specialized agents (Domain Intelligence, Knowledge Extraction, Universal Search, Query Generation)
+- **Domain-Agnostic Processing**: Universal models work across ANY domain without predetermined categories
+- **Real Azure Integration**: AsyncAzureOpenAI, Cosmos DB Gremlin, Cognitive Search, ML services
+- **Query Generation Pattern**: SQL-style specialized agents for different query types
+- **Type-Safe Communication**: Pydantic models for all agent interfaces with validation
 - **Real-Time Streaming**: React frontend with Server-Sent Events and progressive disclosure
 - **Production-Ready Testing**: Real Azure services integration (no mocks)
-- **Enterprise Security**: Comprehensive RBAC with managed identity
+- **Enterprise Security**: DefaultAzureCredential with comprehensive RBAC
 
 ### **Key Performance Metrics**
 - ✅ **Sub-3-second query processing** (exceeds enterprise SLAs)
@@ -50,18 +51,20 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 
 ### **Multi-Agent Backend Stack (Real Implementation)**
 ```
-├─ PydanticAI Framework (3 specialized agents)
-│  ├─ Domain Intelligence Agent (122 lines)
-│  ├─ Knowledge Extraction Agent (368 lines) 
-│  └─ Universal Search Agent (271 lines)
-├─ Azure Service Container (471 lines with DefaultAzureCredential)
-├─ Centralized Data Models (1,536 lines, 80+ Pydantic models)
-├─ FastAPI API (42 lines) + uvicorn (streaming endpoints)
-├─ Azure OpenAI integration (GPT-4, embeddings)
-├─ Azure Cognitive Search (vector search, 1536D embeddings)
-├─ Azure Cosmos DB (knowledge graphs, Gremlin API)
-├─ Azure ML (PyTorch + torch-geometric GNN training)
-└─ Dynamic Configuration Manager (zero-hardcoded-values)
+├─ PydanticAI Framework (4 specialized agents)
+│  ├─ Domain Intelligence Agent (Azure OpenAI integration)
+│  ├─ Knowledge Extraction Agent (Cosmos DB Gremlin integration)
+│  ├─ Universal Search Agent (multi-modal search orchestration)
+│  └─ Query Generation Agents (SQL-pattern specialization)
+├─ Universal Models (agents/core/universal_models.py - domain-agnostic)
+├─ Real Azure Integration (infrastructure/ layer)
+│  ├─ AsyncAzureOpenAI clients
+│  ├─ Azure Cognitive Search (vector search, 1536D embeddings)  
+│  ├─ Azure Cosmos DB (knowledge graphs, Gremlin API)
+│  ├─ Azure Blob Storage (document management)
+│  └─ Azure ML (PyTorch + torch-geometric GNN training)
+├─ FastAPI API + uvicorn (streaming endpoints)
+└─ Configuration Management (config/universal_config.py + agents/core/simple_config_manager.py)
 ```
 
 ### **Frontend Stack (Verified Versions)**
@@ -90,10 +93,10 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 
 ### **Setup & Development**
 ```bash
-# Environment Management (NEW!)
-./scripts/sync-env.sh staging     # Switch to staging & sync backend config
-./scripts/sync-env.sh development # Switch to development & sync backend config
-make sync-env                     # Sync backend with current azd environment
+# Environment Management (Universal RAG)
+./scripts/deployment/sync-env.sh staging     # Switch to staging & sync backend config
+./scripts/deployment/sync-env.sh development # Switch to development & sync backend config
+make sync-env                                 # Sync backend with current azd environment
 
 # One-command deployment
 azd up                  # Deploy complete Azure infrastructure
@@ -182,8 +185,8 @@ The system now **automatically syncs** whatever azd environment you select to yo
 
 ```bash
 # Method 1: Switch environment and sync everything automatically
-./scripts/sync-env.sh staging      # Switches azd to staging + syncs backend
-./scripts/sync-env.sh development  # Switches azd to development + syncs backend
+./scripts/deployment/sync-env.sh staging      # Switches azd to staging + syncs backend
+./scripts/deployment/sync-env.sh development  # Switches azd to development + syncs backend
 
 # Method 2: Sync with current azd environment
 azd env select production          # Select environment in azd
@@ -199,11 +202,11 @@ make sync-env                      # Sync backend to match
 ### **One-Command Deployment**
 ```bash
 # Setup environments (one-time)
-./scripts/setup-environments.sh
+./scripts/deployment/setup-environments.sh
 
 # Deploy with automatic sync
-./scripts/sync-env.sh development && azd up
-./scripts/sync-env.sh production && azd up
+./scripts/deployment/sync-env.sh development && azd up
+./scripts/deployment/sync-env.sh production && azd up
 ```
 
 ### **🔄 Automatic CI/CD Setup** 🆕

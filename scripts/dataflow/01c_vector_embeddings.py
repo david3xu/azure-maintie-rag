@@ -11,23 +11,27 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.core.azure_service_container import ConsolidatedAzureServices
+from infrastructure.azure_openai.openai_client import AzureOpenAIClient
+from infrastructure.azure_search.search_client import SimpleSearchClient
 
 
-async def generate_embeddings(domain: str = "maintenance"):
-    """Simple vector embedding generation"""
+async def generate_embeddings(domain: str = "universal"):
+    """Vector embedding generation using Azure OpenAI"""
     print(f"🎯 Vector Embeddings Generation (domain: {domain})")
 
     try:
-        # Initialize services
-        azure_services = ConsolidatedAzureServices()
-        await azure_services.initialize_all_services()
-
-        # Get OpenAI client for embeddings
-        openai_client = azure_services.openai_client
+        # Initialize OpenAI client for embeddings
+        try:
+            openai_client = AzureOpenAIClient()
+            await openai_client.async_initialize()
+            print("✅ Azure OpenAI client ready for embeddings")
+        except Exception as e:
+            openai_client = None
+            print(f"⚠️  Azure OpenAI unavailable: {str(e)[:50]}...")
+            print("🎯 Will simulate embedding generation")
 
         if not openai_client:
-            print("🎯 Simulated embedding generation (no client available)")
+            print("🎯 Simulated embedding generation (Azure OpenAI unavailable)")
             return True
 
         # Sample documents for embedding generation

@@ -12,7 +12,7 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.core.azure_service_container import ConsolidatedAzureServices
+from infrastructure.azure_monitoring.app_insights_client import AppInsightsClient
 
 
 class SimpleMonitor:

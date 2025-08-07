@@ -5,9 +5,9 @@ from .constants import *
 
 __all__ = [
     "UniversalDomainCharacteristics",
-    "UniversalProcessingConfiguration", 
+    "UniversalProcessingConfiguration",
     "UniversalDomainAnalysis",
     "UniversalDomainDeps",
     "UniversalOrchestrationResult",
-    "AgentHandoffData"
+    "AgentHandoffData",
 ]

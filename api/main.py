@@ -34,7 +34,7 @@ async def root():
     return {
         "message": "Azure Universal RAG API",
         "version": "1.0.0",
-        "endpoints": ["/api/v1/search", "/api/v1/search/health"],
+        "endpoints": ["/api/v1/search", "/api/v1/extract", "/api/v1/health"],
     }
 
 

@@ -9,13 +9,8 @@ from collections import Counter
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-# Import PydanticAI output validators (replaces manual validation chains)
-from agents.core.data_models import (
-    validate_extraction_quality,
-    ExtractionQualityOutput,
-    ValidatedEntity,
-    ValidatedRelationship,
-)
+# Import universal models instead of circular dependency
+from agents.core.universal_models import UniversalEntity, UniversalRelation
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
