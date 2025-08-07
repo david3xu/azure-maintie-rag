@@ -26,6 +26,7 @@ from agents.core.constants import (
     UniversalSearchConstants,
     PerformanceAdaptiveConstants,
     FileSystemConstants,
+    StubConstants,
 )
 from agents.core.math_expressions import MATH, EXPR
 
@@ -244,7 +245,7 @@ class DynamicConfigManager:
             # Use analysis confidence for entity threshold
             entity_threshold = domain_profile.analysis_confidence.confidence
             relationship_threshold = (
-                entity_threshold * 0.9
+                entity_threshold * StubConstants.RELATIONSHIP_THRESHOLD_FACTOR
             )  # Slightly more conservative for relationships
 
             # Use document characteristics for chunk size
@@ -252,7 +253,11 @@ class DynamicConfigManager:
                 domain_profile.text_statistics.avg_sentence_length or 50
             )
             optimal_chunk_size = min(
-                2000, max(500, int(avg_sentence_length * 20))
+                StubConstants.MAX_WORDS_BASE * 4,
+                max(
+                    StubConstants.MAX_WORDS_BASE,
+                    int(avg_sentence_length * StubConstants.MAX_WORDS_MULTIPLIER),
+                ),
             )  # Adaptive chunk size
 
             learned_config = DynamicExtractionConfig(

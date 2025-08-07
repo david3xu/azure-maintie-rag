@@ -24,12 +24,13 @@ from agents.core.data_models import (
     RelationshipConfidenceFactors,
     ConfidenceMethod,
 )
+from agents.core.constants import StubConstants
 
 
 # Stub functions - these should be properly implemented
 def calculate_adaptive_confidence(data: Dict[str, Any]) -> float:
     """Stub for adaptive confidence calculation"""
-    return 0.8
+    return StubConstants.STUB_ADAPTIVE_CONFIDENCE
 
 
 # ConfidenceScore and other models imported from data_models.py above

@@ -29,27 +29,15 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from pydantic import BaseModel, Field
 
-# Interface contracts - use fallback to avoid circular imports during consolidation
-try:
-    from services.interfaces.extraction_interface import ExtractionConfiguration
-except ImportError:
-    # Fallback definition to avoid circular imports during restructuring
-    from pydantic import BaseModel
-    from typing import List, Dict, Any
+from agents.core.constants import StubConstants
 
-    class ExtractionConfiguration(BaseModel):
-        """Fallback extraction configuration model"""
-
-        domain_name: str = "general"
-        entity_confidence_threshold: float = 0.7
-        relationship_confidence_threshold: float = 0.65
-        expected_entity_types: List[str] = []
-        technical_vocabulary: List[str] = []
-        key_concepts: List[str] = []
-        minimum_quality_score: float = 0.6
-        enable_caching: bool = True
-        validation_criteria: Dict[str, Any] = {}
-
+# Import centralized data models instead of fallback definitions
+from agents.core.data_models import (
+    ExtractionConfiguration,
+    UnifiedExtractionResult,
+    ValidatedEntity,
+    ValidatedRelationship,
+)
 
 # Clean configuration imports (CODING_STANDARDS compliant)
 from config.centralized_config import get_extraction_config
@@ -60,99 +48,8 @@ from .validation_processor import SimpleValidator, ValidationResult
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class EntityMatch:
-    """Individual entity match result"""
-
-    text: str
-    entity_type: str
-    start_position: int
-    end_position: int
-    confidence: float
-    extraction_method: str
-    context: str = ""
-    metadata: Dict[str, Any] = None
-
-    def __post_init__(self):
-        if self.metadata is None:
-            self.metadata = {}
-
-
-@dataclass
-class RelationshipMatch:
-    """Individual relationship match result"""
-
-    source_entity: str
-    relation_type: str
-    target_entity: str
-    confidence: float
-    extraction_method: str
-    start_position: int
-    end_position: int
-    context: str = ""
-    metadata: Dict[str, Any] = None
-    relation_direction: str = "bidirectional"
-
-    def __post_init__(self):
-        if self.metadata is None:
-            self.metadata = {}
-
-    def to_triple(self) -> Tuple[str, str, str]:
-        """Convert to (source, relation, target) triple"""
-        return (self.source_entity, self.relation_type, self.target_entity)
-
-
-class UnifiedExtractionResult(BaseModel):
-    """Results of unified extraction processing"""
-
-    # Entity results
-    entities: List[Dict[str, Any]] = Field(..., description="Extracted entities")
-    entity_confidence_distribution: Dict[str, int] = Field(
-        ..., description="Entity confidence distribution"
-    )
-    entity_type_counts: Dict[str, int] = Field(..., description="Count by entity type")
-    total_entities: int = Field(..., description="Total entities found")
-    high_confidence_entities: int = Field(..., description="High confidence entities")
-    average_entity_confidence: float = Field(
-        ..., description="Average entity confidence"
-    )
-
-    # Relationship results
-    relationships: List[Dict[str, Any]] = Field(
-        ..., description="Extracted relationships"
-    )
-    relationship_confidence_distribution: Dict[str, int] = Field(
-        ..., description="Relationship confidence distribution"
-    )
-    relation_type_counts: Dict[str, int] = Field(
-        ..., description="Count by relation type"
-    )
-    total_relationships: int = Field(..., description="Total relationships found")
-    high_confidence_relationships: int = Field(
-        ..., description="High confidence relationships"
-    )
-    average_relationship_confidence: float = Field(
-        ..., description="Average relationship confidence"
-    )
-
-    # Unified results
-    extraction_method: str = Field(..., description="Primary extraction method used")
-    processing_time: float = Field(..., description="Processing time in seconds")
-
-    # Graph metrics
-    unique_entity_pairs: int = Field(..., description="Unique entity pairs connected")
-    graph_density: float = Field(..., description="Relationship graph density")
-    connected_components: int = Field(..., description="Number of connected components")
-
-    # Quality metrics
-    validation_passed: bool = Field(..., description="Whether validation passed")
-    validation_warnings: List[str] = Field(
-        default_factory=list, description="Validation warnings"
-    )
-    validation_errors: List[str] = Field(
-        default_factory=list, description="Validation errors"
-    )
-    coverage_percentage: float = Field(..., description="Document coverage percentage")
+# Use centralized ValidatedEntity, ValidatedRelationship, and UnifiedExtractionResult models from data_models.py
+# Local dataclass definitions removed - using centralized models
 
 
 class UnifiedExtractionProcessor:
@@ -180,11 +77,11 @@ class UnifiedExtractionProcessor:
                 from types import SimpleNamespace
 
                 self.extraction_config = SimpleNamespace(
-                    entity_confidence_threshold=0.7,
-                    relationship_confidence_threshold=0.65,
-                    chunk_size=1000,
-                    max_entities_per_chunk=15,
-                    minimum_quality_score=0.8,
+                    entity_confidence_threshold=StubConstants.FALLBACK_ENTITY_THRESHOLD,
+                    relationship_confidence_threshold=StubConstants.FALLBACK_RELATIONSHIP_THRESHOLD,
+                    chunk_size=StubConstants.FALLBACK_CHUNK_SIZE,
+                    max_entities_per_chunk=StubConstants.FALLBACK_MAX_ENTITIES_PER_CHUNK,
+                    minimum_quality_score=StubConstants.FALLBACK_MINIMUM_QUALITY_SCORE,
                 )
         return self.extraction_config
 
@@ -201,25 +98,25 @@ class UnifiedExtractionProcessor:
         self._performance_stats = {
             "total_extractions": 0,
             "successful_extractions": 0,
-            "average_processing_time": 0.0,
+            "average_processing_time": StubConstants.DEFAULT_ZERO_FLOAT,
             "method_performance": {
                 "pattern_based": {
                     "count": 0,
-                    "avg_time": 0.0,
-                    "avg_entities": 0.0,
-                    "avg_relationships": 0.0,
+                    "avg_time": StubConstants.DEFAULT_ZERO_FLOAT,
+                    "avg_entities": StubConstants.DEFAULT_ZERO_FLOAT,
+                    "avg_relationships": StubConstants.DEFAULT_ZERO_FLOAT,
                 },
                 "nlp_based": {
                     "count": 0,
-                    "avg_time": 0.0,
-                    "avg_entities": 0.0,
-                    "avg_relationships": 0.0,
+                    "avg_time": StubConstants.DEFAULT_ZERO_FLOAT,
+                    "avg_entities": StubConstants.DEFAULT_ZERO_FLOAT,
+                    "avg_relationships": StubConstants.DEFAULT_ZERO_FLOAT,
                 },
                 "hybrid": {
                     "count": 0,
-                    "avg_time": 0.0,
-                    "avg_entities": 0.0,
-                    "avg_relationships": 0.0,
+                    "avg_time": StubConstants.DEFAULT_ZERO_FLOAT,
+                    "avg_entities": StubConstants.DEFAULT_ZERO_FLOAT,
+                    "avg_relationships": StubConstants.DEFAULT_ZERO_FLOAT,
                 },
             },
         }
@@ -719,7 +616,9 @@ class UnifiedExtractionProcessor:
         # Simple confidence calculation - no over-engineering
         length_factor = min(1.0, len(text) / 20.0)  # Normalize text length
         position_factor = (
-            0.8 if match.start() < len(content) / 4 else 0.6
+            StubConstants.EARLY_POSITION_FACTOR
+            if match.start() < len(content) / 4
+            else StubConstants.LATE_POSITION_FACTOR
         )  # Early vs late position
 
         # Context analysis
@@ -1135,7 +1034,9 @@ class UnifiedExtractionProcessor:
                 ]
             ),
             average_entity_confidence=(
-                sum(e.confidence for e in entities) / len(entities) if entities else 0.0
+                sum(e.confidence for e in entities) / len(entities)
+                if entities
+                else StubConstants.DEFAULT_ZERO_FLOAT
             ),
             # Relationship results
             relationships=[self._relationship_to_dict(r) for r in relationships],
@@ -1154,7 +1055,7 @@ class UnifiedExtractionProcessor:
             average_relationship_confidence=(
                 sum(r.confidence for r in relationships) / len(relationships)
                 if relationships
-                else 0.0
+                else StubConstants.DEFAULT_ZERO_FLOAT
             ),
             # Unified results
             extraction_method=extraction_method,
@@ -1183,22 +1084,22 @@ class UnifiedExtractionProcessor:
             entity_type_counts={},
             total_entities=0,
             high_confidence_entities=0,
-            average_entity_confidence=0.0,
+            average_entity_confidence=StubConstants.DEFAULT_ZERO_FLOAT,
             relationships=[],
             relationship_confidence_distribution={},
             relation_type_counts={},
             total_relationships=0,
             high_confidence_relationships=0,
-            average_relationship_confidence=0.0,
+            average_relationship_confidence=StubConstants.DEFAULT_ZERO_FLOAT,
             extraction_method=extraction_method,
             processing_time=processing_time,
             unique_entity_pairs=0,
-            graph_density=0.0,
+            graph_density=StubConstants.DEFAULT_ZERO_FLOAT,
             connected_components=0,
             validation_passed=False,
             validation_warnings=[],
             validation_errors=[f"Extraction failed: {error_message}"],
-            coverage_percentage=0.0,
+            coverage_percentage=StubConstants.DEFAULT_ZERO_FLOAT,
         )
 
     def _calculate_entity_confidence_distribution(
@@ -1228,11 +1129,11 @@ class UnifiedExtractionProcessor:
         distribution = {"very_high": 0, "high": 0, "medium": 0, "low": 0}
 
         for relationship in relationships:
-            if relationship.confidence >= 0.9:
+            if relationship.confidence >= StubConstants.VERY_HIGH_CONFIDENCE_THRESHOLD:
                 distribution["very_high"] += 1
-            elif relationship.confidence >= 0.8:
+            elif relationship.confidence >= StubConstants.HIGH_CONFIDENCE_THRESHOLD:
                 distribution["high"] += 1
-            elif relationship.confidence >= 0.6:
+            elif relationship.confidence >= StubConstants.MEDIUM_CONFIDENCE_THRESHOLD:
                 distribution["medium"] += 1
             else:
                 distribution["low"] += 1
@@ -1269,7 +1170,7 @@ class UnifiedExtractionProcessor:
         """Calculate graph-based metrics for relationships"""
 
         if not relationships or not entities:
-            return {"density": 0.0, "components": 0}
+            return {"density": StubConstants.DEFAULT_ZERO_FLOAT, "components": 0}
 
         # Build adjacency list
         adjacency = {}
@@ -1293,7 +1194,11 @@ class UnifiedExtractionProcessor:
         num_entities = len(all_entities)
         max_edges = num_entities * (num_entities - 1) / 2
         actual_edges = len(relationships)
-        density = actual_edges / max_edges if max_edges > 0 else 0.0
+        density = (
+            actual_edges / max_edges
+            if max_edges > 0
+            else StubConstants.DEFAULT_ZERO_FLOAT
+        )
 
         # Calculate connected components using DFS
         visited = set()
@@ -1319,12 +1224,14 @@ class UnifiedExtractionProcessor:
         """Calculate what percentage of document is covered by entities"""
 
         if not entities or not content:
-            return 0.0
+            return StubConstants.DEFAULT_ZERO_FLOAT
 
         total_entity_chars = sum(len(e.text) for e in entities)
-        coverage = (total_entity_chars / len(content)) * 100
+        coverage = (
+            total_entity_chars / len(content)
+        ) * StubConstants.PERCENTAGE_MULTIPLIER
 
-        return min(100.0, coverage)
+        return min(StubConstants.MAX_COVERAGE_PERCENTAGE, coverage)
 
     def _entity_to_dict(self, entity: EntityMatch) -> Dict[str, Any]:
         """Convert EntityMatch to dictionary format"""
@@ -1389,7 +1296,9 @@ class UnifiedExtractionProcessor:
             ) / count
 
             # Update average relationship count
-            current_avg_relationships = method_stats.get("avg_relationships", 0.0)
+            current_avg_relationships = method_stats.get(
+                "avg_relationships", StubConstants.DEFAULT_ZERO_FLOAT
+            )
             method_stats["avg_relationships"] = (
                 current_avg_relationships * (count - 1) + relationship_count
             ) / count
@@ -1410,7 +1319,7 @@ class UnifiedExtractionProcessor:
                 self._performance_stats["successful_extractions"]
                 / self._performance_stats["total_extractions"]
                 if self._performance_stats["total_extractions"] > 0
-                else 0.0
+                else StubConstants.DEFAULT_ZERO_FLOAT
             ),
         }
 
