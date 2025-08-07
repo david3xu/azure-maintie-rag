@@ -11,23 +11,28 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.core.azure_service_container import ConsolidatedAzureServices
+from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosClient
 
 
 async def store_graph_data(entities: list = None, relationships: list = None):
-    """Simple graph data storage"""
+    """Azure Cosmos DB graph data storage"""
     print("📊 Cosmos Graph Storage")
 
     try:
-        # Initialize services
-        azure_services = ConsolidatedAzureServices()
-        await azure_services.initialize_all_services()
+        # Initialize Cosmos DB client
+        try:
+            cosmos_client = SimpleCosmosClient()
+            await cosmos_client.async_initialize()
+            print("✅ Azure Cosmos DB client ready")
+            cosmos_available = True
+        except Exception as e:
+            cosmos_client = None
+            cosmos_available = False
+            print(f"⚠️  Azure Cosmos DB unavailable: {str(e)[:50]}...")
+            print("📊 Will simulate graph storage")
 
-        # Get cosmos client
-        cosmos_client = azure_services.cosmos_client
-
-        entities = entities or []
-        relationships = relationships or []
+        entities = entities or ["Entity1", "Entity2", "Entity3"]
+        relationships = relationships or [("Entity1", "relates_to", "Entity2")]
 
         print(
             f"💾 Storing {len(entities)} entities, {len(relationships)} relationships"

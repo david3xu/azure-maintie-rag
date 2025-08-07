@@ -64,16 +64,10 @@ class PromptTemplateLoader:
         try:
             # Get extraction focus from domain patterns if not provided
             if not extraction_focus:
-                # Use consolidated intelligence components (fallback to default if unavailable)
-                try:
-                    from agents.intelligence.pattern_engine import PatternEngine
-
-                    pattern_engine = PatternEngine()
-                    extraction_focus = getattr(
-                        pattern_engine, "get_extraction_focus", lambda x: "standard"
-                    )(domain_name)
-                except ImportError:
-                    extraction_focus = "standard"  # Default fallback
+                # Use simple domain-based focus to avoid circular imports
+                extraction_focus = (
+                    f"entities, relationships, {domain_name}-specific concepts"
+                )
 
             # Load template
             template = self.load_template("direct_knowledge_extraction.jinja2")

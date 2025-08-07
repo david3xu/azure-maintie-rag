@@ -11,23 +11,38 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.core.azure_service_container import ConsolidatedAzureServices
+from infrastructure.azure_search.search_client import SimpleSearchClient
+from infrastructure.azure_openai.openai_client import AzureOpenAIClient
 
 
-async def index_in_search(source_path: str, domain: str = "maintenance"):
-    """Simple Azure Cognitive Search indexing"""
+async def index_in_search(source_path: str, domain: str = "universal"):
+    """Azure Cognitive Search indexing with real search client"""
     print(f"🔍 Azure Search Indexing: '{source_path}' (domain: {domain})")
 
     try:
-        # Initialize services
-        azure_services = ConsolidatedAzureServices()
-        await azure_services.initialize_all_services()
+        # Initialize search and OpenAI clients
+        try:
+            search_client = SimpleSearchClient()
+            await search_client.async_initialize()
+            print("✅ Azure Search client ready")
+            search_available = True
+        except Exception as e:
+            search_client = None
+            search_available = False
+            print(f"⚠️  Azure Search unavailable: {str(e)[:50]}...")
+            
+        try:
+            openai_client = AzureOpenAIClient()
+            await openai_client.async_initialize()
+            print("✅ Azure OpenAI client ready for embeddings")
+            openai_available = True
+        except Exception as e:
+            openai_client = None
+            openai_available = False
+            print(f"⚠️  Azure OpenAI unavailable: {str(e)[:50]}...")
 
-        # Get search client
-        search_client = azure_services.search_client
-
-        if not search_client:
-            print("🔍 Simulated search indexing (no client available)")
+        if not search_available and not openai_available:
+            print("🔍 Simulated search indexing (Azure services unavailable)")
             return True
 
         # Find files to index

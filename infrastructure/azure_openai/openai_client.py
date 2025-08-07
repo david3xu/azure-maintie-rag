@@ -14,39 +14,40 @@ from openai import AzureOpenAI
 
 from config.settings import azure_settings
 
-# Clean configuration imports (CODING_STANDARDS compliant)
-from config.centralized_config import get_model_config_bootstrap
+# Configuration imports using existing universal config
+from config.universal_config import UniversalConfig
 
 from ..azure_auth.base_client import BaseAzureClient
 
-# Updated to use consolidated intelligence components
+# Use existing configuration management
 try:
-    from agents.core.cache_manager import get_cache_manager
-    from agents.intelligence.config_generator import ConfigGenerator
-    from agents.intelligence.pattern_engine import PatternEngine
-
+    from agents.core.simple_config_manager import SimpleConfigManager
+    config_manager = SimpleConfigManager()
     CONSOLIDATED_INTELLIGENCE_AVAILABLE = True
 except ImportError:
-    # Fallback to no-op functions if consolidated intelligence unavailable
-    get_pattern_manager = None
-    get_dynamic_ml_config = None
+    config_manager = None
     CONSOLIDATED_INTELLIGENCE_AVAILABLE = False
 
-# Updated to use consolidated models
+# Use existing universal models
 try:
-    from agents.models.responses import UniversalEntity, UniversalRelation
-
+    from agents.core.universal_models import UniversalEntity, UniversalRelation
     CONSOLIDATED_MODELS_AVAILABLE = True
 except ImportError:
-    # Fallback for backward compatibility
-    try:
-        from ..models.universal_rag_models import UniversalEntity, UniversalRelation
-
-        CONSOLIDATED_MODELS_AVAILABLE = False
-    except ImportError:
-        UniversalEntity = None
-        UniversalRelation = None
-        CONSOLIDATED_MODELS_AVAILABLE = False
+    # Simple fallback classes
+    class UniversalEntity:
+        def __init__(self, text, type, context=""):
+            self.text = text
+            self.type = type
+            self.context = context
+    
+    class UniversalRelation:
+        def __init__(self, source, target, relation, context=""):
+            self.source = source
+            self.target = target
+            self.relation = relation
+            self.context = context
+    
+    CONSOLIDATED_MODELS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +69,8 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
 
     def _initialize_client(self):
         """Initialize Azure OpenAI client (CODING_STANDARDS: Clean configuration)"""
-        # Get clean configuration (bootstrap version to avoid circular dependencies)
-        model_config = get_model_config_bootstrap()
+        # Get configuration from universal config
+        model_config = UniversalConfig.get_openai_config()
 
         if self.use_managed_identity:
             # Use managed identity for azd deployments
@@ -105,7 +106,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
             self.ensure_initialized()
 
             # Simple test request to verify connectivity
-            model_config = get_model_config_bootstrap()
+            model_config = UniversalConfig.get_openai_config()
             response = await asyncio.to_thread(
                 self._client.chat.completions.create,
                 model=azure_settings.openai_deployment_name
@@ -476,10 +477,11 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
     async def _get_prompts_async(self, domain: str):
         """Get prompts configuration for domain (async)"""
         try:
-            # Use dynamic ML config for model parameters
-            ml_config = await (await get_dynamic_ml_config()).get_learned_ml_config(
-                domain
-            )
+            # Use config manager if available
+            if config_manager:
+                ml_config = await config_manager.get_domain_config(domain)
+            else:
+                ml_config = {}
 
             # Create prompt-like object for backward compatibility
             class AsyncPrompts:
@@ -488,15 +490,13 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
                     from config.settings import azure_settings
 
                     self.model_name = azure_settings.openai_deployment_name or "gpt-4o"
-                    # Use centralized constants - validated by PydanticAI Field constraints elsewhere
-                    from infrastructure.constants import AzureServiceLimits
+                    # Use centralized constants
+                    from agents.core.constants import DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS, DEFAULT_REQUESTS_PER_MINUTE, DEFAULT_CHUNK_SIZE
 
-                    self.temperature = AzureServiceLimits.DEFAULT_TEMPERATURE
-                    self.max_tokens = AzureServiceLimits.DEFAULT_MAX_TOKENS
-                    self.requests_per_minute = (
-                        AzureServiceLimits.DEFAULT_REQUESTS_PER_MINUTE
-                    )
-                    self.chunk_size = AzureServiceLimits.DEFAULT_CHUNK_SIZE
+                    self.temperature = DEFAULT_TEMPERATURE
+                    self.max_tokens = DEFAULT_MAX_TOKENS
+                    self.requests_per_minute = DEFAULT_REQUESTS_PER_MINUTE
+                    self.chunk_size = DEFAULT_CHUNK_SIZE
                     self.extraction_focus = (
                         f"entities, relationships, {domain}-specific concepts"
                     )
@@ -513,13 +513,13 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
                 from config.settings import azure_settings
 
                 model_name = azure_settings.openai_deployment_name or "gpt-4o"
-                # Use centralized constants - validated by PydanticAI Field constraints elsewhere
-                from infrastructure.constants import AzureServiceLimits
+                # Use centralized constants
+                from agents.core.constants import DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS, DEFAULT_REQUESTS_PER_MINUTE, DEFAULT_CHUNK_SIZE
 
-                temperature = AzureServiceLimits.DEFAULT_TEMPERATURE
-                max_tokens = AzureServiceLimits.DEFAULT_MAX_TOKENS
-                requests_per_minute = AzureServiceLimits.DEFAULT_REQUESTS_PER_MINUTE
-                chunk_size = AzureServiceLimits.DEFAULT_CHUNK_SIZE
+                temperature = DEFAULT_TEMPERATURE
+                max_tokens = DEFAULT_MAX_TOKENS
+                requests_per_minute = DEFAULT_REQUESTS_PER_MINUTE
+                chunk_size = DEFAULT_CHUNK_SIZE
                 extraction_focus = "entities, relationships, concepts"
                 completion_context = "information processing"
                 query_enhancement = "information retrieval"

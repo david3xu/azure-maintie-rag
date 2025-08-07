@@ -1,103 +1,105 @@
 # Azure Universal RAG - Real Codebase Architecture
 
-**Production-Ready Multi-Agent System with PydanticAI Integration**
+**Production-Ready Multi-Agent System with Universal RAG Philosophy**
 
-**Status**: ✅ **ZERO-MOCK IMPLEMENTATION** - Based on Actual Code Analysis
+**Status**: ✅ **ZERO-DOMAIN-BIAS IMPLEMENTATION** - Based on Actual Code Analysis
 
-## 🔍 Real Implementation Analysis
+## 🔍 Universal RAG Philosophy
 
-This documentation is based on **actual codebase exploration** of the Azure Universal RAG system. All information reflects the real implementation found in the source code.
+This documentation reflects the **actual implementation** of Azure Universal RAG with **zero hardcoded domain assumptions**. The system discovers content characteristics dynamically and adapts to ANY domain without predetermined categories.
+
+### **Core Architecture Principles**
+- **Domain-Agnostic**: No hardcoded domain types (technical, legal, medical, etc.)
+- **Content Discovery**: System analyzes vocabulary complexity, concept density, relationship patterns
+- **Universal Models**: All data structures work across any domain (`agents/core/universal_models.py`)
+- **Real Azure Integration**: PydanticAI with AsyncAzureOpenAI, Cosmos DB, Cognitive Search
 
 ## 🏗️ Actual Codebase Structure
 
 Based on directory listing and source code analysis:
 
-### **Core Agent Architecture (`agents/`)**
+### **Core Agent Architecture (`agents/`) - Universal RAG Implementation**
 
 ```
 agents/
-├── core/                              # Shared infrastructure components
-│   ├── azure_service_container.py     # ConsolidatedAzureServices (471 lines)
-│   │   └── DefaultAzureCredential + PydanticAI providers
-│   ├── data_models.py                 # Centralized Pydantic models (1,536 lines)
-│   │   └── 80+ models with PydanticAI output validators  
-│   ├── constants.py                   # Configuration constants (1,186 lines)
-│   ├── cache_manager.py               # Production caching system
-│   ├── error_handler.py               # Azure service error handling
-│   ├── dynamic_config_manager.py      # Dynamic configuration
-│   ├── math_expressions.py            # Mathematical expressions
-│   └── pydantic_ai_provider.py        # PydanticAI framework integration
-├── domain_intelligence/               # Agent 1: Domain analysis
-│   ├── agent.py                       # Domain Intelligence Agent (122 lines)
-│   │   └── Uses lazy initialization pattern with Azure OpenAI
-│   ├── toolsets.py                    # Domain Intelligence FunctionToolset
-│   ├── dependencies.py                # DomainIntelligenceDeps
-│   └── analyzers/                     # Analysis components
-│       ├── unified_content_analyzer.py # Content analysis (494 lines)
-│       ├── config_generator.py        # Configuration generation
-│       ├── pattern_engine.py          # Pattern recognition
-│       └── background_processor.py    # Background processing
-├── knowledge_extraction/              # Agent 2: Entity/relationship extraction  
-│   ├── agent.py                       # Knowledge Extraction Agent (368 lines)
-│   │   └── Multi-strategy extraction with unified processor
-│   ├── toolsets.py                    # Knowledge Extraction FunctionToolset
-│   ├── dependencies.py                # KnowledgeExtractionDeps
-│   └── processors/                    # Extraction processors
-│       ├── unified_extraction_processor.py # Unified processing (762 lines)
-│       └── validation_processor.py    # Quality validation
-├── universal_search/                  # Agent 3: Tri-modal search
-│   ├── agent.py                       # Universal Search Agent (271 lines)
-│   │   └── Consolidated orchestrator integration
-│   ├── toolsets.py                    # Universal Search FunctionToolset
-│   ├── dependencies.py                # UniversalSearchDeps
-│   └── orchestrators/                 # Search orchestration
-│       └── consolidated_search_orchestrator.py # Vector+Graph+GNN
-├── shared/                            # Shared utilities (cross-agent components)
-│   ├── text_statistics.py             # Statistical analysis utilities
-│   ├── content_preprocessing.py       # Content preprocessing
-│   ├── confidence_calculator.py       # Confidence scoring
-│   ├── extraction_base.py             # Base extraction patterns
-│   ├── capability_patterns.py         # Cross-agent patterns
-│   ├── common_tools.py                # Shared tools
-│   ├── config_enforcement.py          # Configuration enforcement
-│   ├── graph_communication.py         # Graph communication
-│   ├── intelligent_config_provider.py # Intelligent configuration
-│   ├── memory_manager.py              # Memory management
-│   ├── toolsets.py                    # Shared toolsets
-│   └── workflow_state_bridge.py       # Workflow state bridge
-├── workflows/                         # Workflow orchestration
-│   ├── search_workflow_graph.py       # Search workflow
-│   ├── config_extraction_graph.py     # Config extraction
-│   ├── state_persistence.py           # State persistence
-│   ├── dual_graph_orchestrator.py     # Dual graph orchestration
-│   └── enhanced_state_bridge.py       # Enhanced state bridge
-├── interfaces/                        # Agent contracts
-│   └── agent_contracts.py             # Pydantic communication contracts
-└── supports/                          # Support utilities
+├── core/                              # Universal infrastructure (domain-agnostic)
+│   ├── universal_models.py           # Universal data models for ANY domain
+│   ├── constants.py                   # Zero-hardcoded-values constants
+│   ├── simple_config_manager.py      # Simple configuration management
+│   └── __init__.py                   # Module initialization
+├── domain_intelligence/               # Agent 1: Domain characteristic discovery
+│   ├── agent.py                       # Domain Intelligence Agent (Azure OpenAI integration)
+│   │   └── PydanticAI with AsyncAzureOpenAI - discovers content characteristics
+│   └── __init__.py                   # Module initialization
+├── knowledge_extraction/              # Agent 2: Universal entity/relationship extraction  
+│   ├── agent.py                       # Knowledge Extraction Agent (Cosmos DB integration)
+│   │   └── PydanticAI + Azure Cosmos DB Gremlin - domain-agnostic extraction
+│   └── __init__.py                   # Module initialization
+├── universal_search/                  # Agent 3: Multi-modal search orchestration
+│   ├── agent.py                       # Universal Search Agent (tri-modal search)
+│   │   └── PydanticAI orchestration - Vector + Graph + GNN unified
+│   └── __init__.py                   # Module initialization
+├── query_generation/                  # Agent 4: Query generation (SQL pattern)
+│   ├── analysis_query_agent.py       # Analysis query generation
+│   ├── gremlin_query_agent.py        # Gremlin graph query generation  
+│   ├── search_query_agent.py         # Search query generation
+│   ├── universal_query_orchestrator.py # Query orchestration
+│   └── __init__.py                   # Module initialization
+├── shared/                            # Shared utilities (domain-agnostic)
+│   ├── utils.py                       # Shared utilities
+│   └── __init__.py                   # Module initialization
+├── examples/                          # Agent workflow demonstrations
+│   ├── demo_universal.py              # Universal processing demonstration
+│   ├── full_workflow_demo.py          # Full workflow demonstration
+│   └── __init__.py                   # Module initialization
+└── orchestrator.py                   # Multi-agent orchestration
 ```
 
-### **Infrastructure Layer (`infrastructure/`) - Real Azure Clients**
+### **Infrastructure Layer (`infrastructure/`) - Real Azure Integration**
 
-**Actual Azure Service Implementation:**
+**Actual Azure Service Implementation (No Mocks):**
 ```
 infrastructure/
-├── azure_openai/                      # Azure OpenAI integration
-│   ├── openai_client.py              # UnifiedAzureOpenAIClient (540+ lines)
-│   │   ├── Class: UnifiedAzureOpenAIClient extends BaseAzureClient
-│   │   ├── DefaultAzureCredential + AzureOpenAI client initialization
-│   │   ├── Managed identity and API key authentication
-│   │   └── Rate limiting with SimpleRateLimiter
-│   └── embedding.py                  # Embedding operations
+├── azure_openai/                      # Azure OpenAI with AsyncAzureOpenAI
+│   ├── openai_client.py              # Real AsyncAzureOpenAI client integration
+│   ├── completion_client.py          # Completion operations
+│   ├── embedding.py                  # Embedding operations (1536D vectors)
+│   ├── knowledge_extractor.py        # Knowledge extraction with LLM
+│   └── __init__.py                   # Module initialization
 ├── azure_search/                     # Azure Cognitive Search
-│   └── search_client.py              # Vector search (1536D embeddings)
+│   ├── search_client.py              # Vector search operations (1536D embeddings)
+│   └── __init__.py                   # Module initialization
 ├── azure_cosmos/                     # Azure Cosmos DB Gremlin API
-│   └── cosmos_gremlin_client.py      # Graph database operations
+│   ├── cosmos_gremlin_client.py      # Graph database operations
+│   └── __init__.py                   # Module initialization
+├── azure_storage/                    # Azure Blob Storage
+│   ├── storage_client.py             # Document management
+│   └── __init__.py                   # Module initialization
 ├── azure_ml/                         # Azure Machine Learning
 │   ├── gnn_model.py                  # Graph Neural Network models
-│   ├── gnn_training_client.py        # GNN training implementation
+│   ├── gnn_training_client.py        # GNN training implementation  
 │   ├── gnn_inference_client.py       # GNN inference client
 │   ├── classification_client.py      # ML classification
-│   └── ml_client.py                  # General ML operations
+│   ├── ml_client.py                  # General ML operations
+│   └── __init__.py                   # Module initialization
+├── azure_auth/                       # Azure authentication
+│   ├── base_client.py                # Base Azure client with DefaultAzureCredential
+│   ├── session_manager.py            # Session management
+│   └── __init__.py                   # Module initialization
+├── azure_monitoring/                 # Application Insights monitoring
+│   ├── app_insights_client.py        # Real-time monitoring
+│   └── __init__.py                   # Module initialization
+├── utilities/                        # Infrastructure utilities
+│   ├── prompt_loader.py              # Prompt loading utilities
+│   ├── azure_cost_tracker.py         # Cost tracking
+│   ├── workflow_evidence_collector.py # Evidence collection
+│   └── __init__.py                   # Module initialization
+└── prompt_workflows/                 # Universal prompt engineering
+    ├── universal_prompt_generator.py  # Universal prompt generation (domain-agnostic)
+    ├── azure_storage_writer.py        # Storage operations
+    ├── knowledge_graph_builder.py     # Graph building
+    ├── quality_assessor.py            # Quality assessment
+    └── *.jinja2                      # Universal Jinja2 templates (no domain bias)
 ├── azure_storage/                    # Azure Blob Storage
 │   └── storage_client.py             # Blob storage operations
 ├── prompt_workflows/                  # Prompt Engineering
@@ -143,7 +145,7 @@ frontend/
 **Actual Configuration Structure:**
 ```
 config/
-├── centralized_config.py            # Dynamic configuration functions
+├── universal_config.py            # Dynamic configuration functions
 │   ├── get_system_config(), get_model_config_bootstrap()
 │   ├── get_workflow_config(), get_extraction_config()
 │   └── get_search_config() - configuration providers
@@ -173,7 +175,7 @@ Based on direct source code examination:
 #### **3. Data Models & Configuration**
 - ✅ **Centralized Data Models**: 80+ Pydantic models with output validators (agents/core/data_models.py:1,536 lines)
 - ✅ **Constants Management**: Configuration values centralized (agents/core/constants.py:1,186 lines) 
-- ✅ **Dynamic Configuration**: Bootstrap and runtime configuration functions (config/centralized_config.py)
+- ✅ **Dynamic Configuration**: Bootstrap and runtime configuration functions (config/universal_config.py)
 
 #### **4. Shared Infrastructure** 
 - ✅ **Text Statistics**: PydanticAI-enhanced statistical analysis (agents/shared/text_statistics.py)
@@ -299,7 +301,7 @@ graph TB
     end
     
     subgraph "Configuration Management"
-        CONFIG[centralized_config.py]
+        CONFIG[universal_config.py]
         SETTINGS[settings.py - azure_settings]
         ENV[environments/ - dev/staging.env]
     end
@@ -699,7 +701,7 @@ class TextStatistics(BaseModel):
 
 **Configuration Management:**
 ```python
-# config/centralized_config.py
+# config/universal_config.py
 def get_model_config_bootstrap():
     """Bootstrap config during initialization to avoid circular dependencies"""
     
@@ -774,7 +776,7 @@ async def initialize_all_services(self) -> Dict[str, bool]:
     return self.initialized_services
 ```
 
-**Configuration Bootstrap (from centralized_config.py):**
+**Configuration Bootstrap (from universal_config.py):**
 ```python
 _model_config = get_model_config_bootstrap()  # Avoid circular dependencies
 _workflow_config = get_workflow_config()

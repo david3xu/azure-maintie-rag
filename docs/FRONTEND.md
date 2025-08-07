@@ -1,12 +1,12 @@
 # Azure Universal RAG - Frontend Guide
 
-**Real React + TypeScript Frontend Implementation**
+**Universal RAG React + TypeScript Frontend Implementation**
 
-Frontend development guide for the Azure Universal RAG system based on the actual React implementation with real component structure and API integration.
+Frontend development guide for the Azure Universal RAG system with **zero hardcoded domain bias** based on the actual React implementation with real component structure and streaming API integration.
 
-## 🔍 Actual Frontend Implementation
+## 🔍 Universal RAG Frontend Implementation
 
-Based on verified frontend directory structure:
+Based on verified frontend directory structure supporting Universal RAG philosophy:
 
 ### **Technology Stack (Real Versions)**
 - **React 19.1.0** with modern hooks and concurrent features
@@ -24,8 +24,8 @@ frontend/
 │   │   │   ├── ChatHistory.tsx     # Chat message history
 │   │   │   ├── ChatMessage.tsx     # Individual chat messages  
 │   │   │   └── QueryForm.tsx       # Query input form
-│   │   ├── domain/             # Domain-specific components
-│   │   │   └── DomainSelector.tsx  # Domain selection interface
+│   │   ├── domain/             # Content characteristic components (Universal RAG)
+│   │   │   └── DomainSelector.tsx  # Content characteristic selection (domain-agnostic)
 │   │   ├── shared/             # Shared UI components
 │   │   │   └── Layout.tsx          # Main layout component
 │   │   └── workflow/           # Workflow visualization
@@ -45,7 +45,7 @@ frontend/
 │   ├── types/                  # TypeScript definitions
 │   │   ├── api.ts                  # API response types
 │   │   ├── chat.ts                 # Chat message types
-│   │   ├── domain.ts               # Domain-related types
+│   │   ├── domain.ts               # Content characteristic types (Universal RAG)
 │   │   ├── workflow.ts             # Workflow state types
 │   │   └── workflow-events.ts      # Workflow event types
 │   └── utils/                  # Utility functions

@@ -1,12 +1,12 @@
 # Azure Universal RAG - Quick Start Guide
 
-**Real Codebase Setup - Based on Actual Implementation**
+**Universal RAG Setup - Based on Actual Implementation**
 
-Get the Azure Universal RAG system running based on the actual codebase structure and verified implementation patterns.
+Get the Azure Universal RAG system with **zero hardcoded domain bias** running based on the actual codebase structure and Universal RAG philosophy.
 
 ## 🔍 Prerequisites
 
-Based on the real codebase requirements:
+Based on the Universal RAG implementation:
 
 ### **Required Tools**
 ```bash
@@ -17,19 +17,24 @@ python --version  # Should be Python 3.11+
 az --version      # Verify Azure CLI installed
 az login          # Authenticate with Azure
 
-# Optional: Node.js for frontend (if using)
-node --version    # Should be Node.js 18+ if running frontend
+# Azure Developer CLI for infrastructure
+curl -fsSL https://aka.ms/install-azd.sh | bash
+azd --version     # Verify azd installed
+
+# Node.js for React frontend
+node --version    # Should be Node.js 18+ for React 19.1.0
 ```
 
 ### **Azure Services Required**
-Based on `agents/core/azure_service_container.py` implementation:
-- Azure OpenAI (GPT-4 deployment)
-- Azure Cognitive Search (for vector search)
-- Azure Cosmos DB with Gremlin API (for graph storage)
-- Azure ML (for GNN training/inference)
-- Azure Blob Storage (for document storage)
+Universal RAG implementation uses real Azure services (no mocks):
+- **Azure OpenAI** (AsyncAzureOpenAI with GPT-4 deployment)
+- **Azure Cognitive Search** (vector search with 1536D embeddings)
+- **Azure Cosmos DB** (Gremlin API for knowledge graphs)
+- **Azure ML** (GNN training/inference with PyTorch)
+- **Azure Blob Storage** (document management)
+- **Azure Key Vault** (secrets management with DefaultAzureCredential)
 
-## ⚡ Real Implementation Setup
+## ⚡ Universal RAG Implementation Setup
 
 ### 1. Environment Configuration (2 minutes)
 
@@ -38,26 +43,51 @@ Based on `agents/core/azure_service_container.py` implementation:
 git clone <repository-url>
 cd azure-maintie-rag
 
-# Install Python dependencies
+# Install Python dependencies (includes PydanticAI)
 pip install -r requirements.txt
 
-# Set up environment variables (required by azure_service_container.py)
+# Environment synchronization (critical for multi-environment)
+./scripts/deployment/sync-env.sh development    # Switch to development environment
+make sync-env                                   # Sync backend configuration
+
+# Set up Azure environment variables (DefaultAzureCredential)
 export AZURE_OPENAI_ENDPOINT="your-endpoint"
-export AZURE_OPENAI_API_VERSION="2024-08-01-preview"
+export AZURE_OPENAI_API_VERSION="2024-08-01-preview"  
 export OPENAI_MODEL_DEPLOYMENT="your-deployment-name"
+export USE_MANAGED_IDENTITY="false"  # Development mode
 ```
 
-### 2. Verify Real Implementation (1 minute)
-
-Test the actual codebase components:
+### 2. Deploy Azure Infrastructure (5 minutes)
 
 ```bash
-# Test real Azure service container (471 lines)
-python -c "
-from agents.core.azure_service_container import ConsolidatedAzureServices
-print('✅ Real Azure service container loaded')
+# One-command Azure infrastructure deployment
+azd up  # Deploys all 9 Azure services automatically
 
-# Verify centralized data models (1,536 lines)
+# Expected results:
+# ✅ Azure OpenAI (GPT-4 deployment)
+# ✅ Azure Cognitive Search (vector search)
+# ✅ Azure Cosmos DB (Gremlin API)
+# ✅ Azure ML (GNN training)  
+# ✅ Azure Blob Storage (documents)
+# ✅ Azure Key Vault (secrets)
+# ✅ Azure Application Insights (monitoring)
+# ✅ Azure Log Analytics (logging)
+# ✅ Azure Container Apps (hosting)
+```
+
+### 3. Verify Universal RAG Implementation (1 minute)
+
+Test the actual Universal RAG components:
+
+```bash
+# Verify universal models (domain-agnostic)
+python -c "
+from agents.core.universal_models import UniversalDomainAnalysis
+print('✅ Universal models loaded (work for ANY domain)')
+
+# Test Domain Intelligence Agent (content discovery, not classification)
+cd agents/domain_intelligence && python agent.py
+# Expected: Discovers content characteristics without domain assumptions
 from agents.core.data_models import ExtractionQualityOutput, ValidatedEntity
 print('✅ Centralized data models loaded (80+ Pydantic models)')
 
@@ -236,7 +266,8 @@ Test the real configuration system:
 ```bash
 python -c "
 # Test centralized configuration functions
-from config.centralized_config import get_system_config, get_model_config_bootstrap
+from config.universal_config import get_universal_config
+from agents.core.simple_config_manager import SimpleConfigManager
 
 try:
     system_config = get_system_config()

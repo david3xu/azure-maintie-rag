@@ -2,21 +2,23 @@
 
 # Now using the working agent.py (broken version backed up as agent_broken_pydanticai.py)
 from .agent import (
-    run_universal_domain_analysis,
-    UniversalDomainDeps, 
-    UniversalDomainAnalysis
+    run_domain_analysis,
+    create_domain_intelligence_agent,
+    domain_intelligence_agent,
 )
 
-# Import characteristics and config from agent
-from .agent import (
-    WorkingDomainCharacteristics as UniversalDomainCharacteristics,
-    WorkingProcessingConfiguration as UniversalProcessingConfiguration
+# Import universal models from core
+from agents.core.universal_models import (
+    UniversalDomainAnalysis,
+    UniversalDomainCharacteristics,
+    UniversalProcessingConfiguration,
 )
 
 __all__ = [
-    "run_universal_domain_analysis", 
-    "UniversalDomainDeps",
+    "run_domain_analysis",
+    "create_domain_intelligence_agent",
+    "domain_intelligence_agent",
     "UniversalDomainAnalysis",
     "UniversalDomainCharacteristics",
-    "UniversalProcessingConfiguration"
+    "UniversalProcessingConfiguration",
 ]

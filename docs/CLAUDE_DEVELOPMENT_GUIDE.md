@@ -185,7 +185,7 @@ azure-maintie-rag/                    # Production Azure Universal RAG
 │   ├── performance/                 # SLA compliance testing
 │   └── conftest.py                  # Real Azure service fixtures
 └── config/                         # Environment-based configuration
-    ├── centralized_config.py        # Dynamic configuration management
+    ├── universal_config.py        # Dynamic configuration management
     ├── azure_settings.py           # Azure service settings  
     └── environments/                # Development/staging/production .env
 ```
@@ -396,7 +396,7 @@ Your development environment is production-ready when:
 ## 🔍 Development Context Notes
 
 **Configuration Management**:
-- `config/centralized_config.py`: Dynamic configuration patterns
+- `config/universal_config.py`: Dynamic configuration patterns
 - `agents/core/dynamic_config_manager.py`: Runtime configuration adaptation
 - Domain Intelligence Agent generates learned configurations
 

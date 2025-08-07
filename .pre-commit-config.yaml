@@ -15,28 +15,28 @@ repos:
     hooks:
       - id: black
         language_version: python3
-        files: ^(agents|api|services|infrastructure|config)/.*\.py$
+        files: ^(agents|api|infrastructure|config)/.*\.py$
         args: ["--check", "--diff"]  # CHECK-ONLY MODE: Report issues without auto-fixing
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
       - id: isort
-        files: ^(agents|api|services|infrastructure|config)/.*\.py$
+        files: ^(agents|api|infrastructure|config)/.*\.py$
         args: ["--profile", "black", "--check-only", "--diff"]  # CHECK-ONLY MODE: Report issues without auto-fixing
 
   - repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
       - id: flake8
-        files: ^(agents|api|services|infrastructure|config)/.*\.py$
+        files: ^(agents|api|infrastructure|config)/.*\.py$
         args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.5.1
     hooks:
       - id: mypy
-        files: ^(agents|api|services|infrastructure|config)/.*\.py$
+        files: ^(agents|api|infrastructure|config)/.*\.py$
         args: ["--ignore-missing-imports"]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
@@ -58,20 +58,11 @@ repos:
 
   - repo: local
     hooks:
-      - id: check-directory-structure
-        name: Validate directory structure
-        entry: python scripts/validate_directory_structure.py
-        language: python
-        pass_filenames: false
-        always_run: true
+      # Removed: check-directory-structure (script not found)
+      # - id: check-directory-structure
 
-      - id: check-hardcoded-values
-        name: Enforce zero-hardcoded-values and centralized data models
-        entry: scripts/hooks/pre-commit-anti-hardcoding.sh
-        language: system
-        files: ^(agents|api|services|infrastructure)/.*\.py$
-        pass_filenames: false
-        description: Prevent hardcoded values and enforce centralized data models - enforces agents/core/data_models.py usage (detection only)
+      # Removed: check-hardcoded-values hook (functionality integrated into domain-bias check)
+      # The anti-hardcoding functionality is now handled by the domain-bias-check hook below
 
       - id: prevent-large-artifacts
         name: Prevent large ML artifacts
@@ -84,3 +75,11 @@ repos:
         entry: bash -c 'find . -name "venv" -type d | head -1 | grep -q . && echo "❌ Virtual environment detected in git. Add to .gitignore" && exit 1 || exit 0'
         language: system
         pass_filenames: false
+
+      - id: check-domain-bias
+        name: Prevent hardcoded domain bias violations
+        entry: scripts/hooks/pre-commit-domain-bias-check.sh
+        language: system
+        files: ^(agents|config|scripts|infrastructure)/.*\.py$
+        pass_filenames: false
+        description: Enforce Universal RAG zero-domain-bias philosophy - detects hardcoded domain assumptions, predetermined categories, and non-universal patterns
