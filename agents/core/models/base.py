@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, computed_field
 
+from agents.core.constants import MathematicalFoundationConstants
+
 # =============================================================================
 # FOUNDATION BASE CLASS FOR PYDANTIC AI INTEGRATION
 # =============================================================================
@@ -389,7 +391,9 @@ class ConfigurationResolver:
                 )
 
         # Create unified configuration
-        resolution_time = (datetime.now() - start_time).total_seconds() * 1000
+        resolution_time = (
+            datetime.now() - start_time
+        ).total_seconds() * MathematicalFoundationConstants.MILLISECONDS_PER_SECOND
         unified_config = UnifiedAgentConfiguration(
             agent_type=agent_type,
             domain_name=domain_name,

@@ -138,8 +138,10 @@ azd env select production && azd up  # Deploy to production environment
 - **isort** for import organization (black profile, first-party packages configured)
 - **ESLint** for TypeScript/React code quality
 - **pytest** with asyncio auto mode and comprehensive test discovery
-- **Pre-commit hooks** for zero-hardcoded-values enforcement
+- **Pre-commit hooks** (CHECK-ONLY MODE): Zero-hardcoded-values enforcement, directory structure validation
 - **MyPy** for type checking
+- **Flake8** for additional code quality checks
+- **Prettier** for frontend code formatting
 
 ## Configuration & Environment Management
 
@@ -189,6 +191,10 @@ black . --check                # Code formatting check
 isort . --check-only           # Import organization check
 cd frontend && npm run lint    # Frontend linting
 pytest tests/unit/             # Quick unit tests
+
+# Pre-commit hooks (automated validation)
+pre-commit run --all-files     # Run all pre-commit checks
+# Note: Pre-commit hooks run in CHECK-ONLY mode and detect issues without auto-fixing
 ```
 
 ### Service Validation Commands
@@ -241,12 +247,23 @@ tests/                          # Comprehensive testing strategy
 ├── azure_validation/           # Azure service health validation
 ├── performance/                # Performance and SLA compliance tests
 └── conftest.py                 # Real Azure services fixtures
+
+scripts/                        # Development and deployment automation
+├── hooks/                      # Pre-commit validation hooks
+│   └── pre-commit-anti-hardcoding.sh  # Zero-hardcoded-values enforcement
+├── sync-env.sh                 # Environment synchronization
+└── dataflow/                   # Data processing pipeline scripts
+
+frontend/                       # React TypeScript frontend
+├── package.json                # Dependencies (React 19.1.0, TypeScript 5.8.3, Vite 7.0.4)
+├── src/                        # Application source code
+└── public/                     # Static assets
 ```
 
 ## Current Development Context
 
-### Active Branch: `fix/design-overlap-consolidation`
-Focus on eliminating hardcoded values and consolidating agent boundaries.
+### Current Development Context
+The system is actively focused on architectural consolidation and zero-hardcoded-values enforcement.
 
 ### Development Priorities
 1. **Zero Hardcoded Values**: All business logic parameters must come from Domain Intelligence Agent or dynamic configuration
@@ -260,3 +277,27 @@ Focus on eliminating hardcoded values and consolidating agent boundaries.
 - **Architecture**: Agents depend on infrastructure, never the reverse
 - **Configuration**: All parameters come from centralized configuration or learned domain configurations
 - **Testing**: Use real Azure services, not mocks, for integration testing
+
+## Critical Development Patterns
+
+### Session Management Pattern
+- **Clean Session Replacement**: All make commands create unique session IDs and replace previous logs
+- **No Log Accumulation**: System automatically cleans and replaces session data
+- **Enterprise Reporting**: Each session generates comprehensive reports in `logs/session_report.md`
+- **Performance Tracking**: Metrics captured in `logs/performance.log` and `logs/azure_status.log`
+
+### Make Command Architecture
+The Makefile implements enterprise session tracking with clean output replacement:
+- Each command starts with `$(call start_clean_session)` to create unique session
+- Commands capture Azure status, performance metrics, and detailed outputs
+- Session reports provide comprehensive status for enterprise workflows
+- Use `make session-report` to view current session status
+
+### Environment Synchronization Critical Workflow
+```bash
+# CRITICAL: Always sync environment before deployment
+./scripts/sync-env.sh <environment>  # Switches azd environment AND syncs backend
+make sync-env                        # Syncs backend with current azd environment
+
+# This ensures backend configuration matches azd environment selection
+```

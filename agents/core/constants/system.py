@@ -96,6 +96,9 @@ class InfrastructureConstants:
     METRICS_COLLECTION_INTERVAL = 60  # Metrics collection interval (seconds)
     HEALTH_CHECK_INTERVAL = 30  # Health check interval (seconds)
 
+    # Cosmos DB configuration
+    MIN_COSMOS_THROUGHPUT_RU = 400  # Minimum Cosmos DB throughput
+
 
 class FileSystemConstants:
     """File system paths and patterns - STATIC or CONFIGURABLE"""
@@ -108,9 +111,32 @@ class FileSystemConstants:
     GENERAL_CONFIG_SUFFIX = "_config.yaml"
 
 
+class SystemPerformanceConstants:
+    """System performance and operational constants"""
+
+    # Timeout values
+    DEFAULT_TIMEOUT_SECONDS = 30
+    HEALTH_CHECK_INTERVAL_SECONDS = 60
+
+    # Retry and reliability
+    DEFAULT_MAX_RETRIES = 3
+
+    # Performance thresholds
+    MAX_RESPONSE_TIME_MS = 3000.0
+    MAX_ERROR_RATE = 0.05
+    DEFAULT_SLA_AVAILABILITY_PERCENT = 99.9
+    METRICS_WINDOW_MINUTES = 5
+
+    # Concurrency and batching
+    DEFAULT_CONCURRENT_REQUESTS = 10
+    ML_BATCH_SIZE = 32
+    SLOW_OPERATION_THRESHOLD_SECONDS = 5.0
+
+
 # Export all constants
 __all__ = [
     "SystemBoundaryConstants",
     "InfrastructureConstants",
     "FileSystemConstants",
+    "SystemPerformanceConstants",
 ]

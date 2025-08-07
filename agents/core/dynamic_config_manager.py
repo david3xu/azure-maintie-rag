@@ -9,12 +9,13 @@ Solves the critical design issue: Config-Extraction generates intelligent config
 but Search workflow was using static hardcoded values instead.
 """
 
+import asyncio
 import logging
 import os
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 import yaml
 
@@ -28,6 +29,14 @@ from agents.core.constants import (
 from agents.core.data_models import DynamicExtractionConfig, DynamicSearchConfig
 from agents.core.math_expressions import EXPR
 
+# Import automation system components
+from .constants.automation_interface import (
+    automation_coordinator,
+    GenerationRequest,
+    LearningMechanism,
+)
+from .constants.automation_classifier import AutomationPotential
+
 logger = logging.getLogger(__name__)
 
 # Import workflow and agents dynamically to avoid circular imports
@@ -37,13 +46,16 @@ logger = logging.getLogger(__name__)
 
 class DynamicConfigManager:
     """
-    Manages dynamic configuration loading from Config-Extraction workflow results.
+    Enhanced Dynamic Configuration Manager with Phase 3 Automation Integration
 
     This is the architectural bridge that solves the hardcoded values problem:
     1. Loads learned configs from Config-Extraction workflow
     2. Provides domain-specific parameters to Search workflow
     3. Eliminates static hardcoded fallbacks
     4. Enables continuous learning and optimization
+    5. **NEW**: Integrates with automation system for constant generation
+    6. **NEW**: Coordinates performance feedback loops
+    7. **NEW**: Manages interdependent constant groups
     """
 
     def __init__(self) -> None:
@@ -53,6 +65,12 @@ class DynamicConfigManager:
             "agents/domain_intelligence/generated_configs"
         )
         self.config_extraction_workflow: Optional[Any] = None
+        
+        # Phase 3: Automation integration
+        self.automation_enabled: bool = True
+        self.performance_feedback_buffer: List[Dict[str, Any]] = []
+        self.automation_generation_queue: List[str] = []  # Pending constant generations
+        self._automation_lock = asyncio.Lock()
 
     async def get_extraction_config(self, domain_name: str) -> DynamicExtractionConfig:
         """
@@ -510,9 +528,13 @@ class DynamicConfigManager:
         return None
 
     async def force_config_regeneration(self, domain_name: str) -> Dict[str, Any]:
-        """Force regeneration of all configs for a domain"""
+        """Force regeneration of all configs for a domain with automation integration"""
 
         results = {}
+
+        # Phase 3: Queue automated constant generation before config generation
+        if self.automation_enabled:
+            await self._queue_automated_constant_generation(domain_name, results)
 
         # Regenerate extraction config
         try:
@@ -531,6 +553,363 @@ class DynamicConfigManager:
             results["search_error"] = str(e)
 
         return results
+
+    # === Phase 3: Automation Integration Methods ===
+
+    async def _queue_automated_constant_generation(
+        self, domain_name: str, results: Dict[str, Any]
+    ) -> None:
+        """Queue automated constant generation for domain-specific optimization"""
+        
+        async with self._automation_lock:
+            try:
+                # Queue domain-adaptive constants generation
+                domain_request = GenerationRequest(
+                    constant_name="DomainAdaptiveConstants",
+                    learning_mechanisms=[
+                        LearningMechanism.DOMAIN_ANALYSIS,
+                        LearningMechanism.CORRELATION_ANALYSIS,
+                        LearningMechanism.QUALITY_OPTIMIZATION
+                    ],
+                    context={
+                        "domain_name": domain_name,
+                        "domain_analysis": await self._gather_domain_analysis_context(domain_name),
+                        "performance_metrics": await self._gather_performance_context(domain_name),
+                        "quality_assessment": await self._gather_quality_context(domain_name)
+                    },
+                    priority=3  # High priority
+                )
+                
+                await automation_coordinator.queue_generation_request(domain_request)
+                
+                # Queue performance-adaptive constants if we have performance data
+                if self.performance_feedback_buffer:
+                    perf_request = GenerationRequest(
+                        constant_name="PerformanceAdaptiveConstants",
+                        learning_mechanisms=[
+                            LearningMechanism.PERFORMANCE_FEEDBACK,
+                            LearningMechanism.USAGE_PATTERNS
+                        ],
+                        context={
+                            "domain_name": domain_name,
+                            "performance_metrics": self._aggregate_performance_feedback(),
+                            "usage_statistics": await self._gather_usage_statistics(domain_name)
+                        },
+                        priority=2
+                    )
+                    
+                    await automation_coordinator.queue_generation_request(perf_request)
+                
+                # Queue extraction constants optimization
+                extraction_request = GenerationRequest(
+                    constant_name="KnowledgeExtractionConstants",
+                    learning_mechanisms=[
+                        LearningMechanism.DOMAIN_ANALYSIS,
+                        LearningMechanism.QUALITY_OPTIMIZATION
+                    ],
+                    context={
+                        "domain_name": domain_name,
+                        "extraction_performance": await self._gather_extraction_performance(domain_name)
+                    },
+                    priority=2
+                )
+                
+                await automation_coordinator.queue_generation_request(extraction_request)
+                
+                results["automation_queued"] = {
+                    "domain_adaptive": True,
+                    "performance_adaptive": bool(self.performance_feedback_buffer),
+                    "knowledge_extraction": True,
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+            except Exception as e:
+                logger.error(f"Failed to queue automated constant generation: {e}")
+                results["automation_error"] = str(e)
+
+    async def _gather_domain_analysis_context(self, domain_name: str) -> Dict[str, Any]:
+        """Gather domain analysis context for constant generation"""
+        
+        try:
+            # Try to get existing domain profile from cache or recent analysis
+            cache_key = f"domain_profile_{domain_name}"
+            cached_profile = self.config_cache.get(cache_key)
+            
+            if cached_profile and (datetime.now() - cached_profile["cached_at"]).total_seconds() < self.cache_ttl:
+                return cached_profile["data"]
+            
+            # If no cached profile, gather basic domain characteristics
+            corpus_stats = await self._analyze_corpus_characteristics(domain_name)
+            
+            return {
+                "entity_density": corpus_stats.get("entity_density", 0.1),
+                "relationship_complexity": corpus_stats.get("relationship_complexity", 0.5),
+                "technical_vocabulary_size": corpus_stats.get("vocabulary_size", 100),
+                "domain_complexity": corpus_stats.get("complexity_class", "medium")
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to gather domain analysis context: {e}")
+            return {}
+
+    async def _gather_performance_context(self, domain_name: str) -> Dict[str, Any]:
+        """Gather performance metrics context for constant optimization"""
+        
+        try:
+            # Aggregate performance metrics from buffer
+            performance_data = self._aggregate_performance_feedback()
+            
+            # Add domain-specific performance metrics
+            domain_metrics = {}
+            for metric in self.performance_feedback_buffer:
+                if metric.get("domain_name") == domain_name:
+                    domain_metrics.update(metric)
+            
+            return {
+                "average_response_time": performance_data.get("avg_response_time", 1.0),
+                "cache_hit_rate": performance_data.get("cache_hit_rate", 0.6),
+                "extraction_accuracy": domain_metrics.get("extraction_accuracy", 0.85),
+                "search_relevance": domain_metrics.get("search_relevance", 0.75),
+                "concurrent_users": performance_data.get("concurrent_users", 10)
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to gather performance context: {e}")
+            return {}
+
+    async def _gather_quality_context(self, domain_name: str) -> Dict[str, Any]:
+        """Gather quality assessment context for optimization"""
+        
+        try:
+            # This would integrate with quality assessment systems
+            # For now, return placeholder structure
+            return {
+                "extraction_accuracy_by_threshold": {
+                    "0.6": 0.70,
+                    "0.7": 0.80,
+                    "0.8": 0.85,
+                    "0.9": 0.75  # May decrease with very high threshold
+                },
+                "search_precision_recall": {
+                    "precision": 0.82,
+                    "recall": 0.76,
+                    "f1_score": 0.79
+                },
+                "user_satisfaction_scores": {
+                    "relevance": 4.2,  # out of 5
+                    "completeness": 3.9,
+                    "accuracy": 4.1
+                }
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to gather quality context: {e}")
+            return {}
+
+    async def _gather_usage_statistics(self, domain_name: str) -> Dict[str, Any]:
+        """Gather usage pattern statistics for optimization"""
+        
+        try:
+            # This would integrate with usage analytics
+            # For now, return placeholder structure
+            return {
+                "query_complexity_distribution": {
+                    "simple": 0.4,   # 40% simple queries
+                    "medium": 0.45,  # 45% medium queries  
+                    "complex": 0.15  # 15% complex queries
+                },
+                "average_query_length": 8.5,
+                "peak_usage_hours": [9, 10, 14, 15, 16],
+                "common_query_patterns": [
+                    "how to", "what is", "examples of", "difference between"
+                ],
+                "session_duration_avg": 12.3  # minutes
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to gather usage statistics: {e}")
+            return {}
+
+    async def _gather_extraction_performance(self, domain_name: str) -> Dict[str, Any]:
+        """Gather extraction performance metrics for optimization"""
+        
+        try:
+            # This would integrate with extraction pipeline metrics
+            return {
+                "entity_extraction_accuracy": 0.87,
+                "relationship_extraction_accuracy": 0.82,
+                "processing_time_per_chunk": 0.45,  # seconds
+                "memory_usage_per_batch": 128,  # MB
+                "false_positive_rate": 0.08,
+                "false_negative_rate": 0.12
+            }
+            
+        except Exception as e:
+            logger.warning(f"Failed to gather extraction performance: {e}")
+            return {}
+
+    async def _analyze_corpus_characteristics(self, domain_name: str) -> Dict[str, Any]:
+        """Analyze corpus characteristics for domain-specific optimization"""
+        
+        try:
+            # This would use the UnifiedContentAnalyzer
+            # For now, return estimated characteristics based on domain
+            if domain_name == "programming_language":
+                return {
+                    "entity_density": 0.15,  # High technical entity density
+                    "relationship_complexity": 0.7,  # Complex technical relationships
+                    "vocabulary_size": 500,
+                    "complexity_class": "high",
+                    "average_document_length": 2500
+                }
+            elif domain_name == "general":
+                return {
+                    "entity_density": 0.08,
+                    "relationship_complexity": 0.4,
+                    "vocabulary_size": 200,
+                    "complexity_class": "medium",
+                    "average_document_length": 1200
+                }
+            else:
+                # Default estimates
+                return {
+                    "entity_density": 0.1,
+                    "relationship_complexity": 0.5,
+                    "vocabulary_size": 300,
+                    "complexity_class": "medium",
+                    "average_document_length": 1500
+                }
+                
+        except Exception as e:
+            logger.warning(f"Failed to analyze corpus characteristics: {e}")
+            return {}
+
+    def _aggregate_performance_feedback(self) -> Dict[str, Any]:
+        """Aggregate performance feedback from buffer"""
+        
+        if not self.performance_feedback_buffer:
+            return {}
+        
+        # Calculate aggregated metrics
+        response_times = [m.get("response_time", 1.0) for m in self.performance_feedback_buffer if "response_time" in m]
+        cache_hits = [m.get("cache_hit_rate", 0.6) for m in self.performance_feedback_buffer if "cache_hit_rate" in m]
+        
+        return {
+            "avg_response_time": sum(response_times) / len(response_times) if response_times else 1.0,
+            "cache_hit_rate": sum(cache_hits) / len(cache_hits) if cache_hits else 0.6,
+            "total_requests": len(self.performance_feedback_buffer),
+            "measurement_period_hours": 24  # Default measurement window
+        }
+
+    async def record_performance_feedback(
+        self, domain_name: str, metrics: Dict[str, Any]
+    ) -> None:
+        """Record performance feedback for automation learning"""
+        
+        async with self._automation_lock:
+            # Add timestamp and domain to metrics
+            metrics_with_context = {
+                **metrics,
+                "domain_name": domain_name,
+                "timestamp": datetime.now(),
+                "session_id": getattr(self, "_current_session_id", "default")
+            }
+            
+            self.performance_feedback_buffer.append(metrics_with_context)
+            
+            # Keep buffer size manageable (last 1000 entries)
+            if len(self.performance_feedback_buffer) > 1000:
+                self.performance_feedback_buffer = self.performance_feedback_buffer[-1000:]
+            
+            logger.info(f"Recorded performance feedback for {domain_name}: {list(metrics.keys())}")
+
+    async def process_automation_queue(self) -> Dict[str, Any]:
+        """Process pending automation requests and apply results"""
+        
+        if not self.automation_enabled:
+            return {"automation_disabled": True}
+        
+        try:
+            # Process all queued generation requests
+            generation_results = await automation_coordinator.process_generation_queue()
+            
+            results = {
+                "processed_count": len(generation_results),
+                "successful_generations": [],
+                "failed_generations": [],
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            for result in generation_results:
+                if result.validation_passed:
+                    results["successful_generations"].append({
+                        "constant_name": result.constant_name,
+                        "confidence_score": result.confidence_score,
+                        "learning_source": result.learning_source,
+                        "generated_values_count": len(result.generated_values)
+                    })
+                    
+                    # Apply generated constants (this would integrate with constant loading)
+                    await self._apply_generated_constants(result)
+                    
+                else:
+                    results["failed_generations"].append({
+                        "constant_name": result.constant_name,
+                        "error_message": result.error_message,
+                        "confidence_score": result.confidence_score
+                    })
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Failed to process automation queue: {e}")
+            return {"error": str(e)}
+
+    async def _apply_generated_constants(self, generation_result) -> None:
+        """Apply generated constants to the system (placeholder for integration)"""
+        
+        try:
+            # This would integrate with the constant loading system
+            # For now, log the successful generation
+            logger.info(
+                f"Would apply generated constants for {generation_result.constant_name}: "
+                f"{list(generation_result.generated_values.keys())}"
+            )
+            
+            # Cache the generated constants for future use
+            cache_key = f"generated_constants_{generation_result.constant_name}"
+            self.config_cache[cache_key] = {
+                "constants": generation_result.generated_values,
+                "confidence": generation_result.confidence_score,
+                "learning_source": generation_result.learning_source,
+                "cached_at": generation_result.generation_timestamp
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to apply generated constants: {e}")
+
+    def get_automation_status(self) -> Dict[str, Any]:
+        """Get current automation system status"""
+        
+        return {
+            "automation_enabled": self.automation_enabled,
+            "performance_feedback_count": len(self.performance_feedback_buffer),
+            "cached_generated_constants": len([
+                k for k in self.config_cache.keys() 
+                if k.startswith("generated_constants_")
+            ]),
+            "coordinator_status": automation_coordinator.get_automation_status()
+        }
+
+    def enable_automation(self) -> None:
+        """Enable automation system integration"""
+        self.automation_enabled = True
+        logger.info("Automation system integration enabled")
+
+    def disable_automation(self) -> None:
+        """Disable automation system integration"""
+        self.automation_enabled = False
+        logger.info("Automation system integration disabled")
 
 
 # Global instance for use across the system

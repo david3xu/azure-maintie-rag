@@ -18,7 +18,41 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, computed_field, validator
 
+from agents.core.constants import (
+    ExtractionQualityConstants,
+    MathematicalFoundationConstants,
+    StatisticalConstants,
+    SystemPerformanceConstants,
+)
+
 from .base import ExtractionStatus, PydanticAIContextualModel
+
+# =============================================================================
+# PYDANTIC AI OUTPUT MODELS
+# =============================================================================
+
+
+class KnowledgeExtractionOutput(BaseModel):
+    """Structured output from Knowledge Extraction Agent for PydanticAI"""
+
+    entities: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of validated entities with confidence scores",
+    )
+    relationships: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of validated relationships with metadata",
+    )
+    extraction_confidence: float = Field(
+        ge=0.0, le=1.0, description="Overall extraction confidence score"
+    )
+    quality_metrics: Optional[Dict[str, float]] = Field(
+        default_factory=dict, description="Quality assessment metrics"
+    )
+    processing_metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Processing metadata"
+    )
+
 
 # =============================================================================
 # CORE EXTRACTION MODELS
@@ -108,7 +142,10 @@ class ExtractionContext(PydanticAIContextualModel):
 
     # Quality indicators
     text_quality_score: float = Field(
-        default=0.8, ge=0.0, le=1.0, description="Quality score of input text"
+        default=ExtractionQualityConstants.DEFAULT_TEXT_QUALITY_SCORE,
+        ge=0.0,
+        le=1.0,
+        description="Quality score of input text",
     )
     preprocessing_applied: List[str] = Field(
         default_factory=list, description="List of preprocessing steps applied"
@@ -326,14 +363,23 @@ class TextStatistics(BaseModel):
     def calculate_readability(self) -> float:
         """Calculate Flesch Reading Ease score"""
         if self.sentence_count == 0 or self.word_count == 0:
-            return 0.0
+            return MathematicalFoundationConstants.ZERO_THRESHOLD
         return min(
-            100.0,
+            ExtractionQualityConstants.MAX_READABILITY_SCORE,
             max(
-                0.0,
-                206.835
-                - (1.015 * self.avg_words_per_sentence)
-                - (84.6 * (self.avg_chars_per_word / 4.7)),
+                MathematicalFoundationConstants.ZERO_THRESHOLD,
+                ExtractionQualityConstants.FLESCH_BASE_SCORE
+                - (
+                    ExtractionQualityConstants.FLESCH_SENTENCE_WEIGHT
+                    * self.avg_words_per_sentence
+                )
+                - (
+                    ExtractionQualityConstants.FLESCH_SYLLABLE_WEIGHT
+                    * (
+                        self.avg_chars_per_word
+                        / ExtractionQualityConstants.FLESCH_CHAR_DIVISOR
+                    )
+                ),
             ),
         )
 
@@ -427,7 +473,11 @@ class CleanedContent(BaseModel):
 class ContentChunker(BaseModel):
     """Configuration for content chunking operations"""
 
-    chunk_size: int = Field(ge=50, le=10000, description="Target chunk size in tokens")
+    chunk_size: int = Field(
+        ge=ExtractionQualityConstants.MIN_CHUNK_SIZE,
+        le=ExtractionQualityConstants.MAX_CHUNK_SIZE,
+        description="Target chunk size in tokens",
+    )
     chunk_overlap: int = Field(ge=0, le=1000, description="Overlap between chunks")
     preserve_sentences: bool = Field(
         default=True, description="Preserve sentence boundaries"
@@ -634,3 +684,75 @@ class ConsolidatedExtractionConfiguration(PydanticAIContextualModel):
                 },
             }
         }
+
+
+# =============================================================================
+# VALIDATION FUNCTIONS
+# =============================================================================
+
+
+def validate_entity_extraction(
+    entity_data: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Validate entity extraction results
+
+    Args:
+        entity_data: List of entity dictionaries with validation data
+
+    Returns:
+        List of validated entity dictionaries
+    """
+    validated_entities = []
+
+    for entity in entity_data:
+        # Basic validation - ensure required fields exist
+        if not all(key in entity for key in ["text", "confidence", "type"]):
+            continue
+
+        # Confidence threshold validation
+        if entity.get("confidence", 0.0) < 0.1:  # Minimum threshold
+            continue
+
+        # Text length validation
+        if not entity.get("text") or len(entity.get("text", "").strip()) < 2:
+            continue
+
+        validated_entities.append(entity)
+
+    return validated_entities
+
+
+def validate_relationship_extraction(
+    relationship_data: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """
+    Validate relationship extraction results
+
+    Args:
+        relationship_data: List of relationship dictionaries with validation data
+
+    Returns:
+        List of validated relationship dictionaries
+    """
+    validated_relationships = []
+
+    for relationship in relationship_data:
+        # Basic validation - ensure required fields exist
+        required_fields = ["source", "target", "relationship_type", "confidence"]
+        if not all(key in relationship for key in required_fields):
+            continue
+
+        # Confidence threshold validation
+        if relationship.get("confidence", 0.0) < 0.1:  # Minimum threshold
+            continue
+
+        # Source and target validation
+        source = relationship.get("source", {})
+        target = relationship.get("target", {})
+        if not (source.get("text") and target.get("text")):
+            continue
+
+        validated_relationships.append(relationship)
+
+    return validated_relationships

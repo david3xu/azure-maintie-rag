@@ -48,7 +48,14 @@ class PerformanceAdaptiveConstants:
     SHORT_CACHE_TTL = 300  # ADAPTIVE: based on dynamic data patterns
     LONG_CACHE_TTL = 86400  # ADAPTIVE: based on stable data patterns
     TARGET_CACHE_HIT_RATE = 0.6  # ADAPTIVE: target based on performance analysis
+    MIN_CACHE_HIT_RATE = 0.6  # Minimum acceptable cache hit rate
     CACHE_CLEANUP_INTERVAL = 300  # ADAPTIVE: based on memory management needs
+
+    # Memory management constants
+    DEFAULT_MEMORY_LIMIT_MB = 200.0
+    MAX_MEMORY_USAGE_MB = 1000.0
+    MEMORY_CLEANUP_THRESHOLD_PERCENT = 80.0
+    OPTIMIZATION_TRIGGER_THRESHOLD = 0.6
 
     # Cache Performance Thresholds - ADAPTIVE based on performance analysis
     CACHE_HIGH_PERFORMANCE_THRESHOLD = 0.8  # ADAPTIVE: high performance cache hit rate

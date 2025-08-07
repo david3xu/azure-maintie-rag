@@ -59,16 +59,30 @@ class StatisticalConstants:
     )
     RICH_VOCABULARY_FACTOR = 0.6  # Factor for rich vocabulary content analysis
 
+    # Additional constants for model integration
+    DEFAULT_TOP_ITEMS_LIMIT = 20
+    MAX_DOMAINS_TO_RETURN = 3
+    MAX_PATTERNS_TO_EXTRACT = 50
+    REFERENCE_DOCUMENT_LENGTH = 1000
+
 
 class UniversalSearchConstants:
     """Universal Search Agent specific constants"""
 
     # Many of these could be performance adaptive based on search quality
 
+    # Query processing parameters
+    MIN_QUERY_LENGTH = 3
+    MAX_QUERY_LENGTH = 500
+    DEFAULT_MAX_RESULTS = 10
+    MAX_TOTAL_RESULTS = 20
+    DEFAULT_EMBEDDING_MODEL = "text-embedding-ada-002"
+
     DEFAULT_GRAPH_HOP_COUNT = 2  # LEARNABLE: optimal graph traversal depth
-    DEFAULT_GNN_NODE_EMBEDDINGS = 128  # LEARNABLE: optimal embedding dimensionality
+    DEFAULT_GNN_MAX_HOPS = 2  # Maximum GNN hops
+    DEFAULT_GNN_NODE_EMBEDDINGS = 256  # Updated for consistency
     GRAPH_MIN_RELATIONSHIP_STRENGTH = 0.5  # LEARNABLE: domain relationship quality
-    GNN_MIN_PREDICTION_CONFIDENCE = 0.6  # ADAPTIVE: GNN calibration
+    GNN_MIN_PREDICTION_CONFIDENCE = 0.5  # Updated for consistency
 
     # Search Result Processing - Could be performance adaptive
     DEFAULT_VECTOR_TOP_K = 10  # ADAPTIVE: optimal result count for quality

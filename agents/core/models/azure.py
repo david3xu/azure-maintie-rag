@@ -19,6 +19,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, computed_field
 
+from agents.core.constants import (
+    InfrastructureConstants,
+    MathematicalFoundationConstants,
+    SystemPerformanceConstants,
+)
+
 from .base import HealthStatus, PydanticAIContextualModel
 
 # =============================================================================
@@ -67,19 +73,31 @@ class AzureServiceConfiguration(PydanticAIContextualModel):
 
     # Performance and reliability
     timeout_seconds: int = Field(
-        default=60, ge=1, le=300, description="Request timeout in seconds"
+        default=SystemPerformanceConstants.DEFAULT_TIMEOUT_SECONDS,
+        ge=1,
+        le=300,
+        description="Request timeout in seconds",
     )
     max_retries: int = Field(
-        default=3, ge=0, le=10, description="Maximum retry attempts"
+        default=SystemPerformanceConstants.DEFAULT_MAX_RETRIES,
+        ge=0,
+        le=10,
+        description="Maximum retry attempts",
     )
     retry_backoff_factor: float = Field(
-        default=2.0, ge=1.0, le=10.0, description="Exponential backoff factor"
+        default=MathematicalFoundationConstants.EXPONENTIAL_BACKOFF_BASE,
+        ge=1.0,
+        le=10.0,
+        description="Exponential backoff factor",
     )
 
     # Health check configuration
     health_check_enabled: bool = Field(default=True, description="Enable health checks")
     health_check_interval_seconds: int = Field(
-        default=30, ge=5, le=300, description="Health check interval"
+        default=SystemPerformanceConstants.HEALTH_CHECK_INTERVAL_SECONDS,
+        ge=5,
+        le=300,
+        description="Health check interval",
     )
 
     @computed_field
@@ -193,7 +211,10 @@ class AzureServiceMetrics(BaseModel):
 
     # Authentication and connectivity
     auth_success_rate: float = Field(
-        default=1.0, ge=0.0, le=1.0, description="Authentication success rate"
+        default=MathematicalFoundationConstants.PERFECT_SCORE,
+        ge=0.0,
+        le=1.0,
+        description="Authentication success rate",
     )
     connection_pool_size: Optional[int] = Field(
         default=None, ge=0, description="Connection pool size"
@@ -207,17 +228,23 @@ class AzureServiceMetrics(BaseModel):
         default_factory=datetime.now, description="Last metrics update"
     )
     measurement_window_minutes: int = Field(
-        default=5, ge=1, le=60, description="Measurement window"
+        default=SystemPerformanceConstants.METRICS_WINDOW_MINUTES,
+        ge=1,
+        le=60,
+        description="Measurement window",
     )
 
-    def calculate_sla_compliance(self, target_availability: float = 99.9) -> bool:
+    def calculate_sla_compliance(
+        self,
+        target_availability: float = SystemPerformanceConstants.DEFAULT_SLA_AVAILABILITY_PERCENT,
+    ) -> bool:
         """Check if service meets SLA availability target"""
         return self.availability_percentage >= target_availability
 
     def is_performance_degraded(
         self,
-        response_time_threshold_ms: float = 3000.0,
-        error_rate_threshold: float = 0.05,
+        response_time_threshold_ms: float = SystemPerformanceConstants.MAX_RESPONSE_TIME_MS,
+        error_rate_threshold: float = SystemPerformanceConstants.MAX_ERROR_RATE,
     ) -> bool:
         """Check if service performance is degraded"""
         return (
@@ -310,7 +337,10 @@ class AzureCosmosGraphSchema(BaseModel):
     partition_key: str = Field(description="Partition key property")
     vertex_count: int = Field(ge=0, description="Total vertex count")
     edge_count: int = Field(ge=0, description="Total edge count")
-    throughput_ru: int = Field(ge=400, description="Provisioned throughput RU/s")
+    throughput_ru: int = Field(
+        ge=InfrastructureConstants.MIN_COSMOS_THROUGHPUT_RU,
+        description="Provisioned throughput RU/s",
+    )
 
 
 class GraphConnectionInfo(PydanticAIContextualModel):
@@ -320,8 +350,14 @@ class GraphConnectionInfo(PydanticAIContextualModel):
     database_name: str = Field(description="Database name")
     container_name: str = Field(description="Graph container name")
     partition_key: str = Field(description="Partition key for queries")
-    max_retry_attempts: int = Field(default=3, description="Maximum retry attempts")
-    timeout_seconds: int = Field(default=30, description="Request timeout")
+    max_retry_attempts: int = Field(
+        default=SystemPerformanceConstants.DEFAULT_MAX_RETRIES,
+        description="Maximum retry attempts",
+    )
+    timeout_seconds: int = Field(
+        default=SystemPerformanceConstants.DEFAULT_TIMEOUT_SECONDS,
+        description="Request timeout",
+    )
 
     @computed_field
     @property

@@ -19,7 +19,13 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, computed_field
 
-from agents.core.constants import StatisticalConstants
+from agents.core.constants import (
+    MathematicalFoundationConstants,
+    PerformanceAdaptiveConstants,
+    StatisticalConstants,
+    SystemPerformanceConstants,
+    UniversalSearchConstants,
+)
 
 from .agents import GNNSearchConfig, GraphSearchConfig, VectorSearchConfig
 from .base import (
@@ -31,6 +37,32 @@ from .base import (
 )
 
 # =============================================================================
+# PYDANTIC AI OUTPUT MODELS
+# =============================================================================
+
+
+class UniversalSearchOutput(BaseModel):
+    """Structured output from Universal Search Agent for PydanticAI"""
+
+    search_results: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Comprehensive search results from all modalities",
+    )
+    synthesis_score: float = Field(
+        ge=0.0, le=1.0, description="Quality score of result synthesis"
+    )
+    modality_breakdown: Dict[str, Dict[str, Any]] = Field(
+        default_factory=dict, description="Results breakdown by search modality"
+    )
+    confidence_metrics: Dict[str, float] = Field(
+        default_factory=dict, description="Confidence metrics for results"
+    )
+    processing_metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Processing and performance metadata"
+    )
+
+
+# =============================================================================
 # SEARCH REQUEST MODELS
 # =============================================================================
 
@@ -38,12 +70,19 @@ from .base import (
 class QueryRequest(BaseRequest):
     """Unified query request model - eliminates duplicates across agents"""
 
-    query: str = Field(min_length=3, max_length=500, description="User query text")
+    query: str = Field(
+        min_length=UniversalSearchConstants.MIN_QUERY_LENGTH,
+        max_length=UniversalSearchConstants.MAX_QUERY_LENGTH,
+        description="User query text",
+    )
     domain: Optional[str] = Field(
         default=None, description="Target domain (auto-detect if None)"
     )
     max_results: int = Field(
-        default=10, ge=1, le=50, description="Maximum results to return"
+        default=UniversalSearchConstants.DEFAULT_MAX_RESULTS,
+        ge=1,
+        le=50,
+        description="Maximum results to return",
     )
     search_types: List[SearchType] = Field(
         default=[SearchType.ALL], description="Search types to execute"
@@ -276,10 +315,16 @@ class ConsolidatedSearchConfiguration(PydanticAIContextualModel):
 
     # Vector search configuration
     vector_top_k: int = Field(
-        default=10, ge=1, le=50, description="Vector search top-k results"
+        default=UniversalSearchConstants.DEFAULT_VECTOR_TOP_K,
+        ge=1,
+        le=50,
+        description="Vector search top-k results",
     )
     vector_similarity_threshold: float = Field(
-        default=0.7, ge=0.0, le=1.0, description="Vector similarity threshold"
+        default=UniversalSearchConstants.VECTOR_SIMILARITY_THRESHOLD,
+        ge=0.0,
+        le=1.0,
+        description="Vector similarity threshold",
     )
     embedding_model: str = Field(
         default="text-embedding-ada-002", description="Embedding model name"

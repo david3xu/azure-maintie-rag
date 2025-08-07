@@ -100,8 +100,28 @@ class KnowledgeExtractionConstants:
     MS_MULTIPLIER = 1000.0  # Milliseconds multiplier
 
 
+class ExtractionQualityConstants:
+    """Quality assessment constants for extraction operations"""
+
+    # Text quality scoring
+    DEFAULT_TEXT_QUALITY_SCORE = 0.8
+    DEFAULT_REASONING_QUALITY = 0.8
+
+    # Readability calculation constants (Flesch Reading Ease)
+    MAX_READABILITY_SCORE = 100.0
+    FLESCH_BASE_SCORE = 206.835
+    FLESCH_SENTENCE_WEIGHT = 1.015
+    FLESCH_SYLLABLE_WEIGHT = 84.6
+    FLESCH_CHAR_DIVISOR = 4.7
+
+    # Chunk size constraints
+    MIN_CHUNK_SIZE = 50
+    MAX_CHUNK_SIZE = 10000
+
+
 # Export all constants
 __all__ = [
     "ExtractionAlgorithmConstants",
     "KnowledgeExtractionConstants",
+    "ExtractionQualityConstants",
 ]
