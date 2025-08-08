@@ -9,82 +9,87 @@ Solves the authentication mismatch between azd (managed identity) and PydanticAI
 import os
 from typing import Optional
 
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, AzureCliCredential
 from openai import AsyncAzureOpenAI
-from pydantic_ai.models import Model
+from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
-
-def create_azure_token_provider():
-    """Create Azure AD token provider for managed identity authentication."""
-    credential = DefaultAzureCredential()
-
-    def get_token():
-        token = credential.get_token("https://cognitiveservices.azure.com/.default")
-        return token.token
-
-    return get_token
+# Load environment variables early
+from dotenv import load_dotenv
+load_dotenv()
 
 
-def create_azure_openai_client() -> AsyncAzureOpenAI:
-    """Create AsyncAzureOpenAI client with managed identity authentication."""
 
+
+def get_azure_openai_model(model_deployment: Optional[str] = None) -> OpenAIModel:
+    """
+    Create Azure OpenAI model for PydanticAI agents.
+    
+    Sets up environment variables for PydanticAI Azure provider.
+    
+    Args:
+        model_deployment: Optional model deployment name. Uses OPENAI_MODEL_DEPLOYMENT env var if not provided.
+        
+    Returns:
+        OpenAIModel: Configured Azure OpenAI model for PydanticAI
+    """
     # Get Azure configuration from environment (set by azd)
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    azure_deployment = os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o")
-    api_version = os.getenv("OPENAI_API_VERSION", "2024-02-01")
+    api_version = os.getenv("OPENAI_API_VERSION", "2024-06-01")
+    deployment_name = model_deployment or os.getenv('OPENAI_MODEL_DEPLOYMENT', 'gpt-4o')
 
     if not azure_endpoint:
         raise ValueError(
             "AZURE_OPENAI_ENDPOINT not set. Run 'azd up' to deploy Azure services."
         )
 
-    # Create Azure AD token provider
-    token_provider = create_azure_token_provider()
-
-    # Create AsyncAzureOpenAI client with managed identity
-    client = AsyncAzureOpenAI(
-        azure_endpoint=azure_endpoint,
-        azure_deployment=azure_deployment,
-        api_version=api_version,
-        azure_ad_token_provider=token_provider,  # Use managed identity
-        # api_key not needed with azure_ad_token_provider
+    # Use appropriate credential based on environment setting
+    use_managed_identity = os.getenv("USE_MANAGED_IDENTITY", "true").lower() == "true"
+    
+    if not use_managed_identity:
+        # For testing, use CLI credentials with proper token provider
+        from azure.identity import AzureCliCredential, get_bearer_token_provider
+        credential = AzureCliCredential()
+        token_provider = get_bearer_token_provider(
+            credential, "https://cognitiveservices.azure.com/.default"
+        )
+        
+        azure_client = AsyncAzureOpenAI(
+            azure_endpoint=azure_endpoint,
+            azure_ad_token_provider=token_provider,
+            api_version=api_version,
+        )
+    else:
+        # For production, use managed identity with proper token provider
+        from azure.identity import get_bearer_token_provider
+        credential = DefaultAzureCredential()
+        token_provider = get_bearer_token_provider(
+            credential, "https://cognitiveservices.azure.com/.default"
+        )
+        
+        azure_client = AsyncAzureOpenAI(
+            azure_endpoint=azure_endpoint,
+            azure_ad_token_provider=token_provider,
+            api_version=api_version,
+        )
+    
+    # Use OpenAIProvider with custom AsyncAzureOpenAI client
+    # This ensures the API version 2024-06-01 is used for tool_choice support
+    provider = OpenAIProvider(openai_client=azure_client)
+    
+    return OpenAIModel(
+        model_name=deployment_name,
+        provider=provider
     )
-
-    return client
-
-
-def create_azure_pydantic_provider() -> OpenAIProvider:
-    """Create PydanticAI OpenAI provider with Azure managed identity client."""
-
-    # Create Azure OpenAI client with managed identity
-    azure_client = create_azure_openai_client()
-
-    # Create PydanticAI provider with custom Azure client
-    provider = OpenAIProvider(
-        openai_client=azure_client,  # Inject our Azure identity client
-        # base_url and api_key handled by azure_client
-    )
-
-    return provider
-
-
-def create_azure_pydantic_model(model_name: str = "gpt-4o") -> str:
-    """Create PydanticAI model string with Azure managed identity authentication.
-
-    Note: Returns model string for use with Agent constructor.
-    The provider configuration is handled separately.
-    """
-    return f"openai:{model_name}"
 
 
 # Test function to verify Azure authentication works
 async def test_azure_authentication():
     """Test Azure managed identity authentication with PydanticAI."""
     try:
-        model = create_azure_pydantic_model()
+        model = get_azure_openai_model()
         print("✅ Azure PydanticAI model created successfully")
-        print(f"   Model: {model}")
+        print(f"   Model: {model.model_name}")
         print("   Authentication: Azure managed identity")
         return True
     except Exception as e:
@@ -92,17 +97,3 @@ async def test_azure_authentication():
         return False
 
 
-if __name__ == "__main__":
-    import asyncio
-
-    print("🧪 Testing Azure Managed Identity with PydanticAI")
-    print("=" * 50)
-
-    # Run test
-    result = asyncio.run(test_azure_authentication())
-
-    if result:
-        print("\n🎉 SUCCESS: PydanticAI can use Azure managed identity")
-        print("   No API keys required - fully compatible with azd deployment")
-    else:
-        print("\n❌ FAILED: Authentication issue needs investigation")

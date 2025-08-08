@@ -26,7 +26,7 @@ async def generate_gremlin_query(
     This is a proper tool (not a pseudo-agent) that performs atomic query generation.
     """
     # Use universal configuration instead of hardcoded patterns
-    config = ctx.deps.config_manager.get_extraction_config()
+    config = await ctx.deps.config_manager.get_extraction_config("universal")
 
     # Build query based on discovered characteristics, not predetermined assumptions
     base_query = "g.V()"
@@ -45,10 +45,10 @@ async def generate_gremlin_query(
 
     # Apply universal search patterns
     if "similarity" in query_intent.lower():
-        base_query += f".has('confidence', gt({config.confidence_threshold}))"
+        base_query += f".has('confidence', gt({config.get('confidence_threshold', 0.8)}))"
 
     if "limit" not in base_query:
-        base_query += f".limit({config.max_results})"
+        base_query += f".limit({config.get('max_results', 10)})"
 
     return base_query
 
@@ -63,12 +63,12 @@ async def generate_search_query(
 
     Adapts query based on discovered content characteristics, not domain assumptions.
     """
-    config = ctx.deps.config_manager.get_search_config()
+    config = await ctx.deps.config_manager.get_search_config("universal")
 
     # Base search configuration
     search_config = {
         "search_text": user_query,
-        "top": config.max_results,
+        "top": config.get("max_results", 10),
         "highlight_fields": ["content", "title"],
         "search_mode": "any",
         "query_type": (
@@ -79,19 +79,19 @@ async def generate_search_query(
     # Adapt based on discovered characteristics (not hardcoded domain types)
     if domain_characteristics:
         # Adjust search parameters based on measured content properties
-        if domain_characteristics.vocabulary_complexity > 0.7:
+        if domain_characteristics.characteristics.vocabulary_complexity_ratio > 0.7:
             search_config["search_mode"] = "all"  # More precise for complex content
 
-        if domain_characteristics.concept_density > 0.8:
+        if domain_characteristics.characteristics.lexical_diversity > 0.8:
             search_config["top"] = min(
-                config.max_results * 2, 50
+                config.get("max_results", 10) * 2, 50
             )  # More results for concept-rich content
 
         # Use discovered patterns for field weighting
         search_fields = []
-        if "code_patterns" in domain_characteristics.discovered_patterns:
+        if "code_patterns" in domain_characteristics.characteristics.content_patterns:
             search_fields.append("code_content^2.0")
-        if "structured_content" in domain_characteristics.discovered_patterns:
+        if "structured_content" in domain_characteristics.characteristics.content_patterns:
             search_fields.append("structured_fields^1.5")
 
         if search_fields:
@@ -196,11 +196,11 @@ async def orchestrate_query_workflow(
         ]
 
     # Add universal processing parameters
-    config = ctx.deps.config_manager.get_workflow_config()
+    config = await ctx.deps.config_manager.get_workflow_config("universal")
     workflow_config.update(
         {
-            "max_iterations": config.max_workflow_steps,
-            "timeout_seconds": config.workflow_timeout,
+            "max_iterations": config.get("max_workflow_steps", 5),
+            "timeout_seconds": config.get("workflow_timeout", 300),
             "enable_monitoring": ctx.deps.is_service_available("monitoring"),
             "enable_caching": True,
         }

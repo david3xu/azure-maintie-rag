@@ -146,17 +146,3 @@ def get_available_prompt_templates() -> list:
     return prompt_loader.list_available_templates()
 
 
-if __name__ == "__main__":
-    # Test the prompt loader
-    loader = PromptTemplateLoader()
-
-    print("Available templates:")
-    for template in loader.list_available_templates():
-        print(f"  - {template}")
-
-    print("\nTesting knowledge extraction prompt:")
-    test_prompt = loader.render_knowledge_extraction_prompt(
-        text_content="system component analysis and optimization",
-        domain_name="universal",
-    )
-    print(test_prompt[:200] + "..." if len(test_prompt) > 200 else test_prompt)

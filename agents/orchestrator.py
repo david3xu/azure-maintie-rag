@@ -528,5 +528,3 @@ async def main():
 __all__ = ["UniversalOrchestrator", "UniversalWorkflowResult"]
 
 
-if __name__ == "__main__":
-    asyncio.run(main())

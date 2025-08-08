@@ -79,7 +79,7 @@ class UniversalDeps:
             try:
                 if not self.openai_client:
                     self.openai_client = UnifiedAzureOpenAIClient()
-                    await self.openai_client.initialize()
+                    self.openai_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["openai"] = True
             except Exception as e:
                 print(f"Warning: OpenAI client initialization failed: {e}")
@@ -89,7 +89,7 @@ class UniversalDeps:
             try:
                 if not self.cosmos_client:
                     self.cosmos_client = SimpleCosmosGremlinClient()
-                    await self.cosmos_client.initialize()
+                    self.cosmos_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["cosmos"] = True
             except Exception as e:
                 print(f"Warning: Cosmos DB client initialization failed: {e}")
@@ -99,7 +99,7 @@ class UniversalDeps:
             try:
                 if not self.search_client:
                     self.search_client = UnifiedSearchClient()
-                    await self.search_client.initialize()
+                    self.search_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["search"] = True
             except Exception as e:
                 print(f"Warning: Search client initialization failed: {e}")
@@ -109,7 +109,7 @@ class UniversalDeps:
             try:
                 if not self.storage_client:
                     self.storage_client = SimpleStorageClient()
-                    await self.storage_client.initialize()
+                    self.storage_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["storage"] = True
             except Exception as e:
                 print(f"Warning: Storage client initialization failed: {e}")
@@ -119,7 +119,9 @@ class UniversalDeps:
             try:
                 if not self.gnn_client:
                     self.gnn_client = GNNInferenceClient()
-                    await self.gnn_client.initialize()
+                    if hasattr(self.gnn_client, 'ensure_initialized'):
+                        self.gnn_client.ensure_initialized()  # Use synchronous if available
+                    # GNN client might not inherit from BaseAzureClient
                 services_status["gnn"] = True
             except Exception as e:
                 print(f"Warning: GNN client initialization failed: {e}")
@@ -129,7 +131,9 @@ class UniversalDeps:
             try:
                 if not self.monitoring_client:
                     self.monitoring_client = AzureApplicationInsightsClient()
-                    await self.monitoring_client.initialize()
+                    if hasattr(self.monitoring_client, 'ensure_initialized'):
+                        self.monitoring_client.ensure_initialized()  # Use synchronous if available
+                    # Monitoring client might not inherit from BaseAzureClient
                 services_status["monitoring"] = True
             except Exception as e:
                 print(f"Warning: Monitoring client initialization failed: {e}")
@@ -151,11 +155,16 @@ class UniversalDeps:
 
     def get_available_services(self) -> list[str]:
         """Get list of successfully initialized services."""
-        return [
-            service
-            for service, status in asyncio.run(self._get_service_status()).items()
-            if status
-        ]
+        # Use synchronous service status check to avoid nested event loops
+        service_status = {
+            "openai": self.openai_client is not None,
+            "cosmos": self.cosmos_client is not None,
+            "search": self.search_client is not None,
+            "storage": self.storage_client is not None,
+            "gnn": self.gnn_client is not None,
+            "monitoring": self.monitoring_client is not None,
+        }
+        return [service for service, status in service_status.items() if status]
 
     def is_service_available(self, service_name: str) -> bool:
         """Check if a specific service is available."""
@@ -176,7 +185,7 @@ _universal_deps: Optional[UniversalDeps] = None
 
 async def get_universal_deps() -> UniversalDeps:
     """
-    Factory function to get initialized universal dependencies.
+    Factory function to get initialized universal dependencies (async version).
 
     This function ensures all services are properly initialized
     before returning the dependencies to agents.
@@ -188,6 +197,21 @@ async def get_universal_deps() -> UniversalDeps:
         await _universal_deps.initialize_all_services()
     elif not _universal_deps._initialized:
         await _universal_deps.initialize_all_services()
+    return _universal_deps
+
+
+def get_universal_deps_sync() -> UniversalDeps:
+    """
+    Factory function to get universal dependencies synchronously.
+    
+    This creates the UniversalDeps instance but does NOT initialize
+    Azure services. Suitable for testing and synchronous contexts.
+    For production use, prefer get_universal_deps() async version.
+    """
+    global _universal_deps
+    if _universal_deps is None:
+        _universal_deps = UniversalDeps()
+        # Note: Services are not initialized - call initialize_all_services() separately
     return _universal_deps
 
 

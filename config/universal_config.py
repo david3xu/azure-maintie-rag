@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 # Environment-based Azure configuration (infrastructure only)
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "")
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "")
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", None)
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
 OPENAI_MODEL_DEPLOYMENT = os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o")
 
@@ -73,7 +73,7 @@ class ModelConfig:
 
     # Azure configuration (infrastructure)
     endpoint: str = AZURE_OPENAI_ENDPOINT
-    api_key: str = AZURE_OPENAI_API_KEY
+    api_key: Optional[str] = AZURE_OPENAI_API_KEY
     api_version: str = AZURE_OPENAI_API_VERSION
     deployment_name: str = OPENAI_MODEL_DEPLOYMENT
 

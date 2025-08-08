@@ -24,7 +24,7 @@ var environmentConfig = {
     keyVaultSku: 'standard'
     logRetentionDays: 30
   }
-  production: {
+  prod: {
     searchSku: 'standard'
     searchReplicas: 2
     searchPartitions: 2

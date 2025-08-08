@@ -10,23 +10,23 @@ var environmentConfig = {
   development: {
     cosmosCapacityMode: 'Serverless'
     cosmosRU: 0
-    mlComputeSize: 'Standard_DS3_v2'
+    mlComputeSize: 'Standard_DS1_v2'
     mlMinNodes: 0
     mlMaxNodes: 1
   }
   staging: {
     cosmosCapacityMode: 'Provisioned'
     cosmosRU: 1000
-    mlComputeSize: 'Standard_DS3_v2'
+    mlComputeSize: 'Standard_DS1_v2'
     mlMinNodes: 0
-    mlMaxNodes: 3
+    mlMaxNodes: 2
   }
-  production: {
+  prod: {
     cosmosCapacityMode: 'Provisioned'
     cosmosRU: 4000
-    mlComputeSize: 'Standard_DS4_v2'
-    mlMinNodes: 1
-    mlMaxNodes: 10
+    mlComputeSize: 'Standard_DS1_v2'
+    mlMinNodes: 0
+    mlMaxNodes: 3
   }
 }
 
@@ -35,7 +35,7 @@ var config = environmentConfig[environmentName]
 // Azure Cosmos DB Account with Gremlin API for Knowledge Graphs
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
   name: 'cosmos-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
-  location: 'centralus'
+  location: location
   kind: 'GlobalDocumentDB'
   properties: {
     databaseAccountOfferType: 'Standard'
@@ -44,7 +44,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
     }
     locations: [
       {
-        locationName: 'centralus'
+        locationName: location
         failoverPriority: 0
         isZoneRedundant: environmentName == 'production'
       }
@@ -139,36 +139,15 @@ resource knowledgeGraphContainer 'Microsoft.DocumentDB/databaseAccounts/gremlinD
 }
 
 // Azure ML Workspace for GNN Training  
-resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' = {
-  name: 'ml-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 10)}-${take(uniqueString(resourceGroup().id, deployment().name), 8)}'
-  location: 'centralus'
-  identity: {
-    type: 'SystemAssigned'
-  }
-  sku: {
-    name: 'Basic'
-    tier: 'Basic'
-  }
-  properties: {
-    description: 'Azure ML Workspace for GNN training and model management'
-    friendlyName: 'Universal RAG ML Workspace (${environmentName})'
-    keyVault: resourceId('Microsoft.KeyVault/vaults', 'kv-maintieragst-bfyhcuxj')
-    storageAccount: resourceId('Microsoft.Storage/storageAccounts', 'stmaintieroeeopj3ksg')
-    applicationInsights: resourceId('Microsoft.Insights/components', 'appi-${resourcePrefix}-${environmentName}')
-    publicNetworkAccess: 'Enabled'
-    v1LegacyMode: false
-  }
-  tags: {
-    Environment: environmentName
-    Purpose: 'GNN model training for enhanced maintenance knowledge graph reasoning'
-  }
+resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' existing = {
+  name: 'ml-maintierag-prod'
 }
 
 // Compute Instance for ML development and experimentation
 resource mlComputeInstance 'Microsoft.MachineLearningServices/workspaces/computes@2023-04-01' = if (environmentName != 'production' && !empty(principalId)) {
   parent: mlWorkspace
   name: 'compute-${environmentName}'
-  location: 'centralus'
+  location: location
   properties: {
     computeType: 'ComputeInstance'
     properties: {
@@ -190,7 +169,7 @@ resource mlComputeInstance 'Microsoft.MachineLearningServices/workspaces/compute
 resource mlComputeCluster 'Microsoft.MachineLearningServices/workspaces/computes@2023-04-01' = {
   parent: mlWorkspace
   name: 'cluster-${environmentName}'
-  location: 'centralus'
+  location: location
   properties: {
     computeType: 'AmlCompute'
     properties: {

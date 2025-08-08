@@ -54,9 +54,12 @@ class SearchMetrics(BaseModel):
     duplicate_results_removed: int = Field(ge=0)
 
 
+# Use centralized Azure PydanticAI provider
+from agents.core.azure_pydantic_provider import get_azure_openai_model
+
 # Create the Universal Search Agent with proper PydanticAI patterns
 universal_search_agent = Agent[UniversalDeps, MultiModalSearchResult](
-    "openai:gpt-4o",  # PydanticAI format for Azure OpenAI via AsyncAzureOpenAI client
+    get_azure_openai_model(),
     deps_type=UniversalDeps,
     output_type=MultiModalSearchResult,
     system_prompt="""You are the Universal Search Agent.
@@ -111,7 +114,7 @@ async def execute_multi_modal_search(
                 usage=ctx.usage,  # Pass usage for tracking
             )
             domain_analysis = domain_result.output
-            search_strategy = f"adaptive_{domain_analysis.content_signature}"
+            search_strategy = f"adaptive_{domain_analysis.domain_signature}"
 
         except Exception as e:
             print(
@@ -529,30 +532,3 @@ async def run_universal_search(
     return result.output
 
 
-if __name__ == "__main__":
-    # Test the agent
-    sample_query = "Azure Cosmos DB distributed database performance optimization"
-
-    async def test_agent():
-        try:
-            result = await run_universal_search(sample_query, max_results=5)
-            print("Universal Search Result:")
-            print(f"Search Strategy: {result.search_strategy_used}")
-            print(f"Total Results: {result.total_results_found}")
-            print(f"Search Confidence: {result.search_confidence:.2f}")
-            print(f"Processing Time: {result.processing_time_seconds:.3f}s")
-
-            print(f"\nVector Results: {len(result.vector_results)}")
-            print(f"Graph Results: {len(result.graph_results)}")
-            print(f"GNN Results: {len(result.gnn_results)}")
-
-            print("\nTop Unified Results:")
-            for i, result_item in enumerate(result.unified_results[:3]):
-                print(
-                    f"{i+1}. {result_item.title} (score: {result_item.score:.3f}, source: {result_item.source})"
-                )
-
-        except Exception as e:
-            print(f"Error: {e}")
-
-    asyncio.run(test_agent())

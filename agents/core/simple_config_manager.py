@@ -461,6 +461,26 @@ class SimpleDynamicConfigManager:
     async def get_universal_config(self, content_directory: str) -> Dict[str, Any]:
         """Get universal configuration based on discovered content characteristics"""
         return await self.get_extraction_config("universal_content", content_directory)
+    
+    async def get_processing_config(self, domain_name: str) -> 'UniversalProcessingConfiguration':
+        """
+        Get processing configuration for agents (required by Domain Intelligence Agent).
+        
+        Returns a configuration object that agents can use for adaptive processing.
+        """
+        from agents.core.universal_models import UniversalProcessingConfiguration
+        
+        # Default configuration with universal settings using correct field names
+        return UniversalProcessingConfiguration(
+            optimal_chunk_size=1000,
+            chunk_overlap_ratio=0.2,
+            entity_confidence_threshold=0.8,
+            relationship_density=0.7,
+            vector_search_weight=0.4,
+            graph_search_weight=0.6,
+            expected_extraction_quality=0.75,
+            processing_complexity="medium"
+        )
 
     def clear_cache(self):
         """Clear all caches"""

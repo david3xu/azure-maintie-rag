@@ -119,7 +119,7 @@ class Settings(BaseSettings):
     azure_openai_endpoint: str = Field(
         default="", env="AZURE_OPENAI_ENDPOINT"
     )  # azd output
-    openai_api_version: str = Field(default="2024-02-01", env="OPENAI_API_VERSION")
+    openai_api_version: str = Field(default="2024-06-01", env="OPENAI_API_VERSION")
     openai_deployment_name: str = Field(
         default="", env="OPENAI_MODEL_DEPLOYMENT"
     )  # azd output
@@ -143,7 +143,7 @@ class Settings(BaseSettings):
         default="", env="EMBEDDING_MODEL_DEPLOYMENT"
     )  # azd output
     embedding_api_version: str = Field(
-        default="2024-02-01", env="EMBEDDING_API_VERSION"
+        default="2024-06-01", env="EMBEDDING_API_VERSION"
     )
     embedding_dimension: int = Field(default=1536, env="EMBEDDING_DIMENSION")
 

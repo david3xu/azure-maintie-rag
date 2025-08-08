@@ -16,9 +16,10 @@ from typing import Any, Dict
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from agents.domain_intelligence.agent import (
-    UniversalDomainDeps,
-    run_universal_domain_analysis,
+    domain_intelligence_agent,
+    run_domain_analysis,
 )
+from agents.core.universal_deps import UniversalDeps
 from agents.orchestrator import UniversalOrchestrator
 from infrastructure.prompt_workflows.universal_prompt_generator import (
     UniversalPromptGenerator,
@@ -72,14 +73,18 @@ async def run_universal_full_pipeline(
 
         print(f"   📁 Analyzing content from: {data_dir}")
 
-        domain_analysis = await run_universal_domain_analysis(
-            UniversalDomainDeps(
-                data_directory=data_dir,
-                max_files_to_analyze=10,
-                min_content_length=200,
-                enable_multilingual=True,
-            )
-        )
+        # Read sample content from data directory
+        data_path = Path(data_dir)
+        sample_files = list(data_path.rglob("*.md"))[:5]  # Get first 5 markdown files
+        sample_content = ""
+        for file_path in sample_files:
+            try:
+                content = file_path.read_text(encoding='utf-8')
+                sample_content += content[:1000] + "\n\n"  # First 1000 chars of each
+            except:
+                continue
+        
+        domain_analysis = await run_domain_analysis(sample_content)
 
         stage_duration = time.time() - stage_start
         pipeline_results["stages_completed"].append(
