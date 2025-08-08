@@ -573,5 +573,3 @@ async def main():
     except Exception as e:
         print(f"❌ Error generating prompts: {e}")
         return {}
-
-

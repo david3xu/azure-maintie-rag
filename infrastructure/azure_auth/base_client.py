@@ -53,13 +53,12 @@ class BaseAzureClient(ABC):
             return
 
         # Simple initialization
-        self.endpoint = (
-            self.config.get("endpoint")
-            or self._get_default_endpoint()
-        )
+        self.endpoint = self.config.get("endpoint") or self._get_default_endpoint()
 
         if not self.use_managed_identity:
-            self.key = self.config.get("api_key") or getattr(azure_settings, 'azure_openai_api_key', None)
+            self.key = self.config.get("api_key") or getattr(
+                azure_settings, "azure_openai_api_key", None
+            )
 
         self._initialize_client()
 

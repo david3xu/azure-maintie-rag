@@ -199,5 +199,3 @@ def main(
 ) -> Dict[str, Any]:
     """Main function called by Azure Prompt Flow"""
     return assess_extraction_quality(entities, relations, original_texts)
-
-

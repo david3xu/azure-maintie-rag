@@ -212,5 +212,3 @@ def main(
             "success": False,
             "timestamp": datetime.now().isoformat(),
         }
-
-

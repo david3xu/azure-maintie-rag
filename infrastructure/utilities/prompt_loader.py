@@ -144,5 +144,3 @@ def load_knowledge_extraction_prompt(
 def get_available_prompt_templates() -> list:
     """Convenience function to get available templates"""
     return prompt_loader.list_available_templates()
-
-

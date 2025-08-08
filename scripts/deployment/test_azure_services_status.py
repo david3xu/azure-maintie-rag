@@ -41,8 +41,10 @@ async def test_azure_services_status():
 
         print(f"\n🎯 Overall Health:")
         print(f"   Services Ready: {len(available_services)}/{total_services}")
-        
-        overall_health = len(available_services) >= (total_services // 2)  # At least half services healthy
+
+        overall_health = len(available_services) >= (
+            total_services // 2
+        )  # At least half services healthy
         print(f"   Overall Status: {'Healthy' if overall_health else 'Degraded'}")
 
         return overall_health

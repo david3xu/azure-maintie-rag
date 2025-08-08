@@ -91,12 +91,12 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         else:
             # Use Azure CLI credential for local development
             from azure.identity import AzureCliCredential, get_bearer_token_provider
-            
+
             credential = AzureCliCredential()
             token_provider = get_bearer_token_provider(
                 credential, "https://cognitiveservices.azure.com/.default"
             )
-            
+
             self._client = AzureOpenAI(
                 azure_ad_token_provider=token_provider,
                 api_version=model_config.api_version,

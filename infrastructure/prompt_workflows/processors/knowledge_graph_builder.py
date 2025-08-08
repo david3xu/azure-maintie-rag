@@ -177,5 +177,3 @@ def main(
     return build_knowledge_graph(
         entities, relations, confidence_threshold, max_entities
     )
-
-

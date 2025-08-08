@@ -530,5 +530,3 @@ async def run_universal_search(
     )
 
     return result.output
-
-

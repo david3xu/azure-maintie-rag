@@ -25,6 +25,7 @@ from agents.core.universal_models import (
     UniversalDomainCharacteristics,
     UniversalProcessingConfiguration,
 )
+
 # from agents.shared.query_tools import generate_analysis_query  # Temporarily disabled
 
 
@@ -51,8 +52,9 @@ class ContentCharacteristics(BaseModel):
     )
 
 
-# Create the Domain Intelligence Agent with proper PydanticAI patterns  
+# Create the Domain Intelligence Agent with proper PydanticAI patterns
 import os
+
 from dotenv import load_dotenv
 from pydantic_ai.models.openai import OpenAIModel
 
@@ -196,18 +198,24 @@ async def generate_processing_configuration(
     # Adapt chunk size based on measured complexity
     optimal_chunk_size = base_config.optimal_chunk_size
     if characteristics.vocabulary_complexity > 0.7:
-        optimal_chunk_size = int(optimal_chunk_size * 1.3)  # Larger chunks for complex vocabulary
+        optimal_chunk_size = int(
+            optimal_chunk_size * 1.3
+        )  # Larger chunks for complex vocabulary
     if "code_blocks" in characteristics.structural_patterns:
         optimal_chunk_size = int(optimal_chunk_size * 1.5)  # Even larger for code
     if characteristics.concept_density > 0.8:
-        optimal_chunk_size = int(optimal_chunk_size * 1.2)  # Larger for concept-dense content
+        optimal_chunk_size = int(
+            optimal_chunk_size * 1.2
+        )  # Larger for concept-dense content
 
     # Adapt overlap based on structural patterns
     chunk_overlap_ratio = base_config.chunk_overlap_ratio
     if "hierarchical_headers" in characteristics.structural_patterns:
         chunk_overlap_ratio *= 0.8  # Less overlap for well-structured content
     if characteristics.concept_density > 0.7:
-        chunk_overlap_ratio = min(chunk_overlap_ratio * 1.4, 0.5)  # More overlap but cap at 0.5
+        chunk_overlap_ratio = min(
+            chunk_overlap_ratio * 1.4, 0.5
+        )  # More overlap but cap at 0.5
 
     # Adapt confidence thresholds based on content characteristics
     entity_confidence_threshold = base_config.entity_confidence_threshold
@@ -215,7 +223,9 @@ async def generate_processing_configuration(
         entity_confidence_threshold *= 0.9  # Lower threshold for entity-rich content
     if characteristics.vocabulary_complexity < 0.3:
         entity_confidence_threshold *= 1.1  # Higher threshold for simple content
-    entity_confidence_threshold = max(0.5, min(1.0, entity_confidence_threshold))  # Keep in valid range
+    entity_confidence_threshold = max(
+        0.5, min(1.0, entity_confidence_threshold)
+    )  # Keep in valid range
 
     # Adapt relationship density based on discovered indicators
     relationship_density = base_config.relationship_density
@@ -226,16 +236,22 @@ async def generate_processing_configuration(
     # Adapt search weights based on content complexity
     vector_search_weight = base_config.vector_search_weight
     graph_search_weight = base_config.graph_search_weight
-    
+
     if characteristics.vocabulary_complexity > 0.7:
         # High complexity - favor graph search for concept relationships
         graph_search_weight = min(1.0, graph_search_weight * 1.2)
         vector_search_weight = max(0.0, 1.0 - graph_search_weight)
-    
+
     # Determine processing complexity
-    if characteristics.vocabulary_complexity > 0.8 or characteristics.concept_density > 0.8:
+    if (
+        characteristics.vocabulary_complexity > 0.8
+        or characteristics.concept_density > 0.8
+    ):
         processing_complexity = "high"
-    elif characteristics.vocabulary_complexity < 0.3 and characteristics.concept_density < 0.3:
+    elif (
+        characteristics.vocabulary_complexity < 0.3
+        and characteristics.concept_density < 0.3
+    ):
         processing_complexity = "low"
     else:
         processing_complexity = "medium"
@@ -248,7 +264,7 @@ async def generate_processing_configuration(
         vector_search_weight=vector_search_weight,
         graph_search_weight=graph_search_weight,
         expected_extraction_quality=base_config.expected_extraction_quality,
-        processing_complexity=processing_complexity
+        processing_complexity=processing_complexity,
     )
 
 
@@ -316,5 +332,3 @@ async def run_domain_analysis(
     )
 
     return result.output
-
-
