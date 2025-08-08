@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './WorkflowProgress.css';
+import type { UniversalQueryResponse } from '../../types/api';
 
 export interface WorkflowStep {
   query_id: string;
@@ -12,12 +13,12 @@ export interface WorkflowStep {
   details: string;
   fix_applied?: string;
   progress_percentage: number;
-  technical_data?: any;
+  technical_data?: Record<string, unknown>;
 }
 
 interface WorkflowProgressProps {
   queryId: string | null;
-  onComplete?: (response: any) => void;
+  onComplete?: (response: UniversalQueryResponse) => void;
   onError?: (error: string) => void;
   viewLayer?: 1 | 2 | 3;
 }
