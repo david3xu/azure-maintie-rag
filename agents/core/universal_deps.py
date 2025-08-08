@@ -119,7 +119,7 @@ class UniversalDeps:
             try:
                 if not self.gnn_client:
                     self.gnn_client = GNNInferenceClient()
-                    if hasattr(self.gnn_client, 'ensure_initialized'):
+                    if hasattr(self.gnn_client, "ensure_initialized"):
                         self.gnn_client.ensure_initialized()  # Use synchronous if available
                     # GNN client might not inherit from BaseAzureClient
                 services_status["gnn"] = True
@@ -131,7 +131,7 @@ class UniversalDeps:
             try:
                 if not self.monitoring_client:
                     self.monitoring_client = AzureApplicationInsightsClient()
-                    if hasattr(self.monitoring_client, 'ensure_initialized'):
+                    if hasattr(self.monitoring_client, "ensure_initialized"):
                         self.monitoring_client.ensure_initialized()  # Use synchronous if available
                     # Monitoring client might not inherit from BaseAzureClient
                 services_status["monitoring"] = True
@@ -203,7 +203,7 @@ async def get_universal_deps() -> UniversalDeps:
 def get_universal_deps_sync() -> UniversalDeps:
     """
     Factory function to get universal dependencies synchronously.
-    
+
     This creates the UniversalDeps instance but does NOT initialize
     Azure services. Suitable for testing and synchronous contexts.
     For production use, prefer get_universal_deps() async version.

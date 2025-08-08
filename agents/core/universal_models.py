@@ -241,57 +241,87 @@ class SearchConfiguration(BaseModel):
 # Request/Response Models for Agent Communication
 class ExtractionRequest(BaseModel):
     """Request model for knowledge extraction."""
-    
+
     content: str = Field(..., description="Content to extract from")
-    use_domain_analysis: bool = Field(default=True, description="Whether to use domain analysis")
-    max_entities: int = Field(default=50, ge=1, description="Maximum entities to extract")
-    max_relationships: int = Field(default=100, ge=1, description="Maximum relationships to extract")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional parameters")
+    use_domain_analysis: bool = Field(
+        default=True, description="Whether to use domain analysis"
+    )
+    max_entities: int = Field(
+        default=50, ge=1, description="Maximum entities to extract"
+    )
+    max_relationships: int = Field(
+        default=100, ge=1, description="Maximum relationships to extract"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional parameters"
+    )
 
 
 class ExtractionResult(BaseModel):
     """Results from universal extraction process."""
-    
+
     entities: List[ExtractedEntity] = Field(default_factory=list)
     relationships: List[ExtractedRelationship] = Field(default_factory=list)
-    extraction_confidence: float = Field(ge=0.0, le=1.0, description="Overall extraction confidence")
+    extraction_confidence: float = Field(
+        ge=0.0, le=1.0, description="Overall extraction confidence"
+    )
     processing_signature: str = Field(description="Processing signature for tracking")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Processing metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Processing metadata"
+    )
 
 
 class SearchRequest(BaseModel):
     """Request model for universal search."""
-    
+
     query: str = Field(..., description="Search query")
     max_results: int = Field(default=10, ge=1, le=100, description="Maximum results")
-    use_domain_analysis: bool = Field(default=True, description="Whether to use domain analysis")
-    search_config: Optional[SearchConfiguration] = Field(default=None, description="Search configuration")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional parameters")
+    use_domain_analysis: bool = Field(
+        default=True, description="Whether to use domain analysis"
+    )
+    search_config: Optional[SearchConfiguration] = Field(
+        default=None, description="Search configuration"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional parameters"
+    )
 
 
 class MultiModalSearchResult(BaseModel):
     """Result from multi-modal search combining vector, graph, and GNN."""
-    
+
     result_id: str = Field(..., description="Unique result identifier")
     content: str = Field(..., description="Result content")
     title: Optional[str] = Field(default=None, description="Result title")
     score: float = Field(ge=0.0, le=1.0, description="Combined relevance score")
-    vector_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Vector similarity score")
-    graph_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Graph relevance score")
-    gnn_score: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="GNN prediction score")
+    vector_score: Optional[float] = Field(
+        default=None, ge=0.0, le=1.0, description="Vector similarity score"
+    )
+    graph_score: Optional[float] = Field(
+        default=None, ge=0.0, le=1.0, description="Graph relevance score"
+    )
+    gnn_score: Optional[float] = Field(
+        default=None, ge=0.0, le=1.0, description="GNN prediction score"
+    )
     source: str = Field(..., description="Result source")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
 
 class SearchResponse(BaseModel):
     """Response model for universal search."""
-    
+
     unified_results: List[SearchResult] = Field(default_factory=list)
     total_results_found: int = Field(ge=0, description="Total results found")
     search_confidence: float = Field(ge=0.0, le=1.0, description="Search confidence")
     search_strategy_used: str = Field(description="Search strategy employed")
-    processing_time_ms: float = Field(ge=0.0, description="Processing time in milliseconds")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Response metadata")
+    processing_time_ms: float = Field(
+        ge=0.0, description="Processing time in milliseconds"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Response metadata"
+    )
 
 
 # Agent communication models

@@ -15,11 +15,11 @@ from typing import Any, Dict
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from agents.core.universal_deps import UniversalDeps
 from agents.domain_intelligence.agent import (
     domain_intelligence_agent,
     run_domain_analysis,
 )
-from agents.core.universal_deps import UniversalDeps
 from agents.orchestrator import UniversalOrchestrator
 from infrastructure.prompt_workflows.universal_prompt_generator import (
     UniversalPromptGenerator,
@@ -52,7 +52,9 @@ async def run_universal_full_pipeline(
             print("🔍 Prerequisites: Azure Services State Check")
             # Import here to avoid circular imports
             # Run a simple inline Azure connectivity check
-            from infrastructure.azure_openai.openai_client import UnifiedAzureOpenAIClient
+            from infrastructure.azure_openai.openai_client import (
+                UnifiedAzureOpenAIClient,
+            )
 
             try:
                 openai_client = UnifiedAzureOpenAIClient()
@@ -79,11 +81,11 @@ async def run_universal_full_pipeline(
         sample_content = ""
         for file_path in sample_files:
             try:
-                content = file_path.read_text(encoding='utf-8')
+                content = file_path.read_text(encoding="utf-8")
                 sample_content += content[:1000] + "\n\n"  # First 1000 chars of each
             except:
                 continue
-        
+
         domain_analysis = await run_domain_analysis(sample_content)
 
         stage_duration = time.time() - stage_start

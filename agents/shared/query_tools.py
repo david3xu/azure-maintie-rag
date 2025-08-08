@@ -45,7 +45,9 @@ async def generate_gremlin_query(
 
     # Apply universal search patterns
     if "similarity" in query_intent.lower():
-        base_query += f".has('confidence', gt({config.get('confidence_threshold', 0.8)}))"
+        base_query += (
+            f".has('confidence', gt({config.get('confidence_threshold', 0.8)}))"
+        )
 
     if "limit" not in base_query:
         base_query += f".limit({config.get('max_results', 10)})"
@@ -91,7 +93,10 @@ async def generate_search_query(
         search_fields = []
         if "code_patterns" in domain_characteristics.characteristics.content_patterns:
             search_fields.append("code_content^2.0")
-        if "structured_content" in domain_characteristics.characteristics.content_patterns:
+        if (
+            "structured_content"
+            in domain_characteristics.characteristics.content_patterns
+        ):
             search_fields.append("structured_fields^1.5")
 
         if search_fields:

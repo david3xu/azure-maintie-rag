@@ -272,7 +272,7 @@ async def extract_entities_and_relationships(
 
     # Apply adaptive configuration if available
     max_entities = base_config.get("max_entities_per_chunk", 15)
-    max_relationships = base_config.get("min_relationship_strength", 0.7)  
+    max_relationships = base_config.get("min_relationship_strength", 0.7)
     confidence_threshold = base_config.get("entity_confidence_threshold", 0.8)
 
     if domain_analysis:
@@ -818,5 +818,3 @@ async def run_knowledge_extraction(
         )
 
     return result.output
-
-

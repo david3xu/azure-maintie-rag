@@ -535,5 +535,3 @@ async def main():
     print(f"   Quality: {results['quality_metrics']['overall_confidence']:.2f}")
 
     return results
-
-

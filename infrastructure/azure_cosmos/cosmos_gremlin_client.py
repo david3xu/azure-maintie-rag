@@ -82,10 +82,12 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             # Use appropriate authentication method
             if self.use_managed_identity:
                 from azure.identity import DefaultAzureCredential
+
                 credential = DefaultAzureCredential()
                 token = credential.get_token("https://cosmos.azure.com/.default")
             else:
                 from azure.identity import AzureCliCredential
+
                 credential = AzureCliCredential()
                 token = credential.get_token("https://cosmos.azure.com/.default")
 

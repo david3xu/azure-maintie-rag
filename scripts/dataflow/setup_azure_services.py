@@ -33,7 +33,9 @@ async def validate_azure_services():
         # Get overall health
         available_services = universal_deps.get_available_services()
         total_services = len(service_status)
-        print(f"\n🎯 Overall: {len(available_services)}/{total_services} services ready")
+        print(
+            f"\n🎯 Overall: {len(available_services)}/{total_services} services ready"
+        )
 
         return len(available_services) >= (total_services // 2)
 
