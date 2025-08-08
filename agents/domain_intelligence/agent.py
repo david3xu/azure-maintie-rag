@@ -53,7 +53,7 @@ class ContentCharacteristics(BaseModel):
 
 # Create the Domain Intelligence Agent with proper PydanticAI patterns
 domain_intelligence_agent = Agent[UniversalDeps, UniversalDomainAnalysis](
-    "azure_openai:gpt-4o",  # Use Azure OpenAI instead of OpenAI API
+    "openai:gpt-4o",  # PydanticAI format - Azure credentials from environment
     deps_type=UniversalDeps,
     output_type=UniversalDomainAnalysis,
     system_prompt="""You are the Universal Domain Intelligence Agent.

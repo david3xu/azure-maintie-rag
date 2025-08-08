@@ -65,7 +65,7 @@ class TestEnterpriseDeployment:
                 "properties": {
                     "query": "machine learning algorithms",
                     "search_type": "multi_modal",
-                    "user_type": "enterprise",
+                    "deployment_scale": "large_scale",
                     "data_source": "production",
                 },
                 "measurements": {

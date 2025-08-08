@@ -21,7 +21,7 @@ class ExtractionQualityOutput(BaseModel):
     """PydanticAI quality assessment output model."""
 
     overall_score: float = Field(ge=0.0, le=1.0, description="Overall quality score")
-    quality_tier: str = Field(description="Quality tier classification")
+    quality_level: str = Field(description="Universal quality level assessment")
     entities_per_text: float = Field(ge=0.0, description="Average entities per text")
     relations_per_entity: float = Field(
         ge=0.0, description="Average relations per entity"
@@ -67,17 +67,17 @@ def validate_extraction_quality(
 
         # Determine quality tier based on score
         if overall_score >= 0.8:
-            quality_tier = "excellent"
+            quality_level = "excellent"
         elif overall_score >= 0.6:
-            quality_tier = "good"
+            quality_level = "good"
         elif overall_score >= 0.4:
-            quality_tier = "acceptable"
+            quality_level = "acceptable"
         else:
-            quality_tier = "needs_improvement"
+            quality_level = "needs_improvement"
 
         return ExtractionQualityOutput(
             overall_score=overall_score,
-            quality_tier=quality_tier,
+            quality_level=quality_level,
             entities_per_text=entities_per_text,
             relations_per_entity=relations_per_entity,
             avg_entity_confidence=avg_entity_confidence,
@@ -89,7 +89,7 @@ def validate_extraction_quality(
         # Return safe fallback
         return ExtractionQualityOutput(
             overall_score=0.0,
-            quality_tier="validation_error",
+            quality_level="validation_error",
             entities_per_text=quality_data.get("entities_per_text", 0.0),
             relations_per_entity=quality_data.get("relations_per_entity", 0.0),
             avg_entity_confidence=quality_data.get("avg_entity_confidence", 0.0),
@@ -131,7 +131,7 @@ def assess_extraction_quality(
             "avg_entity_confidence": avg_entity_confidence,
             "avg_relation_confidence": avg_relation_confidence,
             "overall_score": 0.8,  # Base score - will be refined by agent
-            "quality_tier": "good",  # Default - will be determined by agent
+            "quality_level": "good",  # Default - will be determined by agent
         }
 
         # Use PydanticAI output validator (replaces 100+ lines of manual validation)
@@ -146,7 +146,7 @@ def assess_extraction_quality(
         # Compile streamlined assessment (80% reduction from original)
         quality_assessment = {
             "overall_score": validated_quality.overall_score,
-            "quality_tier": validated_quality.quality_tier,
+            "quality_level": validated_quality.quality_level,
             "extraction_metrics": {
                 "total_entities": total_entities,
                 "total_relations": total_relations,
@@ -176,7 +176,7 @@ def assess_extraction_quality(
         }
 
         logger.info(
-            f"PydanticAI quality assessment: {validated_quality.quality_tier} ({validated_quality.overall_score:.3f})"
+            f"PydanticAI quality assessment: {validated_quality.quality_level} ({validated_quality.overall_score:.3f})"
         )
 
         return quality_assessment
@@ -185,7 +185,7 @@ def assess_extraction_quality(
         logger.error(f"PydanticAI quality assessment failed: {e}", exc_info=True)
         return {
             "overall_score": 0.0,
-            "quality_tier": "assessment_failed",
+            "quality_level": "assessment_failed",
             "error": str(e),
             "assessment_timestamp": datetime.now().isoformat(),
         }

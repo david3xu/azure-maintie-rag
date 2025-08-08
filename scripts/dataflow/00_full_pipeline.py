@@ -51,11 +51,11 @@ async def run_universal_full_pipeline(
             print("🔍 Prerequisites: Azure Services State Check")
             # Import here to avoid circular imports
             # Run a simple inline Azure connectivity check
-            from infrastructure.azure_openai.openai_client import AzureOpenAIClient
+            from infrastructure.azure_openai.openai_client import UnifiedAzureOpenAIClient
 
             try:
-                openai_client = AzureOpenAIClient()
-                await openai_client.async_initialize()
+                openai_client = UnifiedAzureOpenAIClient()
+                openai_client.ensure_initialized()
                 print("✅ Azure OpenAI connectivity verified")
                 azure_ready = True
             except Exception as e:

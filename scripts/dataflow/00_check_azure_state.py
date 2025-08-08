@@ -15,8 +15,8 @@ from typing import Any, Dict, List
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from config.settings import azure_settings
-from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosClient
-from infrastructure.azure_openai.openai_client import AzureOpenAIClient
+from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosGremlinClient
+from infrastructure.azure_openai.openai_client import UnifiedAzureOpenAIClient
 from infrastructure.azure_search.search_client import SimpleSearchClient
 from infrastructure.azure_storage.storage_client import SimpleStorageClient
 
@@ -54,7 +54,7 @@ async def check_azure_state(
         # Test Storage Client
         try:
             storage_client = SimpleStorageClient()
-            await storage_client.async_initialize()
+            storage_client.ensure_initialized()
             service_status["individual_services"]["storage"] = True
             service_status["successful_services"] += 1
             if verbose:
@@ -66,8 +66,8 @@ async def check_azure_state(
 
         # Test OpenAI Client
         try:
-            openai_client = AzureOpenAIClient()
-            await openai_client.async_initialize()
+            openai_client = UnifiedAzureOpenAIClient()
+            openai_client.ensure_initialized()
             service_status["individual_services"]["openai"] = True
             service_status["successful_services"] += 1
             if verbose:
@@ -80,7 +80,7 @@ async def check_azure_state(
         # Test Search Client
         try:
             search_client = SimpleSearchClient()
-            await search_client.async_initialize()
+            search_client.ensure_initialized()
             service_status["individual_services"]["search"] = True
             service_status["successful_services"] += 1
             if verbose:
@@ -92,8 +92,8 @@ async def check_azure_state(
 
         # Test Cosmos Client
         try:
-            cosmos_client = SimpleCosmosClient()
-            await cosmos_client.async_initialize()
+            cosmos_client = SimpleCosmosGremlinClient()
+            cosmos_client.ensure_initialized()
             service_status["individual_services"]["cosmos"] = True
             service_status["successful_services"] += 1
             if verbose:

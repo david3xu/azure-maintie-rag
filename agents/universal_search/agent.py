@@ -56,7 +56,7 @@ class SearchMetrics(BaseModel):
 
 # Create the Universal Search Agent with proper PydanticAI patterns
 universal_search_agent = Agent[UniversalDeps, MultiModalSearchResult](
-    "azure_openai:gpt-4o",  # Use Azure OpenAI instead of OpenAI API
+    "openai:gpt-4o",  # PydanticAI format for Azure OpenAI via AsyncAzureOpenAI client
     deps_type=UniversalDeps,
     output_type=MultiModalSearchResult,
     system_prompt="""You are the Universal Search Agent.

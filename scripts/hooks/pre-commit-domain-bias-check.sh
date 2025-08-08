@@ -25,8 +25,8 @@ NC='\033[0m' # No Color
 VIOLATION_COUNT=0
 CHECK_PATHS=("agents" "config" "scripts/dataflow" "infrastructure")
 
-echo -e "${BLUE}🔍 Universal RAG Domain Bias Detection${NC}"
-echo "========================================"
+echo -e "${BLUE}🔍 Universal RAG Domain Bias & Mock Value Detection${NC}"
+echo "===================================================="
 
 # Function to report violations
 report_violation() {
@@ -249,6 +249,52 @@ check_hardcoded_domains() {
         'industrial_analysis'
         'domain_specific_analysis'
         'specialized_analysis'
+        
+        # NEWLY DETECTED: Complexity assumptions that violate Universal RAG
+        '"simple".*query'
+        '"complex".*query'
+        '"basic".*search'
+        '"advanced".*search'
+        '"standard".*analysis'
+        '"premium".*processing'
+        '"enterprise".*mode'
+        '"professional".*tier'
+        '"beginner".*level'
+        '"intermediate".*level'
+        '"expert".*level'
+        '"low".*complexity'
+        '"medium".*complexity'
+        '"high".*complexity'
+        '"simple".*algorithm'
+        '"complex".*algorithm'
+        
+        # NEWLY DETECTED: Quality tier assumptions
+        '"basic".*quality'
+        '"standard".*quality'
+        '"premium".*quality'
+        '"enterprise".*quality'
+        'quality.*tier'
+        'processing.*tier'
+        'service.*tier'
+        'performance.*tier'
+        'complexity.*tier'
+        
+        # NEWLY DETECTED: User type assumptions
+        '"consumer".*type'
+        '"enterprise".*type'
+        '"professional".*type'
+        '"commercial".*type'
+        '"personal".*type'
+        'user_type.*=='
+        'client_type.*=='
+        
+        # NEWLY DETECTED: Content difficulty assumptions
+        'difficulty.*level'
+        'reading.*level'
+        'comprehension.*level'
+        'skill.*level'
+        'expertise.*level'
+        'proficiency.*level'
     )
     
     for pattern in "${domain_patterns[@]}"; do
@@ -432,6 +478,43 @@ check_config_bias() {
         'specialized_chunk_size'
         'specialized_overlap'
         'specialized_threshold'
+        
+        # NEWLY DETECTED: Implicit complexity bias patterns
+        'if.*simple.*query'
+        'if.*complex.*content'
+        'if.*basic.*document'
+        'if.*advanced.*processing'
+        'simple.*vs.*complex'
+        'basic.*vs.*advanced'
+        'low.*vs.*high.*complexity'
+        'beginner.*vs.*expert'
+        'consumer.*vs.*enterprise'
+        'personal.*vs.*professional'
+        
+        # NEWLY DETECTED: Service tier bias
+        'tier.*==.*"basic"'
+        'tier.*==.*"standard"'
+        'tier.*==.*"premium"'
+        'tier.*==.*"enterprise"'
+        'sku.*==.*"basic"'
+        'sku.*==.*"standard"'
+        'sku.*==.*"premium"'
+        
+        # NEWLY DETECTED: Processing complexity assumptions
+        'processing_complexity.*==.*"low"'
+        'processing_complexity.*==.*"medium"'
+        'processing_complexity.*==.*"high"'
+        'algorithm_complexity.*='
+        'computational_complexity.*='
+        'query_complexity.*weights'
+        
+        # NEWLY DETECTED: User experience assumptions
+        'user_experience.*level'
+        'expertise_required'
+        'skill_level_required'
+        'difficulty_rating'
+        'complexity_rating'
+        'proficiency_needed'
     )
     
     for pattern in "${config_bias_patterns[@]}"; do
@@ -748,3 +831,68 @@ else
     echo ""
     exit 1
 fi
+# Function to check for mock/fake values (production quality enforcement)
+check_mock_values() {
+    local file="$1"
+    
+    # Mock value patterns that should never appear in production code
+    local mock_patterns=(
+        # Mock API keys and endpoints
+        'sk-mock'
+        'mock-key'
+        'fake-key'
+        'test-key'
+        'dummy-key'
+        'mock.*endpoint'
+        'fake.*endpoint'
+        'test.*endpoint'
+        'dummy.*endpoint'
+        'localhost.*azure'
+        'mock.*azure'
+        'fake.*azure'
+        'test.*azure'
+        'dummy.*azure'
+        # Mock Azure resources
+        'mock.*storage'
+        'fake.*storage' 
+        'test.*storage'
+        'dummy.*storage'
+        'mock.*cosmos'
+        'fake.*cosmos'
+        'test.*cosmos'
+        'dummy.*cosmos'
+        'mock.*openai'
+        'fake.*openai'
+        'test.*openai'
+        'dummy.*openai'
+        # Mock credentials
+        'mock.*credential'
+        'fake.*credential'
+        'test.*credential'
+        'dummy.*credential'
+        'placeholder.*key'
+        'placeholder.*endpoint'
+        'placeholder.*url'
+        # Environment placeholders
+        'YOUR_.*_HERE'
+        'REPLACE_.*_VALUE'
+        'INSERT_.*_HERE'
+        'ADD_YOUR_.*'
+        'CHANGE_THIS_.*'
+    )
+    
+    for pattern in "${mock_patterns[@]}"; do
+        while IFS=: read -r line_num content; do
+            if [[ -n "$content" ]]; then
+                # Skip comments and documentation examples
+                if [[ "$content" =~ ^[[:space:]]*# ]] && [[ "$content" =~ (example|sample|demo) ]]; then
+                    continue
+                fi
+                
+                report_violation "$file" "$line_num" "Mock/Fake Value Detected" \
+                    "$(echo "$content" | sed 's/^[[:space:]]*//')" \
+                    "Production code must use real Azure services only - no mocks/fakes allowed"
+            fi
+        done < <(grep -n -i -E "$pattern" "$file" 2>/dev/null || true)
+    done
+}
