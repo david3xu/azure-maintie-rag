@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { API_CONFIG } from '../utils/api-config';
 import type { UniversalQueryResponse } from '../types/api';
 
