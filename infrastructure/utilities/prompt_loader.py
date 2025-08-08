@@ -55,7 +55,7 @@ class PromptTemplateLoader:
 
         Args:
             text_content: The text to extract knowledge from
-            domain_name: Domain for extraction (e.g., 'maintenance')
+            domain_name: Content type identifier discovered from analysis
             extraction_focus: Comma-separated focus areas
 
         Returns:

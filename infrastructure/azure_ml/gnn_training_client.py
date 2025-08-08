@@ -10,13 +10,27 @@ import logging
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
+# Optional PyTorch imports
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    from torch_geometric.data import DataLoader
+    PYTORCH_AVAILABLE = True
+except ImportError:
+    PYTORCH_AVAILABLE = False
+    torch = None
+    nn = None
+    optim = None
+
+try:
+    from azure.ai.ml import MLClient
+    from azure.ai.ml.entities import Command, Environment, Job
+    AZURE_ML_AVAILABLE = True
+except ImportError:
+    AZURE_ML_AVAILABLE = False
+
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from azure.ai.ml import MLClient
-from azure.ai.ml.entities import Command, Environment, Job
-from torch_geometric.data import DataLoader
 
 from config.settings import azure_settings
 from infrastructure.azure_auth_utils import get_azure_credential
@@ -33,18 +47,35 @@ class GNNTrainingClient:
         self, config: Optional[UniversalGNNConfig] = None, device: Optional[str] = None
     ):
         """Initialize GNN training client with Azure ML workspace and original trainer."""
+        # Check dependencies
+        if not PYTORCH_AVAILABLE:
+            logger.warning("PyTorch not available - GNN training will use fallback mode")
+        if not AZURE_ML_AVAILABLE:
+            logger.warning("Azure ML SDK not available - using simulation mode")
+
         # Azure ML setup with centralized session management
         self.credential = get_azure_credential()
-        self.ml_client = MLClient(
-            credential=self.credential,
-            subscription_id=azure_settings.azure_subscription_id,
-            resource_group_name=azure_settings.azure_resource_group,
-            workspace_name=azure_settings.azure_ml_workspace_name,
-        )
+        self.ml_client = None
+        
+        if AZURE_ML_AVAILABLE:
+            try:
+                self.ml_client = MLClient(
+                    credential=self.credential,
+                    subscription_id=azure_settings.azure_subscription_id,
+                    resource_group_name=azure_settings.azure_resource_group,
+                    workspace_name=azure_settings.azure_ml_workspace_name,
+                )
+            except Exception as e:
+                logger.warning(f"Azure ML client initialization failed: {e}")
+                self.ml_client = None
 
         # Original trainer setup
         self.config = config or UniversalGNNConfig()
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        
+        if PYTORCH_AVAILABLE and torch is not None:
+            self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = "cpu"  # Fallback device
         self.model = None
         self.optimizer = None
         self.scheduler = None

@@ -53,7 +53,7 @@ class PromptWorkflowOrchestrator:
     async def prepare_workflow_templates(
         self,
         data_directory: str,
-        domain_config: Optional[Dict[str, Any]] = None,
+        content_config: Optional[Dict[str, Any]] = None,
         use_generated: bool = True,
     ) -> Dict[str, str]:
         """
@@ -61,7 +61,7 @@ class PromptWorkflowOrchestrator:
 
         Args:
             data_directory: Directory containing content for domain analysis
-            domain_config: Optional pre-analyzed domain configuration
+            content_config: Optional pre-analyzed content configuration
             use_generated: Whether to generate new templates or use existing ones
 
         Returns:
@@ -96,7 +96,7 @@ class PromptWorkflowOrchestrator:
     async def execute_extraction_workflow(
         self,
         texts: List[str],
-        domain_config: Optional[Dict[str, Any]] = None,
+        content_config: Optional[Dict[str, Any]] = None,
         confidence_threshold: float = 0.7,
         max_entities: int = 50,
         max_relationships: int = 40,
@@ -106,7 +106,7 @@ class PromptWorkflowOrchestrator:
 
         Args:
             texts: List of text content to process
-            domain_config: Optional domain-specific configuration
+            content_config: Optional content-specific configuration
             confidence_threshold: Minimum confidence for extractions
             max_entities: Maximum entities to extract
             max_relationships: Maximum relationships to extract
@@ -117,7 +117,7 @@ class PromptWorkflowOrchestrator:
         print(f"🚀 Executing extraction workflow on {len(texts)} documents...")
 
         # Step 1: Template preparation (handled internally)
-        template_config = domain_config or {}
+        template_config = content_config or {}
 
         # Step 2: Entity extraction
         print("🏷️  Extracting entities...")
@@ -166,7 +166,7 @@ class PromptWorkflowOrchestrator:
             "relationships": knowledge_graph.get("relationships", []),
             "knowledge_graph": knowledge_graph,
             "quality_metrics": quality_metrics,
-            "domain_config": template_config,
+            "content_config": template_config,
         }
 
         print(f"✅ Workflow completed successfully!")
@@ -257,11 +257,11 @@ class PromptWorkflowOrchestrator:
                 # Find capitalized words (proper nouns)
                 proper_nouns = [w for w in words if w and w[0].isupper() and len(w) > 2]
 
-                # Find technical terms (words > 6 chars)
-                technical_terms = [w for w in words if len(w) > 6 and w.isalpha()]
+                # Find significant terms (words > 6 chars)
+                significant_terms = [w for w in words if len(w) > 6 and w.isalpha()]
 
                 # Combine and deduplicate
-                candidates = list(set(proper_nouns + technical_terms))
+                candidates = list(set(proper_nouns + significant_terms))
 
                 for j, candidate in enumerate(candidates[: max_entities // len(texts)]):
                     entity_type = (

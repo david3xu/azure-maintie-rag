@@ -12,6 +12,13 @@ from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 
 def get_azd_environment() -> str:
     """Auto-detect current azd environment"""
@@ -121,7 +128,7 @@ class Settings(BaseSettings):
     )  # azd output
     openai_api_version: str = Field(default="2024-06-01", env="OPENAI_API_VERSION")
     openai_deployment_name: str = Field(
-        default="", env="OPENAI_MODEL_DEPLOYMENT"
+        default="gpt-4o", env="AZURE_OPENAI_DEPLOYMENT_NAME"
     )  # azd output
     openai_model: str = Field(default="gpt-4", env="OPENAI_MODEL")
 
@@ -140,7 +147,7 @@ class Settings(BaseSettings):
         default="text-embedding-ada-002", env="EMBEDDING_MODEL"
     )
     embedding_deployment_name: str = Field(
-        default="", env="EMBEDDING_MODEL_DEPLOYMENT"
+        default="text-embedding-ada-002", env="AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME"
     )  # azd output
     embedding_api_version: str = Field(
         default="2024-06-01", env="EMBEDDING_API_VERSION"
@@ -152,10 +159,10 @@ class Settings(BaseSettings):
         default="", env="AZURE_STORAGE_ACCOUNT"
     )  # azd output
     azure_blob_container: str = Field(
-        default="", env="AZURE_STORAGE_CONTAINER"
+        default="maintie-prod-data", env="AZURE_STORAGE_CONTAINER"
     )  # azd output
     azure_storage_container: str = Field(
-        default="rag-data", env="AZURE_STORAGE_CONTAINER"
+        default="maintie-prod-data", env="AZURE_STORAGE_CONTAINER"
     )  # alias
 
     # Backward compatibility properties
@@ -171,7 +178,7 @@ class Settings(BaseSettings):
     azure_search_api_version: str = Field(
         default="2023-11-01", env="AZURE_SEARCH_API_VERSION"
     )
-    azure_search_index: str = Field(default="", env="AZURE_SEARCH_INDEX")  # azd output
+    azure_search_index: str = Field(default="maintie-prod-index", env="AZURE_SEARCH_INDEX")  # azd output
 
     # Backward compatibility properties
     @property
@@ -184,9 +191,9 @@ class Settings(BaseSettings):
         default="", env="AZURE_COSMOS_ENDPOINT"
     )  # azd output
     cosmos_database_name: str = Field(
-        default="", env="COSMOS_DATABASE_NAME"
+        default="maintie-rag-prod", env="COSMOS_DATABASE_NAME"
     )  # azd output
-    cosmos_graph_name: str = Field(default="", env="COSMOS_GRAPH_NAME")  # azd output
+    cosmos_graph_name: str = Field(default="knowledge-graph-prod", env="COSMOS_GRAPH_NAME")  # azd output
     azure_cosmos_container: str = Field(
         default="", env="COSMOS_CONTAINER_NAME"
     )  # azd output

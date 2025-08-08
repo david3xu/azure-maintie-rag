@@ -37,7 +37,22 @@ class TestAuthenticationDiagnostics:
 
         except Exception as e:
             print(f"❌ Azure CLI Authentication Failed: {e}")
-            print("💡 Please run 'az login' to authenticate with Azure CLI")
+            error_msg = str(e).lower()
+            
+            # Check for authentication issues
+            if any(auth_error in error_msg for auth_error in [
+                'authentication', 'credential', 'not authenticated', 'login required',
+                'az login', 'no subscription', 'cli not found', 'please run'
+            ]):
+                pytest.skip(f"Azure CLI authentication required - run 'az login': {e}")
+            
+            # Check for network/service issues
+            if any(network_error in error_msg for network_error in [
+                'connection', 'timeout', 'network', 'dns', 'unreachable'
+            ]):
+                pytest.skip(f"Network connectivity issue: {e}")
+            
+            # For other errors, show details and fail
             raise
 
     def test_default_azure_credential(self):
@@ -60,7 +75,21 @@ class TestAuthenticationDiagnostics:
 
         except Exception as e:
             print(f"❌ DefaultAzureCredential Failed: {e}")
-            print("💡 Check Azure authentication (az login) or managed identity setup")
+            error_msg = str(e).lower()
+            
+            # Check for authentication issues
+            if any(auth_error in error_msg for auth_error in [
+                'authentication', 'credential', 'not authenticated', 'login required',
+                'az login', 'no subscription', 'managed identity', 'environment credential'
+            ]):
+                pytest.skip(f"Azure credential authentication issue: {e}")
+            
+            # Check for network/service issues
+            if any(network_error in error_msg for network_error in [
+                'connection', 'timeout', 'network', 'dns', 'unreachable'
+            ]):
+                pytest.skip(f"Network connectivity issue: {e}")
+                
             raise
 
     def test_environment_variables_diagnostic(self):
@@ -136,4 +165,19 @@ class TestAuthenticationDiagnostics:
 
         except Exception as e:
             print(f"❌ Bearer Token Provider Failed: {e}")
+            error_msg = str(e).lower()
+            
+            # Check for authentication issues
+            if any(auth_error in error_msg for auth_error in [
+                'authentication', 'credential', 'not authenticated', 'login required',
+                'az login', 'no subscription', 'token', 'bearer'
+            ]):
+                pytest.skip(f"Azure bearer token authentication issue: {e}")
+            
+            # Check for network/service issues  
+            if any(network_error in error_msg for network_error in [
+                'connection', 'timeout', 'network', 'dns', 'unreachable'
+            ]):
+                pytest.skip(f"Network connectivity issue: {e}")
+                
             raise

@@ -56,6 +56,27 @@ class UniversalDomainCharacteristics(BaseModel):
     structural_consistency: float = Field(
         ..., ge=0.0, le=1.0, description="Document structure consistency"
     )
+    
+    # Backward compatibility aliases for test compatibility
+    @property
+    def vocabulary_complexity(self) -> float:
+        """Alias for vocabulary_complexity_ratio to maintain API compatibility"""
+        return self.vocabulary_complexity_ratio
+    
+    @property
+    def concept_density(self) -> float:
+        """Calculated concept density based on vocabulary richness and lexical diversity"""
+        return (self.vocabulary_richness + self.lexical_diversity) / 2.0
+    
+    @property
+    def structural_patterns(self) -> List[str]:
+        """Alias for content_patterns to maintain API compatibility"""
+        return self.content_patterns
+    
+    @property
+    def content_signature(self) -> str:
+        """Generate content signature from characteristics for API compatibility"""
+        return f"vc{self.vocabulary_complexity:.2f}_cd{self.concept_density:.2f}_sc{self.structural_consistency:.2f}"
 
 
 class UniversalProcessingConfiguration(BaseModel):
@@ -108,6 +129,17 @@ class UniversalDomainAnalysis(BaseModel):
     # Discovered characteristics and adaptive configuration
     characteristics: UniversalDomainCharacteristics
     processing_config: UniversalProcessingConfiguration
+    
+    # Backward compatibility aliases for API compatibility
+    @property
+    def discovered_characteristics(self) -> UniversalDomainCharacteristics:
+        """Alias for characteristics to maintain API compatibility"""
+        return self.characteristics
+    
+    @property
+    def processing_configuration(self) -> UniversalProcessingConfiguration:
+        """Alias for processing_config to maintain API compatibility"""
+        return self.processing_config
 
     # Data-driven insights (discovered from analysis)
     key_insights: List[str] = Field(
