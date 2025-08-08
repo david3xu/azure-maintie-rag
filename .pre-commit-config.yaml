@@ -22,7 +22,7 @@ repos:
 
       - id: check-venv-not-committed
         name: Ensure venv not in git
-        entry: bash -c 'find . -name "venv" -type d | head -1 | grep -q . && echo "❌ Virtual environment detected in git. Add to .gitignore" && exit 1 || exit 0'
+        entry: bash -c 'find . -name "venv" -type d -not -path "./.venv/*" | head -1 | grep -q . && echo "❌ Virtual environment detected in git. Add to .gitignore" && exit 1 || exit 0'
         language: system
         pass_filenames: false
 

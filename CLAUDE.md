@@ -32,6 +32,9 @@ PYTHONPATH=/workspace/azure-maintie-rag python agents/universal_search/agent.py
 PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/00_check_azure_state.py
 PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/12_query_generation_showcase.py
 
+# Quick Script Testing (with environment handling)
+OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag python <script_name>  # For GNN-dependent scripts
+
 # Project Structure Navigation
 cd /workspace/azure-maintie-rag  # Always work from project root
 ```
@@ -166,6 +169,11 @@ pytest -v --tb=short    # Verbose output with short tracebacks
 pytest -k "test_name"   # Run specific test pattern
 pytest --collect-only   # Show available tests without running
 pytest -x              # Stop on first failure (useful for debugging)
+pytest -x -vvv         # Stop on first failure with maximum verbosity
+
+# Running tests with proper environment setup
+PYTHONPATH=/workspace/azure-maintie-rag pytest tests/test_agents.py -v
+OPENBLAS_NUM_THREADS=1 pytest tests/test_gnn_comprehensive.py  # For GNN tests
 ```
 
 ### Individual Service Development
@@ -617,3 +625,14 @@ az account show
 2. **Validate agents**: Run individual agent files with PYTHONPATH
 3. **Check dependencies**: Look at `pyproject.toml` for exact versions
 4. **Environment sync**: Use `./scripts/deployment/sync-env.sh <env>` before any Azure operations
+
+### Makefile Commands Reference
+The project uses a sophisticated Makefile with enterprise session tracking:
+- `make dev` - Start API + Frontend with session tracking
+- `make health` - Comprehensive health check with enterprise reporting  
+- `make clean` - Clean session with log replacement (no accumulation)
+- `make data-prep-full` - Complete data processing pipeline
+- `make session-report` - View current session metrics
+- `make azure-deploy` - Deploy Azure infrastructure
+
+All Makefile commands create unique session IDs and replace previous logs (no accumulation).
