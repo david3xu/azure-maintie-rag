@@ -93,14 +93,14 @@ async def universal_search_demo_pipeline(
                 "duration": stage_duration,
                 "status": "completed",
                 "domain_discovered": domain_analysis.domain_signature,
-                "technical_density": domain_analysis.characteristics.technical_vocabulary_ratio,
+                "technical_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 "search_optimization": "domain_aware",
             }
         )
 
         print(f"   ✅ Domain context: {domain_analysis.domain_signature}")
         print(
-            f"   📊 Technical density: {domain_analysis.characteristics.technical_vocabulary_ratio:.3f}"
+            f"   📊 Technical density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
         )
         print(f"   ⏱️  Duration: {stage_duration:.2f}s")
 
@@ -119,7 +119,7 @@ async def universal_search_demo_pipeline(
             filter_conditions={"domain_type": domain_analysis.domain_signature},
             domain_context={
                 "domain_signature": domain_analysis.domain_signature,
-                "technical_density": domain_analysis.characteristics.technical_vocabulary_ratio,
+                "technical_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 "search_mode": "semantic_similarity",
             },
             similarity_threshold=0.7,
@@ -317,7 +317,7 @@ async def universal_search_demo_pipeline(
                 "domain_analysis": {
                     "domain_signature": domain_analysis.domain_signature,
                     "confidence": domain_analysis.content_type_confidence,
-                    "technical_density": domain_analysis.characteristics.technical_vocabulary_ratio,
+                    "technical_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 },
                 "search_summary": {
                     "query": search_query,

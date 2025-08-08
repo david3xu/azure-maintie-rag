@@ -187,7 +187,7 @@ This content demonstrates comprehensive document processing.
             f"   🧠 Vocabulary richness: {domain_analysis.characteristics.vocabulary_richness:.3f}"
         )
         print(
-            f"   ⚙️  Technical density: {domain_analysis.characteristics.technical_vocabulary_ratio:.3f}"
+            f"   ⚙️  Technical density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
         )
         print(f"   ⏱️  Duration: {stage_duration:.2f}s")
 
@@ -357,7 +357,7 @@ Based on the analysis of your {domain_analysis.domain_signature} content, here a
 **Technical Architecture:**
 The system demonstrates zero-hardcoded-values philosophy with dynamic configuration based on content characteristics. 
 The domain analysis revealed {domain_analysis.characteristics.vocabulary_richness:.1%} vocabulary richness and 
-{domain_analysis.characteristics.technical_vocabulary_ratio:.1%} technical density.
+{domain_analysis.characteristics.vocabulary_complexity_ratio:.1%} technical density.
 
 **Key Relationships:**
 - Azure hosts the RAG system infrastructure
@@ -399,7 +399,7 @@ This response was generated through tri-modal search combining semantic similari
                     "domain": domain_analysis.domain_signature,
                     "confidence": domain_analysis.content_type_confidence,
                     "vocabulary_richness": domain_analysis.characteristics.vocabulary_richness,
-                    "technical_density": domain_analysis.characteristics.technical_vocabulary_ratio,
+                    "technical_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 },
                 "processing_summary": {
                     "entities_extracted": len(extraction_result["entities_found"]),

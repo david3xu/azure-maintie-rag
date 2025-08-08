@@ -32,7 +32,7 @@ def get_azd_environment() -> str:
             f"Environment detection via azd failed: {e}. Using development fallback."
         )
         pass
-    return "development"  # fallback
+    return "dynamic_environment"  # universal fallback
 
 
 class Settings(BaseSettings):
@@ -230,7 +230,7 @@ class Settings(BaseSettings):
 
     # Knowledge Extraction Configuration
     extraction_quality_tier: str = Field(
-        default="standard", env="EXTRACTION_QUALITY_TIER"
+        default="adaptive", env="EXTRACTION_QUALITY_TIER"
     )
     extraction_confidence_threshold: float = Field(
         default=0.7, env="EXTRACTION_CONFIDENCE_THRESHOLD"
@@ -261,7 +261,7 @@ class Settings(BaseSettings):
         default=50.0, env="AZURE_OPENAI_COST_THRESHOLD_PER_HOUR"
     )
     azure_openai_priority_tier: str = Field(
-        default="standard", env="AZURE_OPENAI_PRIORITY_TIER"
+        default="adaptive", env="AZURE_OPENAI_PRIORITY_TIER"
     )
 
     # Azure Key Vault Settings - Enterprise Security Enhancement
@@ -360,7 +360,7 @@ class Settings(BaseSettings):
         default=100, env="GNN_TRAINING_TRIGGER_THRESHOLD"
     )
     gnn_model_deployment_tier: str = Field(
-        default="standard", env="GNN_MODEL_DEPLOYMENT_TIER"
+        default="adaptive", env="GNN_MODEL_DEPLOYMENT_TIER"
     )
     enable_incremental_gnn_training: bool = Field(
         default=True, env="ENABLE_INCREMENTAL_GNN_TRAINING"
@@ -400,7 +400,7 @@ class Settings(BaseSettings):
         default="gnn-training-env", env="AZURE_ML_TRAINING_ENVIRONMENT"
     )
     gnn_model_deployment_tier: str = Field(
-        default="standard", env="GNN_MODEL_DEPLOYMENT_TIER"
+        default="adaptive", env="GNN_MODEL_DEPLOYMENT_TIER"
     )
     gnn_batch_size: int = Field(default=32, env="GNN_BATCH_SIZE")
     gnn_learning_rate: float = Field(default=0.01, env="GNN_LEARNING_RATE")
@@ -442,7 +442,7 @@ class Settings(BaseSettings):
             "app_insights_sampling": 10.0,
         },
         "staging": {
-            "search_sku": "standard",
+            "search_sku": "adaptive",
             "search_replicas": 1,
             "storage_sku": "Standard_ZRS",
             "cosmos_throughput": 800,
@@ -453,7 +453,7 @@ class Settings(BaseSettings):
             "app_insights_sampling": 5.0,
         },
         "prod": {
-            "search_sku": "standard",
+            "search_sku": "adaptive",
             "search_replicas": 2,
             "storage_sku": "Standard_GRS",
             "cosmos_throughput": 1600,

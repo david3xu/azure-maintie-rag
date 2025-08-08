@@ -254,7 +254,7 @@ async def configuration_system_demo(
                 context={
                     "content_samples": ["Sample content for domain characterization"]
                 },
-                parameters={"analysis_depth": "standard"},
+                parameters={"analysis_depth": "adaptive"},
             ),
         ]
 
@@ -333,13 +333,13 @@ async def configuration_system_demo(
         print("   🗂️  Testing configuration management...")
 
         # Test cache management
-        initial_cache_size = len(config_manager._domain_configs)
+        initial_cache_size = len(config_manager._universal_configs)
         config_manager.clear_domain_cache()
-        cleared_cache_size = len(config_manager._domain_configs)
+        cleared_cache_size = len(config_manager._universal_configs)
 
         # Re-load configurations
         reloaded_extraction = get_extraction_config("test_reload")
-        final_cache_size = len(config_manager._domain_configs)
+        final_cache_size = len(config_manager._universal_configs)
 
         # Test validation
         validation_check = validate_configuration()

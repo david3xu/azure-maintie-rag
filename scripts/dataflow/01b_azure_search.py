@@ -97,7 +97,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Simple Azure search indexing")
     parser.add_argument("--source", required=True, help="Source directory path")
-    parser.add_argument("--domain", default="maintenance", help="Domain for processing")
+    parser.add_argument(
+        "--domain", default="discovered_content", help="Domain for processing"
+    )
     args = parser.parse_args()
 
     result = asyncio.run(index_in_search(args.source, args.domain))

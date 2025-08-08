@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from infrastructure.azure_storage.storage_client import SimpleStorageClient
 
 
-async def store_to_cosmos(extraction_file: str, domain: str = "maintenance"):
+async def store_to_cosmos(extraction_file: str, domain: str = "discovered_content"):
     """Simple Cosmos DB graph storage"""
     print(f"🕸️  Cosmos Storage: '{extraction_file}' (domain: {domain})")
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--extraction-file", required=True, help="Knowledge extraction JSON file"
     )
-    parser.add_argument("--domain", default="maintenance", help="Domain name")
+    parser.add_argument("--domain", default="discovered_content", help="Domain name")
     args = parser.parse_args()
 
     result = asyncio.run(store_to_cosmos(args.extraction_file, args.domain))
