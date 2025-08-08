@@ -1,11 +1,12 @@
 import React from 'react';
 import WorkflowProgress from './WorkflowProgress';
+import type { UniversalQueryResponse } from '../../types/api';
 
 interface WorkflowPanelProps {
   showWorkflow: boolean;
   queryId: string | null;
   viewLayer: 1 | 2 | 3;
-  onComplete: (response: any) => void;
+  onComplete: (response: UniversalQueryResponse) => void;
   onError: (error: string) => void;
 }
 

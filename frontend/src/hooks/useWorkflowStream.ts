@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { API_CONFIG } from '../utils/api-config';
+import type { UniversalQueryResponse } from '../types/api';
 
 export const useWorkflowStream = (
   queryId: string | null,
-  onComplete?: (response: any) => void,
+  onComplete?: (response: UniversalQueryResponse) => void,
   onError?: (error: string) => void,
   query?: string,
   domain?: string
@@ -55,7 +56,7 @@ export const useWorkflowStream = (
       eventSource.close();
       setIsConnected(false);
     };
-  }, [queryId, query, domain]);
+  }, [queryId, query, domain, onComplete, onError]);
 
   return { isConnected };
 };

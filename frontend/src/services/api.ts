@@ -67,9 +67,9 @@ export async function postUniversalQuery(
       confidence_score: confidenceScore,
       processing_time: backendData.processing_time,
       safety_warnings: backendData.safety_warnings || [],
-      sources: backendData.search_results?.map((r: any) => r.source || r.metadata?.source || 'Unknown') || [],
-      citations: backendData.search_results?.map((r: any) => {
-        const content = r.content || '';
+      sources: backendData.search_results?.map((r: Record<string, unknown>) => (r.source as string) || ((r.metadata as Record<string, unknown>)?.source as string) || 'Unknown') || [],
+      citations: backendData.search_results?.map((r: Record<string, unknown>) => {
+        const content = (r.content as string) || '';
         return content.substring(0, 100) + (content.length > 100 ? '...' : '');
       }) || []
     };
@@ -79,7 +79,7 @@ export async function postUniversalQuery(
   }
 }
 
-export async function getWorkflowSummary(queryId: string): Promise<any> {
+export async function getWorkflowSummary(queryId: string): Promise<Record<string, unknown>> {
   const response = await axios.get(`${API_CONFIG.BASE_URL}/workflow/${queryId}/summary`);
   return response.data;
 }

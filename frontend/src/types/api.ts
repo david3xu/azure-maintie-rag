@@ -51,7 +51,7 @@ export interface UniversalQueryResponse {
     };
   }>;
   processing_time: number;
-  system_stats: Record<string, any>;
+  system_stats: Record<string, unknown>;
   timestamp: string;
   error?: string;
   safety_warnings?: string[];

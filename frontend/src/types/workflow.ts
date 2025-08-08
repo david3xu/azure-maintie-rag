@@ -10,5 +10,5 @@ export interface WorkflowStep {
   details: string;
   fix_applied?: string;
   progress_percentage: number;
-  technical_data?: any;
+  technical_data?: Record<string, unknown>;
 }

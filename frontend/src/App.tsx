@@ -9,6 +9,7 @@ import { useUniversalRAG } from "./hooks/useUniversalRAG";
 import { useWorkflow } from "./hooks/useWorkflow";
 import { useWorkflowStream } from "./hooks/useWorkflowStream";
 import type { ChatMessage } from "./types/chat";
+import type { UniversalQueryResponse } from "./types/api";
 
 function App() {
   // Chat and workflow state from hooks
@@ -48,7 +49,7 @@ function App() {
   );
 
   // Handle workflow completion
-  function handleWorkflowComplete(response: any) {
+  function handleWorkflowComplete(response: UniversalQueryResponse) {
     setIsStreaming(false);
     if (currentChatId) {
       setChatHistory(prev =>
@@ -110,11 +111,12 @@ function App() {
               : msg
           )
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
         setChatHistory(prev =>
           prev.map(msg =>
             msg.id === chatId
-              ? { ...msg, error: error || err.message, isStreaming: false }
+              ? { ...msg, error: error || errorMessage, isStreaming: false }
               : msg
           )
         );
