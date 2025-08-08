@@ -75,7 +75,7 @@ class TestAzureServices:
 
         try:
             response = await client.chat.completions.create(
-                model=os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o"),
+                model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o")),
                 messages=[{"role": "user", "content": "Test Azure connection"}],
                 max_tokens=10,
             )
@@ -83,7 +83,27 @@ class TestAzureServices:
             assert response.choices[0].message.content is not None
             assert len(response.choices[0].message.content) > 0
             print("✅ Azure OpenAI: Connection successful")
+            model_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o"))
+            print(f"   Model: {model_name}")
+            print(f"   Response: {response.choices[0].message.content[:50]}...")
 
+        except Exception as e:
+            model_name = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o"))
+            print(f"❌ Azure OpenAI test failed: {e}")
+            print(f"   Endpoint: {os.getenv('AZURE_OPENAI_ENDPOINT')}")
+            print(f"   Model: {model_name}")
+            print(f"   API Version: {os.getenv('OPENAI_API_VERSION', '2024-06-01')}")
+            
+            # Give more specific error information
+            error_str = str(e).lower()
+            if "404" in error_str or "not found" in error_str:
+                print(f"💡 Model deployment '{model_name}' may not exist in Azure OpenAI resource")
+            elif "401" in error_str or "unauthorized" in error_str:
+                print("💡 Authentication issue - check Azure credentials")
+            elif "429" in error_str or "rate limit" in error_str:
+                print("💡 Rate limit exceeded - try again later")
+            
+            raise
         finally:
             await client.close()
 
@@ -137,9 +157,11 @@ class TestAzureServices:
                 )
 
         try:
+            # Use correct environment variable name
+            embedding_model = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME", os.getenv("EMBEDDING_MODEL_DEPLOYMENT", "text-embedding-ada-002"))
             response = await client.embeddings.create(
-                model=os.getenv("EMBEDDING_MODEL_DEPLOYMENT", "text-embedding-ada-002"),
-                input="Test embedding text",
+                model=embedding_model,
+                input="Test embedding text for Azure OpenAI service validation",
             )
 
             assert len(response.data) > 0
@@ -147,7 +169,26 @@ class TestAzureServices:
                 len(response.data[0].embedding) == 1536
             )  # Ada-002 embedding dimension
             print("✅ Azure OpenAI Embeddings: Working correctly")
+            print(f"   Model: {embedding_model}")
+            print(f"   Embedding dimension: {len(response.data[0].embedding)}")
 
+        except Exception as e:
+            embedding_model = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME", os.getenv("EMBEDDING_MODEL_DEPLOYMENT", "text-embedding-ada-002"))
+            print(f"❌ Azure OpenAI Embeddings test failed: {e}")
+            print(f"   Endpoint: {os.getenv('AZURE_OPENAI_ENDPOINT')}")
+            print(f"   Embedding Model: {embedding_model}")
+            print(f"   API Version: {os.getenv('OPENAI_API_VERSION', '2024-06-01')}")
+            
+            # Give more specific error information
+            error_str = str(e).lower()
+            if "404" in error_str or "not found" in error_str:
+                print(f"💡 Embedding model deployment '{embedding_model}' may not exist")
+            elif "401" in error_str or "unauthorized" in error_str:
+                print("💡 Authentication issue - check Azure credentials")
+            elif "429" in error_str or "rate limit" in error_str:
+                print("💡 Rate limit exceeded - try again later")
+            
+            raise
         finally:
             await client.close()
 
@@ -160,27 +201,38 @@ class TestAzureServices:
         credential = DefaultAzureCredential()
 
         try:
+            index_name = os.getenv("AZURE_SEARCH_INDEX", os.getenv("SEARCH_INDEX_NAME", "maintie-prod-index"))
             search_client = SearchClient(
                 endpoint=os.getenv("AZURE_SEARCH_ENDPOINT"),
-                index_name=os.getenv("SEARCH_INDEX_NAME", "maintie-prod-index"),
+                index_name=index_name,
                 credential=credential,
             )
 
             # Test basic search functionality (will create index if needed)
-            results = await search_client.search(search_text="test", top=1)
+            results = await search_client.search(search_text="azure", top=1)
             result_list = []
             async for result in results:
                 result_list.append(result)
 
             # Service is accessible (index might be empty initially)
             print("✅ Azure Cognitive Search: Connection successful")
+            print(f"   Index: {index_name}")
+            print(f"   Results found: {len(result_list)}")
 
         except Exception as e:
-            if "index" in str(e).lower() and "not found" in str(e).lower():
-                print(
-                    "⚠️ Azure Cognitive Search: Service accessible, index needs creation"
-                )
+            index_name = os.getenv("AZURE_SEARCH_INDEX", os.getenv("SEARCH_INDEX_NAME", "maintie-prod-index"))
+            error_str = str(e).lower()
+            
+            if "index" in error_str and "not found" in error_str:
+                print(f"⚠️ Azure Cognitive Search: Service accessible, index '{index_name}' needs creation")
+            elif "401" in error_str or "unauthorized" in error_str:
+                print("💡 Authentication issue - check Azure Search credentials")
+            elif "403" in error_str or "forbidden" in error_str:
+                print("💡 Permission issue - check Azure Search access roles")
             else:
+                print(f"❌ Azure Cognitive Search test failed: {e}")
+                print(f"   Endpoint: {os.getenv('AZURE_SEARCH_ENDPOINT')}")
+                print(f"   Index: {index_name}")
                 raise
 
         finally:
@@ -261,10 +313,26 @@ class TestAzureServices:
             async for container in storage_client.list_containers():
                 containers.append(container["name"])
 
-            print(
-                f"✅ Azure Blob Storage: Connection successful, found {len(containers)} containers"
-            )
+            print(f"✅ Azure Blob Storage: Connection successful")
+            print(f"   Account: {storage_account}")
+            print(f"   Containers found: {len(containers)}")
+            if containers:
+                print(f"   Container names: {', '.join(containers[:3])}{'...' if len(containers) > 3 else ''}")
 
+        except Exception as e:
+            print(f"❌ Azure Blob Storage test failed: {e}")
+            print(f"   Account: {storage_account}")
+            print(f"   URL: https://{storage_account}.blob.core.windows.net")
+            
+            error_str = str(e).lower()
+            if "401" in error_str or "unauthorized" in error_str:
+                print("💡 Authentication issue - check Azure Storage credentials")
+            elif "403" in error_str or "forbidden" in error_str:
+                print("💡 Permission issue - check Azure Storage access roles")
+            elif "404" in error_str or "not found" in error_str:
+                print(f"💡 Storage account '{storage_account}' may not exist")
+            
+            raise
         finally:
             await storage_client.close()
 

@@ -8,7 +8,7 @@ All agents share the same dependencies to avoid duplication and ensure consisten
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 from azure.identity import DefaultAzureCredential
 from openai import AsyncAzureOpenAI
@@ -19,7 +19,16 @@ from agents.core.universal_models import (
     UniversalProcessingConfiguration,
 )
 from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosGremlinClient
-from infrastructure.azure_ml.gnn_inference_client import GNNInferenceClient
+# Optional GNN import - use lazy loading to avoid PyTorch resource issues
+def _get_gnn_client_class():
+    """Lazy import of GNN client to avoid PyTorch resource exhaustion."""
+    try:
+        from infrastructure.azure_ml.gnn_inference_client import GNNInferenceClient
+        return GNNInferenceClient
+    except ImportError:
+        return None
+
+GNN_AVAILABLE = False  # Will be set to True when GNN client is successfully accessed
 from infrastructure.azure_monitoring.app_insights_client import (
     AzureApplicationInsightsClient,
 )
@@ -54,8 +63,8 @@ class UniversalDeps:
     search_client: Optional[UnifiedSearchClient] = None
     storage_client: Optional[SimpleStorageClient] = None
 
-    # Advanced Services
-    gnn_client: Optional[GNNInferenceClient] = None
+    # Advanced Services (GNN client is dynamically typed due to optional PyTorch)
+    gnn_client: Optional[Any] = None
     monitoring_client: Optional[AzureApplicationInsightsClient] = None
 
     # Service Status
@@ -115,14 +124,21 @@ class UniversalDeps:
                 print(f"Warning: Storage client initialization failed: {e}")
                 services_status["storage"] = False
 
-            # Initialize GNN Client (optional)
+            # Initialize GNN Client (optional, lazy-loaded to avoid PyTorch issues)
             try:
                 if not self.gnn_client:
-                    self.gnn_client = GNNInferenceClient()
-                    if hasattr(self.gnn_client, "ensure_initialized"):
-                        self.gnn_client.ensure_initialized()  # Use synchronous if available
-                    # GNN client might not inherit from BaseAzureClient
-                services_status["gnn"] = True
+                    GNNInferenceClient = _get_gnn_client_class()
+                    if GNNInferenceClient is not None:
+                        self.gnn_client = GNNInferenceClient()
+                        if hasattr(self.gnn_client, "ensure_initialized"):
+                            self.gnn_client.ensure_initialized()  # Use synchronous if available
+                        services_status["gnn"] = True
+                        global GNN_AVAILABLE
+                        GNN_AVAILABLE = True
+                    else:
+                        services_status["gnn"] = False
+                else:
+                    services_status["gnn"] = True
             except Exception as e:
                 print(f"Warning: GNN client initialization failed: {e}")
                 services_status["gnn"] = False

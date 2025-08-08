@@ -8,13 +8,19 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
-from azure.ai.ml import MLClient
-from azure.ai.ml.entities import OnlineDeployment, OnlineEndpoint
+logger = logging.getLogger(__name__)
+
+# Optional Azure ML imports
+try:
+    from azure.ai.ml import MLClient
+    from azure.ai.ml.entities import OnlineDeployment, OnlineEndpoint
+    AZURE_ML_AVAILABLE = True
+except ImportError:
+    AZURE_ML_AVAILABLE = False
+    logger.warning("Azure ML SDK not available - using simulation mode")
 
 from config.settings import azure_settings
 from infrastructure.azure_auth_utils import get_azure_credential
-
-logger = logging.getLogger(__name__)
 
 
 class GNNInferenceClient:
@@ -36,20 +42,24 @@ class GNNInferenceClient:
         if self._initialized:
             return
 
-        try:
-            self.ml_client = MLClient(
-                credential=self.credential,
-                subscription_id=azure_settings.azure_subscription_id,
-                resource_group_name=azure_settings.azure_resource_group,
-                workspace_name=azure_settings.azure_ml_workspace_name,
-            )
-            self._initialized = True
-            logger.info("GNN Inference client initialized with real Azure ML")
-        except Exception as e:
-            logger.warning(
-                f"GNN client initialization failed, using fallback mode: {e}"
-            )
-            # Still mark as initialized for fallback functionality
+        if AZURE_ML_AVAILABLE:
+            try:
+                self.ml_client = MLClient(
+                    credential=self.credential,
+                    subscription_id=azure_settings.azure_subscription_id,
+                    resource_group_name=azure_settings.azure_resource_group,
+                    workspace_name=azure_settings.azure_ml_workspace_name,
+                )
+                self._initialized = True
+                logger.info("GNN Inference client initialized with real Azure ML")
+            except Exception as e:
+                logger.warning(
+                    f"GNN client initialization failed, using fallback mode: {e}"
+                )
+                # Still mark as initialized for fallback functionality
+                self._initialized = True
+        else:
+            logger.info("Azure ML SDK not available - GNN client running in simulation mode")
             self._initialized = True
 
     async def deploy_model(

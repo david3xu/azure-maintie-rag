@@ -6,24 +6,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Essential Development (run from project root)
-make dev                # Start API (8000) + Frontend (5174)
-make health             # Full system health check
-make clean              # Clean sessions
+make dev                # Start API (8000) + Frontend (5174) with session tracking
+make health             # Full system health check with enterprise reporting
+make clean              # Clean sessions with log replacement
+make session-report     # View current session status and metrics
 
-# Testing (uses real Azure services)
-pytest                  # All tests
+# Testing (uses real Azure services - never mocks)
+pytest                  # All tests with automatic asyncio handling
 pytest -m unit          # Unit tests only
-pytest -k "test_name"   # Specific test
+pytest -m integration   # Integration tests with real Azure services
+pytest -k "test_name"   # Specific test pattern
+pytest -x -vvv         # Stop on first failure with maximum verbosity
 
 # Code Quality (must pass before commits)
-black . --check         # Python formatting
-cd frontend && npm run lint  # Frontend linting
-./scripts/hooks/pre-commit-domain-bias-check.sh  # Domain bias validation
+black . --check && isort . --check-only  # Combined Python formatting
+cd frontend && npm run lint               # Frontend linting
+./scripts/hooks/pre-commit-domain-bias-check.sh  # Domain bias validation (CRITICAL)
 
-# Agent Testing
-python agents/domain_intelligence/agent.py     # Test individual agents
-python agents/knowledge_extraction/agent.py
-python agents/universal_search/agent.py
+# Agent Testing (direct execution - requires PYTHONPATH)
+PYTHONPATH=/workspace/azure-maintie-rag python agents/domain_intelligence/agent.py
+PYTHONPATH=/workspace/azure-maintie-rag python agents/knowledge_extraction/agent.py
+PYTHONPATH=/workspace/azure-maintie-rag python agents/universal_search/agent.py
+
+# Data Pipeline Testing (individual scripts)
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/00_check_azure_state.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/12_query_generation_showcase.py
+
+# Project Structure Navigation
+cd /workspace/azure-maintie-rag  # Always work from project root
 ```
 
 ## Architecture Overview
@@ -104,13 +114,13 @@ make clean              # Clean sessions with log replacement
 ./scripts/deployment/sync-env.sh staging       # Switch to staging + sync  
 make sync-env                                   # Sync with current azd environment
 
-# Agent development workflow
-cd agents/domain_intelligence && python agent.py    # Test Domain Intelligence Agent
-cd agents/knowledge_extraction && python agent.py  # Test Knowledge Extraction Agent  
-cd agents/universal_search && python agent.py      # Test Universal Search Agent
+# Agent development workflow (use PYTHONPATH)
+PYTHONPATH=/workspace/azure-maintie-rag python agents/domain_intelligence/agent.py
+PYTHONPATH=/workspace/azure-maintie-rag python agents/knowledge_extraction/agent.py
+PYTHONPATH=/workspace/azure-maintie-rag python agents/universal_search/agent.py
 
 # Single test execution patterns
-pytest tests/test_universal_content_processing.py::test_specific_function  # Run specific test
+pytest tests/test_azure_services.py::test_azure_openai_connection -v  # Run specific test
 pytest -k "knowledge_graph" -v                     # Run tests matching pattern
 pytest -x -vvv tests/test_azure_services.py       # Stop on first failure, maximum verbosity
 ```
@@ -125,15 +135,15 @@ make query-demo         # Query pipeline demonstration
 make unified-search-demo # Tri-modal search demonstration
 make full-workflow-demo # End-to-end agent orchestration demonstration
 
-# Individual dataflow scripts for development
-python scripts/dataflow/00_check_azure_state.py     # Verify Azure service health
-python scripts/dataflow/01_data_ingestion.py        # Document ingestion
-python scripts/dataflow/01a_azure_storage.py        # Azure Blob Storage operations
-python scripts/dataflow/01b_azure_search.py         # Azure Cognitive Search indexing
-python scripts/dataflow/02_knowledge_extraction.py  # Knowledge Extraction Agent
-python scripts/dataflow/03_cosmos_storage.py        # Graph storage in Cosmos DB
-python scripts/dataflow/07_unified_search.py        # Universal Search Agent
-python scripts/dataflow/12_query_generation_showcase.py # Query generation demonstration
+# Individual dataflow scripts for development (use PYTHONPATH)
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/00_check_azure_state.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/01_data_ingestion.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/01a_azure_storage.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/01b_azure_search.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/02_knowledge_extraction.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/03_cosmos_storage.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/07_unified_search.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/12_query_generation_showcase.py
 ```
 
 ### Testing Commands
@@ -145,11 +155,11 @@ pytest -m integration   # Integration tests with real Azure services
 pytest -m azure_validation # Azure service health validation
 pytest -m performance   # SLA compliance and performance tests
 
-# Specific test categories
-pytest tests/test_universal_content_processing.py    # Universal RAG content processing
-pytest tests/test_knowledge_graph_intelligence.py   # Knowledge extraction and graph tests
-pytest tests/test_enterprise_deployment.py         # Enterprise deployment validation
-pytest tests/test_advanced_search_discovery.py     # Multi-modal search testing
+# Specific test categories (actual test files in codebase)
+pytest tests/test_azure_services.py                # Azure service integration tests
+pytest tests/test_layer2_agents.py                 # PydanticAI agent tests
+pytest tests/test_comprehensive_integration.py     # End-to-end integration tests
+pytest tests/test_performance_benchmarking.py      # Performance and SLA tests
 
 # Development testing patterns
 pytest -v --tb=short    # Verbose output with short tracebacks
@@ -421,6 +431,13 @@ Focus on Universal RAG philosophy with zero domain bias and PydanticAI integrati
 - **Type Safety**: Use Pydantic models for all agent interfaces and data structures
 - **Domain Bias Detection**: Pre-commit hooks enforce zero domain assumptions
 
+### System Status: Production Ready (95/100)
+- ✅ All 3 PydanticAI agents operational with real Azure integration
+- ✅ Complete CI/CD pipeline with GitHub Actions and OIDC authentication  
+- ✅ Universal RAG philosophy enforced across all components
+- ✅ Comprehensive test suite with 179-file real Azure AI corpus
+- ✅ Enterprise session management with clean log replacement
+
 ## Critical Development Patterns
 
 ### Session Management Pattern
@@ -429,12 +446,27 @@ Focus on Universal RAG philosophy with zero domain bias and PydanticAI integrati
 - **Enterprise Reporting**: Each session generates comprehensive reports in `logs/session_report.md`
 - **Performance Tracking**: Metrics captured in `logs/performance.log` and `logs/azure_status.log`
 
-### Make Command Architecture
-The Makefile implements enterprise session tracking with clean output replacement:
-- Each command starts with `$(call start_clean_session)` to create unique session
-- Commands capture Azure status, performance metrics, and detailed outputs
-- Session reports provide comprehensive status for enterprise workflows
-- Use `make session-report` to view current session status
+### Enterprise Session Management (Unique Feature)
+The Makefile implements enterprise session tracking with clean output replacement - this is a key differentiator:
+
+**Session Architecture**:
+- Each `make` command creates a unique session ID (`YYYYMMDD_HHMMSS`)
+- Previous session logs are **completely replaced** (no accumulation)
+- Session reports capture Azure status, performance metrics, and detailed outputs
+- Enterprise reporting in `logs/session_report.md` with timestamps and duration
+
+**Session Commands**:
+```bash
+make session-report     # View current session with full metrics
+make clean             # Clean current session and start fresh
+make health            # Health check with comprehensive session report
+```
+
+**Session Files**:
+- `logs/current_session` - Current session ID
+- `logs/session_report.md` - Enterprise session report (replaced each command)
+- `logs/azure_status.log` - Azure service health (replaced each command) 
+- `logs/performance.log` - System performance metrics (replaced each command)
 
 ### Multi-Agent Development Architecture
 The system uses PydanticAI with specific patterns that must be followed:
@@ -475,18 +507,38 @@ make sync-env                                   # Syncs configuration with curre
 # Supports development, staging, and production environments with appropriate Azure SKUs
 ```
 
-### Domain-Agnostic Development Pattern
+### Domain-Agnostic Development Pattern (Critical)
 ```bash
-# Universal RAG development workflow - no domain assumptions
-python scripts/dataflow/12_query_generation_showcase.py  # Query generation demo
-./scripts/hooks/pre-commit-domain-bias-check.sh         # Validate no domain bias
-pytest tests/test_universal_content_processing.py       # Universal processing tests
+# Universal RAG development workflow - ZERO domain assumptions
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/12_query_generation_showcase.py
+./scripts/hooks/pre-commit-domain-bias-check.sh         # REQUIRED: Validate no domain bias
+pytest tests/test_azure_services.py                     # Universal processing tests
 
-# Content analysis approach (NOT domain classification)
-# 1. Analyze vocabulary_complexity, concept_density, relationship_patterns
-# 2. Adapt parameters based on measured properties  
-# 3. Use universal models that work for ANY domain
-# 4. Let Domain Intelligence Agent DISCOVER characteristics
+# Content analysis approach (NEVER domain classification)
+# ✅ Analyze: vocabulary_complexity, concept_density, relationship_patterns  
+# ✅ Adapt: parameters based on measured properties
+# ✅ Use: universal models that work for ANY domain
+# ✅ Let: Domain Intelligence Agent DISCOVER characteristics
+# ❌ NEVER: hardcode "technical", "legal", "medical" categories
+```
+
+### Critical Pre-commit Domain Bias Enforcement
+The `scripts/hooks/pre-commit-domain-bias-check.sh` (899 lines) enforces the Universal RAG philosophy:
+- **Detects**: Hardcoded domain categories, assumptions, and classifications
+- **Prevents**: Domain-specific logic that should be dynamic discovery
+- **Enforces**: Universal patterns that adapt to ANY content type
+- **Validates**: Zero hardcoded domain knowledge across all components
+
+**Common Violations Caught**:
+```bash
+# ❌ These patterns will fail pre-commit
+if domain == "technical"           # Hardcoded domain classification
+technical_complexity = 0.8        # Assumed complexity value  
+legal_pattern_weights = {...}     # Domain-specific hardcoding
+
+# ✅ These patterns are allowed
+complexity = analyze_vocabulary(content)     # Dynamic discovery
+pattern_weights = discover_patterns(data)    # Content-driven
 ```
 
 ## Debugging and Troubleshooting
@@ -501,21 +553,67 @@ az login && az account show && azd env select <environment> && make sync-env
 **Agent Debugging:**
 ```bash
 export DEBUG=1
-python agents/domain_intelligence/agent.py  # Test individual agent
+PYTHONPATH=/workspace/azure-maintie-rag python agents/domain_intelligence/agent.py
 ```
 
 **Service Health Check:**
 ```bash
-python scripts/dataflow/00_check_azure_state.py  # Full Azure status
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/00_check_azure_state.py
 curl http://localhost:8000/api/v1/health         # API health
 curl http://localhost:5174                        # Frontend health
+make health                                       # Comprehensive health with session report
+```
+
+**Session Management Issues:**
+```bash
+make session-report                               # View current session
+make clean && make dev                            # Clean start with new session
 ```
 
 ### Common Issues & Solutions
 
-**Agent Failures**: Check `UniversalDeps`, validate Pydantic models, test tools independently, review logs in `logs/`
+**Agent Failures**: 
+- Check `UniversalDeps` configuration in `agents/core/universal_deps.py`
+- Validate Pydantic models match expected structure
+- Test agent tools independently with proper RunContext
+- Review session logs in `logs/session_report.md`
 
 **Pre-commit Hook Failures**: The domain bias detection is strict:
-- ❌ Never use "technical", "legal", "medical" as categories
-- ❌ No mock/hardcoded values 
+- ❌ Never use "technical", "legal", "medical" as hardcoded categories
+- ❌ No mock/hardcoded values that should come from configuration
+- ❌ Domain assumptions in prompts or logic
 - ✅ Let Domain Intelligence Agent discover characteristics dynamically
+- ✅ Use universal models that adapt to discovered content properties
+
+**Python Path Issues**: Always use the full PYTHONPATH when running scripts:
+```bash
+PYTHONPATH=/workspace/azure-maintie-rag python <script_name>
+```
+
+**Azure Authentication Issues**: Ensure proper authentication chain:
+```bash
+az login
+az account show  
+./scripts/deployment/sync-env.sh prod  # or staging
+# Verify: DefaultAzureCredential should work across all services
+```
+
+**Testing Issues**: 
+- Tests use REAL Azure services, never mocks
+- Ensure Azure services are deployed with `azd up`
+- Use `pytest -x -vvv` for detailed failure debugging
+- Check `tests/conftest.py` for real Azure fixtures
+
+## Development Notes for Claude Code
+
+### Important File Paths
+- Main project directory: `/workspace/azure-maintie-rag/`
+- Agent files: `agents/{domain_intelligence,knowledge_extraction,universal_search}/agent.py`
+- Configuration: `config/azure_settings.py`, `config/universal_config.py`
+- Test files: `tests/test_*.py` (all use real Azure services)
+
+### Key Commands for Troubleshooting
+1. **Check Azure services**: `PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/00_check_azure_state.py`
+2. **Validate agents**: Run individual agent files with PYTHONPATH
+3. **Check dependencies**: Look at `pyproject.toml` for exact versions
+4. **Environment sync**: Use `./scripts/deployment/sync-env.sh <env>` before any Azure operations

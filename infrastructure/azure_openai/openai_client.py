@@ -389,6 +389,46 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
             logger.error(f"Completion failed: {e}")
             return f"Error: {str(e)}"
 
+    async def complete_chat(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: float = 0.3,
+        model: str = None,
+        max_tokens: int = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Chat completion interface for PydanticAI agents"""
+        self.ensure_initialized()
+        await self.rate_limiter.wait_if_needed()
+
+        try:
+            prompts = await self._get_prompts_async("universal")
+            response = await asyncio.to_thread(
+                self._client.chat.completions.create,
+                model=model or prompts.model_name,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens or prompts.max_tokens,
+                **kwargs
+            )
+            
+            return {
+                "content": response.choices[0].message.content,
+                "model": response.model,
+                "usage": response.usage.model_dump() if response.usage else {},
+                "finish_reason": response.choices[0].finish_reason
+            }
+
+        except Exception as e:
+            logger.error(f"Chat completion failed: {e}")
+            return {
+                "content": "",
+                "error": str(e),
+                "model": model or "unknown",
+                "usage": {},
+                "finish_reason": "error"
+            }
+
     # === TEXT PROCESSING ===
 
     def process_text(self, text: str, operation: str = "clean") -> str:
@@ -501,7 +541,7 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
         try:
             # Use config manager if available
             if config_manager:
-                ml_config = await config_manager.get_domain_config(domain)
+                ml_config = await config_manager.get_content_config(domain)
             else:
                 ml_config = {}
 

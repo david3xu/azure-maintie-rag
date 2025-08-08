@@ -34,9 +34,9 @@ class SimpleAzureClassifier:
     - Universal Design: Works with any domain
     """
 
-    def __init__(self, domain_config: Optional[Dict[str, Any]] = None):
-        """Initialize simple Azure classifier"""
-        self.domain_config = domain_config or {}
+    def __init__(self, content_characteristics: Optional[Dict[str, Any]] = None):
+        """Initialize simple Azure classifier with discovered content characteristics"""
+        self.content_characteristics = content_characteristics or {}
         self.azure_client = UnifiedAzureOpenAIClient()
 
         # Simple thresholds (CODING_STANDARDS: Essential parameters only)

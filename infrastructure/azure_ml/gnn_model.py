@@ -3,151 +3,203 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch_geometric.data import Data, DataLoader
-from torch_geometric.nn import GATConv, GCNConv, SAGEConv
+# Optional PyTorch imports for environments without GPU/PyTorch
+try:
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    from torch_geometric.data import Data, DataLoader
+    from torch_geometric.nn import GATConv, GCNConv, SAGEConv
+    PYTORCH_AVAILABLE = True
+except ImportError:
+    # Fallback for environments without PyTorch
+    PYTORCH_AVAILABLE = False
+    torch = None
+    nn = None
+    F = None
 
 from infrastructure.constants import MLModelConstants
 
 logger = logging.getLogger(__name__)
 
 
-class UniversalGNN(nn.Module):
-    """Universal Graph Neural Network for any domain knowledge graph"""
+if PYTORCH_AVAILABLE:
+    class UniversalGNN(nn.Module):
+        """Universal Graph Neural Network for any domain knowledge graph"""
 
-    def __init__(
-        self,
-        num_node_features: int,
-        num_classes: int,
-        hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
-        num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
-        dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
-        conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE,
-    ):
-        """
-        Initialize Universal GNN
+        def __init__(
+            self,
+            num_node_features: int,
+            num_classes: int,
+            hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
+            num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
+            dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
+            conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE,
+        ):
+            """
+            Initialize Universal GNN
 
-        Args:
-            num_node_features: Number of input node features
-            num_classes: Number of output classes
-            hidden_dim: Hidden dimension size
-            num_layers: Number of GNN layers
-            dropout: Dropout rate
-            conv_type: Type of graph convolution ("gcn", "gat", "sage")
-        """
-        super(UniversalGNN, self).__init__()
+            Args:
+                num_node_features: Number of input node features
+                num_classes: Number of output classes
+                hidden_dim: Hidden dimension size
+                num_layers: Number of GNN layers
+                dropout: Dropout rate
+                conv_type: Type of graph convolution ("gcn", "gat", "sage")
+            """
+            super(UniversalGNN, self).__init__()
 
-        self.num_node_features = num_node_features
-        self.num_classes = num_classes
-        self.hidden_dim = hidden_dim
-        self.num_layers = num_layers
-        self.dropout = dropout
-        self.conv_type = conv_type
+            self.num_node_features = num_node_features
+            self.num_classes = num_classes
+            self.hidden_dim = hidden_dim
+            self.num_layers = num_layers
+            self.dropout = dropout
+            self.conv_type = conv_type
 
-        # Graph convolution layers
-        self.conv_layers = nn.ModuleList()
+            # Graph convolution layers
+            self.conv_layers = nn.ModuleList()
 
-        # First layer
-        if conv_type == "gcn":
-            self.conv_layers.append(GCNConv(num_node_features, hidden_dim))
-        elif conv_type == "gat":
-            self.conv_layers.append(GATConv(num_node_features, hidden_dim))
-        elif conv_type == "sage":
-            self.conv_layers.append(SAGEConv(num_node_features, hidden_dim))
-        else:
-            raise ValueError(f"Unsupported conv_type: {conv_type}")
-
-        # Hidden layers
-        for _ in range(num_layers - 1):
+            # First layer
             if conv_type == "gcn":
-                self.conv_layers.append(GCNConv(hidden_dim, hidden_dim))
+                self.conv_layers.append(GCNConv(num_node_features, hidden_dim))
             elif conv_type == "gat":
-                self.conv_layers.append(GATConv(hidden_dim, hidden_dim))
+                self.conv_layers.append(GATConv(num_node_features, hidden_dim))
             elif conv_type == "sage":
-                self.conv_layers.append(SAGEConv(hidden_dim, hidden_dim))
+                self.conv_layers.append(SAGEConv(num_node_features, hidden_dim))
+            else:
+                raise ValueError(f"Unsupported conv_type: {conv_type}")
 
-        # Output classifier
-        self.classifier = nn.Linear(hidden_dim, num_classes)
+            # Hidden layers
+            for _ in range(num_layers - 1):
+                if conv_type == "gcn":
+                    self.conv_layers.append(GCNConv(hidden_dim, hidden_dim))
+                elif conv_type == "gat":
+                    self.conv_layers.append(GATConv(hidden_dim, hidden_dim))
+                elif conv_type == "sage":
+                    self.conv_layers.append(SAGEConv(hidden_dim, hidden_dim))
 
-        # Global pooling layer
-        self.global_pool = nn.AdaptiveAvgPool1d(1)
+            # Output classifier
+            self.classifier = nn.Linear(hidden_dim, num_classes)
 
-        logger.info(
-            f"UniversalGNN initialized: {conv_type}, {num_layers} layers, "
-            f"hidden_dim={hidden_dim}, dropout={dropout}"
-        )
+            # Global pooling layer
+            self.global_pool = nn.AdaptiveAvgPool1d(1)
 
-    def forward(
-        self,
-        x: torch.Tensor,
-        edge_index: torch.Tensor,
-        batch: Optional[torch.Tensor] = None,
-    ) -> torch.Tensor:
-        """
-        Forward pass through the GNN
+            logger.info(
+                f"UniversalGNN initialized: {conv_type}, {num_layers} layers, "
+                f"hidden_dim={hidden_dim}, dropout={dropout}"
+            )
 
-        Args:
-            x: Node features [num_nodes, num_node_features]
-            edge_index: Graph connectivity [2, num_edges]
-            batch: Batch assignment [num_nodes] (optional)
+        def forward(
+            self,
+            x: torch.Tensor,
+            edge_index: torch.Tensor,
+            batch: Optional[torch.Tensor] = None,
+        ) -> torch.Tensor:
+            """
+            Forward pass through the GNN
 
-        Returns:
-            Graph-level predictions [batch_size, num_classes]
-        """
-        # Graph convolution layers
-        for i, conv in enumerate(self.conv_layers):
-            x = conv(x, edge_index)
-            if i < len(self.conv_layers) - 1:  # Not the last layer
-                x = F.relu(x)
-                x = F.dropout(x, p=self.dropout, training=self.training)
+            Args:
+                x: Node features [num_nodes, num_node_features]
+                edge_index: Graph connectivity [2, num_edges]
+                batch: Batch assignment [num_nodes] (optional)
 
-        # Global pooling
-        if batch is not None:
-            # Use batch information for pooling
-            x = self._global_pool(x, batch)
-        else:
-            # Simple mean pooling for single graph
-            x = torch.mean(x, dim=0, keepdim=True)
+            Returns:
+                Graph-level predictions [batch_size, num_classes]
+            """
+            # Graph convolution layers
+            for i, conv in enumerate(self.conv_layers):
+                x = conv(x, edge_index)
+                if i < len(self.conv_layers) - 1:  # Not the last layer
+                    x = F.relu(x)
+                    x = F.dropout(x, p=self.dropout, training=self.training)
 
-        # Classification
-        x = self.classifier(x)
+            # Global pooling
+            if batch is not None:
+                # Use batch information for pooling
+                x = self._global_pool(x, batch)
+            else:
+                # Simple mean pooling for single graph
+                x = torch.mean(x, dim=0, keepdim=True)
 
-        return x
+            # Classification
+            x = self.classifier(x)
 
-    def _global_pool(self, x: torch.Tensor, batch: torch.Tensor) -> torch.Tensor:
-        """Global pooling using batch information"""
-        # Group by batch
-        unique_batches = torch.unique(batch)
-        pooled_features = []
+            return x
 
-        for batch_idx in unique_batches:
-            mask = batch == batch_idx
-            batch_features = x[mask]
-            # Mean pooling for each batch
-            batch_pooled = torch.mean(batch_features, dim=0)
-            pooled_features.append(batch_pooled)
+        def _global_pool(self, x: torch.Tensor, batch: torch.Tensor) -> torch.Tensor:
+            """Global pooling using batch information"""
+            # Group by batch
+            unique_batches = torch.unique(batch)
+            pooled_features = []
 
-        return torch.stack(pooled_features)
+            for batch_idx in unique_batches:
+                mask = batch == batch_idx
+                batch_features = x[mask]
+                # Mean pooling for each batch
+                batch_pooled = torch.mean(batch_features, dim=0)
+                pooled_features.append(batch_pooled)
 
-    def get_embeddings(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
-        """Get node embeddings (without classification layer)"""
-        # Graph convolution layers
-        for i, conv in enumerate(self.conv_layers):
-            x = conv(x, edge_index)
-            if i < len(self.conv_layers) - 1:  # Not the last layer
-                x = F.relu(x)
-                x = F.dropout(x, p=self.dropout, training=self.training)
+            return torch.stack(pooled_features)
 
-        return x
+        def get_embeddings(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
+            """Get node embeddings (without classification layer)"""
+            # Graph convolution layers
+            for i, conv in enumerate(self.conv_layers):
+                x = conv(x, edge_index)
+                if i < len(self.conv_layers) - 1:  # Not the last layer
+                    x = F.relu(x)
+                    x = F.dropout(x, p=self.dropout, training=self.training)
 
-    def predict_node_classes(
-        self, x: torch.Tensor, edge_index: torch.Tensor
-    ) -> torch.Tensor:
-        """Predict node-level classes"""
-        embeddings = self.get_embeddings(x, edge_index)
-        return self.classifier(embeddings)
+            return x
+
+        def predict_node_classes(
+            self, x: torch.Tensor, edge_index: torch.Tensor
+        ) -> torch.Tensor:
+            """Predict node-level classes"""
+            embeddings = self.get_embeddings(x, edge_index)
+            return self.classifier(embeddings)
+
+else:
+    # Fallback implementation when PyTorch is not available
+    class UniversalGNN:
+        """Fallback Universal GNN implementation for environments without PyTorch"""
+
+        def __init__(
+            self,
+            num_node_features: int,
+            num_classes: int,
+            hidden_dim: int = MLModelConstants.DEFAULT_HIDDEN_DIM,
+            num_layers: int = MLModelConstants.DEFAULT_NUM_LAYERS,
+            dropout: float = MLModelConstants.DEFAULT_DROPOUT_RATE,
+            conv_type: str = MLModelConstants.DEFAULT_CONV_TYPE,
+        ):
+            """Initialize fallback GNN with configuration only"""
+            self.num_node_features = num_node_features
+            self.num_classes = num_classes
+            self.hidden_dim = hidden_dim
+            self.num_layers = num_layers
+            self.dropout = dropout
+            self.conv_type = conv_type
+
+            logger.warning(
+                "PyTorch not available - using fallback GNN implementation. "
+                "Install PyTorch and torch-geometric for full functionality."
+            )
+
+        def forward(self, x, edge_index, batch=None):
+            """Fallback forward pass - returns mock predictions"""
+            logger.warning("GNN forward pass called without PyTorch - returning mock data")
+            return {"predictions": [], "mock": True}
+
+        def get_embeddings(self, x, edge_index):
+            """Fallback embeddings - returns mock data"""
+            logger.warning("GNN embeddings called without PyTorch - returning mock data")
+            return {"embeddings": [], "mock": True}
+
+        def predict_node_classes(self, x, edge_index):
+            """Fallback node prediction - returns mock data"""
+            logger.warning("GNN node prediction called without PyTorch - returning mock data")
+            return {"predictions": [], "mock": True}
 
 
 class UniversalGNNConfig:
@@ -234,3 +286,9 @@ def create_gnn_model(
         dropout=config.dropout,
         conv_type=config.conv_type,
     )
+
+
+# Module availability check
+def is_pytorch_available() -> bool:
+    """Check if PyTorch is available for GNN functionality"""
+    return PYTORCH_AVAILABLE
