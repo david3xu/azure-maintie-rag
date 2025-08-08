@@ -23,14 +23,14 @@ PydanticAI Usage:
 
 from .core.universal_deps import UniversalDeps, get_universal_deps
 
-# Core universal components  
+# Core universal components
 from .core.universal_models import (
-    UniversalDomainAnalysis,
-    UniversalDomainCharacteristics, 
-    UniversalProcessingConfiguration,
-    SearchResult,
     ExtractedEntity,
     ExtractedRelationship,
+    SearchResult,
+    UniversalDomainAnalysis,
+    UniversalDomainCharacteristics,
+    UniversalProcessingConfiguration,
 )
 
 # PydanticAI Agents (proper architecture)

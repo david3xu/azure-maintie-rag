@@ -24,8 +24,8 @@ from pydantic import BaseModel, Field
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from agents.core.universal_deps import get_universal_deps
-from agents.orchestrator import UniversalOrchestrator
 from agents.knowledge_extraction.agent import run_knowledge_extraction
+from agents.orchestrator import UniversalOrchestrator
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["search"])

@@ -46,20 +46,85 @@ class SimpleDynamicConfigManager:
     async def analyze_domain_if_needed(
         self, data_directory: str
     ) -> DomainIntelligenceResult:
-        """Analyze domain characteristics or return cached result"""
+        """Analyze domain characteristics based on subdirectory names in data/raw/"""
 
         if data_directory in self._domain_analyses:
             return self._domain_analyses[data_directory]
 
         try:
-            # Use universal config for content analysis to avoid circular imports
-            from config.universal_config import analyze_content_characteristics
-
-            # Read sample files for analysis
+            # Universal RAG philosophy: discover domains from subdirectory names in data/raw/
+            # NOT from content classification which creates domain bias
             data_path = Path(data_directory)
+
+            # Look for subdirectories in data/raw/ to discover actual domains
+            raw_data_path = Path("/workspace/azure-maintie-rag/data/raw")
+            discovered_domains = []
+
+            if raw_data_path.exists():
+                for subdir in raw_data_path.iterdir():
+                    if subdir.is_dir():
+                        discovered_domains.append(subdir.name)
+
+            # Map each subdirectory in data/raw/ to its own domain
+            if discovered_domains:
+                # Match the requested data_directory to the correct subdirectory domain
+                domain_name = None
+
+                # If data_directory points to a specific subdirectory, use that
+                for domain in discovered_domains:
+                    domain_path = raw_data_path / domain
+                    if (
+                        str(domain_path) in str(data_directory)
+                        or data_path.name == domain
+                    ):
+                        domain_name = domain
+                        break
+
+                # If no specific match, check if data_directory is the raw data root
+                if domain_name is None:
+                    if (
+                        str(data_directory).endswith("data/raw")
+                        or data_path.name == "raw"
+                    ):
+                        # When analyzing the root data/raw, use the directory name
+                        logger.info(
+                            f"Root analysis - Available domains: {discovered_domains}"
+                        )
+                        domain_name = (
+                            data_path.name
+                        )  # Use actual directory name, not hardcoded label
+                    else:
+                        # Default to first domain if unclear
+                        domain_name = discovered_domains[0]
+                        logger.info(f"Using first available domain: {domain_name}")
+
+                logger.info(
+                    f"Discovered domain mapping: {data_directory} -> {domain_name}"
+                )
+            else:
+                # Fallback when no subdirectories exist yet
+                domain_name = data_path.name if data_path.exists() else "unknown_domain"
+                logger.warning(
+                    f"No subdirectories found in data/raw/, using fallback: {domain_name}"
+                )
+
+            # Analyze actual content files if they exist
             content_samples = []
-            if data_path.exists():
-                for file_path in list(data_path.rglob("*"))[:5]:  # Sample first 5 files
+            if data_path.name == "raw" and len(discovered_domains) > 1:
+                # For root analysis with multiple domains, analyze all subdirectories
+                domain_path = raw_data_path
+            else:
+                # For specific domain, analyze that subdirectory
+                domain_path = (
+                    raw_data_path / domain_name
+                    if (raw_data_path / domain_name).exists()
+                    else data_path
+                )
+
+            if domain_path.exists():
+                for file_path in list(domain_path.rglob("*"))[
+                    :5
+                ]:  # Sample first 5 files
                     if file_path.is_file() and file_path.suffix in [
                         ".md",
                         ".txt",
@@ -75,59 +140,129 @@ class SimpleDynamicConfigManager:
                         except:
                             pass
 
+            # Create result based on discovered domain name and actual content analysis
             if content_samples:
-                characteristics = analyze_content_characteristics(
-                    content_samples, data_directory
+                # Basic content analysis without domain classification
+                all_content = " ".join(content_samples)
+                words = all_content.split()
+                unique_words = set(word.lower().strip('.,!?;:"()[]') for word in words)
+
+                # Universal characteristics measurement
+                vocabulary_complexity = min(len(unique_words) / max(len(words), 1), 1.0)
+                potential_concepts = [word for word in unique_words if len(word) > 6]
+                concept_density = min(
+                    len(potential_concepts) / max(len(words), 1) * 10, 1.0
                 )
 
-                # Convert to our simple format
                 result = DomainIntelligenceResult(
-                    domain_signature=f"{data_path.name}_analyzed",
-                    content_type_confidence=characteristics.analysis_confidence,
-                    vocabulary_complexity=characteristics.vocabulary_complexity,
-                    document_count=characteristics.sample_size,
-                    avg_document_length=characteristics.avg_paragraph_length,
-                    key_concepts=["content", "analysis", data_path.name],
-                    recommended_chunk_size=int(
-                        800 + characteristics.structural_complexity * 600
-                    ),
+                    domain_signature=f"{domain_name}",  # Use actual subdirectory name
+                    content_type_confidence=0.9,  # High confidence since based on real data structure
+                    vocabulary_complexity=vocabulary_complexity,
+                    document_count=len(content_samples),
+                    avg_document_length=sum(len(sample) for sample in content_samples)
+                    / len(content_samples),
+                    key_concepts=[
+                        domain_name,
+                        "content",
+                        "analysis",
+                    ],  # Include actual domain name
+                    recommended_chunk_size=int(800 + concept_density * 400),
                     recommended_confidence_thresholds={
-                        "entity": 0.9 - characteristics.vocabulary_complexity * 0.2,
-                        "relationship": 0.8
-                        - characteristics.vocabulary_complexity * 0.2,
+                        "entity": 0.85 - vocabulary_complexity * 0.1,
+                        "relationship": 0.75 - vocabulary_complexity * 0.1,
                     },
-                    processing_recommendations={},
+                    processing_recommendations={
+                        "discovered_from": "subdirectory_structure",
+                        "domain_path": str(domain_path),
+                        "available_domains": discovered_domains,
+                    },
+                )
+            else:
+                # No content available, use directory-based analysis
+                result = DomainIntelligenceResult(
+                    domain_signature=f"{domain_name}",
+                    content_type_confidence=0.7,  # Lower confidence without content
+                    vocabulary_complexity=0.5,  # Neutral default
+                    document_count=0,
+                    avg_document_length=1000.0,
+                    key_concepts=[domain_name, "pending_data"],
+                    recommended_chunk_size=1000,
+                    recommended_confidence_thresholds={
+                        "entity": 0.8,
+                        "relationship": 0.7,
+                    },
+                    processing_recommendations={
+                        "discovered_from": "subdirectory_name",
+                        "domain_path": str(domain_path),
+                        "available_domains": discovered_domains,
+                        "status": "waiting_for_data",
+                    },
                 )
 
-                self._domain_analyses[data_directory] = result
-                logger.info(
-                    f"Universal domain analysis complete: {result.domain_signature}"
-                )
-                return result
-            else:
-                raise Exception("No content samples found")
+            self._domain_analyses[data_directory] = result
+            logger.info(
+                f"Universal domain discovery complete: {result.domain_signature} (from {'content' if content_samples else 'directory_structure'})"
+            )
+            return result
 
         except Exception as e:
-            logger.warning(f"Domain analysis failed, using safe defaults: {e}")
-
+            logger.warning(f"Domain discovery failed, using safe defaults: {e}")
             # Fallback analysis based on directory structure
             return self._create_fallback_analysis(data_directory)
 
     def _create_fallback_analysis(
         self, data_directory: str
     ) -> DomainIntelligenceResult:
-        """Create reasonable fallback analysis when agent is unavailable"""
+        """Create fallback analysis using subdirectory-based discovery (Universal RAG compliant)"""
 
         data_path = Path(data_directory)
-        domain_name = data_path.name if data_path.exists() else "unknown"
 
-        # Basic file analysis
+        # Universal RAG: discover domains from subdirectory structure, not content classification
+        raw_data_path = Path("/workspace/azure-maintie-rag/data/raw")
+        discovered_domains = []
+
+        if raw_data_path.exists():
+            for subdir in raw_data_path.iterdir():
+                if subdir.is_dir():
+                    discovered_domains.append(subdir.name)
+
+        # Map each subdirectory in data/raw/ to its own domain (same logic as main method)
+        if discovered_domains:
+            domain_name = None
+
+            # Match the requested data_directory to the correct subdirectory domain
+            for domain in discovered_domains:
+                domain_path = raw_data_path / domain
+                if str(domain_path) in str(data_directory) or data_path.name == domain:
+                    domain_name = domain
+                    break
+
+            # If no specific match found, handle root analysis or use first domain
+            if domain_name is None:
+                if str(data_directory).endswith("data/raw") or data_path.name == "raw":
+                    domain_name = data_path.name  # Use actual directory name
+                else:
+                    domain_name = discovered_domains[0]  # Default to first domain
+        else:
+            domain_name = data_path.name if data_path.exists() else "unknown_domain"
+
+        # Basic file analysis from the actual domain directory
         file_count = 0
         total_size = 0
         specialized_indicators = 0
+        if data_path.name == "raw" and len(discovered_domains) > 1:
+            # For root analysis with multiple domains, analyze all subdirectories
+            domain_path = raw_data_path
+        else:
+            # For specific domain, analyze that subdirectory
+            domain_path = (
+                raw_data_path / domain_name
+                if (raw_data_path / domain_name).exists()
+                else data_path
+            )
 
-        if data_path.exists():
-            for file_path in data_path.rglob("*"):
+        if domain_path.exists():
+            for file_path in domain_path.rglob("*"):
                 if file_path.is_file() and file_path.suffix in [
                     ".md",
                     ".txt",
@@ -139,14 +274,11 @@ class SimpleDynamicConfigManager:
                         content = file_path.read_text(encoding="utf-8", errors="ignore")
                         total_size += len(content)
 
-                        # Simple specialized vocabulary detection
-                        specialized_indicators_count = 0
-                        # Count capitalized terms (indicating specialized terminology)
+                        # Universal content analysis (no domain assumptions)
                         words = content.split()
                         capitalized_count = sum(
                             1 for word in words if word.istitle() and len(word) > 3
                         )
-                        # Count structured patterns (indicating formal content)
                         punctuation_density = (
                             sum(1 for char in content if char in ":.;()[]{}")
                             / len(content)
@@ -162,13 +294,13 @@ class SimpleDynamicConfigManager:
                     except:
                         pass
 
-        # Calculate basic metrics
+        # Calculate universal metrics
         vocabulary_complexity_ratio = specialized_indicators / max(file_count, 1)
         avg_length = total_size / max(file_count, 1)
 
         return DomainIntelligenceResult(
-            domain_signature=f"{domain_name}_auto_detected",
-            content_type_confidence=0.7,
+            domain_signature=f"{domain_name}",  # Use actual subdirectory name without fake suffixes
+            content_type_confidence=0.6,  # Lower confidence for fallback
             vocabulary_complexity=vocabulary_complexity_ratio,  # Universal characteristic
             document_count=file_count,
             avg_document_length=avg_length,
@@ -178,7 +310,12 @@ class SimpleDynamicConfigManager:
                 "entity": 0.8 if vocabulary_complexity_ratio > 0.5 else 0.85,
                 "relationship": 0.7 if vocabulary_complexity_ratio > 0.5 else 0.75,
             },
-            processing_recommendations={},
+            processing_recommendations={
+                "discovered_from": "fallback_subdirectory_analysis",
+                "domain_path": str(domain_path),
+                "available_domains": discovered_domains,
+                "fallback_used": True,
+            },
         )
 
     async def get_extraction_config(
@@ -218,8 +355,8 @@ class SimpleDynamicConfigManager:
                 ),
                 "quality_validation_threshold": 0.75,
                 "domain_name": domain_analysis.domain_signature,
-                "technical_vocabulary": domain_analysis.key_concepts,
-                "expected_entity_types": ["CONCEPT", "TERM", "PROCEDURE", "ENTITY"],
+                "discovered_vocabulary": domain_analysis.key_concepts,
+                "entity_discovery_mode": "universal",  # Discover entity types from content
                 "corpus_stats": {
                     "document_count": domain_analysis.document_count,
                     "vocabulary_complexity": domain_analysis.vocabulary_complexity,
@@ -238,8 +375,8 @@ class SimpleDynamicConfigManager:
                 "min_relationship_strength": 0.7,
                 "quality_validation_threshold": 0.75,
                 "domain_name": domain_name,
-                "technical_vocabulary": [],
-                "expected_entity_types": ["CONCEPT", "TERM", "PROCEDURE"],
+                "discovered_vocabulary": [],
+                "entity_discovery_mode": "universal",  # Discover entity types from content
                 "corpus_stats": {},
             }
 

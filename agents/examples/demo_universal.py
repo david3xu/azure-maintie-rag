@@ -95,7 +95,9 @@ async def run_pydantic_ai_domain_demo():
 
         print(f"\n🔧 Agent Architecture Benefits:")
         print(f"==============================")
-        print(f"✅ **Proper PydanticAI Patterns**: Agent uses RunContext[UniversalDeps]")
+        print(
+            f"✅ **Proper PydanticAI Patterns**: Agent uses RunContext[UniversalDeps]"
+        )
         print(f"✅ **Centralized Dependencies**: Shared Azure services, no duplication")
         print(f"✅ **Universal Processing**: Zero hardcoded domain assumptions")
         print(f"✅ **Atomic Tools**: Clean tool boundaries for content analysis")
