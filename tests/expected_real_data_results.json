@@ -1,0 +1,9 @@
+{
+  "total_files": 17,
+  "estimated_total_chars": 165685,
+  "estimated_embeddings": 17,
+  "estimated_entities": 170,
+  "estimated_relationships": 85,
+  "expected_search_results": "50-100 relevant results per query",
+  "processing_time_estimate": "5-15 minutes for complete pipeline"
+}

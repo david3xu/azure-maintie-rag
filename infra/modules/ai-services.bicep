@@ -17,7 +17,7 @@ var environmentConfig = {
     embeddingCapacity: 30
     location: 'westus'
   }
-  production: {
+  prod: {
     gpt4Capacity: 50
     embeddingCapacity: 60
     location: 'westus'
@@ -27,104 +27,24 @@ var environmentConfig = {
 var config = environmentConfig[environmentName]
 var deploymentLocation = location
 
-// Azure OpenAI Service
-resource openaiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: 'oai-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
-  location: config.location
-  kind: 'OpenAI'
-  sku: {
-    name: 'S0'
-  }
-  properties: {
-    customSubDomainName: '${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
-    publicNetworkAccess: 'Enabled'
-    networkAcls: {
-      defaultAction: 'Allow'
-    }
-  }
-  identity: {
-    type: 'SystemAssigned'
-  }
-  tags: {
-    Environment: environmentName
-    Purpose: 'AI text processing, embeddings, and completions for Universal RAG'
-  }
+// Azure OpenAI Service (existing)
+resource openaiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
+  name: 'oai-maintie-rag-prod-fymhwfec3ra2w'
 }
 
-// GPT-4o Model Deployment for text generation and reasoning
-resource gpt4Deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (true) {
+// GPT-4o Model Deployment (existing)
+resource gpt4Deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' existing = {
   parent: openaiAccount
   name: 'gpt-4o'
-  properties: {
-    model: {
-      format: 'OpenAI'
-      name: 'gpt-4o'
-      version: '2024-08-06'
-    }
-    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
-    sku: {
-      name: 'GlobalStandard'
-      capacity: config.gpt4Capacity
-    }
-  }
 }
 
-// GPT-4o Mini for enhanced performance (production)
-resource gpt4TurboDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (environmentName == 'production') {
-  parent: openaiAccount
-  name: 'gpt-4o-mini'
-  properties: {
-    model: {
-      format: 'OpenAI'
-      name: 'gpt-4o-mini'
-      version: '2024-07-18'
-    }
-    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
-    sku: {
-      name: 'GlobalStandard'
-      capacity: 20
-    }
-  }
-  dependsOn: [gpt4Deployment]
-}
 
-// Text Embedding Model for vector search
-resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (true) {
+// Text Embedding Model (existing)
+resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' existing = {
   parent: openaiAccount
   name: 'text-embedding-ada-002'
-  properties: {
-    model: {
-      format: 'OpenAI'
-      name: 'text-embedding-ada-002'
-      version: '2'
-    }
-    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
-    sku: {
-      name: 'GlobalStandard'
-      capacity: config.embeddingCapacity
-    }
-  }
-  dependsOn: [gpt4Deployment]
 }
 
-// Text Embedding 3 Large (for production environments)
-resource embedding3LargeDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = if (environmentName == 'production') {
-  parent: openaiAccount
-  name: 'text-embedding-3-large'
-  properties: {
-    model: {
-      format: 'OpenAI'
-      name: 'text-embedding-3-large'
-      version: '1'
-    }
-    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
-    sku: {
-      name: 'GlobalStandard'
-      capacity: 30
-    }
-  }
-  dependsOn: [embeddingDeployment]
-}
 
 // RBAC for managed identity access
 resource managedIdentityOpenaiUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {

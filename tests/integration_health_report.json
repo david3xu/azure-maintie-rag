@@ -1,0 +1,20 @@
+{
+  "timestamp": 1754635589.0933294,
+  "environment": "prod",
+  "services": {
+    "openai": true,
+    "cosmos": true,
+    "search": true,
+    "storage": true,
+    "gnn": true,
+    "monitoring": true
+  },
+  "authentication": {
+    "default_credential": true
+  },
+  "performance": {
+    "initialization_time": 4.0531158447265625e-06
+  },
+  "recommendations": [],
+  "overall_health_score": 1.0
+}

@@ -179,10 +179,3 @@ def main(
     )
 
 
-if __name__ == "__main__":
-    # This module should only be called from the prompt flow - no standalone execution with hardcoded data
-    print(
-        "Error: This module is designed to be called from Azure Prompt Flow, not executed standalone."
-    )
-    print("Use: make prompt-flow-extract to run knowledge extraction from raw data")
-    exit(1)

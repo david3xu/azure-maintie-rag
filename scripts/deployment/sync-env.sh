@@ -26,18 +26,16 @@ fi
 echo "📁 Syncing backend configuration..."
 
 # Create environment file from current azd values
-azd env get-values > "backend/config/environments/${TARGET_ENV}.env"
-echo "✅ Created: backend/config/environments/${TARGET_ENV}.env"
+azd env get-values > "config/environments/${TARGET_ENV}.env"
+echo "✅ Created: config/environments/${TARGET_ENV}.env"
 
-# Update .env symlink
-cd backend
+# Update .env symlink in root
 rm -f .env
 ln -sf "config/environments/${TARGET_ENV}.env" .env
 echo "✅ Updated: .env -> config/environments/${TARGET_ENV}.env"
 
 # Update Makefile default environment
-cd ..
-sed -i "s/AZURE_ENVIRONMENT := .*/AZURE_ENVIRONMENT := \$(or \$(AZURE_ENVIRONMENT), ${TARGET_ENV})/" backend/Makefile
+sed -i "s/AZURE_ENVIRONMENT := .*/AZURE_ENVIRONMENT := \$(or \$(AZURE_ENVIRONMENT), ${TARGET_ENV})/" Makefile
 echo "✅ Updated: Makefile default environment"
 
 echo ""

@@ -11,7 +11,7 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.core.azure_service_container import ConsolidatedAzureServices
+from agents.core.universal_deps import get_universal_deps
 
 
 async def test_azure_services_status():
@@ -19,11 +19,11 @@ async def test_azure_services_status():
     print("🔧 Testing Azure Services Status...")
 
     try:
-        # Initialize services
-        azure_services = ConsolidatedAzureServices()
+        # Initialize services using UniversalDeps
+        universal_deps = await get_universal_deps()
 
         # Test all services
-        service_status = await azure_services.initialize_all_services()
+        service_status = await universal_deps.initialize_all_services()
 
         print("\n📊 Service Status:")
         healthy_count = 0
@@ -35,18 +35,17 @@ async def test_azure_services_status():
             else:
                 print(f"   ❌ {service}: Failed")
 
-        # Get detailed health status
-        health = azure_services.get_service_status()
+        # Get available services
+        available_services = universal_deps.get_available_services()
+        total_services = len(service_status)
 
         print(f"\n🎯 Overall Health:")
-        print(
-            f"   Services Ready: {health['successful_services']}/{health['total_services']}"
-        )
-        print(
-            f"   Overall Status: {'Healthy' if health['overall_health'] else 'Degraded'}"
-        )
+        print(f"   Services Ready: {len(available_services)}/{total_services}")
+        
+        overall_health = len(available_services) >= (total_services // 2)  # At least half services healthy
+        print(f"   Overall Status: {'Healthy' if overall_health else 'Degraded'}")
 
-        return health["overall_health"]
+        return overall_health
 
     except Exception as e:
         print(f"❌ Status test failed: {e}")

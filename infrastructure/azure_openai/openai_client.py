@@ -76,27 +76,36 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
 
         if self.use_managed_identity:
             # Use managed identity for azd deployments
-            from azure.identity import get_bearer_token_provider
+            from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
-            from infrastructure.azure_auth_utils import get_azure_credential
-
-            credential = get_azure_credential()
+            credential = DefaultAzureCredential()
             token_provider = get_bearer_token_provider(
                 credential, "https://cognitiveservices.azure.com/.default"
             )
 
             self._client = AzureOpenAI(
                 azure_ad_token_provider=token_provider,
-                api_version=model_config.openai_api_version,
+                api_version=model_config.api_version,
                 azure_endpoint=self.endpoint,
             )
         else:
-            # Use API key for local development
+            # Use Azure CLI credential for local development
+            from azure.identity import AzureCliCredential, get_bearer_token_provider
+            
+            credential = AzureCliCredential()
+            token_provider = get_bearer_token_provider(
+                credential, "https://cognitiveservices.azure.com/.default"
+            )
+            
             self._client = AzureOpenAI(
-                api_key=self.key,
-                api_version=model_config.openai_api_version,
+                azure_ad_token_provider=token_provider,
+                api_version=model_config.api_version,
                 azure_endpoint=self.endpoint,
             )
+
+    async def initialize(self):
+        """Initialize the Azure OpenAI client for async usage"""
+        self.ensure_initialized()
 
     def ensure_initialized(self):
         """Ensure client is initialized with rate limiter"""

@@ -214,21 +214,3 @@ def main(
         }
 
 
-if __name__ == "__main__":
-    # Test with sample data
-    sample_entities = [
-        {"entity_id": "e1", "text": "valve", "entity_type": "valve", "confidence": 0.8},
-        {
-            "entity_id": "e2",
-            "text": "bearing",
-            "entity_type": "bearing",
-            "confidence": 0.9,
-        },
-    ]
-    sample_relations = [
-        {"relation_id": "r1", "relation_type": "connected_to", "confidence": 0.8}
-    ]
-    sample_summary = {"overall_score": 0.85, "quality_tier": "good"}
-
-    result = main(sample_entities, sample_relations, sample_summary, "test")
-    print(json.dumps(result, indent=2))

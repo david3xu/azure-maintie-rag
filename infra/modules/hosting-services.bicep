@@ -28,7 +28,7 @@ var environmentConfig = {
     maxReplicas: 5
     registrySku: 'Standard'
   }
-  production: {
+  prod: {
     containerCpu: '2.0'
     containerMemory: '4Gi'
     minReplicas: 2

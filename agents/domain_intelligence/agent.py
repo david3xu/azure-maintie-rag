@@ -25,7 +25,7 @@ from agents.core.universal_models import (
     UniversalDomainCharacteristics,
     UniversalProcessingConfiguration,
 )
-from agents.shared.query_tools import generate_analysis_query
+# from agents.shared.query_tools import generate_analysis_query  # Temporarily disabled
 
 
 class ContentCharacteristics(BaseModel):
@@ -51,9 +51,23 @@ class ContentCharacteristics(BaseModel):
     )
 
 
-# Create the Domain Intelligence Agent with proper PydanticAI patterns
+# Create the Domain Intelligence Agent with proper PydanticAI patterns  
+import os
+from dotenv import load_dotenv
+from pydantic_ai.models.openai import OpenAIModel
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Use environment-based model configuration for Azure OpenAI
+# PydanticAI will use OPENAI_API_KEY and OPENAI_BASE_URL from environment
+os.environ.setdefault("OPENAI_BASE_URL", os.getenv("AZURE_OPENAI_ENDPOINT", ""))
+
+# Use centralized Azure PydanticAI provider
+from agents.core.azure_pydantic_provider import get_azure_openai_model
+
 domain_intelligence_agent = Agent[UniversalDeps, UniversalDomainAnalysis](
-    "openai:gpt-4o",  # PydanticAI format - Azure credentials from environment
+    get_azure_openai_model(),
     deps_type=UniversalDeps,
     output_type=UniversalDomainAnalysis,
     system_prompt="""You are the Universal Domain Intelligence Agent.
@@ -87,10 +101,12 @@ async def analyze_content_characteristics(
 
     This tool performs atomic content analysis and discovery.
     """
-    # Use analysis query tool for configuration
-    analysis_config = await generate_analysis_query(
-        ctx, content, analysis_type="characteristics"
-    )
+    # Simple analysis configuration without complex dependencies
+    analysis_config = {
+        "analysis_type": "characteristics",
+        "max_patterns": 10,
+        "confidence_threshold": 0.7,
+    }
 
     # Statistical analysis (domain-agnostic)
     words = content.split()
@@ -175,49 +191,64 @@ async def generate_processing_configuration(
     This tool creates configurations dynamically, not from hardcoded domain rules.
     """
     config_manager = ctx.deps.config_manager
-    base_config = config_manager.get_processing_config()
+    base_config = await config_manager.get_processing_config("universal")
 
     # Adapt chunk size based on measured complexity
-    chunk_size = base_config.chunk_size
+    optimal_chunk_size = base_config.optimal_chunk_size
     if characteristics.vocabulary_complexity > 0.7:
-        chunk_size = int(chunk_size * 1.3)  # Larger chunks for complex vocabulary
+        optimal_chunk_size = int(optimal_chunk_size * 1.3)  # Larger chunks for complex vocabulary
     if "code_blocks" in characteristics.structural_patterns:
-        chunk_size = int(chunk_size * 1.5)  # Even larger for code
+        optimal_chunk_size = int(optimal_chunk_size * 1.5)  # Even larger for code
     if characteristics.concept_density > 0.8:
-        chunk_size = int(chunk_size * 1.2)  # Larger for concept-dense content
+        optimal_chunk_size = int(optimal_chunk_size * 1.2)  # Larger for concept-dense content
 
     # Adapt overlap based on structural patterns
-    overlap = base_config.overlap
+    chunk_overlap_ratio = base_config.chunk_overlap_ratio
     if "hierarchical_headers" in characteristics.structural_patterns:
-        overlap = int(overlap * 0.8)  # Less overlap for well-structured content
+        chunk_overlap_ratio *= 0.8  # Less overlap for well-structured content
     if characteristics.concept_density > 0.7:
-        overlap = int(overlap * 1.4)  # More overlap for concept-rich content
+        chunk_overlap_ratio = min(chunk_overlap_ratio * 1.4, 0.5)  # More overlap but cap at 0.5
 
     # Adapt confidence thresholds based on content characteristics
-    confidence_threshold = base_config.confidence_threshold
+    entity_confidence_threshold = base_config.entity_confidence_threshold
     if "proper_noun_rich" in characteristics.entity_indicators:
-        confidence_threshold *= 0.9  # Lower threshold for entity-rich content
+        entity_confidence_threshold *= 0.9  # Lower threshold for entity-rich content
     if characteristics.vocabulary_complexity < 0.3:
-        confidence_threshold *= 1.1  # Higher threshold for simple content
+        entity_confidence_threshold *= 1.1  # Higher threshold for simple content
+    entity_confidence_threshold = max(0.5, min(1.0, entity_confidence_threshold))  # Keep in valid range
 
-    # Set max entities/relationships based on discovered indicators
-    max_entities = min(
-        len(characteristics.entity_indicators) * 5 + 10, base_config.max_entities
-    )
-    max_relationships = min(
-        len(characteristics.relationship_indicators) * 3 + 5,
-        base_config.max_relationships,
-    )
+    # Adapt relationship density based on discovered indicators
+    relationship_density = base_config.relationship_density
+    if len(characteristics.relationship_indicators) > 3:
+        relationship_density *= 1.2  # More relationships expected
+    relationship_density = min(1.0, relationship_density)  # Keep in valid range
+
+    # Adapt search weights based on content complexity
+    vector_search_weight = base_config.vector_search_weight
+    graph_search_weight = base_config.graph_search_weight
+    
+    if characteristics.vocabulary_complexity > 0.7:
+        # High complexity - favor graph search for concept relationships
+        graph_search_weight = min(1.0, graph_search_weight * 1.2)
+        vector_search_weight = max(0.0, 1.0 - graph_search_weight)
+    
+    # Determine processing complexity
+    if characteristics.vocabulary_complexity > 0.8 or characteristics.concept_density > 0.8:
+        processing_complexity = "high"
+    elif characteristics.vocabulary_complexity < 0.3 and characteristics.concept_density < 0.3:
+        processing_complexity = "low"
+    else:
+        processing_complexity = "medium"
 
     return UniversalProcessingConfiguration(
-        chunk_size=chunk_size,
-        overlap=overlap,
-        confidence_threshold=confidence_threshold,
-        max_entities=max_entities,
-        max_relationships=max_relationships,
-        processing_strategy="adaptive",
-        content_signature=characteristics.content_signature,
-        discovered_patterns=characteristics.structural_patterns,
+        optimal_chunk_size=optimal_chunk_size,
+        chunk_overlap_ratio=chunk_overlap_ratio,
+        entity_confidence_threshold=entity_confidence_threshold,
+        relationship_density=relationship_density,
+        vector_search_weight=vector_search_weight,
+        graph_search_weight=graph_search_weight,
+        expected_extraction_quality=base_config.expected_extraction_quality,
+        processing_complexity=processing_complexity
     )
 
 
@@ -287,29 +318,3 @@ async def run_domain_analysis(
     return result.output
 
 
-if __name__ == "__main__":
-    # Test the agent with sample content
-    sample_content = """
-    Python is a programming language that emphasizes readability and simplicity.
-    Functions are defined using the def keyword, and classes use the class keyword.
-    Popular frameworks include Django for web development and NumPy for data science.
-    
-    Example code:
-    ```python
-    def hello_world():
-        print("Hello, World!")
-    ```
-    """
-
-    async def test_agent():
-        try:
-            result = await run_domain_analysis(sample_content)
-            print("Domain Analysis Result:")
-            print(f"Vocabulary Complexity: {result.vocabulary_complexity}")
-            print(f"Concept Density: {result.concept_density}")
-            print(f"Discovered Patterns: {result.discovered_patterns}")
-            print(f"Content Signature: {result.content_signature}")
-        except Exception as e:
-            print(f"Error: {e}")
-
-    asyncio.run(test_agent())

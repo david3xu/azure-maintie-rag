@@ -67,9 +67,12 @@ class GraphOperationResult(BaseModel):
     error_message: Optional[str] = None
 
 
+# Use centralized Azure PydanticAI provider
+from agents.core.azure_pydantic_provider import get_azure_openai_model
+
 # Create the Knowledge Extraction Agent with proper PydanticAI patterns
 knowledge_extraction_agent = Agent[UniversalDeps, ExtractionResult](
-    "openai:gpt-4o",  # PydanticAI format for Azure OpenAI via AsyncAzureOpenAI client
+    get_azure_openai_model(),
     deps_type=UniversalDeps,
     output_type=ExtractionResult,
     system_prompt="""You are the Universal Knowledge Extraction Agent.
@@ -257,33 +260,28 @@ async def extract_entities_and_relationships(
             )
             domain_analysis = domain_result.output
 
-            # Generate adaptive processing configuration
-            processing_result = await domain_intelligence_agent.run(
-                "Generate processing configuration based on the analyzed characteristics",
-                deps=ctx.deps,
-                usage=ctx.usage,
-            )
-            # Note: This would need the proper output from domain intelligence
+            # Skip second call for now - use the domain analysis directly
+            # The domain analysis already contains the processing configuration we need
 
         except Exception as e:
             print(f"Warning: Domain analysis failed, using default configuration: {e}")
 
     # Use configuration from analysis or fall back to defaults
     config_manager = ctx.deps.config_manager
-    base_config = config_manager.get_extraction_config()
+    base_config = await config_manager.get_extraction_config("universal")
 
     # Apply adaptive configuration if available
-    max_entities = base_config.max_entities
-    max_relationships = base_config.max_relationships
-    confidence_threshold = base_config.confidence_threshold
+    max_entities = base_config.get("max_entities_per_chunk", 15)
+    max_relationships = base_config.get("min_relationship_strength", 0.7)  
+    confidence_threshold = base_config.get("entity_confidence_threshold", 0.8)
 
     if domain_analysis:
         # Adapt based on discovered characteristics (not domain assumptions)
-        if domain_analysis.vocabulary_complexity > 0.7:
+        if domain_analysis.characteristics.vocabulary_complexity_ratio > 0.7:
             max_entities = min(max_entities * 2, 100)
-        if domain_analysis.concept_density > 0.8:
+        if domain_analysis.characteristics.lexical_diversity > 0.8:
             max_relationships = min(max_relationships * 2, 50)
-        if "proper_noun_rich" in getattr(domain_analysis, "entity_indicators", []):
+        if domain_analysis.characteristics.structural_consistency < 0.5:
             confidence_threshold *= 0.9
 
     # Universal entity extraction using prompt workflow system
@@ -309,7 +307,7 @@ async def extract_entities_and_relationships(
         f"ct{confidence_threshold:.2f}",
     ]
     if domain_analysis:
-        signature_parts.append(domain_analysis.content_signature)
+        signature_parts.append(domain_analysis.domain_signature)
     processing_signature = "_".join(signature_parts)
 
     # Perform quality assessment
@@ -375,9 +373,9 @@ async def _extract_entities_with_prompt_workflow(
         if domain_analysis:
             # Create temporary data for prompt generation (simulating domain analysis)
             temp_data = {
-                "domain_signature": domain_analysis.content_signature,
-                "content_confidence": domain_analysis.vocabulary_complexity,
-                "discovered_domain_description": f"content with {domain_analysis.content_signature} characteristics",
+                "domain_signature": domain_analysis.domain_signature,
+                "content_confidence": domain_analysis.characteristics.vocabulary_complexity_ratio,
+                "discovered_domain_description": f"content with {domain_analysis.domain_signature} characteristics",
                 "discovered_content_patterns": [
                     {
                         "category": pattern.replace("_", " ").title(),
@@ -393,10 +391,10 @@ async def _extract_entities_with_prompt_workflow(
                 ),
                 "entity_confidence_threshold": confidence_threshold,
                 "key_domain_insights": [
-                    f"Entity extraction for {domain_analysis.content_signature}"
+                    f"Entity extraction for {domain_analysis.domain_signature}"
                 ],
-                "vocabulary_richness": domain_analysis.vocabulary_complexity,
-                "technical_density": domain_analysis.concept_density,
+                "vocabulary_richness": domain_analysis.characteristics.vocabulary_complexity_ratio,
+                "technical_density": domain_analysis.characteristics.lexical_diversity,
                 "analysis_processing_time": 0.5,
                 "example_entity": "discovered_entity",
                 "adaptive_entity_type": "concept",
@@ -405,9 +403,9 @@ async def _extract_entities_with_prompt_workflow(
             # Use OpenAI to extract entities based on discovered domain characteristics
             extraction_prompt = f"""
             You are analyzing content to extract meaningful entities. Based on domain analysis, focus on:
-            - Content type: {domain_analysis.content_signature}
-            - Vocabulary complexity: {domain_analysis.vocabulary_complexity:.2f}
-            - Concept density: {domain_analysis.concept_density:.2f}
+            - Content type: {domain_analysis.domain_signature}
+            - Vocabulary complexity: {domain_analysis.characteristics.vocabulary_complexity_ratio:.2f}
+            - Lexical diversity: {domain_analysis.characteristics.lexical_diversity:.2f}
             
             Extract entities from this content with confidence >= {confidence_threshold}:
             {content[:2000]}  # Truncate for API limits
@@ -464,8 +462,8 @@ async def _extract_relationships_with_prompt_workflow(
         if domain_analysis:
             relationship_prompt = f"""
             You are analyzing content to extract meaningful relationships between entities. Based on domain analysis:
-            - Content type: {domain_analysis.content_signature}
-            - Vocabulary complexity: {domain_analysis.vocabulary_complexity:.2f}
+            - Content type: {domain_analysis.domain_signature}
+            - Vocabulary complexity: {domain_analysis.characteristics.vocabulary_complexity_ratio:.2f}
             
             Available entities: {[e.text for e in entities[:10]]}
             
@@ -822,34 +820,3 @@ async def run_knowledge_extraction(
     return result.output
 
 
-if __name__ == "__main__":
-    # Test the agent
-    sample_content = """
-    Azure Cosmos DB is a globally distributed database service. It supports multiple data models
-    including document, key-value, graph, and column-family. Cosmos DB provides comprehensive SLAs
-    for throughput, availability, latency, and consistency. The service integrates with Azure Functions
-    and Azure App Service for building scalable applications.
-    """
-
-    async def test_agent():
-        try:
-            result = await run_knowledge_extraction(sample_content)
-            print("Knowledge Extraction Result:")
-            print(f"Entities found: {len(result.entities)}")
-            print(f"Relationships found: {len(result.relationships)}")
-            print(f"Extraction confidence: {result.extraction_confidence:.2f}")
-
-            for entity in result.entities[:3]:  # Show first 3
-                print(
-                    f"Entity: {entity.text} ({entity.type}, confidence: {entity.confidence:.2f})"
-                )
-
-            for rel in result.relationships[:3]:  # Show first 3
-                print(
-                    f"Relationship: {rel.source_entity} -[{rel.relationship_type}]-> {rel.target_entity}"
-                )
-
-        except Exception as e:
-            print(f"Error: {e}")
-
-    asyncio.run(test_agent())

@@ -188,7 +188,7 @@ full-workflow-demo: ## End-to-end workflow demonstration
 
 sync-env: ## Sync backend configuration with current azd environment
 	@echo "🔄 Syncing backend with azd environment..."
-	@./scripts/sync-env.sh
+	@./scripts/deployment/sync-env.sh
 	@echo "✅ Backend configuration synchronized"
 
 health: ## Comprehensive service health with session management
