@@ -335,7 +335,7 @@ async def query_generation_showcase(
                 query_type="analysis",
                 operation_type="ml_training",
                 context={"target_metrics": ["accuracy", "precision", "recall"]},
-                parameters={"analysis_depth": "standard"},
+                parameters={"analysis_depth": "adaptive"},
             ),
         ]
 

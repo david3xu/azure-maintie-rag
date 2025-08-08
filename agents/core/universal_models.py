@@ -269,3 +269,6 @@ __all__ = [
     "SearchConfiguration",
     "AgentHandoffData",
 ]
+# Aliases for backward compatibility
+UniversalEntity = ExtractedEntity
+UniversalRelation = ExtractedRelationship

@@ -187,7 +187,10 @@ azure-maintie-rag/                    # Production Azure Universal RAG
 └── config/                         # Environment-based configuration
     ├── universal_config.py        # Dynamic configuration management
     ├── azure_settings.py           # Azure service settings  
-    └── environments/                # Development/staging/production .env
+    └── environments/                # Development .env (legacy)
+.azure/
+    ├── prod/.env                    # Production environment (azd-managed)
+    └── staging/.env                 # Staging environment (azd-managed)
 ```
 
 ## 🎯 Zero-Hardcoded-Values Architecture (Critical)

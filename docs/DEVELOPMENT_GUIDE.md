@@ -15,12 +15,12 @@ This development guide follows the **Universal RAG philosophy** implemented in t
 - **Real Azure Integration**: PydanticAI with AsyncAzureOpenAI, Cosmos DB Gremlin, Cognitive Search
 - **Type Safety**: Pydantic models for all agent interfaces with validation
 
-### **Agent Architecture (4 Specialized Agents)**
+### **Agent Architecture (3 Specialized Agents)**
 ```
-Domain Intelligence → Knowledge Extraction → Universal Search → Query Generation
-        ↓                      ↓                    ↓                 ↓
-Content Discovery      Universal Extraction   Multi-modal Search   SQL-Pattern Queries
-   (Azure OpenAI)        (Cosmos Gremlin)      (Vector+Graph+GNN)    (Specialized)
+Domain Intelligence → Knowledge Extraction → Universal Search
+        ↓                      ↓                    ↓
+Content Discovery      Universal Extraction   Multi-modal Search
+   (Azure OpenAI)        (Cosmos Gremlin)      (Vector+Graph+GNN)
 ```
 
 ## 🚀 Development Setup
@@ -89,9 +89,9 @@ cd agents/knowledge_extraction && python agent.py
 cd agents/universal_search && python agent.py
 # Expected: Vector + Graph + GNN unified search
 
-# Test Query Generation Agents (SQL-pattern specialization)
+# Test Query Generation Showcase (demonstration script)
 python scripts/dataflow/12_query_generation_showcase.py
-# Expected: Specialized query agents working together
+# Expected: Query generation patterns and techniques
 
 # Test Knowledge Extraction Agent (agents/knowledge_extraction/agent.py:368 lines)
 python -c "
@@ -100,11 +100,11 @@ agent = get_knowledge_extraction_agent()
 print('✅ Knowledge Extraction Agent created with multi-strategy extraction')
 "
 
-# Test Universal Search Agent (agents/universal_search/agent.py:271 lines)
+# Test Universal Search Agent (agents/universal_search/agent.py)
 python -c "
 from agents.universal_search.agent import get_universal_search_agent
 agent = get_universal_search_agent()
-print('✅ Universal Search Agent created with consolidated orchestrator')
+print('✅ Universal Search Agent created with multi-modal search orchestration')
 "
 ```
 

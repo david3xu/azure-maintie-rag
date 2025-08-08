@@ -32,10 +32,12 @@ from agents.core.universal_models import (
 from agents.domain_intelligence.agent import domain_intelligence_agent
 from agents.shared.query_tools import generate_analysis_query, generate_gremlin_query
 from infrastructure.azure_ml.classification_client import SimpleAzureClassifier
+from infrastructure.prompt_workflows.processors.quality_assessor import (
+    assess_extraction_quality,
+)
 from infrastructure.prompt_workflows.prompt_workflow_orchestrator import (
     PromptWorkflowOrchestrator,
 )
-from infrastructure.prompt_workflows.quality_assessor import assess_extraction_quality
 from infrastructure.prompt_workflows.universal_prompt_generator import (
     UniversalPromptGenerator,
 )
@@ -67,7 +69,7 @@ class GraphOperationResult(BaseModel):
 
 # Create the Knowledge Extraction Agent with proper PydanticAI patterns
 knowledge_extraction_agent = Agent[UniversalDeps, ExtractionResult](
-    "azure_openai:gpt-4o",  # Use Azure OpenAI instead of OpenAI API
+    "openai:gpt-4o",  # PydanticAI format for Azure OpenAI via AsyncAzureOpenAI client
     deps_type=UniversalDeps,
     output_type=ExtractionResult,
     system_prompt="""You are the Universal Knowledge Extraction Agent.
@@ -226,7 +228,7 @@ async def extract_with_generated_prompts(
                 processing_signature="emergency_fallback_pattern_extraction",
                 quality_assessment={
                     "overall_score": 0.3,
-                    "quality_tier": "emergency",
+                    "quality_level": "emergency_fallback",
                     "extraction_method": "emergency_pattern_fallback",
                     "note": "Generated prompts and standard extraction both failed",
                 },
@@ -337,7 +339,7 @@ async def extract_entities_and_relationships(
             [content[:1000]],  # Use first 1k chars for assessment
         )
         logger.info(
-            f"Quality assessment: {quality_assessment.get('quality_tier', 'unknown')} "
+            f"Quality assessment: {quality_assessment.get('quality_level', 'unknown')} "
             f"(score: {quality_assessment.get('overall_score', 0.0):.3f})"
         )
     except Exception as e:

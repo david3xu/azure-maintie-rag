@@ -7,7 +7,7 @@ SHELL := /bin/bash
 SESSION_ID := $(shell date +"%Y%m%d_%H%M%S")
 
 # Azure Configuration - Auto-sync with azd environment
-AZURE_ENVIRONMENT := $(or $(AZURE_ENVIRONMENT), development)
+AZURE_ENVIRONMENT := $(or $(AZURE_ENVIRONMENT), prod)
 AZURE_RESOURCE_GROUP := $(or $(AZURE_RESOURCE_GROUP), maintie-rag-rg)
 
 # Clean Session Management - Replace Previous Sessions
@@ -91,7 +91,7 @@ help: ## Azure Universal RAG Multi-Agent Commands (Production Ready)
 setup: ## Enterprise setup with clean session management
 	@$(call start_clean_session)
 	@echo "🔧 Setting up Universal RAG backend..."
-	@cd backend && make setup 2>&1 | tail -10 || echo "Backend setup completed"
+	@make setup 2>&1 | tail -10 || echo "Backend setup completed"
 	@echo "🎨 Setting up frontend..."
 	@cd frontend && npm install > /dev/null 2>&1 && echo "✅ Frontend dependencies installed" || echo "⚠️ Frontend setup failed"
 	@$(call capture_performance_metrics)
@@ -141,7 +141,7 @@ data-prep-full: ## Complete data processing pipeline (00_full_pipeline.py)
 	@$(call start_clean_session)
 	@echo "🧠 Azure Universal RAG - Complete Data Pipeline (Dataflow Architecture)"
 	@echo "Data processing pipeline initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/dataflow/00_full_pipeline.py 2>&1 | tail -15 >> $(SESSION_REPORT)
+	@python scripts/dataflow/00_full_pipeline.py 2>&1 | tail -15 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Complete pipeline finished - Check: $(SESSION_REPORT)"
 
@@ -149,7 +149,7 @@ data-upload: ## Data ingestion stage (01_data_ingestion.py)
 	@$(call start_clean_session)
 	@echo "📤 Azure Universal RAG - Data Ingestion"
 	@echo "Data ingestion initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/dataflow/01_data_ingestion.py 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@python scripts/dataflow/01_data_ingestion.py 2>&1 | tail -10 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Data ingestion finished - Check: $(SESSION_REPORT)"
 
@@ -157,7 +157,7 @@ knowledge-extract: ## Knowledge extraction stage (02_knowledge_extraction.py)
 	@$(call start_clean_session)
 	@echo "🧠 Azure Universal RAG - Knowledge Extraction"
 	@echo "Knowledge extraction initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/dataflow/02_knowledge_extraction.py 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@python scripts/dataflow/02_knowledge_extraction.py 2>&1 | tail -10 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Knowledge extraction finished - Check: $(SESSION_REPORT)"
 
@@ -166,7 +166,7 @@ query-demo: ## Complete query pipeline (10_query_pipeline.py)
 	@$(call start_clean_session)
 	@echo "🔍 Azure Universal RAG - Query Pipeline Demo"
 	@echo "Query pipeline initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/dataflow/10_query_pipeline.py 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@python scripts/dataflow/10_query_pipeline.py 2>&1 | tail -10 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Query pipeline finished - Check: $(SESSION_REPORT)"
 
@@ -174,7 +174,7 @@ unified-search-demo: ## Unified search demonstration (07_unified_search.py)
 	@$(call start_clean_session)
 	@echo "🎯 Azure Universal RAG - Unified Search Demo (Vector + Graph + GNN)"
 	@echo "Unified search demo initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/dataflow/07_unified_search.py 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@python scripts/dataflow/07_unified_search.py 2>&1 | tail -10 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Unified search demo finished - Check: $(SESSION_REPORT)"
 
@@ -182,7 +182,7 @@ full-workflow-demo: ## End-to-end workflow demonstration
 	@$(call start_clean_session)
 	@echo "🚀 Azure Universal RAG - Full Workflow Demonstration"
 	@echo "Full workflow demo initiated at $(shell date)" >> $(SESSION_REPORT)
-	@cd backend && python scripts/dataflow/demo_full_workflow.py 2>&1 | tail -15 >> $(SESSION_REPORT)
+	@python scripts/dataflow/demo_full_workflow.py 2>&1 | tail -15 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Full workflow demo finished - Check: $(SESSION_REPORT)"
 

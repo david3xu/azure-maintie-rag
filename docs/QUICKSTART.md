@@ -47,7 +47,7 @@ cd azure-maintie-rag
 pip install -r requirements.txt
 
 # Environment synchronization (critical for multi-environment)
-./scripts/deployment/sync-env.sh development    # Switch to development environment
+./scripts/deployment/sync-env.sh prod           # Switch to production environment (default)
 make sync-env                                   # Sync backend configuration
 
 # Set up Azure environment variables (DefaultAzureCredential)
@@ -86,8 +86,11 @@ from agents.core.universal_models import UniversalDomainAnalysis
 print('✅ Universal models loaded (work for ANY domain)')
 
 # Test Domain Intelligence Agent (content discovery, not classification)
-cd agents/domain_intelligence && python agent.py
-# Expected: Discovers content characteristics without domain assumptions
+python -c "
+from agents.domain_intelligence.agent import get_domain_intelligence_agent
+agent = get_domain_intelligence_agent()
+print('✅ Domain Intelligence Agent created')
+# Expected: Discovers content characteristics without domain assumptions"
 from agents.core.data_models import ExtractionQualityOutput, ValidatedEntity
 print('✅ Centralized data models loaded (80+ Pydantic models)')
 
@@ -220,17 +223,17 @@ except Exception as e:
 
 ## 📊 Real Data Verification
 
-If the `data/raw/Programming-Language/` directory exists:
+Check the actual test corpus:
 
 ```bash
 # Check for real data files
-ls -la data/raw/Programming-Language/ | head -10
+ls -la data/raw/azure-ai-services-language-service_output/ | head -10
 
-# Count actual data files
-find data/raw/Programming-Language/ -name "*.md" | wc -l
+# Count actual data files (should be 179 files)
+find data/raw/azure-ai-services-language-service_output/ -name "*.md" | wc -l
 
 # Sample content from actual files
-head -5 data/raw/Programming-Language/*.md | head -20
+head -5 data/raw/azure-ai-services-language-service_output/*.md | head -20
 ```
 
 ## 🧪 Shared Infrastructure Testing  

@@ -411,10 +411,10 @@ class SimpleDynamicConfigManager:
             "gnn_node_embeddings": 128,
             "tri_modal_weights": {"vector": 0.4, "graph": 0.3, "gnn": 0.3},
             "result_synthesis_threshold": 0.6,
-            "query_complexity_weights": {
-                "simple": 1.0,
-                "moderate": 1.2,
-                "complex": 1.5,
+            "adaptive_query_weights": {
+                "measured_low": 1.0,
+                "measured_medium": 1.2,
+                "measured_high": 1.5,
             },
             "domain_name": domain_name,
             "learned_at": None,

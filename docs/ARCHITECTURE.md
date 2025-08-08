@@ -39,12 +39,7 @@ agents/
 │   ├── agent.py                       # Universal Search Agent (tri-modal search)
 │   │   └── PydanticAI orchestration - Vector + Graph + GNN unified
 │   └── __init__.py                   # Module initialization
-├── query_generation/                  # Agent 4: Query generation (SQL pattern)
-│   ├── analysis_query_agent.py       # Analysis query generation
-│   ├── gremlin_query_agent.py        # Gremlin graph query generation  
-│   ├── search_query_agent.py         # Search query generation
-│   ├── universal_query_orchestrator.py # Query orchestration
-│   └── __init__.py                   # Module initialization
+# Note: Query generation functionality is demonstrated in scripts/dataflow/12_query_generation_showcase.py
 ├── shared/                            # Shared utilities (domain-agnostic)
 │   ├── utils.py                       # Shared utilities
 │   └── __init__.py                   # Module initialization

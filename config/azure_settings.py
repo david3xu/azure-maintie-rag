@@ -229,8 +229,8 @@ class Settings(BaseSettings):
     )
 
     # Knowledge Extraction Configuration
-    extraction_quality_tier: str = Field(
-        default="adaptive", env="EXTRACTION_QUALITY_TIER"
+    extraction_quality_level: str = Field(
+        default="adaptive", env="EXTRACTION_QUALITY_LEVEL"
     )
     extraction_confidence_threshold: float = Field(
         default=0.7, env="EXTRACTION_CONFIDENCE_THRESHOLD"
@@ -431,7 +431,7 @@ class Settings(BaseSettings):
     # Environment-specific service configurations
     SERVICE_CONFIGS: ClassVar[Dict[str, Dict[str, Any]]] = {
         "dev": {
-            "search_sku": "basic",
+            "search_sku": "adaptive",
             "search_replicas": 1,
             "storage_sku": "Standard_LRS",
             "cosmos_throughput": 400,

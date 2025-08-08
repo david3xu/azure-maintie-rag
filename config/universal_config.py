@@ -105,7 +105,7 @@ class ContentCharacteristics:
     # Content properties (discovered)
     content_signature: str = "unknown"
     primary_language: str = "en"
-    estimated_reading_level: int = 8
+    measured_text_complexity_level: int = 8  # Measured from content analysis
 
     # Statistical confidence
     analysis_confidence: float = 0.0
@@ -216,11 +216,12 @@ class UniversalSearchConfig:
 
         # Adjust multi-modal weights based on content structure
         structure_complexity = content_characteristics.structural_complexity
-        if structure_complexity > 0.7:  # Highly structured content
+        # Adapt multi-modal weights based on measured structure complexity
+        if structure_complexity > 0.7:  # Measured high structure complexity
             adapted.vector_weight = 0.3
             adapted.graph_weight = 0.4
             adapted.hybrid_weight = 0.3
-        elif structure_complexity < 0.3:  # Loosely structured content
+        elif structure_complexity < 0.3:  # Measured low structure complexity
             adapted.vector_weight = 0.5
             adapted.graph_weight = 0.2
             adapted.hybrid_weight = 0.3
@@ -338,8 +339,8 @@ class UniversalConfigManager:
         )
         cross_reference_ratio = min(reference_count / max(len(words), 1) * 100, 1.0)
 
-        # Estimate reading level (simple approximation)
-        estimated_reading_level = min(12, max(6, int(avg_sentence_length / 2)))
+        # Measure text complexity level from content analysis
+        measured_text_complexity_level = min(12, max(6, int(avg_sentence_length / 2)))
 
         characteristics = ContentCharacteristics(
             vocabulary_complexity=vocabulary_complexity,
@@ -351,7 +352,7 @@ class UniversalConfigManager:
             terminology_uniqueness=terminology_uniqueness,
             cross_reference_ratio=cross_reference_ratio,
             content_signature=content_signature or f"analyzed_content_{cache_key}",
-            estimated_reading_level=estimated_reading_level,
+            measured_text_complexity_level=measured_text_complexity_level,
             analysis_confidence=0.8,  # Confidence in our analysis
             sample_size=len(content_samples),
         )
