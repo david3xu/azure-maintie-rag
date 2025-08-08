@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import './WorkflowProgress.css';
 import type { UniversalQueryResponse } from '../../types/api';
 
@@ -105,10 +105,8 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
       setIsStreaming(false);
 
       // Only call onError if we haven't completed successfully
-      if (currentProgress < 100) {
-        if (onError) {
-          onError('Connection to server lost');
-        }
+      if (onError) {
+        onError('Connection to server lost');
       }
       eventSource.close();
     };
@@ -119,13 +117,8 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
       setIsStreaming(false);
     };
 
-    // Fix: Remove startTime from dependencies to prevent infinite loop
-  }, [queryId]); // Only depend on queryId, not onComplete, onError, or startTime
-
-  // Separate useEffect for callback dependencies to avoid infinite loops
-  useEffect(() => {
-    // This effect only runs when callback functions change, not on every render
-  }, [onComplete, onError]);
+    // Dependencies: Include callbacks that are used within the effect
+  }, [queryId, onComplete, onError]);
 
   if (!queryId || steps.length === 0) {
     return null;
