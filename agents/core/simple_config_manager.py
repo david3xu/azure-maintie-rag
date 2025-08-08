@@ -42,6 +42,7 @@ class SimpleDynamicConfigManager:
     def __init__(self):
         self._domain_analyses = {}  # Cache for domain analyses
         self._config_cache = {}  # Cache for generated configurations
+        self._universal_configs = {}  # Cache for universal configurations
 
     async def analyze_domain_if_needed(
         self, data_directory: str
@@ -249,7 +250,7 @@ class SimpleDynamicConfigManager:
         # Basic file analysis from the actual domain directory
         file_count = 0
         total_size = 0
-        specialized_indicators = 0
+        complexity_indicators = 0
         if data_path.name == "raw" and len(discovered_domains) > 1:
             # For root analysis with multiple domains, analyze all subdirectories
             domain_path = raw_data_path
@@ -290,12 +291,12 @@ class SimpleDynamicConfigManager:
                             capitalized_count > len(words) * 0.1
                             or punctuation_density > 0.05
                         ):
-                            specialized_indicators += 1
+                            complexity_indicators += 1
                     except:
                         pass
 
         # Calculate universal metrics
-        vocabulary_complexity_ratio = specialized_indicators / max(file_count, 1)
+        vocabulary_complexity_ratio = complexity_indicators / max(file_count, 1)
         avg_length = total_size / max(file_count, 1)
 
         return DomainIntelligenceResult(
@@ -457,15 +458,20 @@ class SimpleDynamicConfigManager:
         self._config_cache[cache_key] = base_config
         return base_config
 
-    async def get_domain_config(self, domain_name: str) -> Dict[str, Any]:
-        """Get domain configuration (for infrastructure compatibility)"""
-        return await self.get_extraction_config(domain_name)
+    async def get_universal_config(self, content_directory: str) -> Dict[str, Any]:
+        """Get universal configuration based on discovered content characteristics"""
+        return await self.get_extraction_config("universal_content", content_directory)
 
     def clear_cache(self):
         """Clear all caches"""
         self._domain_analyses.clear()
         self._config_cache.clear()
+        self._universal_configs.clear()
         logger.info("Configuration cache cleared")
+
+    def clear_domain_cache(self):
+        """Clear domain cache (legacy compatibility)"""
+        self.clear_cache()
 
 
 # Private singleton for proper dependency injection

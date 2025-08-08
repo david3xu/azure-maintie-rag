@@ -47,8 +47,11 @@ class UniversalDomainCharacteristics(BaseModel):
     lexical_diversity: float = Field(
         ..., ge=0.0, le=1.0, description="Type-token ratio"
     )
-    technical_vocabulary_ratio: float = Field(
-        ..., ge=0.0, le=1.0, description="Technical vs common word ratio"
+    vocabulary_complexity_ratio: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Complex vs simple vocabulary ratio (domain-agnostic)",
     )
     structural_consistency: float = Field(
         ..., ge=0.0, le=1.0, description="Document structure consistency"

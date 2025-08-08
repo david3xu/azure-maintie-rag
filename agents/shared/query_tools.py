@@ -108,14 +108,16 @@ async def generate_analysis_query(
 
     This replaces the analysis_query_agent pseudo-agent with proper tool functionality.
     """
-    config = ctx.deps.config_manager.get_domain_config()
+    config = await ctx.deps.config_manager.get_universal_config(
+        "/workspace/azure-maintie-rag/data/raw"
+    )
 
     analysis_config = {
         "content": content,
         "analysis_type": analysis_type,
-        "min_confidence": config.confidence_threshold,
-        "max_entities": config.max_entities,
-        "max_relationships": config.max_relationships,
+        "min_confidence": config.get("entity_confidence_threshold", 0.8),
+        "max_entities": config.get("max_entities_per_chunk", 15),
+        "max_relationships": config.get("min_relationship_strength", 0.7),
     }
 
     # Universal analysis patterns (no hardcoded domain assumptions)

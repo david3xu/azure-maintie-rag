@@ -73,7 +73,9 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Simple vector embedding generation")
-    parser.add_argument("--domain", default="maintenance", help="Domain for processing")
+    parser.add_argument(
+        "--domain", default="discovered_content", help="Domain for processing"
+    )
     args = parser.parse_args()
 
     result = asyncio.run(generate_embeddings(args.domain))
