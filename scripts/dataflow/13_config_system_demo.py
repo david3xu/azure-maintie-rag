@@ -251,7 +251,9 @@ async def configuration_system_demo(
             QueryRequest(
                 query_type="analysis",
                 operation_type="domain_characterization",
-                context={"content_samples": ["Azure machine learning example content"]},
+                context={
+                    "content_samples": ["Sample content for domain characterization"]
+                },
                 parameters={"analysis_depth": "standard"},
             ),
         ]

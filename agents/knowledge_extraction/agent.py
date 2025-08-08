@@ -32,12 +32,12 @@ from agents.core.universal_models import (
 from agents.domain_intelligence.agent import domain_intelligence_agent
 from agents.shared.query_tools import generate_analysis_query, generate_gremlin_query
 from infrastructure.azure_ml.classification_client import SimpleAzureClassifier
+from infrastructure.prompt_workflows.prompt_workflow_orchestrator import (
+    PromptWorkflowOrchestrator,
+)
 from infrastructure.prompt_workflows.quality_assessor import assess_extraction_quality
 from infrastructure.prompt_workflows.universal_prompt_generator import (
     UniversalPromptGenerator,
-)
-from infrastructure.prompt_workflows.prompt_workflow_orchestrator import (
-    PromptWorkflowOrchestrator,
 )
 
 
@@ -95,114 +95,130 @@ then adapt your extraction approach accordingly.""",
 
 @knowledge_extraction_agent.tool
 async def extract_with_generated_prompts(
-    ctx: RunContext[UniversalDeps], 
-    content: str, 
+    ctx: RunContext[UniversalDeps],
+    content: str,
     use_domain_analysis: bool = True,
-    data_directory: Optional[str] = None
+    data_directory: Optional[str] = None,
 ) -> ExtractionResult:
     """
     Extract entities and relationships using dynamically generated prompts from domain analysis.
-    
+
     This tool demonstrates the complete prompt workflow integration:
     1. Domain analysis → 2. Prompt generation → 3. Entity/relationship extraction
     """
     logger.info("🔬 Starting extraction with generated prompts...")
-    
+
     try:
         # Create workflow orchestrator with domain intelligence
-        orchestrator = await PromptWorkflowOrchestrator.create_with_domain_intelligence()
-        
+        orchestrator = (
+            await PromptWorkflowOrchestrator.create_with_domain_intelligence()
+        )
+
         # Use the workflow orchestrator for complete extraction
         workflow_results = await orchestrator.execute_extraction_workflow(
             texts=[content],
             confidence_threshold=0.7,
             max_entities=50,
-            max_relationships=40
+            max_relationships=40,
         )
-        
+
         # Convert workflow results to agent format
         entities = []
         for entity_data in workflow_results.get("entities", []):
-            entities.append(ExtractedEntity(
-                text=entity_data.get("text", ""),
-                type=entity_data.get("entity_type", "concept"),
-                confidence=entity_data.get("confidence", 0.7),
-                context=entity_data.get("context", ""),
-                properties=entity_data.get("properties", {})
-            ))
-        
+            entities.append(
+                ExtractedEntity(
+                    text=entity_data.get("text", ""),
+                    type=entity_data.get("entity_type", "concept"),
+                    confidence=entity_data.get("confidence", 0.7),
+                    context=entity_data.get("context", ""),
+                    properties=entity_data.get("properties", {}),
+                )
+            )
+
         relationships = []
         for rel_data in workflow_results.get("relationships", []):
-            relationships.append(ExtractedRelationship(
-                source_entity=rel_data.get("subject", ""),
-                target_entity=rel_data.get("object", ""),
-                relationship_type=rel_data.get("predicate", "relates_to"),
-                confidence=rel_data.get("confidence", 0.7),
-                context=rel_data.get("context", ""),
-                properties={}
-            ))
-        
+            relationships.append(
+                ExtractedRelationship(
+                    source_entity=rel_data.get("subject", ""),
+                    target_entity=rel_data.get("object", ""),
+                    relationship_type=rel_data.get("predicate", "relates_to"),
+                    confidence=rel_data.get("confidence", 0.7),
+                    context=rel_data.get("context", ""),
+                    properties={},
+                )
+            )
+
         # Calculate extraction confidence from workflow results
         workflow_metadata = workflow_results.get("workflow_metadata", {})
         extraction_confidence = workflow_metadata.get("overall_confidence", 0.0)
-        
+
         processing_signature = (
             f"generated_prompts_"
             f"{workflow_metadata.get('extraction_strategy', 'universal')}_"
             f"{len(entities)}e_{len(relationships)}r"
         )
-        
-        logger.info(f"✅ Generated prompt extraction completed: {len(entities)} entities, {len(relationships)} relationships")
-        
+
+        logger.info(
+            f"✅ Generated prompt extraction completed: {len(entities)} entities, {len(relationships)} relationships"
+        )
+
         return ExtractionResult(
             entities=entities,
             relationships=relationships,
             extraction_confidence=extraction_confidence,
             processing_signature=processing_signature,
-            quality_assessment=workflow_results.get("quality_metrics")
+            quality_assessment=workflow_results.get("quality_metrics"),
         )
-        
+
     except Exception as e:
         logger.error(f"❌ Generated prompt extraction failed: {e}")
         logger.info("🔄 Falling back to standard extraction with hardcoded prompts...")
-        
+
         # Comprehensive fallback mechanism
         try:
             # Try standard extraction first
-            fallback_result = await extract_entities_and_relationships(ctx, content, use_domain_analysis)
+            fallback_result = await extract_entities_and_relationships(
+                ctx, content, use_domain_analysis
+            )
             fallback_result.processing_signature += "_fallback_standard"
             return fallback_result
         except Exception as fallback_error:
             logger.error(f"❌ Standard extraction also failed: {fallback_error}")
             logger.info("🔄 Using emergency fallback with pattern-based extraction...")
-            
+
             # Emergency fallback - basic pattern extraction
             words = content.split()
             entities = []
             relationships = []
-            
+
             # Extract capitalized words as potential entities
             for i, word in enumerate(words):
-                if word and word[0].isupper() and len(word) > 2 and i < 20:  # Limit to 20
-                    entities.append(ExtractedEntity(
-                        text=word.strip('.,!?;:"()[]'),
-                        type="emergency_entity",
-                        confidence=0.5,
-                        context=f"Emergency extraction from word position {i}",
-                        properties={"extraction_method": "emergency_fallback"}
-                    ))
-            
+                if (
+                    word and word[0].isupper() and len(word) > 2 and i < 20
+                ):  # Limit to 20
+                    entities.append(
+                        ExtractedEntity(
+                            text=word.strip('.,!?;:"()[]'),
+                            type="emergency_entity",
+                            confidence=0.5,
+                            context=f"Emergency extraction from word position {i}",
+                            properties={"extraction_method": "emergency_fallback"},
+                        )
+                    )
+
             # Create basic relationships between adjacent entities
             for i in range(min(len(entities) - 1, 10)):  # Limit to 10
-                relationships.append(ExtractedRelationship(
-                    source_entity=entities[i].text,
-                    target_entity=entities[i + 1].text,
-                    relationship_type="emergency_relation",
-                    confidence=0.3,
-                    context="Emergency fallback relationship",
-                    properties={"extraction_method": "emergency_fallback"}
-                ))
-            
+                relationships.append(
+                    ExtractedRelationship(
+                        source_entity=entities[i].text,
+                        target_entity=entities[i + 1].text,
+                        relationship_type="emergency_relation",
+                        confidence=0.3,
+                        context="Emergency fallback relationship",
+                        properties={"extraction_method": "emergency_fallback"},
+                    )
+                )
+
             return ExtractionResult(
                 entities=entities,
                 relationships=relationships,
@@ -212,8 +228,8 @@ async def extract_with_generated_prompts(
                     "overall_score": 0.3,
                     "quality_tier": "emergency",
                     "extraction_method": "emergency_pattern_fallback",
-                    "note": "Generated prompts and standard extraction both failed"
-                }
+                    "note": "Generated prompts and standard extraction both failed",
+                },
             )
 
 
@@ -779,7 +795,7 @@ async def run_knowledge_extraction(
 ) -> ExtractionResult:
     """
     Run knowledge extraction with proper PydanticAI patterns.
-    
+
     Args:
         content: Text content to extract from
         use_domain_analysis: Whether to use domain intelligence
