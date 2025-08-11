@@ -11,12 +11,9 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.domain_intelligence.agent import (
-    UniversalDomainDeps,
-    run_universal_domain_analysis,
-)
-from agents.universal_search.agent import SearchDeps
-from agents.universal_search.agent import agent as universal_search_agent
+from agents.domain_intelligence.agent import run_domain_analysis
+from agents.core.universal_deps import UniversalDeps
+from agents.universal_search.agent import run_universal_search
 
 
 async def universal_query_analysis(
@@ -32,18 +29,21 @@ async def universal_query_analysis(
         print(f"\n📊 Step 1: Domain Context Discovery")
         print(f"   📁 Reference data: {data_directory}")
 
-        domain_analysis = await run_universal_domain_analysis(
-            UniversalDomainDeps(
-                data_directory=data_directory,
-                max_files_to_analyze=5,
-                min_content_length=100,
-                enable_multilingual=True,
-            )
+        # Load sample content from data directory for query context analysis
+        data_dir = Path(data_directory) / "azure-ai-services-language-service_output"
+        sample_files = list(data_dir.glob("*.md"))[:3]
+        sample_content = ""
+        for file_path in sample_files:
+            content = file_path.read_text(encoding='utf-8', errors='ignore')
+            sample_content += content + "\n\n"
+        
+        domain_analysis = await run_domain_analysis(
+            sample_content, detailed=True
         )
 
         print(f"   ✅ Domain context: {domain_analysis.domain_signature}")
         print(
-            f"   📚 Key terms: {domain_analysis.characteristics.most_frequent_terms[:5]}"
+            f"   📚 Key terms: {domain_analysis.characteristics.key_content_terms[:5]}"
         )
         print(
             f"   🎯 Concept density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
@@ -53,7 +53,7 @@ async def universal_query_analysis(
         print(f"\n🔍 Step 2: Adaptive Query Analysis")
 
         # Configure search with discovered domain characteristics
-        search_deps = SearchDeps(max_results=15, similarity_threshold=0.7)
+        # Configure search parameters
 
         print(f"   🔧 Using domain-adaptive configuration:")
         print(
@@ -62,17 +62,18 @@ async def universal_query_analysis(
         print(
             f"      Graph weight: {domain_analysis.processing_config.graph_search_weight:.1%}"
         )
-        print(f"      Max results: {search_deps.max_results}")
+        print(f"      Max results: 15")
 
-        # Analyze query in domain context
-        search_result = await universal_search_agent.run(
-            f"Analyze query '{query}' in {domain_analysis.domain_signature} context",
-            deps=search_deps,
+        # Analyze query in domain context using universal search
+        search_result = await run_universal_search(
+            f"Query: {query} (context: {domain_analysis.domain_signature})",
+            max_results=15,
+            use_domain_analysis=True
         )
 
         print(f"   ✅ Query analysis completed")
-        print(f"   📊 Results found: {search_result.data.total_results}")
-        print(f"   🎯 Synthesis score: {search_result.data.synthesis_score:.2f}")
+        print(f"   📊 Results found: {search_result.total_results_found}")
+        print(f"   🎯 Search confidence: {search_result.search_confidence:.2f}")
         print(
             f"   🌍 Domain relevance: High (adapted to {domain_analysis.domain_signature})"
         )
@@ -81,11 +82,15 @@ async def universal_query_analysis(
             "success": True,
             "query": query,
             "domain_context": domain_analysis.domain_signature,
-            "search_result": search_result.data,
+            "search_result": {
+                "total_results": search_result.total_results_found,
+                "search_confidence": search_result.search_confidence,
+                "strategy_used": search_result.search_strategy_used
+            },
             "adaptive_configuration": {
                 "vector_weight": domain_analysis.processing_config.vector_search_weight,
                 "graph_weight": domain_analysis.processing_config.graph_search_weight,
-                "domain_terms": domain_analysis.characteristics.most_frequent_terms[:5],
+                "domain_terms": domain_analysis.characteristics.key_content_terms[:5],
             },
         }
 
@@ -122,7 +127,7 @@ if __name__ == "__main__":
     if result["success"]:
         print(f"\n🎉 SUCCESS: Query analysis completed!")
         print(f"Domain context: {result['domain_context']}")
-        print(f"Search results: {result['search_result'].total_results}")
+        print(f"Search results: {result['search_result']['total_results']}")
         sys.exit(0)
     else:
         print(f"\n❌ FAILED: Query analysis encountered issues.")

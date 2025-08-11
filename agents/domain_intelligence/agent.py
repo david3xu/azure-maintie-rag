@@ -29,27 +29,7 @@ from agents.core.universal_models import (
 # from agents.shared.query_tools import generate_analysis_query  # Temporarily disabled
 
 
-class ContentCharacteristics(BaseModel):
-    """Content characteristics discovered from analysis (not predetermined)."""
-
-    vocabulary_complexity_ratio: float = Field(
-        ge=0.0, le=1.0, description="Measured vocabulary complexity ratio"
-    )
-    concept_density: float = Field(
-        ge=0.0, le=1.0, description="Density of concepts per content unit"
-    )
-    structural_patterns: List[str] = Field(
-        default_factory=list, description="Discovered structural patterns"
-    )
-    entity_indicators: List[str] = Field(
-        default_factory=list, description="Potential entity types found"
-    )
-    relationship_indicators: List[str] = Field(
-        default_factory=list, description="Potential relationship types"
-    )
-    content_signature: str = Field(
-        description="Unique signature based on measured properties"
-    )
+# ContentCharacteristics model removed - using UniversalDomainCharacteristics from universal_models
 
 
 # Create the Domain Intelligence Agent with proper PydanticAI patterns
@@ -73,6 +53,7 @@ domain_intelligence_agent = Agent[UniversalDeps, UniversalDomainAnalysis](
     get_azure_openai_model(),
     output_type=PromptedOutput(UniversalDomainAnalysis),
     toolsets=[get_domain_intelligence_toolset()],
+    retries=3,  # Add retry configuration for Azure OpenAI reliability
     system_prompt="""You are the Universal Domain Intelligence Agent.
 
 Your role is to discover content characteristics WITHOUT making domain assumptions.

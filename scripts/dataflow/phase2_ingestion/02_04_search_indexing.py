@@ -44,9 +44,9 @@ async def index_in_search(source_path: str, domain: str = "universal"):
 
         print(f"📂 Found {len(files)} files to index")
 
-        # Index files (demo)
+        # Index all files
         indexed = 0
-        for file_path in files[:3]:  # Demo: index first 3 files
+        for file_path in files:  # Index all available files
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
@@ -63,7 +63,7 @@ async def index_in_search(source_path: str, domain: str = "universal"):
                 }
 
                 # REAL Azure Search indexing - no simulations
-                index_result = await search_client.index_document(doc)
+                index_result = await search_client.index_document(document)
                 if index_result.get("success"):
                     indexed += 1
                     print(f"   ✅ Indexed: {file_path.name}")

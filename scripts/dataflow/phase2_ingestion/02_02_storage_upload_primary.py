@@ -39,11 +39,11 @@ async def ingest_data(source_path: str, container_name: str = "raw-data"):
 
         print(f"📂 Found {len(md_files)} files to process")
 
-        # Process files (demo)
+        # Process all files
         processed = 0
         total_size = 0
 
-        for file_path in md_files[:5]:  # Process first 5 files
+        for file_path in md_files:  # Process all available files
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()

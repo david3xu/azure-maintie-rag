@@ -5,7 +5,7 @@ consolidated from the original utilities/ directory.
 """
 
 from .azure_cost_tracker import AzureServiceCostTracker
-from .prompt_loader import PromptTemplateLoader
+# Removed PromptTemplateLoader - using unified approach with Agent 1 template variables only
 from .workflow_evidence_collector import (
     AzureDataWorkflowEvidenceCollector,
     DataWorkflowEvidence,

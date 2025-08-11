@@ -172,8 +172,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
                 
             return query_result
         except Exception as e:
+            # FAIL FAST - Don't return empty results on Cosmos DB failures
             logger.error(f"Sync query failed: {e}")
-            return []
+            raise RuntimeError(f"Cosmos DB Gremlin sync query failed: {e}. Check Azure Cosmos DB connection.") from e
 
     async def _execute_query(self, query: str) -> List[Any]:
         """Execute Gremlin query asynchronously using ThreadPoolExecutor"""
@@ -186,8 +187,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
                 query
             )
         except Exception as e:
+            # FAIL FAST - Don't return empty results on Cosmos DB failures
             logger.error(f"Async query failed: {e}")
-            return []
+            raise RuntimeError(f"Cosmos DB Gremlin async query failed: {e}. Check Azure Cosmos DB connection.") from e
 
     async def execute_query(self, query: str) -> List[Any]:
         """Public method for executing Gremlin queries"""
@@ -221,7 +223,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             )
 
         except Exception as e:
-            return self.handle_azure_error("add_entity", e)
+            # FAIL FAST - Don't return error response, raise exception
+            logger.error(f"Add entity failed: {e}")
+            raise RuntimeError(f"Cosmos DB entity creation failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
 
     async def add_relationship(
         self, relation_data: Dict[str, Any], domain: str
@@ -249,7 +253,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             )
 
         except Exception as e:
-            return self.handle_azure_error("add_relationship", e)
+            # FAIL FAST - Don't return error response, raise exception
+            logger.error(f"Add relationship failed: {e}")
+            raise RuntimeError(f"Cosmos DB relationship creation failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
 
     async def find_entities_by_type(
         self,
@@ -283,8 +289,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             return entities
 
         except Exception as e:
+            # FAIL FAST - Don't return empty results on query failures
             logger.error(f"Find entities failed: {e}")
-            return []
+            raise RuntimeError(f"Cosmos DB entity search failed: {e}. Check Azure Cosmos DB Gremlin query execution.") from e
 
     async def find_related_entities(
         self,
@@ -323,8 +330,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             return relationships
 
         except Exception as e:
+            # FAIL FAST - Don't return empty results on relationship queries
             logger.error(f"Find related entities failed: {e}")
-            return []
+            raise RuntimeError(f"Cosmos DB relationship search failed: {e}. Check Azure Cosmos DB Gremlin traversal.") from e
 
     async def count_vertices(self, domain: str) -> int:
         """Count vertices in domain"""
@@ -333,8 +341,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             result = await self._execute_query(query)
             return int(result[0]) if result else 0
         except Exception as e:
+            # FAIL FAST - Don't return fallback count on failures
             logger.error(f"Count vertices failed: {e}")
-            return 0
+            raise RuntimeError(f"Cosmos DB vertex count failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
 
     async def get_all_entities(self, domain: str) -> List[Dict[str, Any]]:
         """Get all entities for domain"""
@@ -359,8 +368,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             return entities
 
         except Exception as e:
+            # FAIL FAST - Don't return empty results on entity retrieval failures
             logger.error(f"Get all entities failed: {e}")
-            return []
+            raise RuntimeError(f"Cosmos DB entity retrieval failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
 
     async def get_all_relations(self, domain: str) -> List[Dict[str, Any]]:
         """Get all relations for domain"""
@@ -389,8 +399,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             return relations
 
         except Exception as e:
+            # FAIL FAST - Don't return empty results on relation retrieval failures
             logger.error(f"Get all relations failed: {e}")
-            return []
+            raise RuntimeError(f"Cosmos DB relation retrieval failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
 
     async def export_graph_for_training(self, domain: str) -> Dict[str, Any]:
         """Export graph data for training"""
@@ -408,8 +419,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             }
 
         except Exception as e:
+            # FAIL FAST - Don't return error response, raise exception
             logger.error(f"Graph export failed: {e}")
-            return {"success": False, "error": str(e)}
+            raise RuntimeError(f"Cosmos DB graph export failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
 
     def _get_value(self, prop_value):
         """Extract value from Gremlin property format"""

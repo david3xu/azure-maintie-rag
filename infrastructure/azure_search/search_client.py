@@ -135,6 +135,10 @@ class SimpleSearchClient(BaseAzureClient):
         except Exception as e:
             return self.handle_azure_error("index_documents", e)
 
+    async def index_document(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """Index single document - wrapper for compatibility"""
+        return await self.index_documents([document])
+
     async def search_documents(
         self, query: str, top: int = 10, filters: str = None
     ) -> Dict[str, Any]:
