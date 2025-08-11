@@ -1,0 +1,155 @@
+[0;34m🔍 Universal RAG Domain Bias & Mock Value Detection[0m
+====================================================
+Scanning for domain bias violations...
+
+[0;34m📂 Checking agents/[0m
+   📄 universal_query_orchestrator.py
+   📄 analysis_query_agent.py
+   📄 search_query_agent.py
+   📄 __init__.py
+   📄 gremlin_query_agent.py
+   📄 utils.py
+   📄 __init__.py
+   📄 query_tools.py
+   📄 agent.py
+   📄 __init__.py
+   📄 full_workflow_demo.py
+   📄 __init__.py
+   📄 demo_universal.py
+   📄 agent.py
+   📄 __init__.py
+   📄 simple_config_manager.py
+   📄 agent_toolsets.py
+   📄 centralized_agent1_schema.py
+   📄 universal_models.py
+   📄 universal_deps.py
+   📄 azure_pydantic_provider.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35magents/core/azure_pydantic_provider.py:40[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m if not azure_endpoint
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+   📄 __init__.py
+   📄 constants.py
+   📄 __init__.py
+   📄 agent.py
+   📄 __init__.py
+   📄 orchestrator.py
+[0;34m📂 Checking config/[0m
+   📄 azure_settings.py
+   📄 settings.py
+   📄 universal_config.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mconfig/universal_config.py:536[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m if not validation["azure_openai_configured"]
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+   📄 __init__.py
+   📄 timeouts.py
+[0;34m📂 Checking scripts/dataflow/[0m
+   📄 05_03_query_generation_showcase.py
+   📄 05_02_interactive_workflow_demo.py
+   📄 05_01_full_pipeline_execution.py
+   📄 04_05_response_generation.py
+   📄 04_03_unified_search.py
+   📄 04_01_query_analysis.py
+   📄 04_06_complete_query_pipeline.py
+   📄 04_04_context_retrieval.py
+   📄 04_02_universal_search_demo.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mscripts/dataflow/phase4_query/04_02_universal_search_demo.py:230[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m "source": "simulated_vector_search",
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mscripts/dataflow/phase4_query/04_02_universal_search_demo.py:236[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m "source": "simulated_graph_search",
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mscripts/dataflow/phase4_query/04_02_universal_search_demo.py:249[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m "note": "Search unavailable - simulated results",
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+   📄 setup_azure_services.py
+   📄 load_outputs.py
+   📄 01_03_validate_universal_search.py
+   📄 01_02_validate_knowledge_extraction.py
+   📄 01_01_validate_domain_intelligence.py
+   📄 06_01_gnn_training.py
+   📄 06_03_config_system_demo.py
+   📄 06_02_streaming_monitor.py
+   📄 03_03_cosmos_storage.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mscripts/dataflow/phase3_knowledge/03_03_cosmos_storage.py:31[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m print(f"⚠️  Azure Cosmos DB unavailable: {str(e)[:50]}...")
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+   📄 03_02_knowledge_extraction.py
+   📄 03_04_graph_construction.py
+   📄 00_01_cleanup_azure_data.py
+   📄 00_02_cleanup_azure_storage.py
+   📄 00_03_verify_clean_state.py
+   📄 02_02_storage_upload_primary.py
+   📄 02_04_search_indexing.py
+   📄 02_03_vector_embeddings.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mscripts/dataflow/phase2_ingestion/02_03_vector_embeddings.py:29[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m print("🎯 Simulated embedding generation (Azure OpenAI unavailable)")
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+   📄 02_02_storage_upload_direct.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mscripts/dataflow/phase2_ingestion/02_02_storage_upload_direct.py:73[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m print(f"   📝 Fallback: simulated upload")
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mscripts/dataflow/phase2_ingestion/02_02_storage_upload_direct.py:29[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m print(f"⚠️  Azure Storage unavailable: {str(storage_error)[:50]}...")
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35mscripts/dataflow/phase2_ingestion/02_02_storage_upload_direct.py:77[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m print(f"   📝 Simulated upload (Azure unavailable)")
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+[0;34m📂 Checking infrastructure/[0m
+   📄 search_client.py
+   📄 __init__.py
+   📄 base_client.py
+   📄 session_manager.py
+   📄 gnn_model.py
+   📄 classification_client.py
+   📄 ml_client.py
+   📄 gnn_inference_client.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35minfrastructure/azure_ml/gnn_inference_client.py:20[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m logger.warning("Azure ML SDK not available - using simulation mode")
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+   📄 __init__.py
+   📄 gnn_training_client.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35minfrastructure/azure_ml/gnn_training_client.py:52[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m logger.warning("PyTorch not available - GNN training will use fallback mode")
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35minfrastructure/azure_ml/gnn_training_client.py:54[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m logger.warning("Azure ML SDK not available - using simulation mode")
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+   📄 prompt_loader.py
+   📄 workflow_evidence_collector.py
+   📄 __init__.py
+   📄 azure_cost_tracker.py
+   📄 app_insights_client.py
+   📄 __init__.py
+   📄 azure_auth_utils.py
+[0;31m❌ DOMAIN BIAS VIOLATION[0m in [0;35minfrastructure/azure_auth_utils.py:43[0m
+   [1;33mType:[0m Hardcoded Domain Category
+   [1;33mCode:[0m if not _azure_credential or time_since_refresh > _refresh_threshold_minutes
+   [1;33mIssue:[0m Universal RAG should DISCOVER domains, not use predetermined categories
+
+   📄 __init__.py

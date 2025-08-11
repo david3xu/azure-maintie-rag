@@ -67,31 +67,18 @@ class PromptWorkflowOrchestrator:
         Returns:
             Dictionary mapping template types to file paths
         """
-        if use_generated and self.prompt_generator.domain_analyzer:
-            print("🔧 Generating domain-optimized templates...")
+        # NO FALLBACKS - Domain analyzer and generated templates required for production
+        if not (use_generated and self.prompt_generator.domain_analyzer):
+            raise Exception("Domain analyzer is required for production template generation")
 
-            # Generate domain-specific templates
-            generated_templates = await self.prompt_generator.generate_domain_prompts(
-                data_directory=data_directory, output_directory=self.generated_directory
-            )
+        print("🔧 Generating domain-optimized templates...")
 
-            return generated_templates
+        # Generate domain-specific templates
+        generated_templates = await self.prompt_generator.generate_domain_prompts(
+            data_directory=data_directory, output_directory=self.generated_directory
+        )
 
-        else:
-            print("🔧 Using universal fallback templates...")
-
-            # Use universal templates with fallback mode
-            universal_templates = {
-                "entity_extraction": str(
-                    Path(self.template_directory) / "universal_entity_extraction.jinja2"
-                ),
-                "relation_extraction": str(
-                    Path(self.template_directory)
-                    / "universal_relation_extraction.jinja2"
-                ),
-            }
-
-            return universal_templates
+        return generated_templates
 
     async def execute_extraction_workflow(
         self,
@@ -251,8 +238,9 @@ class PromptWorkflowOrchestrator:
             return {"entities": entities, "prompt_used": prompt}
 
         except Exception as e:
-            # Ultimate fallback
-            return {"entities": [], "prompt_used": f"Error: {e}"}
+            # NO FALLBACKS - Entity extraction must work for production
+            print(f"❌ Entity extraction failed: {e}")
+            raise e
 
     async def _extract_relationships(
         self,
@@ -382,8 +370,9 @@ class PromptWorkflowOrchestrator:
             return {"relationships": relationships, "prompt_used": prompt}
 
         except Exception as e:
-            # Ultimate fallback
-            return {"relationships": [], "prompt_used": f"Error: {e}"}
+            # NO FALLBACKS - Relationship extraction must work for production
+            print(f"❌ Relationship extraction failed: {e}")
+            raise e
 
     async def _build_knowledge_graph(
         self,
@@ -435,7 +424,7 @@ class PromptWorkflowOrchestrator:
             "overall_confidence": overall_confidence,
             "entity_density": entity_density,
             "relationship_density": relationship_density,
-            "quality_score": overall_confidence,  # Use continuous score instead of predetermined tiers
+            "quality_score": overall_confidence,  # Use continuous score based on measured confidence
             "total_extractions": len(entities) + len(relationships),
         }
 

@@ -100,17 +100,17 @@
     },
     {
       "text": "machine",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "learning",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "algorithms",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
@@ -190,32 +190,32 @@
     },
     {
       "text": "answering",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "and",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "bot",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "service",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "resources",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "Advance",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.95
     },
     {
@@ -300,32 +300,32 @@
     },
     {
       "text": "deploying",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "models",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "The",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.95
     },
     {
       "text": "includes",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "interpretability",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "MLOps",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.95
     },
     {
@@ -370,17 +370,17 @@
     },
     {
       "text": "process",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.85
     },
     {
       "text": "where",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.85
     },
     {
       "text": "learns",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.85
     },
     {
@@ -405,17 +405,17 @@
     },
     {
       "text": "able",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.85
     },
     {
       "text": "view",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.85
     },
     {
       "text": "from",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.85
     },
     {
@@ -490,7 +490,7 @@
     },
     {
       "text": "fr",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.85
     },
     {
@@ -530,12 +530,12 @@
     },
     {
       "text": "train",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "start",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
@@ -580,37 +580,37 @@
     },
     {
       "text": "Key",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.95
     },
     {
       "text": "Value",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.95
     },
     {
       "text": "Example",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.95
     },
     {
       "text": "modelLabel",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "name",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
       "text": "Model1",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.95
     },
     {
       "text": "trainingConfigVersion",
-      "type": "technical_object",
+      "type": "content_object",
       "confidence": 0.8500000000000001
     },
     {
@@ -5591,7 +5591,7 @@
       "Technology": 1,
       "Metric": 1,
       "measurement": 11,
-      "technical_object": 31,
+      "content_object": 31,
       "DescriptionText": 1,
       "service": 2,
       "reference": 1,

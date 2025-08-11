@@ -46,7 +46,7 @@ async def universal_query_analysis(
             f"   📚 Key terms: {domain_analysis.characteristics.most_frequent_terms[:5]}"
         )
         print(
-            f"   🎯 Technical density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
+            f"   🎯 Concept density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
         )
 
         # Step 2: Adaptive query analysis

@@ -261,7 +261,7 @@ Focus on significant terms, proper nouns, and technical concepts.
     relationship_hints = []
     if "process" in predicted_entities.get('predicted_entity_types', []):
         relationship_hints.append("look for process-object relationships")
-    if "technical_object" in predicted_entities.get('predicted_entity_types', []):
+    if "content_object" in predicted_entities.get('predicted_entity_types', []):
         relationship_hints.append("focus on component-system relationships")
     if "measurement" in predicted_entities.get('predicted_entity_types', []):
         relationship_hints.append("identify metric-target relationships")

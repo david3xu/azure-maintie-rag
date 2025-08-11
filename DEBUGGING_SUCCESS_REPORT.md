@@ -59,7 +59,7 @@ ExtractedRelationship(
 - Processing signatures differ with/without Agent 1 analysis
 
 **Enhancement Implementation**:
-- **Entity Type Prediction**: Agent 1 predicts likely entity types (process, technical_object, measurement)
+- **Entity Type Prediction**: Agent 1 predicts likely entity types (process, content_object, measurement)
 - **Targeted Extraction Prompts**: Agent 1 generates specific prompts based on content analysis
 - **Type-Aware Extraction**: Agent 2 uses predictions for targeted extraction (80% guidance rate)
 - **Enhanced Tool as DEFAULT**: `extract_with_enhanced_agent_guidance` is now the default tool

@@ -71,13 +71,9 @@ class UniversalPromptGenerator:
 
         Returns dictionary of generated prompt file paths.
         """
+        # NO FALLBACKS - Domain analyzer required for production
         if self.domain_analyzer is None:
-            print(
-                "⚠️  Domain analyzer not injected. Using universal fallback templates..."
-            )
-            return await self._generate_fallback_prompts(
-                output_directory or str(Path(__file__).parent / "generated")
-            )
+            raise Exception("Domain analyzer is required for production prompt generation")
 
         print(f"🌍 Generating universal prompts for content in: {data_directory}")
 
@@ -216,9 +212,9 @@ class UniversalPromptGenerator:
 
         # Create adaptive configuration based on actual domain analysis results
         return {
-            "domain_signature": content_signature,
+            "content_signature": content_signature,
             "content_confidence": min(vocabulary_complexity + concept_density, 1.0),
-            "discovered_domain_description": self._generate_domain_description_simple(
+            "discovered_content_description": self._generate_content_description_simple(
                 content_signature, vocabulary_complexity
             ),
             "discovered_content_patterns": discovered_content_patterns,
@@ -241,7 +237,7 @@ class UniversalPromptGenerator:
                 content_signature, discovered_patterns
             ),
             "vocabulary_richness": vocabulary_complexity,
-            "technical_density": concept_density,
+            "concept_density": concept_density,
             "analysis_processing_time": 0.0,
             "example_entity": "discovered_concept",
             "adaptive_entity_type": (
@@ -249,7 +245,7 @@ class UniversalPromptGenerator:
             ),
         }
 
-    def _generate_domain_description_simple(
+    def _generate_content_description_simple(
         self, content_signature: str, vocabulary_complexity: float
     ) -> str:
         """Generate natural language description of discovered content characteristics"""
@@ -371,112 +367,6 @@ class UniversalPromptGenerator:
 
         return insights
 
-    async def _generate_fallback_prompts(self, output_directory: str) -> Dict[str, str]:
-        """Generate universal fallback prompts when domain analysis is not available."""
-        print("🔧 Generating universal fallback prompts (no domain analysis)...")
-
-        Path(output_directory).mkdir(exist_ok=True)
-
-        # Universal fallback configuration
-        fallback_config = {
-            "domain_signature": "universal_fallback",
-            "content_confidence": 0.7,
-            "discovered_domain_description": "universal content without domain-specific analysis",
-            "discovered_content_patterns": [
-                {
-                    "category": "General",
-                    "description": "Universal content pattern",
-                    "examples": ["concept", "entity", "term"],
-                }
-            ],
-            "discovered_entity_types": ["concept", "entity", "term", "proper_noun"],
-            "discovered_relationship_patterns": [
-                {
-                    "category": "Universal",
-                    "relationship_types": [
-                        {
-                            "name": "relates_to",
-                            "description": "General relationship",
-                            "example": "A relates to B",
-                        },
-                        {
-                            "name": "contains",
-                            "description": "Containment relationship",
-                            "example": "A contains B",
-                        },
-                        {
-                            "name": "associated_with",
-                            "description": "Association relationship",
-                            "example": "A associated with B",
-                        },
-                    ],
-                }
-            ],
-            "discovered_relationship_types": [
-                "relates_to",
-                "contains",
-                "associated_with",
-            ],
-            "entity_confidence_threshold": 0.7,
-            "relationship_confidence_threshold": 0.6,
-            "key_domain_insights": [
-                "Universal content analysis without domain assumptions",
-                "Domain-agnostic entity and relationship extraction",
-                "Fallback approach for any content type",
-                "Adaptive to discovered content characteristics",
-                "No predetermined domain categories",
-            ],
-            "relationship_insights": [
-                "How entities relate in general content",
-                "Universal relationship patterns",
-                "Content-agnostic associations",
-            ],
-            "vocabulary_richness": 0.5,
-            "technical_density": 0.5,
-            "analysis_processing_time": 0.0,
-            "example_entity": "example_concept",
-            "adaptive_entity_type": "concept",
-        }
-
-        generated_prompts = {}
-
-        # Generate fallback entity extraction prompt
-        try:
-            entity_prompt = self._generate_entity_extraction_prompt(fallback_config)
-            entity_path = (
-                Path(output_directory) / "universal_fallback_entity_extraction.jinja2"
-            )
-            entity_path.write_text(entity_prompt)
-            generated_prompts["entity_extraction"] = str(entity_path)
-        except Exception as e:
-            print(f"⚠️  Failed to generate entity extraction prompt: {e}")
-            # Use the universal template directly
-            generated_prompts["entity_extraction"] = str(
-                Path(self.template_env.loader.searchpath[0])
-                / "universal_entity_extraction.jinja2"
-            )
-
-        # Generate fallback relation extraction prompt
-        try:
-            relation_prompt = self._generate_relation_extraction_prompt(fallback_config)
-            relation_path = (
-                Path(output_directory) / "universal_fallback_relation_extraction.jinja2"
-            )
-            relation_path.write_text(relation_prompt)
-            generated_prompts["relation_extraction"] = str(relation_path)
-        except Exception as e:
-            print(f"⚠️  Failed to generate relation extraction prompt: {e}")
-            # Use the universal template directly
-            generated_prompts["relation_extraction"] = str(
-                Path(self.template_env.loader.searchpath[0])
-                / "universal_relation_extraction.jinja2"
-            )
-
-        print(f"✅ Generated fallback prompts:")
-        for prompt_type, path in generated_prompts.items():
-            print(f"   {prompt_type}: {path}")
-
-        return generated_prompts
 
     def _generate_entity_extraction_prompt(self, config: Dict[str, Any]) -> str:
         """Generate entity extraction prompt using configuration"""

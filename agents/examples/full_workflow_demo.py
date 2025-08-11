@@ -268,7 +268,7 @@ def demonstrate_architecture_comparison():
         ),
         (
             "Testing",
-            "❌ Difficult to mock dependencies",
+            "❌ Difficult to test dependencies",
             "✅ Dependency injection enables easy testing",
         ),
         (

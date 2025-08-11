@@ -17,7 +17,8 @@ try:
     AZURE_ML_AVAILABLE = True
 except ImportError:
     AZURE_ML_AVAILABLE = False
-    logger.warning("Azure ML SDK not available - using simulation mode")
+    logger.error("Azure ML SDK not available - production deployment requires Azure ML SDK")
+    raise ImportError("Azure ML SDK is required for production GNN inference - install azure-ai-ml")
 
 from config.settings import azure_settings
 from infrastructure.azure_auth_utils import get_azure_credential
@@ -53,14 +54,12 @@ class GNNInferenceClient:
                 self._initialized = True
                 logger.info("GNN Inference client initialized with real Azure ML")
             except Exception as e:
-                logger.warning(
-                    f"GNN client initialization failed, using fallback mode: {e}"
-                )
-                # Still mark as initialized for fallback functionality
-                self._initialized = True
+                logger.error(f"GNN client initialization failed: {e}")
+                # NO FALLBACKS - Azure ML REQUIRED for production GNN
+                raise Exception(f"Azure ML client initialization required for production GNN: {e}")
         else:
-            logger.info("Azure ML SDK not available - GNN client running in simulation mode")
-            self._initialized = True
+            # NO SIMULATIONS - Azure ML SDK REQUIRED for production
+            raise ImportError("Azure ML SDK is required for production GNN - install azure-ai-ml")
 
     async def deploy_model(
         self, model_name: str, deployment_config: Dict[str, Any]

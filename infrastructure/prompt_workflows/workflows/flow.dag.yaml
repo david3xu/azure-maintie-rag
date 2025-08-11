@@ -8,10 +8,10 @@ inputs:
   texts:
     type: list
     description: "Raw text documents for knowledge extraction"
-  domain_name:
+  content_name:
     type: string
     default: "general"
-    description: "Domain name for context (remains universal)"
+    description: "Content name for context (remains universal)"
   max_entities:
     type: int
     default: 50
@@ -43,7 +43,7 @@ nodes:
     temperature: 0.3
     max_tokens: 500
     texts: ${inputs.texts}
-    domain_name: ${inputs.domain_name}
+    content_name: ${inputs.content_name}
   connection: azure_openai_connection
   api: chat
 
@@ -57,7 +57,7 @@ nodes:
     temperature: 0.4
     max_tokens: 400
     texts: ${inputs.texts}
-    domain_name: ${inputs.domain_name}
+    content_name: ${inputs.content_name}
     entities: ${entity_extraction.output}
   connection: azure_openai_connection
   api: chat
@@ -92,4 +92,4 @@ nodes:
     entities: ${knowledge_graph_builder.output.entities}
     relations: ${knowledge_graph_builder.output.relations}
     summary: ${quality_assessor.output}
-    domain_name: ${inputs.domain_name}
+    content_name: ${inputs.content_name}

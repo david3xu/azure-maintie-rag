@@ -26,8 +26,8 @@ async def index_in_search(source_path: str, domain: str = "universal"):
         print("✅ Azure Search and OpenAI clients ready")
 
         if not search_client or not openai_client:
-            print("🔍 Simulated search indexing (Azure services unavailable)")
-            return True
+            # NO SIMULATIONS - Azure services MUST work for production
+            raise Exception("Azure Search or OpenAI client not available - cannot proceed")
 
         # Find files to index
         source_dir = Path(source_path)
@@ -62,8 +62,13 @@ async def index_in_search(source_path: str, domain: str = "universal"):
                     "domain": domain,
                 }
 
-                # Simple indexing simulation
-                indexed += 1
+                # REAL Azure Search indexing - no simulations
+                index_result = await search_client.index_document(doc)
+                if index_result.get("success"):
+                    indexed += 1
+                    print(f"   ✅ Indexed: {file_path.name}")
+                else:
+                    raise Exception(f"Search indexing failed: {index_result.get('error')}")
 
             except Exception as e:
                 print(f"⚠️ Indexing failed for {file_path.name}: {e}")

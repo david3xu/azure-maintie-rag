@@ -202,9 +202,9 @@ class SimpleDynamicConfigManager:
             return result
 
         except Exception as e:
-            logger.warning(f"Domain discovery failed, using safe defaults: {e}")
-            # Fallback analysis based on directory structure
-            return self._create_fallback_analysis(data_directory)
+            logger.error(f"Domain discovery failed - no fallbacks allowed: {e}")
+            # NO FALLBACKS - Domain intelligence MUST work for production
+            raise Exception(f"Domain discovery required for production Universal RAG: {e}")
 
     def _create_fallback_analysis(
         self, data_directory: str

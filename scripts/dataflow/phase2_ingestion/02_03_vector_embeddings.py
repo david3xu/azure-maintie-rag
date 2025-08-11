@@ -26,8 +26,8 @@ async def generate_embeddings(domain: str = "universal"):
         print("✅ Azure OpenAI and Search clients ready for embeddings")
 
         if not openai_client:
-            print("🎯 Simulated embedding generation (Azure OpenAI unavailable)")
-            return True
+            # NO SIMULATIONS - Azure OpenAI required for production embeddings
+            raise Exception("Azure OpenAI client is required for production vector embeddings")
 
         # Sample documents for embedding generation
         sample_docs = [
@@ -47,9 +47,13 @@ async def generate_embeddings(domain: str = "universal"):
                 # Simple embedding request
                 embedding_prompt = f"Generate embedding for: {doc}"
 
-                # Simple embedding simulation
-                embeddings_generated += 1
-                print(f"✅ Generated 1536D embedding for document {i}")
+                # REAL Azure OpenAI embedding generation - no simulations
+                embedding = await openai_client.get_embedding(doc)
+                if embedding and len(embedding) == 1536:
+                    embeddings_generated += 1
+                    print(f"✅ Generated 1536D embedding for document {i}")
+                else:
+                    raise Exception(f"Failed to generate valid 1536D embedding for document {i}")
 
             except Exception as e:
                 print(f"⚠️ Embedding generation failed for document {i}: {e}")

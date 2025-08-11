@@ -200,34 +200,29 @@ result = await run_knowledge_extraction(
     use_generated_prompts=True  # ✅ Uses dynamically generated templates
 )
 
-# Fallback to hardcoded prompts if needed
-result = await run_knowledge_extraction(
-    content="Your content...",
-    use_generated_prompts=False  # Uses static prompts
-)
+# AUTO-GENERATED PROMPTS ONLY - No hardcoded fallbacks
+# If this fails, system throws exception (production-first approach)
 ```
 
-### **Comprehensive Fallback System**
+### **Production-First Architecture**
 
-**3-Tier Fallback Architecture**:
-- **Tier 1**: Generated Prompts + Azure OpenAI LLM
-- **Tier 2**: Standard hardcoded prompts + Azure OpenAI LLM  
-- **Tier 3**: Emergency pattern-based extraction (no LLM)
+**Auto-Generated Prompts Only**:
+- **ONLY Agent 1**: Domain Intelligence → Dynamic Prompt Generation → Knowledge Extraction
+- **NO FALLBACKS**: System fails fast if Azure services unavailable
+- **PRODUCTION READY**: Requires real Azure OpenAI and domain analysis for all operations
 
-**Fallback Flow Implementation**:
+**Production Flow Implementation**:
 ```python
 # Knowledge Extraction Agent - extract_with_generated_prompts()
-try:
-    # Tier 1: Generated prompts workflow
-    result = await orchestrator.execute_extraction_workflow(texts=[content])
-except Exception:
-    try:
-        # Tier 2: Standard extraction with hardcoded prompts
-        result = await extract_entities_and_relationships(ctx, content)
-    except Exception:
-        # Tier 3: Emergency pattern extraction
-        entities = [emergency_pattern_extraction(content)]
-        result = ExtractionResult(entities=entities, processing_signature="emergency_fallback")
+# Agent 1 (Domain Intelligence) analyzes content characteristics
+domain_analysis = await run_domain_analysis(content, detailed=True)
+
+# Generate domain-optimized prompts using Agent 1 results
+orchestrator = await PromptWorkflowOrchestrator.create_with_domain_intelligence()
+result = await orchestrator.execute_extraction_workflow(texts=[content])
+
+# NO FALLBACKS - If domain analysis or prompt generation fail, system throws exception
+# This ensures production quality and prevents silent degradation
 ```
 
 ### **Performance Impact**
@@ -273,7 +268,7 @@ infrastructure/prompt_workflows/
 
 **Zero Domain Assumptions**: All templates adapt dynamically to content characteristics discovered through domain intelligence analysis, never using hardcoded business logic or domain categories.
 
-**Fallback Gracefully**: Templates work both with and without domain intelligence, providing universal extraction capabilities.
+**Production-First Approach**: All templates REQUIRE domain intelligence from Agent 1. System fails fast if domain analysis is unavailable, ensuring consistent production quality.
 
 ## Core Components
 
@@ -285,10 +280,10 @@ infrastructure/prompt_workflows/
 - `universal_relation_extraction.jinja2` - Relationship extraction with discovered patterns
 
 **Features**:
-- Conditional sections based on domain intelligence availability
-- Fallback modes for universal operation
-- Template variables populated by content analysis
-- No hardcoded domain knowledge
+- Dynamic sections based on Agent 1 domain intelligence analysis
+- Template variables populated by discovered content characteristics
+- Auto-generated prompts for ANY domain without hardcoded assumptions
+- Production-quality extraction with fail-fast error handling
 
 ### 2. Workflow Orchestration
 
@@ -416,17 +411,13 @@ nodes:
 ### Template Customization
 
 ```python
-# Generate domain-specific templates
+# Generate domain-specific templates (ONLY OPTION - No fallbacks)
 templates = await orchestrator.prepare_workflow_templates(
     data_directory="/path/to/domain/content",
-    use_generated=True  # Use domain-optimized templates
+    use_generated=True  # REQUIRED: Domain-optimized templates from Agent 1
 )
 
-# Use universal fallbacks
-templates = await orchestrator.prepare_workflow_templates(
-    data_directory="/path/to/content", 
-    use_generated=False  # Use universal templates
-)
+# NO FALLBACK OPTIONS: use_generated=False will throw exception in production
 ```
 
 ## Integration Points

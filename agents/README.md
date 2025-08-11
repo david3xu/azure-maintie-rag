@@ -246,7 +246,7 @@ python examples/full_workflow_demo.py
 Expected output:
 ```
 🌍 Universal domain analysis complete!
-📊 Discovered signature: code_rich_high_technical_density_medium_sentences
+📊 Discovered signature: code_rich_high_concept_density_medium_sentences
 ⚙️  Adaptive configuration generated for your specific content
 ```
 

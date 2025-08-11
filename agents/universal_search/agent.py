@@ -520,12 +520,12 @@ async def run_universal_search(
     # Use centralized orchestration tool directly
     from agents.core.agent_toolsets import orchestrate_universal_search
     
-    class MockRunContext:
+    class SearchRunContext:
         def __init__(self, deps):
             self.deps = deps
             self.usage = None
     
-    ctx = MockRunContext(deps)
+    ctx = SearchRunContext(deps)
     
     # Call centralized orchestration
     search_results = await orchestrate_universal_search(

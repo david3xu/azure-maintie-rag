@@ -187,19 +187,16 @@ else:
             )
 
         def forward(self, x, edge_index, batch=None):
-            """Fallback forward pass - returns mock predictions"""
-            logger.warning("GNN forward pass called without PyTorch - returning mock data")
-            return {"predictions": [], "mock": True}
+            """NO FALLBACKS - PyTorch REQUIRED for production GNN"""
+            raise ImportError("PyTorch is required for GNN operations - install PyTorch for production")
 
         def get_embeddings(self, x, edge_index):
-            """Fallback embeddings - returns mock data"""
-            logger.warning("GNN embeddings called without PyTorch - returning mock data")
-            return {"embeddings": [], "mock": True}
+            """NO FALLBACKS - PyTorch REQUIRED for production GNN"""
+            raise ImportError("PyTorch is required for GNN embeddings - install PyTorch for production")
 
         def predict_node_classes(self, x, edge_index):
-            """Fallback node prediction - returns mock data"""
-            logger.warning("GNN node prediction called without PyTorch - returning mock data")
-            return {"predictions": [], "mock": True}
+            """NO FALLBACKS - PyTorch REQUIRED for production GNN"""
+            raise ImportError("PyTorch is required for GNN node prediction - install PyTorch for production")
 
 
 class UniversalGNNConfig:
