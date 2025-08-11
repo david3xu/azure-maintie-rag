@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-08-10T05:41:45",
+  "inspection_duration": 4.002407550811768,
+  "services_checked": [
+    "cosmos_db",
+    "cognitive_search",
+    "azure_storage",
+    "azure_openai",
+    "local_cache"
+  ],
+  "results": {
+    "cosmos_db": {
+      "vertices": 0,
+      "edges": 0
+    },
+    "cognitive_search": {
+      "indexes": 0,
+      "total_documents": "manual_check_needed"
+    },
+    "azure_storage": {
+      "containers": "manual_check_needed",
+      "blobs": "manual_check_needed"
+    },
+    "azure_openai": {
+      "status": "operational",
+      "persistent_data": null
+    },
+    "local_cache": {
+      "files": 0,
+      "size_kb": 0.0
+    }
+  }
+}

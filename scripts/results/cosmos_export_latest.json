@@ -1,0 +1,6591 @@
+{
+  "export_timestamp": "2025-08-10T09:49:33.971661",
+  "total_entities": 139,
+  "total_relationships": 812,
+  "entities": [
+    {
+      "text": "orchestration workflow model",
+      "type": "concept",
+      "confidence": 0.9
+    },
+    {
+      "text": "Training",
+      "type": "process",
+      "confidence": 0.95
+    },
+    {
+      "text": "model",
+      "type": "object",
+      "confidence": 0.85
+    },
+    {
+      "text": "labeled utterances",
+      "type": "data",
+      "confidence": 0.9
+    },
+    {
+      "text": "model performance",
+      "type": "metric",
+      "confidence": 0.8
+    },
+    {
+      "text": "06/21/2025",
+      "type": "date",
+      "confidence": 0.95
+    },
+    {
+      "text": "Conversation",
+      "type": "ProjectKind",
+      "confidence": 0.9
+    },
+    {
+      "text": "confidenceThreshold",
+      "type": "ConfigurationParameter",
+      "confidence": 0.85
+    },
+    {
+      "text": "0.7",
+      "type": "ConfidenceValue",
+      "confidence": 0.8
+    },
+    {
+      "text": "{PROJECT-NAME}",
+      "type": "ProjectName",
+      "confidence": 0.75
+    },
+    {
+      "text": "multilingual",
+      "type": "Feature",
+      "confidence": 0.8
+    },
+    {
+      "text": "description",
+      "type": "MetadataField",
+      "confidence": 0.85
+    },
+    {
+      "text": "Azure Machine Learning",
+      "type": "Service",
+      "confidence": 0.9
+    },
+    {
+      "text": "machine learning algorithms",
+      "type": "Technology",
+      "confidence": 0.9
+    },
+    {
+      "text": "performance",
+      "type": "Metric",
+      "confidence": 0.8
+    },
+    {
+      "text": "labeled",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "utterances",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "orchestration",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "workflow",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "machine",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "learning",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "algorithms",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "metrics",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "API",
+      "type": "measurement",
+      "confidence": 0.9
+    },
+    {
+      "text": "configuration",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "parameters",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "deployment",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "threshold",
+      "type": "measurement",
+      "confidence": 0.8
+    },
+    {
+      "text": "settings",
+      "type": "measurement",
+      "confidence": 0.75
+    },
+    {
+      "text": "use",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "this",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "application",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "delete",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "the",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "associate",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "custom",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "question",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "answering",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "and",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "bot",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "service",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "resources",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "Advance",
+      "type": "technical_object",
+      "confidence": 0.95
+    },
+    {
+      "text": "next",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "article",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "learn",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "how",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "customize",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "your",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "FAQ",
+      "type": "concept",
+      "confidence": 0.75
+    },
+    {
+      "text": "multi-turn",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "Azure",
+      "type": "concept",
+      "confidence": 0.75
+    },
+    {
+      "text": "Machine",
+      "type": "concept",
+      "confidence": 0.75
+    },
+    {
+      "text": "Learning",
+      "type": "concept",
+      "confidence": 0.75
+    },
+    {
+      "text": "provides",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "automated",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "capabilities",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "for",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "training",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "deploying",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "models",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "The",
+      "type": "technical_object",
+      "confidence": 0.95
+    },
+    {
+      "text": "includes",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "interpretability",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "MLOps",
+      "type": "technical_object",
+      "confidence": 0.95
+    },
+    {
+      "text": "features",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "production",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "you're",
+      "type": "concept",
+      "confidence": 0.6
+    },
+    {
+      "text": "not",
+      "type": "concept",
+      "confidence": 0.6
+    },
+    {
+      "text": "going",
+      "type": "concept",
+      "confidence": 0.6
+    },
+    {
+      "text": "continue",
+      "type": "concept",
+      "confidence": 0.6
+    },
+    {
+      "text": "wi",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "Train",
+      "type": "concept",
+      "confidence": 0.75
+    },
+    {
+      "text": "process",
+      "type": "technical_object",
+      "confidence": 0.85
+    },
+    {
+      "text": "where",
+      "type": "technical_object",
+      "confidence": 0.85
+    },
+    {
+      "text": "learns",
+      "type": "technical_object",
+      "confidence": 0.85
+    },
+    {
+      "text": "After",
+      "type": "process",
+      "confidence": 0.95
+    },
+    {
+      "text": "completed",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "you",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "will",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "able",
+      "type": "technical_object",
+      "confidence": 0.85
+    },
+    {
+      "text": "view",
+      "type": "technical_object",
+      "confidence": 0.85
+    },
+    {
+      "text": "from",
+      "type": "technical_object",
+      "confidence": 0.85
+    },
+    {
+      "text": "metadata",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "projectKind",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "projectName",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "true",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "Trying",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "{\"metadata",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "{\"projectKind",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "Conversation\",\"settings\":{\"confidenceThreshold",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "0.7},\"projectName",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "{PROJECT-NAME}\",\"multilingual",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "true,\"description",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "out",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "CLU\",\"language",
+      "type": "concept",
+      "confidence": 0.75
+    },
+    {
+      "text": "{LANGUAGE-CODE}\"},\"assets",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "fr",
+      "type": "technical_object",
+      "confidence": 0.85
+    },
+    {
+      "text": "Trying out",
+      "type": "DescriptionText",
+      "confidence": 0.8
+    },
+    {
+      "text": "custom question answering",
+      "type": "service",
+      "confidence": 0.85
+    },
+    {
+      "text": "bot service resources",
+      "type": "service",
+      "confidence": 0.85
+    },
+    {
+      "text": "FAQ bot",
+      "type": "object",
+      "confidence": 0.8
+    },
+    {
+      "text": "next article",
+      "type": "reference",
+      "confidence": 0.75
+    },
+    {
+      "text": "training job",
+      "type": "Task",
+      "confidence": 0.88
+    },
+    {
+      "text": "successfully completed jobs",
+      "type": "Condition",
+      "confidence": 0.82
+    },
+    {
+      "text": "train",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "start",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "Trying out CLU",
+      "type": "Description",
+      "confidence": 0.85
+    },
+    {
+      "text": "{LANGUAGE-CODE}",
+      "type": "LanguageCode",
+      "confidence": 0.75
+    },
+    {
+      "text": "Clean",
+      "type": "pattern_discovered",
+      "confidence": 0.7999999999999999
+    },
+    {
+      "text": "Next",
+      "type": "pattern_discovered",
+      "confidence": 0.7999999999999999
+    },
+    {
+      "text": "comp",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "CLU",
+      "type": "pattern_discovered",
+      "confidence": 0.8
+    },
+    {
+      "text": "with",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "prompts",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "Key",
+      "type": "technical_object",
+      "confidence": 0.95
+    },
+    {
+      "text": "Value",
+      "type": "technical_object",
+      "confidence": 0.95
+    },
+    {
+      "text": "Example",
+      "type": "technical_object",
+      "confidence": 0.95
+    },
+    {
+      "text": "modelLabel",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "name",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "Model1",
+      "type": "technical_object",
+      "confidence": 0.95
+    },
+    {
+      "text": "trainingConfigVersion",
+      "type": "technical_object",
+      "confidence": 0.8500000000000001
+    },
+    {
+      "text": "version",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "default",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "latest",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "used",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "2022-05-01",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "startDateTime",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "time",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "started",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "2022-04-",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "14T10:23:04.2598544Z",
+      "type": "process",
+      "confidence": 0.9
+    },
+    {
+      "text": "status",
+      "type": "concept",
+      "confidence": 0.65
+    },
+    {
+      "text": "You",
+      "type": "pattern_discovered",
+      "confidence": 0.7999999999999999
+    },
+    {
+      "text": "Option",
+      "type": "pattern_discovered",
+      "confidence": 0.7999999999999999
+    },
+    {
+      "text": "Description",
+      "type": "pattern_discovered",
+      "confidence": 0.7999999999999999
+    },
+    {
+      "text": "Label",
+      "type": "pattern_discovered",
+      "confidence": 0.7999999999999999
+    },
+    {
+      "text": "Select",
+      "type": "pattern_discovered",
+      "confidence": 0.7999999999999999
+    },
+    {
+      "text": "Highlight",
+      "type": "pattern_discovered",
+      "confidence": 0.7999999999999999
+    }
+  ],
+  "relationships": [
+    {
+      "source": "Training",
+      "target": "orchestration workflow model",
+      "relation": "applies_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Training",
+      "target": "labeled utterances",
+      "relation": "depends_on",
+      "confidence": 0.92
+    },
+    {
+      "source": "Training",
+      "target": "model performance",
+      "relation": "leads_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "Training",
+      "target": "model",
+      "relation": "part_of",
+      "confidence": 0.95
+    },
+    {
+      "source": "Training",
+      "target": "labeled utterances",
+      "relation": "requires",
+      "confidence": 0.92
+    },
+    {
+      "source": "Training",
+      "target": "model",
+      "relation": "causes",
+      "confidence": 0.95
+    },
+    {
+      "source": "Training",
+      "target": "labeled utterances",
+      "relation": "requires",
+      "confidence": 0.9
+    },
+    {
+      "source": "Training",
+      "target": "model",
+      "relation": "processes",
+      "confidence": 0.93
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "orchestration workflow model",
+      "relation": "applies_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Training",
+      "target": "labeled utterances",
+      "relation": "depends_on",
+      "confidence": 0.92
+    },
+    {
+      "source": "Training",
+      "target": "model",
+      "relation": "part_of",
+      "confidence": 0.95
+    },
+    {
+      "source": "Training",
+      "target": "labeled utterances",
+      "relation": "depends_on",
+      "confidence": 0.92
+    },
+    {
+      "source": "Training",
+      "target": "model performance",
+      "relation": "leads_to",
+      "confidence": 0.93
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.6
+    },
+    {
+      "source": "Training",
+      "target": "model",
+      "relation": "part_of",
+      "confidence": 0.9
+    },
+    {
+      "source": "Training",
+      "target": "labeled utterances",
+      "relation": "depends_on",
+      "confidence": 0.85
+    },
+    {
+      "source": "Training",
+      "target": "model performance",
+      "relation": "leads_to",
+      "confidence": 0.87
+    },
+    {
+      "source": "Training",
+      "target": "orchestration workflow model",
+      "relation": "applies_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Training",
+      "target": "labeled utterances",
+      "relation": "depends_on",
+      "confidence": 0.92
+    },
+    {
+      "source": "Training",
+      "target": "model performance",
+      "relation": "improves",
+      "confidence": 0.9
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Training",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.6
+    },
+    {
+      "source": "Training",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "orchestration workflow model",
+      "target": "model performance",
+      "relation": "associated_with",
+      "confidence": 0.88
+    },
+    {
+      "source": "orchestration workflow model",
+      "target": "machine learning algorithms",
+      "relation": "uses",
+      "confidence": 0.94
+    },
+    {
+      "source": "orchestration workflow model",
+      "target": "model performance",
+      "relation": "leads_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "orchestration workflow model",
+      "target": "model performance",
+      "relation": "leads_to",
+      "confidence": 0.88
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "occurs_on",
+      "confidence": 0.85
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "associated_with",
+      "confidence": 0.85
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "associated_with",
+      "confidence": 0.8
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "associated_with",
+      "confidence": 0.85
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "06/21/2025",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "machine learning algorithms",
+      "target": "performance",
+      "relation": "improves",
+      "confidence": 0.93
+    },
+    {
+      "source": "model",
+      "target": "performance",
+      "relation": "associated_with",
+      "confidence": 0.88
+    },
+    {
+      "source": "model",
+      "target": "labeled utterances",
+      "relation": "uses",
+      "confidence": 0.88
+    },
+    {
+      "source": "model",
+      "target": "machine",
+      "relation": "uses",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "interpretability",
+      "relation": "integrates_with",
+      "confidence": 0.925
+    },
+    {
+      "source": "model",
+      "target": "deployment",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.815
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.8150000000000001
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.8150000000000001
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.815
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.815
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.8150000000000001
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.8150000000000001
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.8150000000000001
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "model",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.8150000000000001
+    },
+    {
+      "source": "model",
+      "target": "name",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "API",
+      "target": "configuration",
+      "relation": "measures",
+      "confidence": 0.95
+    },
+    {
+      "source": "machine",
+      "target": "learning",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "machine",
+      "target": "learning",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learning",
+      "target": "algorithms",
+      "relation": "includes",
+      "confidence": 0.95
+    },
+    {
+      "source": "learning",
+      "target": "models",
+      "relation": "integrates_with",
+      "confidence": 0.66
+    },
+    {
+      "source": "algorithms",
+      "target": "performance",
+      "relation": "enhances",
+      "confidence": 0.95
+    },
+    {
+      "source": "configuration",
+      "target": "parameters",
+      "relation": "specifies",
+      "confidence": 0.95
+    },
+    {
+      "source": "configuration",
+      "target": "version",
+      "relation": "relates_to",
+      "confidence": 0.895
+    },
+    {
+      "source": "parameters",
+      "target": "deployment",
+      "relation": "defines",
+      "confidence": 0.8
+    },
+    {
+      "source": "deployment",
+      "target": "threshold",
+      "relation": "sets",
+      "confidence": 0.95
+    },
+    {
+      "source": "deployment",
+      "target": "capabilities",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "threshold",
+      "target": "settings",
+      "relation": "adjusts",
+      "confidence": 0.95
+    },
+    {
+      "source": "use",
+      "target": "this",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "use",
+      "target": "application",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "use",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "use",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.855
+    },
+    {
+      "source": "use",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.835
+    },
+    {
+      "source": "use",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.785
+    },
+    {
+      "source": "use",
+      "target": "question",
+      "relation": "relates_to",
+      "confidence": 0.75
+    },
+    {
+      "source": "use",
+      "target": "answering",
+      "relation": "relates_to",
+      "confidence": 0.7050000000000001
+    },
+    {
+      "source": "use",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.655
+    },
+    {
+      "source": "use",
+      "target": "this",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "use",
+      "target": "this",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "this",
+      "target": "application",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "this",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.91
+    },
+    {
+      "source": "this",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "this",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.855
+    },
+    {
+      "source": "this",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.8049999999999999
+    },
+    {
+      "source": "this",
+      "target": "question",
+      "relation": "relates_to",
+      "confidence": 0.77
+    },
+    {
+      "source": "this",
+      "target": "answering",
+      "relation": "relates_to",
+      "confidence": 0.725
+    },
+    {
+      "source": "this",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.675
+    },
+    {
+      "source": "this",
+      "target": "bot",
+      "relation": "relates_to",
+      "confidence": 0.655
+    },
+    {
+      "source": "this",
+      "target": "application",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "this",
+      "target": "application",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "application",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "application",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "application",
+      "target": "custom question answering",
+      "relation": "associated_with",
+      "confidence": 0.9
+    },
+    {
+      "source": "application",
+      "target": "bot service resources",
+      "relation": "associated_with",
+      "confidence": 0.9
+    },
+    {
+      "source": "application",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "delete",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "delete",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "delete",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "process",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "the",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "associate",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "associate",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "associate",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "custom",
+      "target": "question",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "custom",
+      "target": "question",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "custom",
+      "target": "question",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "question",
+      "target": "answering",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "question",
+      "target": "answering",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "question",
+      "target": "answering",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "answering",
+      "target": "and",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "answering",
+      "target": "and",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "answering",
+      "target": "and",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "and",
+      "target": "bot",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "and",
+      "target": "deploying",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "and",
+      "target": "MLOps",
+      "relation": "integrates_with",
+      "confidence": 0.6649999999999999
+    },
+    {
+      "source": "and",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "and",
+      "target": "bot",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "and",
+      "target": "deployment",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "and",
+      "target": "bot",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "bot",
+      "target": "service",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "bot",
+      "target": "service",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "bot",
+      "target": "service",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "service",
+      "target": "resources",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "service",
+      "target": "includes",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "service",
+      "target": "resources",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "service",
+      "target": "resources",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "resources",
+      "target": "Advance",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "resources",
+      "target": "Advance",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "resources",
+      "target": "Advance",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Advance",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Advance",
+      "target": "next",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Advance",
+      "target": "FAQ",
+      "relation": "co_occurs_with",
+      "confidence": 0.7050000000000001
+    },
+    {
+      "source": "Advance",
+      "target": "Next",
+      "relation": "co_occurs_with",
+      "confidence": 0.925
+    },
+    {
+      "source": "Advance",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "next",
+      "target": "article",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "next",
+      "target": "article",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "next",
+      "target": "article",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "article",
+      "target": "learn",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "article",
+      "target": "learn",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "article",
+      "target": "learn",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "learn",
+      "target": "how",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "learn",
+      "target": "how",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "learn",
+      "target": "how",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "how",
+      "target": "customize",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "how",
+      "target": "customize",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "how",
+      "target": "customize",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "customize",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "customize",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "customize",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "FAQ",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "FAQ",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "your",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.875
+    },
+    {
+      "source": "your",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.715
+    },
+    {
+      "source": "your",
+      "target": "process",
+      "relation": "integrates_with",
+      "confidence": 0.795
+    },
+    {
+      "source": "your",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.755
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "your",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.875
+    },
+    {
+      "source": "your",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.7150000000000001
+    },
+    {
+      "source": "your",
+      "target": "process",
+      "relation": "integrates_with",
+      "confidence": 0.795
+    },
+    {
+      "source": "your",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.755
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "your",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.875
+    },
+    {
+      "source": "your",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.715
+    },
+    {
+      "source": "your",
+      "target": "process",
+      "relation": "integrates_with",
+      "confidence": 0.795
+    },
+    {
+      "source": "your",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.755
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "your",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.875
+    },
+    {
+      "source": "your",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.715
+    },
+    {
+      "source": "your",
+      "target": "process",
+      "relation": "integrates_with",
+      "confidence": 0.795
+    },
+    {
+      "source": "your",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.755
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "your",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.875
+    },
+    {
+      "source": "your",
+      "target": "process",
+      "relation": "integrates_with",
+      "confidence": 0.795
+    },
+    {
+      "source": "your",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.755
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "your",
+      "target": "Training",
+      "relation": "integrates_with",
+      "confidence": 0.875
+    },
+    {
+      "source": "your",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.7150000000000001
+    },
+    {
+      "source": "your",
+      "target": "process",
+      "relation": "integrates_with",
+      "confidence": 0.795
+    },
+    {
+      "source": "your",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.755
+    },
+    {
+      "source": "your",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.8150000000000001
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "orchestration",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "your",
+      "target": "FAQ",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Azure",
+      "target": "Machine",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Azure",
+      "target": "Learning",
+      "relation": "relates_to",
+      "confidence": 0.93
+    },
+    {
+      "source": "Azure",
+      "target": "provides",
+      "relation": "relates_to",
+      "confidence": 0.885
+    },
+    {
+      "source": "Azure",
+      "target": "automated",
+      "relation": "relates_to",
+      "confidence": 0.84
+    },
+    {
+      "source": "Azure",
+      "target": "capabilities",
+      "relation": "relates_to",
+      "confidence": 0.775
+    },
+    {
+      "source": "Azure",
+      "target": "for",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "Azure",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.69
+    },
+    {
+      "source": "Azure",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.645
+    },
+    {
+      "source": "Azure",
+      "target": "deploying",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Azure",
+      "target": "machine",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Azure",
+      "target": "learning",
+      "relation": "relates_to",
+      "confidence": 0.93
+    },
+    {
+      "source": "Azure",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.645
+    },
+    {
+      "source": "Azure",
+      "target": "for",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "Azure",
+      "target": "Machine",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Azure",
+      "target": "Learning",
+      "relation": "relates_to",
+      "confidence": 0.93
+    },
+    {
+      "source": "Azure",
+      "target": "provides",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "Azure",
+      "target": "automated",
+      "relation": "relates_to",
+      "confidence": 0.84
+    },
+    {
+      "source": "Azure",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.77
+    },
+    {
+      "source": "Azure",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.73
+    },
+    {
+      "source": "Azure",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "Azure",
+      "target": "deployment",
+      "relation": "relates_to",
+      "confidence": 0.68
+    },
+    {
+      "source": "Azure",
+      "target": "capabilities",
+      "relation": "relates_to",
+      "confidence": 0.63
+    },
+    {
+      "source": "Azure",
+      "target": "provides",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Azure",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.91
+    },
+    {
+      "source": "Azure",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.865
+    },
+    {
+      "source": "Azure",
+      "target": "deployment",
+      "relation": "relates_to",
+      "confidence": 0.845
+    },
+    {
+      "source": "Machine",
+      "target": "Learning",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Machine",
+      "target": "provides",
+      "relation": "relates_to",
+      "confidence": 0.915
+    },
+    {
+      "source": "Machine",
+      "target": "automated",
+      "relation": "relates_to",
+      "confidence": 0.87
+    },
+    {
+      "source": "Machine",
+      "target": "capabilities",
+      "relation": "relates_to",
+      "confidence": 0.8049999999999999
+    },
+    {
+      "source": "Machine",
+      "target": "for",
+      "relation": "relates_to",
+      "confidence": 0.74
+    },
+    {
+      "source": "Machine",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.72
+    },
+    {
+      "source": "Machine",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.675
+    },
+    {
+      "source": "Machine",
+      "target": "deploying",
+      "relation": "relates_to",
+      "confidence": 0.655
+    },
+    {
+      "source": "Machine",
+      "target": "machine",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Machine",
+      "target": "learning",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Machine",
+      "target": "Learning",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Machine",
+      "target": "provides",
+      "relation": "relates_to",
+      "confidence": 0.92
+    },
+    {
+      "source": "Machine",
+      "target": "automated",
+      "relation": "relates_to",
+      "confidence": 0.87
+    },
+    {
+      "source": "Machine",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Machine",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.76
+    },
+    {
+      "source": "Machine",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.74
+    },
+    {
+      "source": "Machine",
+      "target": "deployment",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "Machine",
+      "target": "capabilities",
+      "relation": "relates_to",
+      "confidence": 0.66
+    },
+    {
+      "source": "Learning",
+      "target": "provides",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Learning",
+      "target": "provides",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Learning",
+      "target": "automated",
+      "relation": "relates_to",
+      "confidence": 0.91
+    },
+    {
+      "source": "Learning",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.85
+    },
+    {
+      "source": "Learning",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Learning",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.78
+    },
+    {
+      "source": "Learning",
+      "target": "deployment",
+      "relation": "relates_to",
+      "confidence": 0.75
+    },
+    {
+      "source": "Learning",
+      "target": "capabilities",
+      "relation": "relates_to",
+      "confidence": 0.7
+    },
+    {
+      "source": "provides",
+      "target": "automated",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "provides",
+      "target": "automated",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "provides",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "provides",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.91
+    },
+    {
+      "source": "provides",
+      "target": "deployment",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "automated",
+      "target": "capabilities",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "automated",
+      "target": "training",
+      "relation": "processes",
+      "confidence": 0.95
+    },
+    {
+      "source": "capabilities",
+      "target": "for",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "for",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "training",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "training",
+      "target": "and",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "training",
+      "target": "and",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "training",
+      "target": "deployment",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "training",
+      "target": "able",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "training",
+      "target": "completed",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "training",
+      "target": "configuration",
+      "relation": "relates_to",
+      "confidence": 0.825
+    },
+    {
+      "source": "deploying",
+      "target": "machine",
+      "relation": "integrates_with",
+      "confidence": 0.755
+    },
+    {
+      "source": "models",
+      "target": "The",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "The",
+      "target": "service",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "The",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "The",
+      "target": "training",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "includes",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "interpretability",
+      "target": "and",
+      "relation": "integrates_with",
+      "confidence": 0.7699999999999999
+    },
+    {
+      "source": "MLOps",
+      "target": "features",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "production",
+      "target": "deployment",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "you're",
+      "target": "not",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "you're",
+      "target": "going",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "you're",
+      "target": "continue",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "you're",
+      "target": "use",
+      "relation": "relates_to",
+      "confidence": 0.84
+    },
+    {
+      "source": "you're",
+      "target": "this",
+      "relation": "relates_to",
+      "confidence": 0.82
+    },
+    {
+      "source": "you're",
+      "target": "application",
+      "relation": "relates_to",
+      "confidence": 0.795
+    },
+    {
+      "source": "you're",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.73
+    },
+    {
+      "source": "you're",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.695
+    },
+    {
+      "source": "you're",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.675
+    },
+    {
+      "source": "you're",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "you're",
+      "target": "not",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "you're",
+      "target": "going",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "you're",
+      "target": "continue",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "you're",
+      "target": "use",
+      "relation": "relates_to",
+      "confidence": 0.84
+    },
+    {
+      "source": "you're",
+      "target": "this",
+      "relation": "relates_to",
+      "confidence": 0.8200000000000001
+    },
+    {
+      "source": "you're",
+      "target": "application",
+      "relation": "relates_to",
+      "confidence": 0.795
+    },
+    {
+      "source": "you're",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.73
+    },
+    {
+      "source": "you're",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.6950000000000001
+    },
+    {
+      "source": "you're",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.675
+    },
+    {
+      "source": "you're",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "you're",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.6950000000000001
+    },
+    {
+      "source": "not",
+      "target": "going",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "not",
+      "target": "continue",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "not",
+      "target": "use",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "not",
+      "target": "this",
+      "relation": "relates_to",
+      "confidence": 0.855
+    },
+    {
+      "source": "not",
+      "target": "application",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "not",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.765
+    },
+    {
+      "source": "not",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.73
+    },
+    {
+      "source": "not",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "not",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.66
+    },
+    {
+      "source": "not",
+      "target": "question",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "not",
+      "target": "going",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "not",
+      "target": "continue",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "not",
+      "target": "use",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "not",
+      "target": "this",
+      "relation": "relates_to",
+      "confidence": 0.855
+    },
+    {
+      "source": "not",
+      "target": "application",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "not",
+      "target": "delete",
+      "relation": "relates_to",
+      "confidence": 0.765
+    },
+    {
+      "source": "not",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.73
+    },
+    {
+      "source": "not",
+      "target": "associate",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "not",
+      "target": "custom",
+      "relation": "relates_to",
+      "confidence": 0.6599999999999999
+    },
+    {
+      "source": "not",
+      "target": "question",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "not",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.73
+    },
+    {
+      "source": "going",
+      "target": "continue",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "going",
+      "target": "continue",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "continue",
+      "target": "use",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "continue",
+      "target": "use",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "process",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "you",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "process",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "you",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "process",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "process",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "you",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "process",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "you",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "process",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "you",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "train",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.645
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "process",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "you",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "train",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.645
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "orchestration",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Train",
+      "target": "workflow",
+      "relation": "relates_to",
+      "confidence": 0.875
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "06/21/2025",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Train",
+      "target": "Training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "process",
+      "relation": "relates_to",
+      "confidence": 0.665
+    },
+    {
+      "source": "Train",
+      "target": "where",
+      "relation": "relates_to",
+      "confidence": 0.625
+    },
+    {
+      "source": "Train",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "your",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Train",
+      "target": "you",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "train",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Train",
+      "target": "model",
+      "relation": "relates_to",
+      "confidence": 0.83
+    },
+    {
+      "source": "Train",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "orchestration",
+      "target": "workflow",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "06/21/2025",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "workflow",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "learns",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "process",
+      "target": "where",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "where",
+      "target": "the",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "from",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "from",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "labeled",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "labeled",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "fr",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "from",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "from",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "from",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "from",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "learns",
+      "target": "from",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "from",
+      "target": "your",
+      "relation": "integrates_with",
+      "confidence": 0.64
+    },
+    {
+      "source": "from",
+      "target": "your",
+      "relation": "integrates_with",
+      "confidence": 0.64
+    },
+    {
+      "source": "from",
+      "target": "your",
+      "relation": "integrates_with",
+      "confidence": 0.64
+    },
+    {
+      "source": "from",
+      "target": "your",
+      "relation": "integrates_with",
+      "confidence": 0.64
+    },
+    {
+      "source": "from",
+      "target": "your",
+      "relation": "integrates_with",
+      "confidence": 0.64
+    },
+    {
+      "source": "from",
+      "target": "your",
+      "relation": "integrates_with",
+      "confidence": 0.64
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled",
+      "target": "utterances",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "utterances",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "utterances",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "utterances",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "utterances",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "utterances",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "utterances",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "utterances",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "utterances",
+      "target": "After",
+      "relation": "relates_to",
+      "confidence": 0.94
+    },
+    {
+      "source": "After",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.615
+    },
+    {
+      "source": "After",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.615
+    },
+    {
+      "source": "After",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.615
+    },
+    {
+      "source": "After",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.615
+    },
+    {
+      "source": "After",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.615
+    },
+    {
+      "source": "After",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.615
+    },
+    {
+      "source": "After",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.615
+    },
+    {
+      "source": "After",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.615
+    },
+    {
+      "source": "will",
+      "target": "able",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "will",
+      "target": "able",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "will",
+      "target": "able",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "will",
+      "target": "able",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "will",
+      "target": "able",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "will",
+      "target": "able",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "able",
+      "target": "view",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "able",
+      "target": "view",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "able",
+      "target": "view",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "able",
+      "target": "view",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "able",
+      "target": "view",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "able",
+      "target": "view",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "able",
+      "target": "view",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "able",
+      "target": "view",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "metadata",
+      "target": "projectKind",
+      "relation": "relates_to",
+      "confidence": 0.91
+    },
+    {
+      "source": "metadata",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.835
+    },
+    {
+      "source": "metadata",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "metadata",
+      "target": "projectKind",
+      "relation": "relates_to",
+      "confidence": 0.91
+    },
+    {
+      "source": "metadata",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.835
+    },
+    {
+      "source": "metadata",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "metadata",
+      "target": "projectKind",
+      "relation": "relates_to",
+      "confidence": 0.91
+    },
+    {
+      "source": "metadata",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.835
+    },
+    {
+      "source": "metadata",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "projectKind",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "projectKind",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.825
+    },
+    {
+      "source": "projectKind",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.725
+    },
+    {
+      "source": "projectKind",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "projectKind",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.825
+    },
+    {
+      "source": "projectKind",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.725
+    },
+    {
+      "source": "projectKind",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "projectKind",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.825
+    },
+    {
+      "source": "projectKind",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.725
+    },
+    {
+      "source": "Conversation",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "Conversation",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Conversation",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.69
+    },
+    {
+      "source": "Conversation",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "Conversation",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Conversation",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.69
+    },
+    {
+      "source": "Conversation",
+      "target": "settings",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "Conversation",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.8
+    },
+    {
+      "source": "Conversation",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.69
+    },
+    {
+      "source": "Conversation",
+      "target": "confidenceThreshold",
+      "relation": "depends_on",
+      "confidence": 0.9
+    },
+    {
+      "source": "Conversation",
+      "target": "multilingual",
+      "relation": "associated_with",
+      "confidence": 0.85
+    },
+    {
+      "source": "Conversation",
+      "target": "{PROJECT-NAME}",
+      "relation": "part_of",
+      "confidence": 0.88
+    },
+    {
+      "source": "Conversation",
+      "target": "confidenceThreshold",
+      "relation": "depends_on",
+      "confidence": 0.9
+    },
+    {
+      "source": "Conversation",
+      "target": "{PROJECT-NAME}",
+      "relation": "associated_with",
+      "confidence": 0.85
+    },
+    {
+      "source": "Conversation",
+      "target": "multilingual",
+      "relation": "implements",
+      "confidence": 0.88
+    },
+    {
+      "source": "Conversation",
+      "target": "Trying out CLU",
+      "relation": "describes",
+      "confidence": 0.87
+    },
+    {
+      "source": "Conversation",
+      "target": "{LANGUAGE-CODE}",
+      "relation": "uses",
+      "confidence": 0.86
+    },
+    {
+      "source": "settings",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "settings",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.79
+    },
+    {
+      "source": "settings",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "settings",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "settings",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.79
+    },
+    {
+      "source": "settings",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "settings",
+      "target": "confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "settings",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.79
+    },
+    {
+      "source": "settings",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.71
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.81
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.81
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "0.7",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.81
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "confidenceThreshold",
+      "target": "0.7",
+      "relation": "set_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "0.7",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.92
+    },
+    {
+      "source": "0.7",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.845
+    },
+    {
+      "source": "0.7",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "0.7",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.6599999999999999
+    },
+    {
+      "source": "0.7",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.92
+    },
+    {
+      "source": "0.7",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.845
+    },
+    {
+      "source": "0.7",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "0.7",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.6599999999999999
+    },
+    {
+      "source": "0.7",
+      "target": "projectName",
+      "relation": "relates_to",
+      "confidence": 0.92
+    },
+    {
+      "source": "0.7",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.845
+    },
+    {
+      "source": "0.7",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "0.7",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.6599999999999999
+    },
+    {
+      "source": "projectName",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "projectName",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.815
+    },
+    {
+      "source": "projectName",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.74
+    },
+    {
+      "source": "projectName",
+      "target": "description",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "projectName",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "projectName",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.815
+    },
+    {
+      "source": "projectName",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.74
+    },
+    {
+      "source": "projectName",
+      "target": "description",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "projectName",
+      "target": "{PROJECT-NAME}",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "projectName",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.815
+    },
+    {
+      "source": "projectName",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.74
+    },
+    {
+      "source": "projectName",
+      "target": "description",
+      "relation": "relates_to",
+      "confidence": 0.685
+    },
+    {
+      "source": "{PROJECT-NAME}",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "{PROJECT-NAME}",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "{PROJECT-NAME}",
+      "target": "multilingual",
+      "relation": "relates_to",
+      "confidence": 0.89
+    },
+    {
+      "source": "multilingual",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "multilingual",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "multilingual",
+      "target": "true",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "true",
+      "target": "description",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "true",
+      "target": "description",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "true",
+      "target": "description",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "description",
+      "target": "Trying",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "description",
+      "target": "Trying",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "description",
+      "target": "Trying",
+      "relation": "relates_to",
+      "confidence": 0.925
+    },
+    {
+      "source": "description",
+      "target": "Trying out",
+      "relation": "describes",
+      "confidence": 0.8
+    },
+    {
+      "source": "{\"metadata",
+      "target": "{\"projectKind",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "{\"metadata",
+      "target": "Conversation\",\"settings\":{\"confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.85
+    },
+    {
+      "source": "{\"metadata",
+      "target": "{\"projectKind",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "{\"metadata",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.85
+    },
+    {
+      "source": "{\"projectKind",
+      "target": "Conversation\",\"settings\":{\"confidenceThreshold",
+      "relation": "relates_to",
+      "confidence": 0.915
+    },
+    {
+      "source": "{\"projectKind",
+      "target": "0.7},\"projectName",
+      "relation": "relates_to",
+      "confidence": 0.6699999999999999
+    },
+    {
+      "source": "{\"projectKind",
+      "target": "{\"projectKind",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "{\"projectKind",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.915
+    },
+    {
+      "source": "{\"projectKind",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.915
+    },
+    {
+      "source": "Conversation\",\"settings\":{\"confidenceThreshold",
+      "target": "0.7},\"projectName",
+      "relation": "relates_to",
+      "confidence": 0.755
+    },
+    {
+      "source": "Conversation\",\"settings\":{\"confidenceThreshold",
+      "target": "{PROJECT-NAME}\",\"multilingual",
+      "relation": "relates_to",
+      "confidence": 0.65
+    },
+    {
+      "source": "Conversation\",\"settings\":{\"confidenceThreshold",
+      "target": "{\"projectKind",
+      "relation": "relates_to",
+      "confidence": 0.915
+    },
+    {
+      "source": "Conversation\",\"settings\":{\"confidenceThreshold",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "0.7},\"projectName",
+      "target": "{PROJECT-NAME}\",\"multilingual",
+      "relation": "relates_to",
+      "confidence": 0.895
+    },
+    {
+      "source": "0.7},\"projectName",
+      "target": "true,\"description",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "0.7},\"projectName",
+      "target": "{\"projectKind",
+      "relation": "relates_to",
+      "confidence": 0.6699999999999999
+    },
+    {
+      "source": "0.7},\"projectName",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.755
+    },
+    {
+      "source": "{PROJECT-NAME}\",\"multilingual",
+      "target": "true,\"description",
+      "relation": "relates_to",
+      "confidence": 0.84
+    },
+    {
+      "source": "{PROJECT-NAME}\",\"multilingual",
+      "target": "Trying",
+      "relation": "relates_to",
+      "confidence": 0.735
+    },
+    {
+      "source": "{PROJECT-NAME}\",\"multilingual",
+      "target": "out",
+      "relation": "relates_to",
+      "confidence": 0.7
+    },
+    {
+      "source": "{PROJECT-NAME}\",\"multilingual",
+      "target": "CLU\",\"language",
+      "relation": "relates_to",
+      "confidence": 0.6799999999999999
+    },
+    {
+      "source": "{PROJECT-NAME}\",\"multilingual",
+      "target": "Conversation",
+      "relation": "relates_to",
+      "confidence": 0.65
+    },
+    {
+      "source": "true,\"description",
+      "target": "Trying",
+      "relation": "relates_to",
+      "confidence": 0.895
+    },
+    {
+      "source": "true,\"description",
+      "target": "out",
+      "relation": "relates_to",
+      "confidence": 0.86
+    },
+    {
+      "source": "true,\"description",
+      "target": "CLU\",\"language",
+      "relation": "relates_to",
+      "confidence": 0.84
+    },
+    {
+      "source": "Trying",
+      "target": "out",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "out",
+      "target": "CLU\",\"language",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "CLU\",\"language",
+      "target": "{LANGUAGE-CODE}\"},\"assets",
+      "relation": "relates_to",
+      "confidence": 0.91
+    },
+    {
+      "source": "completed",
+      "target": "able",
+      "relation": "relates_to",
+      "confidence": 0.9
+    },
+    {
+      "source": "view",
+      "target": "performance",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "labeled utterances",
+      "target": "model",
+      "relation": "used_by",
+      "confidence": 0.88
+    },
+    {
+      "source": "FAQ bot",
+      "target": "next article",
+      "relation": "depends_on",
+      "confidence": 0.85
+    },
+    {
+      "source": "custom question answering",
+      "target": "bot service resources",
+      "relation": "part_of",
+      "confidence": 0.8
+    },
+    {
+      "source": "training job",
+      "target": "model",
+      "relation": "creates",
+      "confidence": 0.9
+    },
+    {
+      "source": "training job",
+      "target": "successfully completed jobs",
+      "relation": "requires",
+      "confidence": 0.88
+    },
+    {
+      "source": "training job",
+      "target": "Training",
+      "relation": "initiates",
+      "confidence": 0.88
+    },
+    {
+      "source": "train",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "train",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.93
+    },
+    {
+      "source": "successfully completed jobs",
+      "target": "model",
+      "relation": "creates",
+      "confidence": 0.9
+    },
+    {
+      "source": "FAQ",
+      "target": "Clean",
+      "relation": "co_occurs_with",
+      "confidence": 0.835
+    },
+    {
+      "source": "FAQ",
+      "target": "Next",
+      "relation": "co_occurs_with",
+      "confidence": 0.78
+    },
+    {
+      "source": "with",
+      "target": "multi-turn",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "multi-turn",
+      "target": "prompts",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Key",
+      "target": "Value",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Key",
+      "target": "Example",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Key",
+      "target": "modelLabel",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Key",
+      "target": "The",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Key",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Key",
+      "target": "name",
+      "relation": "integrates_with",
+      "confidence": 0.905
+    },
+    {
+      "source": "Key",
+      "target": "Model1",
+      "relation": "integrates_with",
+      "confidence": 0.88
+    },
+    {
+      "source": "Key",
+      "target": "trainingConfigVersion",
+      "relation": "integrates_with",
+      "confidence": 0.845
+    },
+    {
+      "source": "Key",
+      "target": "The",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Key",
+      "target": "training",
+      "relation": "integrates_with",
+      "confidence": 0.845
+    },
+    {
+      "source": "Key",
+      "target": "version",
+      "relation": "relates_to",
+      "confidence": 0.675
+    },
+    {
+      "source": "Key",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.855
+    },
+    {
+      "source": "Key",
+      "target": "version",
+      "relation": "relates_to",
+      "confidence": 0.675
+    },
+    {
+      "source": "Key",
+      "target": "The",
+      "relation": "relates_to",
+      "confidence": 0.855
+    },
+    {
+      "source": "Key",
+      "target": "training",
+      "relation": "relates_to",
+      "confidence": 0.745
+    },
+    {
+      "source": "Key",
+      "target": "The",
+      "relation": "relates_to",
+      "confidence": 0.855
+    },
+    {
+      "source": "Key",
+      "target": "the",
+      "relation": "relates_to",
+      "confidence": 0.855
+    },
+    {
+      "source": "Value",
+      "target": "Example",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Value",
+      "target": "modelLabel",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Value",
+      "target": "The",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Value",
+      "target": "model",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Value",
+      "target": "name",
+      "relation": "integrates_with",
+      "confidence": 0.925
+    },
+    {
+      "source": "Example",
+      "target": "modelLabel",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "modelLabel",
+      "target": "The",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "name",
+      "target": "Model1",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "Model1",
+      "target": "trainingConfigVersion",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "trainingConfigVersion",
+      "target": "The",
+      "relation": "integrates_with",
+      "confidence": 0.95
+    },
+    {
+      "source": "version",
+      "target": "default",
+      "relation": "relates_to",
+      "confidence": 0.765
+    },
+    {
+      "source": "version",
+      "target": "used",
+      "relation": "relates_to",
+      "confidence": 0.61
+    },
+    {
+      "source": "latest",
+      "target": "version",
+      "relation": "relates_to",
+      "confidence": 0.7
+    },
+    {
+      "source": "used",
+      "target": "2022-05-01",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "2022-05-01",
+      "target": "startDateTime",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "started",
+      "target": "2022-04-",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "2022-04-",
+      "target": "14T10:23:04.2598544Z",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "14T10:23:04.2598544Z",
+      "target": "status",
+      "relation": "relates_to",
+      "confidence": 0.895
+    },
+    {
+      "source": "You",
+      "target": "Option",
+      "relation": "relates_to",
+      "confidence": 0.935
+    },
+    {
+      "source": "You",
+      "target": "Description",
+      "relation": "relates_to",
+      "confidence": 0.74
+    },
+    {
+      "source": "You",
+      "target": "Label",
+      "relation": "relates_to",
+      "confidence": 0.88
+    },
+    {
+      "source": "You",
+      "target": "Label",
+      "relation": "relates_to",
+      "confidence": 0.88
+    },
+    {
+      "source": "Option",
+      "target": "Description",
+      "relation": "relates_to",
+      "confidence": 0.8049999999999999
+    },
+    {
+      "source": "Option",
+      "target": "Label",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Option",
+      "target": "Label",
+      "relation": "relates_to",
+      "confidence": 0.945
+    },
+    {
+      "source": "Description",
+      "target": "Label",
+      "relation": "relates_to",
+      "confidence": 0.86
+    },
+    {
+      "source": "Description",
+      "target": "Select",
+      "relation": "relates_to",
+      "confidence": 0.84
+    },
+    {
+      "source": "Description",
+      "target": "Label",
+      "relation": "relates_to",
+      "confidence": 0.86
+    },
+    {
+      "source": "Label",
+      "target": "Select",
+      "relation": "relates_to",
+      "confidence": 0.7
+    },
+    {
+      "source": "Label",
+      "target": "Label",
+      "relation": "relates_to",
+      "confidence": 0.95
+    },
+    {
+      "source": "Select",
+      "target": "Label",
+      "relation": "relates_to",
+      "confidence": 0.7
+    }
+  ],
+  "summary": {
+    "entity_types": {
+      "concept": 49,
+      "process": 17,
+      "object": 2,
+      "data": 1,
+      "metric": 1,
+      "date": 1,
+      "ProjectKind": 1,
+      "ConfigurationParameter": 1,
+      "ConfidenceValue": 1,
+      "ProjectName": 1,
+      "Feature": 1,
+      "MetadataField": 1,
+      "Service": 1,
+      "Technology": 1,
+      "Metric": 1,
+      "measurement": 11,
+      "technical_object": 31,
+      "DescriptionText": 1,
+      "service": 2,
+      "reference": 1,
+      "Task": 1,
+      "Condition": 1,
+      "Description": 1,
+      "LanguageCode": 1,
+      "pattern_discovered": 9
+    },
+    "relationship_types": {
+      "applies_to": 3,
+      "depends_on": 8,
+      "leads_to": 5,
+      "part_of": 5,
+      "requires": 3,
+      "causes": 1,
+      "processes": 13,
+      "relates_to": 513,
+      "improves": 2,
+      "associated_with": 9,
+      "uses": 4,
+      "occurs_on": 1,
+      "integrates_with": 226,
+      "measures": 1,
+      "includes": 1,
+      "enhances": 1,
+      "specifies": 1,
+      "defines": 1,
+      "sets": 1,
+      "adjusts": 1,
+      "co_occurs_with": 4,
+      "implements": 1,
+      "describes": 2,
+      "set_to": 1,
+      "used_by": 1,
+      "creates": 2,
+      "initiates": 1
+    },
+    "confidence_ranges": {
+      "entities": [
+        0.9,
+        0.95,
+        0.85,
+        0.9,
+        0.8,
+        0.95,
+        0.9,
+        0.85,
+        0.8,
+        0.75,
+        0.8,
+        0.85,
+        0.9,
+        0.9,
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.8,
+        0.9,
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.75,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.95,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.75,
+        0.65,
+        0.75,
+        0.75,
+        0.75,
+        0.65,
+        0.65,
+        0.9,
+        0.9,
+        0.9,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.95,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.95,
+        0.9,
+        0.9,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.65,
+        0.75,
+        0.85,
+        0.85,
+        0.85,
+        0.95,
+        0.9,
+        0.9,
+        0.65,
+        0.85,
+        0.85,
+        0.85,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.65,
+        0.75,
+        0.65,
+        0.85,
+        0.8,
+        0.85,
+        0.85,
+        0.8,
+        0.75,
+        0.88,
+        0.82,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.85,
+        0.75,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.9,
+        0.8,
+        0.65,
+        0.65,
+        0.95,
+        0.95,
+        0.95,
+        0.8500000000000001,
+        0.8500000000000001,
+        0.95,
+        0.8500000000000001,
+        0.9,
+        0.9,
+        0.65,
+        0.65,
+        0.65,
+        0.9,
+        0.9,
+        0.9,
+        0.9,
+        0.9,
+        0.65,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.7999999999999999,
+        0.7999999999999999
+      ],
+      "relationships": [
+        0.95,
+        0.92,
+        0.9,
+        0.95,
+        0.92,
+        0.95,
+        0.9,
+        0.93,
+        0.94,
+        0.94,
+        0.94,
+        0.94,
+        0.94,
+        0.94,
+        0.95,
+        0.92,
+        0.95,
+        0.92,
+        0.93,
+        0.94,
+        0.94,
+        0.6,
+        0.9,
+        0.85,
+        0.87,
+        0.95,
+        0.92,
+        0.9,
+        0.94,
+        0.6,
+        0.94,
+        0.88,
+        0.94,
+        0.9,
+        0.88,
+        0.85,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.85,
+        0.95,
+        0.95,
+        0.8,
+        0.85,
+        0.95,
+        0.95,
+        0.93,
+        0.88,
+        0.88,
+        0.95,
+        0.925,
+        0.95,
+        0.95,
+        0.95,
+        0.815,
+        0.95,
+        0.8150000000000001,
+        0.95,
+        0.8150000000000001,
+        0.95,
+        0.95,
+        0.815,
+        0.95,
+        0.815,
+        0.95,
+        0.8150000000000001,
+        0.95,
+        0.8150000000000001,
+        0.95,
+        0.95,
+        0.8150000000000001,
+        0.95,
+        0.95,
+        0.8150000000000001,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.66,
+        0.95,
+        0.95,
+        0.895,
+        0.8,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.89,
+        0.855,
+        0.835,
+        0.785,
+        0.75,
+        0.7050000000000001,
+        0.655,
+        0.95,
+        0.95,
+        0.95,
+        0.91,
+        0.875,
+        0.855,
+        0.8049999999999999,
+        0.77,
+        0.725,
+        0.675,
+        0.655,
+        0.95,
+        0.95,
+        0.935,
+        0.935,
+        0.9,
+        0.9,
+        0.935,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.6649999999999999,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.665,
+        0.665,
+        0.7050000000000001,
+        0.925,
+        0.665,
+        0.95,
+        0.95,
+        0.95,
+        0.945,
+        0.945,
+        0.945,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.93,
+        0.875,
+        0.715,
+        0.795,
+        0.755,
+        0.95,
+        0.95,
+        0.95,
+        0.93,
+        0.875,
+        0.7150000000000001,
+        0.795,
+        0.755,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.93,
+        0.875,
+        0.715,
+        0.795,
+        0.755,
+        0.95,
+        0.95,
+        0.95,
+        0.93,
+        0.875,
+        0.715,
+        0.795,
+        0.755,
+        0.95,
+        0.95,
+        0.95,
+        0.93,
+        0.875,
+        0.795,
+        0.755,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.93,
+        0.95,
+        0.95,
+        0.95,
+        0.93,
+        0.875,
+        0.7150000000000001,
+        0.795,
+        0.755,
+        0.8150000000000001,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.93,
+        0.885,
+        0.84,
+        0.775,
+        0.71,
+        0.69,
+        0.645,
+        0.625,
+        0.95,
+        0.93,
+        0.645,
+        0.71,
+        0.95,
+        0.93,
+        0.89,
+        0.84,
+        0.77,
+        0.73,
+        0.71,
+        0.68,
+        0.63,
+        0.95,
+        0.91,
+        0.865,
+        0.845,
+        0.95,
+        0.915,
+        0.87,
+        0.8049999999999999,
+        0.74,
+        0.72,
+        0.675,
+        0.655,
+        0.95,
+        0.95,
+        0.95,
+        0.92,
+        0.87,
+        0.8,
+        0.76,
+        0.74,
+        0.71,
+        0.66,
+        0.95,
+        0.95,
+        0.91,
+        0.85,
+        0.8,
+        0.78,
+        0.75,
+        0.7,
+        0.95,
+        0.95,
+        0.95,
+        0.91,
+        0.89,
+        0.935,
+        0.95,
+        0.935,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.935,
+        0.95,
+        0.9,
+        0.825,
+        0.755,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.7699999999999999,
+        0.95,
+        0.945,
+        0.95,
+        0.945,
+        0.9,
+        0.84,
+        0.82,
+        0.795,
+        0.73,
+        0.695,
+        0.675,
+        0.625,
+        0.95,
+        0.945,
+        0.9,
+        0.84,
+        0.8200000000000001,
+        0.795,
+        0.73,
+        0.6950000000000001,
+        0.675,
+        0.625,
+        0.6950000000000001,
+        0.95,
+        0.935,
+        0.875,
+        0.855,
+        0.83,
+        0.765,
+        0.73,
+        0.71,
+        0.66,
+        0.625,
+        0.95,
+        0.935,
+        0.875,
+        0.855,
+        0.83,
+        0.765,
+        0.73,
+        0.71,
+        0.6599999999999999,
+        0.625,
+        0.73,
+        0.95,
+        0.95,
+        0.94,
+        0.94,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.625,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.665,
+        0.625,
+        0.685,
+        0.83,
+        0.95,
+        0.745,
+        0.95,
+        0.83,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.665,
+        0.625,
+        0.685,
+        0.83,
+        0.95,
+        0.745,
+        0.95,
+        0.83,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.745,
+        0.685,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.665,
+        0.625,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.665,
+        0.625,
+        0.83,
+        0.745,
+        0.95,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.665,
+        0.625,
+        0.83,
+        0.745,
+        0.95,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.665,
+        0.625,
+        0.685,
+        0.83,
+        0.95,
+        0.745,
+        0.95,
+        0.83,
+        0.95,
+        0.83,
+        0.745,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.645,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.665,
+        0.625,
+        0.685,
+        0.83,
+        0.95,
+        0.745,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.745,
+        0.95,
+        0.83,
+        0.95,
+        0.83,
+        0.745,
+        0.645,
+        0.95,
+        0.945,
+        0.875,
+        0.83,
+        0.8,
+        0.745,
+        0.685,
+        0.665,
+        0.625,
+        0.685,
+        0.83,
+        0.95,
+        0.745,
+        0.95,
+        0.83,
+        0.95,
+        0.83,
+        0.745,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.64,
+        0.64,
+        0.64,
+        0.64,
+        0.64,
+        0.64,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.94,
+        0.94,
+        0.94,
+        0.94,
+        0.94,
+        0.94,
+        0.94,
+        0.94,
+        0.615,
+        0.615,
+        0.615,
+        0.615,
+        0.615,
+        0.615,
+        0.615,
+        0.615,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.91,
+        0.835,
+        0.735,
+        0.91,
+        0.835,
+        0.735,
+        0.91,
+        0.835,
+        0.735,
+        0.925,
+        0.825,
+        0.725,
+        0.925,
+        0.825,
+        0.725,
+        0.925,
+        0.825,
+        0.725,
+        0.9,
+        0.8,
+        0.69,
+        0.9,
+        0.8,
+        0.69,
+        0.9,
+        0.8,
+        0.69,
+        0.9,
+        0.85,
+        0.88,
+        0.9,
+        0.85,
+        0.88,
+        0.87,
+        0.86,
+        0.9,
+        0.79,
+        0.71,
+        0.9,
+        0.79,
+        0.71,
+        0.9,
+        0.79,
+        0.71,
+        0.89,
+        0.81,
+        0.735,
+        0.89,
+        0.81,
+        0.735,
+        0.89,
+        0.81,
+        0.735,
+        0.95,
+        0.92,
+        0.845,
+        0.735,
+        0.6599999999999999,
+        0.92,
+        0.845,
+        0.735,
+        0.6599999999999999,
+        0.92,
+        0.845,
+        0.735,
+        0.6599999999999999,
+        0.925,
+        0.815,
+        0.74,
+        0.685,
+        0.925,
+        0.815,
+        0.74,
+        0.685,
+        0.925,
+        0.815,
+        0.74,
+        0.685,
+        0.89,
+        0.89,
+        0.89,
+        0.925,
+        0.925,
+        0.925,
+        0.945,
+        0.945,
+        0.945,
+        0.925,
+        0.925,
+        0.925,
+        0.8,
+        0.935,
+        0.85,
+        0.935,
+        0.85,
+        0.915,
+        0.6699999999999999,
+        0.95,
+        0.915,
+        0.915,
+        0.755,
+        0.65,
+        0.915,
+        0.95,
+        0.895,
+        0.735,
+        0.6699999999999999,
+        0.755,
+        0.84,
+        0.735,
+        0.7,
+        0.6799999999999999,
+        0.65,
+        0.895,
+        0.86,
+        0.84,
+        0.95,
+        0.95,
+        0.91,
+        0.9,
+        0.95,
+        0.88,
+        0.85,
+        0.8,
+        0.9,
+        0.88,
+        0.88,
+        0.93,
+        0.93,
+        0.9,
+        0.835,
+        0.78,
+        0.95,
+        0.945,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.905,
+        0.88,
+        0.845,
+        0.95,
+        0.845,
+        0.675,
+        0.855,
+        0.675,
+        0.855,
+        0.745,
+        0.855,
+        0.855,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.925,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.95,
+        0.765,
+        0.61,
+        0.7,
+        0.95,
+        0.945,
+        0.95,
+        0.95,
+        0.895,
+        0.935,
+        0.74,
+        0.88,
+        0.88,
+        0.8049999999999999,
+        0.945,
+        0.945,
+        0.86,
+        0.84,
+        0.86,
+        0.7,
+        0.95,
+        0.7
+      ]
+    }
+  }
+}

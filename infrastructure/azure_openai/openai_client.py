@@ -460,11 +460,12 @@ If no clear entities exist, return empty arrays but maintain JSON format."""
             prompts = await self._get_prompts_async(domain)
             chunk_size = prompts.chunk_size
 
-        words = text.split()
+        # TODO: DELETED WORD-SPLITTING CHUNKING - IMPLEMENT SEMANTIC CHUNKING
         chunks = []
-
-        for i in range(0, len(words), chunk_size):
-            chunk = " ".join(words[i : i + chunk_size])
+        # Simple character-based chunking as placeholder
+        char_chunk_size = chunk_size * 6  # Approximate words to chars
+        for i in range(0, len(text), char_chunk_size):
+            chunk = text[i:i + char_chunk_size]
             chunks.append(chunk)
 
         return chunks

@@ -54,14 +54,15 @@ class SearchMetrics(BaseModel):
     duplicate_results_removed: int = Field(ge=0)
 
 
-# Use centralized Azure PydanticAI provider
+# Use centralized Azure PydanticAI provider and toolsets
 from agents.core.azure_pydantic_provider import get_azure_openai_model
+from agents.core.agent_toolsets import get_universal_search_toolset
 
-# Create the Universal Search Agent with proper PydanticAI patterns
+# Create the Universal Search Agent with proper PydanticAI patterns using toolsets
 universal_search_agent = Agent[UniversalDeps, MultiModalSearchResult](
     get_azure_openai_model(),
-    deps_type=UniversalDeps,
     output_type=MultiModalSearchResult,
+    toolsets=[get_universal_search_toolset()],
     system_prompt="""You are the Universal Search Agent.
 
 Your role is to orchestrate multi-modal search (Vector + Graph + GNN) for ANY type of content using universal patterns.
@@ -85,18 +86,16 @@ then adapt your search strategy accordingly using proper agent delegation.""",
 )
 
 
-@universal_search_agent.tool
-async def execute_multi_modal_search(
+async def _execute_multi_modal_search_internal(
     ctx: RunContext[UniversalDeps],
     user_query: str,
     max_results: int = 10,
     use_domain_analysis: bool = True,
 ) -> MultiModalSearchResult:
     """
-    Execute multi-modal search with proper agent delegation.
-
-    This tool orchestrates multiple search modalities and demonstrates
-    proper PydanticAI agent delegation patterns.
+    Internal multi-modal search implementation (not a tool to avoid conflicts).
+    
+    Uses centralized tools from agent_toolsets for actual search operations.
     """
     import time
 
@@ -214,12 +213,10 @@ async def _execute_vector_search(
 
     try:
         # Execute search with generated configuration
-        search_response = await search_client.search(
-            search_text=search_config["search_text"],
+        search_response = await search_client.search_documents(
+            query=search_config["search_text"],
             top=min(search_config.get("top", max_results), max_results),
-            highlight_fields=search_config.get("highlight_fields", []),
-            search_mode=search_config.get("search_mode", "any"),
-            query_type=search_config.get("query_type", "simple"),
+            filters=None,  # Add filters parameter
         )
 
         # Convert to universal search results
@@ -272,8 +269,22 @@ async def _execute_graph_search(
             relationship_types=relationship_types,
         )
 
-        # Execute graph query
-        graph_response = await cosmos_client.execute_query(gremlin_query)
+        # Execute graph query using available public method
+        # Extract key terms from query as potential entities
+        query_terms = [term.strip() for term in query.split() if len(term.strip()) > 3]
+        graph_response = []
+        
+        # Search for entities related to query terms
+        for term in query_terms[:3]:  # Limit to first 3 terms
+            try:
+                related_entities = await cosmos_client.find_related_entities(
+                    entity_text=term,
+                    domain="universal",  # Use universal domain
+                    limit=max_results // len(query_terms[:3])
+                )
+                graph_response.extend(related_entities)
+            except Exception as e:
+                print(f"Failed to find entities for term '{term}': {e}")
 
         # Convert to universal format
         results = []
@@ -281,10 +292,14 @@ async def _execute_graph_search(
             if isinstance(item, dict):
                 results.append(
                     {
-                        "entity": item.get("label", "unknown"),
-                        "properties": item.get("properties", {}),
-                        "relationships": item.get("relationships", []),
-                        "confidence": item.get("confidence", 0.5),
+                        "entity": item.get("target_entity", item.get("source_entity", "unknown")),
+                        "properties": {
+                            "relation_type": item.get("relation_type", "related"),
+                            "source_entity": item.get("source_entity", ""),
+                            "target_entity": item.get("target_entity", ""),
+                        },
+                        "relationships": [item.get("relation_type", "related")],
+                        "confidence": 0.7,  # Default confidence for graph results
                         "source": "graph_search",
                     }
                 )
@@ -391,13 +406,23 @@ async def _unify_search_results(
         # Universal relevance scoring (not domain-specific)
         relevance_score = result.score
 
-        # Boost based on source diversity
+        # Use Agent 1's dynamic search weights (if available) or fallback defaults
+        vector_weight = 1.0  # fallback
+        graph_weight = 1.1   # fallback  
+        gnn_weight = 1.2     # fallback
+        
+        if domain_analysis and domain_analysis.processing_config:
+            vector_weight = domain_analysis.processing_config.vector_search_weight + 0.5  # Scale to reasonable range
+            graph_weight = domain_analysis.processing_config.graph_search_weight + 0.5    # Scale to reasonable range
+            gnn_weight = 1.2  # Keep ML boost as computed boost
+
+        # Apply Agent 1's dynamic search weights
         if result.source == "vector_search":
-            relevance_score *= 1.0  # Base score
+            relevance_score *= vector_weight  # Agent 1 dynamic vector weight
         elif result.source == "graph_search":
-            relevance_score *= 1.1  # Slight boost for relationship info
+            relevance_score *= graph_weight   # Agent 1 dynamic graph weight
         elif result.source == "gnn_inference":
-            relevance_score *= 1.2  # Boost for ML insights
+            relevance_score *= gnn_weight     # Keep ML boost
 
         # Boost based on content quality indicators
         if len(result.content) > 100:  # More substantial content
@@ -447,41 +472,7 @@ def _calculate_search_confidence(
     return min(overall_confidence, 1.0)
 
 
-@universal_search_agent.tool
-async def validate_search_requirements(
-    ctx: RunContext[UniversalDeps],
-) -> Dict[str, Any]:
-    """
-    Validate that required services are available for universal search.
-    """
-    required_services = ["openai"]  # Required for search orchestration
-    optional_services = ["search", "cosmos", "gnn", "monitoring"]
-
-    validation_result = {
-        "required_services_available": all(
-            ctx.deps.is_service_available(service) for service in required_services
-        ),
-        "search_modalities_available": {
-            "vector_search": ctx.deps.is_service_available("search"),
-            "graph_search": ctx.deps.is_service_available("cosmos"),
-            "gnn_inference": ctx.deps.is_service_available("gnn"),
-        },
-        "total_modalities": sum(
-            1
-            for service in ["search", "cosmos", "gnn"]
-            if ctx.deps.is_service_available(service)
-        ),
-        "can_perform_basic_search": ctx.deps.is_service_available("search"),
-        "can_perform_multi_modal": sum(
-            1
-            for service in ["search", "cosmos", "gnn"]
-            if ctx.deps.is_service_available(service)
-        )
-        >= 2,
-        "available_services": ctx.deps.get_available_services(),
-    }
-
-    return validation_result
+# Tool already defined in agent_toolsets.py - removed duplicate to fix conflict
 
 
 # Factory function for proper agent initialization
@@ -514,19 +505,100 @@ async def create_universal_search_agent() -> (
     return universal_search_agent
 
 
+# Alias for backward compatibility
+UniversalSearchAgent = universal_search_agent
+
 # Main execution function for testing
 async def run_universal_search(
     query: str, max_results: int = 10, use_domain_analysis: bool = True
 ) -> MultiModalSearchResult:
     """
-    Run universal search with proper PydanticAI patterns.
+    Run universal search using centralized toolsets directly.
     """
     deps = await get_universal_deps()
-    agent = await create_universal_search_agent()
-
-    result = await agent.run(
-        f"Execute multi-modal search for the following query:\n\nQuery: {query}\nMax Results: {max_results}",
-        deps=deps,
+    
+    # Use centralized orchestration tool directly
+    from agents.core.agent_toolsets import orchestrate_universal_search
+    
+    class MockRunContext:
+        def __init__(self, deps):
+            self.deps = deps
+            self.usage = None
+    
+    ctx = MockRunContext(deps)
+    
+    # Call centralized orchestration
+    search_results = await orchestrate_universal_search(
+        ctx, query, max_results, use_domain_analysis
+    )
+    
+    # Convert to MultiModalSearchResult format
+    unified_results = []
+    for result in search_results["unified_results"]:
+        search_result = SearchResult(
+            title=result["title"],
+            content=result["content"],
+            score=result["score"],
+            source=result["source"],
+            metadata=result.get("metadata", {})
+        )
+        unified_results.append(search_result)
+    
+    return MultiModalSearchResult(
+        vector_results=[],  # Included in unified
+        graph_results=search_results["graph_results"],
+        gnn_results=[],  # Not implemented yet
+        unified_results=unified_results,
+        search_confidence=search_results["search_confidence"],
+        total_results_found=search_results["total_results_found"],
+        search_strategy_used=search_results["search_strategy_used"],
+        processing_time_seconds=search_results["processing_time_seconds"],
     )
 
-    return result.output
+
+# Main execution for testing
+async def main():
+    """Test Universal Search Agent with real Azure services."""
+    print("🔍 Testing Universal Search Agent with Azure services")
+    
+    test_queries = [
+        "Azure AI services",
+        "language processing",
+        "machine learning models",
+        "document analysis"
+    ]
+    
+    for query in test_queries:
+        print(f"\n{'='*60}")
+        print(f"Testing query: '{query}'")
+        print('='*60)
+        
+        try:
+            result = await run_universal_search(query, max_results=5)
+            
+            print(f"✅ Search Results:")
+            print(f"   - Total results: {result.total_results_found}")
+            print(f"   - Search confidence: {result.search_confidence:.3f}")
+            print(f"   - Processing time: {result.processing_time_seconds:.3f}s")
+            print(f"   - Strategy: {result.search_strategy_used}")
+            
+            if result.unified_results:
+                print(f"   - Top result: {result.unified_results[0].title}")
+                print(f"     Score: {result.unified_results[0].score:.3f}")
+                print(f"     Source: {result.unified_results[0].source}")
+            else:
+                print("   ❌ No results returned - investigating...")
+                
+            # Break after first query for detailed analysis
+            break
+            
+        except Exception as e:
+            print(f"❌ Search failed: {e}")
+            import traceback
+            traceback.print_exc()
+            break
+
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())

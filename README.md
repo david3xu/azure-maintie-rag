@@ -11,6 +11,7 @@
 Azure Universal RAG is a **production-ready multi-agent system** combining PydanticAI framework with Azure services for intelligent document processing with **zero hardcoded domain bias**. The system uses tri-modal search (Vector + Graph + GNN) and discovers content characteristics dynamically.
 
 ### **Core Capabilities (Real Implementation)**
+
 - **Universal RAG Philosophy**: Zero domain assumptions - discovers content characteristics from analysis
 - **Multi-Agent Architecture**: PydanticAI with 3 specialized agents (Domain Intelligence, Knowledge Extraction, Universal Search)
 - **Domain-Agnostic Processing**: Universal models work across ANY domain without predetermined categories
@@ -22,6 +23,7 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 - **Enterprise Security**: DefaultAzureCredential with comprehensive RBAC
 
 ### **Key Performance Metrics**
+
 - ✅ **Sub-3-second query processing** (exceeds enterprise SLAs)
 - ✅ **85% relationship extraction accuracy** with dynamic discovery
 - ✅ **60% cache hit rate** with 99% reduction in repeat processing
@@ -33,16 +35,17 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 
 ### **Essential Documentation (6 Files - Real Codebase Analysis)**
 
-| File | Purpose | Real Implementation Content |
-|------|---------|---------------------------|
-| **[docs/QUICKSTART.md](docs/QUICKSTART.md)** | 5-minute setup | Real agent initialization, Azure service health checks |
-| **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)** | Development workflows | PydanticAI patterns, actual Azure integration (471-line service container) |
-| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Technical architecture | Multi-agent boundaries, 1,536-line data models, real mermaid diagrams |
-| **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** | Issue resolution | Real Azure authentication, service diagnostics, error patterns |
-| **[docs/FRONTEND.md](docs/FRONTEND.md)** | Frontend development | React 19.1.0 + TypeScript 5.8.3, real hooks (30-line useUniversalRAG) |
-| **[docs/CLAUDE_DEVELOPMENT_GUIDE.md](docs/CLAUDE_DEVELOPMENT_GUIDE.md)** | Claude Code integration | Actual development context with verified line counts |
+| File                                                                     | Purpose                 | Real Implementation Content                                                |
+| ------------------------------------------------------------------------ | ----------------------- | -------------------------------------------------------------------------- |
+| **[docs/QUICKSTART.md](docs/QUICKSTART.md)**                             | 5-minute setup          | Real agent initialization, Azure service health checks                     |
+| **[docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md)**               | Development workflows   | PydanticAI patterns, actual Azure integration (471-line service container) |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                         | Technical architecture  | Multi-agent boundaries, 1,536-line data models, real mermaid diagrams      |
+| **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)**                   | Issue resolution        | Real Azure authentication, service diagnostics, error patterns             |
+| **[docs/FRONTEND.md](docs/FRONTEND.md)**                                 | Frontend development    | React 19.1.0 + TypeScript 5.8.3, real hooks (30-line useUniversalRAG)      |
+| **[docs/CLAUDE_DEVELOPMENT_GUIDE.md](docs/CLAUDE_DEVELOPMENT_GUIDE.md)** | Claude Code integration | Actual development context with verified line counts                       |
 
 ### **Data Source**
+
 - **Real corpus**: `data/raw/azure-ai-services-language-service_output/` (179 Azure AI Language Service files)
 
 ---
@@ -50,15 +53,16 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 ## 🛠️ Technology Stack
 
 ### **Multi-Agent Backend Stack (Real Implementation)**
+
 ```
 ├─ PydanticAI Framework (3 specialized agents)
 │  ├─ Domain Intelligence Agent (Azure OpenAI integration)
-│  ├─ Knowledge Extraction Agent (Cosmos DB Gremlin integration)
+│  ├─ Knowledge Extraction Agent (LLM + Pattern + Hybrid tools)
 │  └─ Universal Search Agent (multi-modal search orchestration)
 ├─ Universal Models (agents/core/universal_models.py - domain-agnostic)
 ├─ Real Azure Integration (infrastructure/ layer)
 │  ├─ AsyncAzureOpenAI clients
-│  ├─ Azure Cognitive Search (vector search, 1536D embeddings)  
+│  ├─ Azure Cognitive Search (vector search, 1536D embeddings)
 │  ├─ Azure Cosmos DB (knowledge graphs, Gremlin API)
 │  ├─ Azure Blob Storage (document management)
 │  └─ Azure ML (PyTorch + torch-geometric GNN training)
@@ -67,6 +71,7 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 ```
 
 ### **Frontend Stack (Verified Versions)**
+
 ```
 ├─ React 19.1.0 + TypeScript 5.8.3 (frontend/package.json)
 ├─ Vite 7.0.4 (build tool and HMR)
@@ -78,6 +83,7 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 ```
 
 ### **Infrastructure Stack**
+
 ```
 ├─ Azure Bicep templates (Infrastructure as Code)
 ├─ Azure Developer CLI (azd) deployment
@@ -91,6 +97,7 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 ## ⚡ Quick Commands
 
 ### **Setup & Development**
+
 ```bash
 # Environment Management (Universal RAG)
 ./scripts/deployment/sync-env.sh prod        # Switch to production & sync backend config (default)
@@ -100,7 +107,7 @@ make sync-env                                 # Sync backend with current azd en
 # One-command deployment
 azd up                  # Deploy complete Azure infrastructure
 
-# Development workflow  
+# Development workflow
 make setup              # Full project setup (backend + frontend)
 make dev                # Start both backend API and frontend UI
 make health             # Check service health
@@ -108,6 +115,7 @@ make clean              # Clean sessions and logs
 ```
 
 ### **Data Processing**
+
 ```bash
 make data-prep-full     # Complete data processing pipeline
 make data-upload        # Upload docs & create chunks
@@ -115,6 +123,7 @@ make knowledge-extract  # Extract entities & relations
 ```
 
 ### **API Development**
+
 ```bash
 uvicorn api.main:app --reload --host 0.0.0.0 --port 8000    # Development server
 python -m api.main                                           # Alternative startup
@@ -122,6 +131,7 @@ pytest                  # Run pytest suite
 ```
 
 ### **Frontend Development**
+
 ```bash
 cd frontend
 npm run dev             # Start Vite dev server (localhost:5174)
@@ -134,6 +144,7 @@ npm run lint            # Run ESLint
 ## 🏗️ Architecture Overview
 
 ### **Data Flow**
+
 ```mermaid
 flowchart TD
     A[Raw Text Data] --> B[Azure Blob Storage]
@@ -148,30 +159,32 @@ flowchart TD
     E --> J
     H --> J
     J --> K[Azure OpenAI Response]
-    
+
     %% Real-time streaming
     J --> L[Streaming Progress Events]
     L --> M[Frontend Progressive UI]
 ```
 
 ### **Core Azure Services (9 Services)**
-| Service | Purpose | Authentication | Environment |
-|---------|---------|----------------|-------------|
-| **Azure OpenAI** | Text processing & embeddings | RBAC | Dev: 10 TPM, Prod: 50 TPM |
-| **Cognitive Search** | Vector search operations | RBAC | Basic → Standard |
-| **Cosmos DB (Gremlin)** | Knowledge graph storage | API Key | Serverless → Provisioned |
-| **Blob Storage** | Data management | RBAC | LRS → ZRS |
-| **Azure ML** | GNN training | RBAC | 1 → 10 compute instances |
-| **Key Vault** | Secret management | RBAC | Standard → Premium |
-| **App Insights** | Monitoring | Managed Identity | All environments |
-| **Log Analytics** | Logging | Managed Identity | Auto-configured |
-| **Container Apps** | Hosting (optional) | Managed Identity | 0.5 → 2.0 CPU auto-scale |
+
+| Service                 | Purpose                      | Authentication   | Environment               |
+| ----------------------- | ---------------------------- | ---------------- | ------------------------- |
+| **Azure OpenAI**        | Text processing & embeddings | RBAC             | Dev: 10 TPM, Prod: 50 TPM |
+| **Cognitive Search**    | Vector search operations     | RBAC             | Basic → Standard          |
+| **Cosmos DB (Gremlin)** | Knowledge graph storage      | API Key          | Serverless → Provisioned  |
+| **Blob Storage**        | Data management              | RBAC             | LRS → ZRS                 |
+| **Azure ML**            | GNN training                 | RBAC             | 1 → 10 compute instances  |
+| **Key Vault**           | Secret management            | RBAC             | Standard → Premium        |
+| **App Insights**        | Monitoring                   | Managed Identity | All environments          |
+| **Log Analytics**       | Logging                      | Managed Identity | Auto-configured           |
+| **Container Apps**      | Hosting (optional)           | Managed Identity | 0.5 → 2.0 CPU auto-scale  |
 
 ---
 
 ## 🚀 Deployment Ready
 
 ### **Prerequisites**
+
 ```bash
 # Required tools
 curl -fsSL https://aka.ms/install-azd.sh | bash  # Azure Developer CLI
@@ -179,6 +192,7 @@ az login                                          # Azure CLI authentication
 ```
 
 ### **Automatic Environment Sync** 🆕
+
 The system now **automatically syncs** whatever azd environment you select to your backend configuration:
 
 ```bash
@@ -192,12 +206,14 @@ make sync-env                      # Sync backend to match
 ```
 
 **What gets synced automatically:**
+
 - ✅ Backend environment file (`config/environments/{env}.env`)
 - ✅ Backend `.env` symlink
 - ✅ Makefile default environment
 - ✅ Runtime environment detection
 
 ### **One-Command Deployment**
+
 ```bash
 # Setup environments (one-time)
 ./scripts/deployment/setup-environments.sh
@@ -208,13 +224,16 @@ make sync-env                      # Sync backend to match
 ```
 
 ### **🔄 Automatic CI/CD Setup** 🆕
+
 ```bash
 # One command sets up complete CI/CD pipeline
 azd pipeline config
 ```
+
 This automatically:
+
 - ✅ Creates GitHub Actions workflow
-- ✅ Sets up Azure service principal  
+- ✅ Sets up Azure service principal
 - ✅ Configures all secrets
 - ✅ Enables automatic deployment on push
 - ✅ **Zero manual configuration required!**
@@ -222,12 +241,14 @@ This automatically:
 **[→ Full CI/CD Setup Guide](CICD_SETUP.md)**
 
 ### **Expected Results**
+
 - **Infrastructure provisioning**: ~15 minutes
 - **Backend deployment**: ~5 minutes
 - **All 9 Azure services**: Fully operational
 - **Zero manual configuration**: Required
 
 ### **Post-Deployment Verification**
+
 ```bash
 # Health check
 curl $SERVICE_BACKEND_URI/health
@@ -246,36 +267,40 @@ curl $SERVICE_BACKEND_URI/api/v1/query \
 ### **Why Azure Universal RAG Outperforms Traditional RAG**
 
 #### **Multi-Modal Knowledge Representation**
+
 ```
 Traditional RAG:    Text → Chunks → Vectors → Search
 Azure Universal:    Text → Entities/Relations → Vector + Graph + GNN → Unified Search
 ```
 
 **Key Benefits:**
+
 - **Knowledge Graphs**: Preserve relationships between entities across entire dataset
 - **Graph Neural Networks**: Learn complex patterns and relationships from graph structure
 - **Triple Storage**: Vector search + Graph traversal + GNN predictions combined
 - **Contextual Understanding**: Entity relationships maintained across documents
 
 #### **Performance at Scale**
-| Component | Traditional RAG | Azure Universal RAG | Scaling Advantage |
-|-----------|----------------|-------------------|------------------|
-| **Storage** | Single vector DB | Multi-tier: Blob + Search + Cosmos | Horizontal scaling |
-| **Search** | Vector similarity only | Vector + Graph + GNN unified | Multiple search strategies |
-| **Processing** | Synchronous chunks | Async batch processing | Parallel Azure ML |
-| **Memory** | Load entire index | Lazy loading + caching | Memory-efficient large datasets |
-| **Updates** | Reprocess everything | Incremental updates | O(new data) vs O(total data) |
+
+| Component      | Traditional RAG        | Azure Universal RAG                | Scaling Advantage               |
+| -------------- | ---------------------- | ---------------------------------- | ------------------------------- |
+| **Storage**    | Single vector DB       | Multi-tier: Blob + Search + Cosmos | Horizontal scaling              |
+| **Search**     | Vector similarity only | Vector + Graph + GNN unified       | Multiple search strategies      |
+| **Processing** | Synchronous chunks     | Async batch processing             | Parallel Azure ML               |
+| **Memory**     | Load entire index      | Lazy loading + caching             | Memory-efficient large datasets |
+| **Updates**    | Reprocess everything   | Incremental updates                | O(new data) vs O(total data)    |
 
 #### **Real-World Performance Comparison**
+
 **Dataset Size: 10,000+ Documents**
 
-| Metric | Traditional RAG | Azure Universal RAG | Improvement |
-|--------|----------------|-------------------|-------------|
-| **Initial Processing** | 8-12 hours | 2-4 hours | 60-70% faster |
-| **Update Processing** | 8-12 hours (full reprocess) | 10-30 minutes (incremental) | 95%+ faster |
-| **Query Response Time** | 2-5 seconds | 0.5-1.5 seconds | 70% faster |
-| **Retrieval Accuracy** | 65-75% relevant | 85-95% relevant | 20-30% better |
-| **Complex Queries** | Poor performance | Excellent performance | 10x better |
+| Metric                  | Traditional RAG             | Azure Universal RAG         | Improvement   |
+| ----------------------- | --------------------------- | --------------------------- | ------------- |
+| **Initial Processing**  | 8-12 hours                  | 2-4 hours                   | 60-70% faster |
+| **Update Processing**   | 8-12 hours (full reprocess) | 10-30 minutes (incremental) | 95%+ faster   |
+| **Query Response Time** | 2-5 seconds                 | 0.5-1.5 seconds             | 70% faster    |
+| **Retrieval Accuracy**  | 65-75% relevant             | 85-95% relevant             | 20-30% better |
+| **Complex Queries**     | Poor performance            | Excellent performance       | 10x better    |
 
 ---
 
@@ -286,6 +311,7 @@ Azure Universal:    Text → Entities/Relations → Vector + Graph + GNN → Uni
 Our frontend provides **progressive disclosure** for different user types:
 
 **Layer 1: User-Friendly** (90% of users)
+
 ```
 🔍 Understanding your question...
 ☁️ Searching Azure services...
@@ -293,6 +319,7 @@ Our frontend provides **progressive disclosure** for different user types:
 ```
 
 **Layer 2: Technical Workflow** (power users)
+
 ```
 📊 Knowledge Extraction (Azure OpenAI): 15 entities, 10 relations
 🔧 Vector Indexing (Azure Cognitive Search): 7 documents, 1536D vectors
@@ -302,10 +329,11 @@ Our frontend provides **progressive disclosure** for different user types:
 ```
 
 **Layer 3: System Diagnostics** (administrators)
+
 ```json
 {
   "step": "azure_cognitive_search",
-  "status": "completed", 
+  "status": "completed",
   "duration": 2.7,
   "azure_service": "cognitive_search",
   "details": { "documents_found": 15, "search_score": 0.826 }
@@ -313,6 +341,7 @@ Our frontend provides **progressive disclosure** for different user types:
 ```
 
 ### **Streaming API Endpoints**
+
 - `GET /api/v1/query/stream/{query_id}`: Server-sent events for real-time updates
 - `POST /api/v1/query/universal`: Submit query with Azure services processing
 - Real-time progress updates with detailed Azure service information
@@ -322,11 +351,12 @@ Our frontend provides **progressive disclosure** for different user types:
 ## 🔬 Enterprise Features
 
 ### **Multi-Environment Support**
+
 ```bash
 # Development Environment
 azd env new development && azd up  # Basic SKUs, 7-day retention
 
-# Staging Environment  
+# Staging Environment
 azd env new staging && azd up      # Standard SKUs, 30-day retention
 
 # Production Environment
@@ -334,6 +364,7 @@ azd env new production && azd up   # Premium SKUs, 90-day retention, auto-scalin
 ```
 
 ### **Enterprise Security**
+
 - ✅ **Managed Identity** for all Azure service authentication
 - ✅ **RBAC** for fine-grained access control
 - ✅ **Key Vault** for secure secret storage
@@ -341,12 +372,14 @@ azd env new production && azd up   # Premium SKUs, 90-day retention, auto-scalin
 - ✅ **Zero secrets** in code or configuration files
 
 ### **Performance & Scalability**
+
 - ✅ **Auto-Scaling**: Container Apps (1-10 instances), Azure ML (0-10 compute instances)
 - ✅ **Memory Efficiency**: Streaming processing, never load entire dataset
 - ✅ **Caching Layers**: Multi-level caching for frequently accessed data
 - ✅ **Connection Pooling**: Efficient Azure service connections
 
 ### **Production Operations**
+
 - ✅ **Automated Monitoring**: Real-time performance metrics and alerting
 - ✅ **Automated Backup**: Multi-component backup with integrity validation
 - ✅ **Security Assessment**: Comprehensive security evaluation and compliance
@@ -357,11 +390,13 @@ azd env new production && azd up   # Premium SKUs, 90-day retention, auto-scalin
 ## 💰 Cost Optimization
 
 ### **Estimated Monthly Costs**
+
 - **Development**: ~$200-300 (Basic SKUs, low usage)
-- **Staging**: ~$500-700 (Standard SKUs, moderate testing)  
+- **Staging**: ~$500-700 (Standard SKUs, moderate testing)
 - **Production**: ~$800-1200 (Premium SKUs, auto-scaling)
 
 ### **Cost Controls**
+
 - ✅ Budget alerts at 80% threshold
 - ✅ Auto-shutdown for development resources
 - ✅ Environment-appropriate SKU sizing
@@ -420,6 +455,7 @@ azure-maintie-rag/
 ## 🧪 Testing & Validation
 
 ### **Infrastructure Tests**
+
 ```bash
 ./scripts/test-infrastructure.sh
 
@@ -431,6 +467,7 @@ azure-maintie-rag/
 ```
 
 ### **Integration Tests**
+
 ```bash
 pytest                  # All tests with real Azure services
 pytest -m integration   # Integration tests with Azure services
@@ -443,6 +480,7 @@ pytest -m integration   # Integration tests with Azure services
 ```
 
 ### **Complete System Validation**
+
 ```bash
 # Health check all services
 make health
@@ -459,17 +497,20 @@ curl localhost:8000/api/v1/query -X POST -H "Content-Type: application/json" -d 
 ## 🤝 Contributing
 
 ### **Development Setup**
+
 1. **Prerequisites**: Azure CLI, Python 3.11+, Node.js 18+
 2. **Clone & Setup**: `git clone <repo> && make setup`
 3. **Configure Azure**: Update `backend/.env` with Azure service credentials
 4. **Start Development**: `make dev`
 
 ### **Code Style**
+
 - **Backend**: Black formatter (line 88), isort imports
 - **Frontend**: ESLint with TypeScript rules
 - **Architecture**: Follow existing patterns in `core/` modules
 
 ### **Security Guidelines**
+
 - Never commit secrets or API keys
 - Use Azure Key Vault for secrets management
 - Follow RBAC patterns for service authentication
@@ -496,6 +537,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🎯 System Validation Status
 
 ### ✅ **Comprehensive Lifecycle Validation Completed**
+
 **Date**: August 8, 2025 | **Score**: 95/100 | **Status**: Production Ready
 
 - **Multi-Agent Architecture**: All 3 PydanticAI agents validated and functional

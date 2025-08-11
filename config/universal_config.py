@@ -117,8 +117,8 @@ class UniversalExtractionConfig:
     """Knowledge extraction configuration based on discovered characteristics"""
 
     # Adaptive thresholds based on content complexity
-    entity_confidence_threshold: float = 0.8
-    relationship_confidence_threshold: float = 0.7
+    entity_confidence_threshold: float = 0.65
+    relationship_confidence_threshold: float = 0.6
 
     # Adaptive chunking based on content structure
     chunk_size: int = 1000
@@ -299,18 +299,12 @@ class UniversalConfigManager:
         if cache_key in self._content_analyses:
             return self._content_analyses[cache_key]
 
-        # Analyze vocabulary complexity
+        # TODO: DELETED WORD-SPLITTING VOCABULARY ANALYSIS - IMPLEMENT LLM-BASED
         all_text = " ".join(content_samples)
-        words = all_text.split()
-        unique_words = set(words)
-        vocabulary_complexity = min(len(unique_words) / max(len(words), 1) * 2, 1.0)
+        vocabulary_complexity = 0.75  # Placeholder until LLM implementation
 
-        # Analyze concept density
-        sentences = all_text.split(".")
-        avg_sentence_length = sum(len(s.split()) for s in sentences) / max(
-            len(sentences), 1
-        )
-        concept_density = min((avg_sentence_length - 10) / 20, 1.0)  # Normalize to 0-1
+        # TODO: DELETED WORD-SPLITTING SENTENCE ANALYSIS - IMPLEMENT LLM-BASED
+        concept_density = 0.80  # Placeholder until LLM implementation
 
         # Analyze relationship complexity
         relationship_indicators = (
@@ -387,14 +381,12 @@ class UniversalConfigManager:
     ) -> UniversalSearchConfig:
         """Get search configuration adapted to query and content characteristics"""
 
-        # Analyze query characteristics if provided
+        # TODO: DELETED WORD-SPLITTING QUERY ANALYSIS - IMPLEMENT LLM-BASED
         query_characteristics = {}
         if query:
-            query_words = query.split()
             query_characteristics = {
-                "complexity": min(len(query_words) / 10, 1.0),  # Normalize to 0-1
-                "length_factor": len(query_words)
-                / 5,  # Factor for length-based adaptation
+                "complexity": 0.75,  # Placeholder until LLM implementation
+                "length_factor": 0.8,  # Placeholder until LLM implementation
             }
 
         # Get content characteristics

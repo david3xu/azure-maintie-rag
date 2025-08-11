@@ -286,6 +286,14 @@ class Settings(BaseSettings):
     )
     azure_enable_telemetry: bool = Field(default=True, env="AZURE_ENABLE_TELEMETRY")
 
+    # Azure Container Apps Settings - Deployment Infrastructure
+    azure_container_app_name: str = Field(default="", env="AZURE_CONTAINER_APP_NAME")
+    azure_container_apps_environment: str = Field(default="", env="AZURE_CONTAINER_APPS_ENVIRONMENT")
+
+    # Azure Container Registry Settings - Image Management
+    azure_container_registry: str = Field(default="", env="AZURE_CONTAINER_REGISTRY")
+    azure_container_registry_endpoint: str = Field(default="", env="AZURE_CONTAINER_REGISTRY_ENDPOINT")
+
     # Azure Resource Naming Convention
     azure_resource_prefix: str = Field(default="maintie", env="AZURE_RESOURCE_PREFIX")
     azure_environment: str = Field(default="dev", env="AZURE_ENVIRONMENT")
