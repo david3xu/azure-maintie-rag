@@ -29,36 +29,45 @@ async def generate_embeddings(domain: str = "universal"):
             # NO SIMULATIONS - Azure OpenAI required for production embeddings
             raise Exception("Azure OpenAI client is required for production vector embeddings")
 
-        # Sample documents for embedding generation
-        sample_docs = [
-            f"Sample {domain} document 1",
-            f"Sample {domain} document 2",
-            f"Sample {domain} document 3",
-        ]
+        # Load actual uploaded files for embedding generation
+        data_dir = Path('/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output')
+        data_files = list(data_dir.glob('*.md'))
+        
+        if not data_files:
+            raise Exception(f"No data files found in {data_dir}")
 
-        print(f"📄 Processing {len(sample_docs)} sample documents")
+        print(f"📄 Processing {len(data_files)} actual uploaded documents")
 
-        # Generate embeddings (demo)
+        # Generate embeddings for real uploaded files
         embeddings_generated = 0
-        for i, doc in enumerate(sample_docs, 1):
+        for i, data_file in enumerate(data_files, 1):
             try:
-                print(f"🎯 Generating embedding for document {i}")
+                print(f"🎯 Generating embedding for document {i}: {data_file.name}")
 
-                # Simple embedding request
-                embedding_prompt = f"Generate embedding for: {doc}"
+                # Load actual file content (first 1000 chars for embedding)
+                content = data_file.read_text(encoding='utf-8', errors='ignore')
+                content_chunk = content[:1000] if len(content) > 1000 else content
+                
+                if not content_chunk.strip():
+                    print(f"⚠️  Skipping empty file: {data_file.name}")
+                    continue
 
-                # REAL Azure OpenAI embedding generation - no simulations
-                embedding = await openai_client.get_embedding(doc)
-                if embedding and len(embedding) == 1536:
-                    embeddings_generated += 1
-                    print(f"✅ Generated 1536D embedding for document {i}")
+                # REAL Azure OpenAI embedding generation with actual file content
+                result = await openai_client.get_embedding(content_chunk)
+                if result.get("success") and result.get("data", {}).get("embedding"):
+                    embedding = result["data"]["embedding"]
+                    if len(embedding) == 1536:
+                        embeddings_generated += 1
+                        print(f"✅ Generated 1536D embedding for {data_file.name}")
+                    else:
+                        raise Exception(f"Invalid embedding dimension: {len(embedding)}, expected 1536")
                 else:
-                    raise Exception(f"Failed to generate valid 1536D embedding for document {i}")
+                    raise Exception(f"Failed to generate valid 1536D embedding for {data_file.name}")
 
             except Exception as e:
-                print(f"⚠️ Embedding generation failed for document {i}: {e}")
+                print(f"⚠️ Embedding generation failed for document {i} ({data_file.name}): {e}")
 
-        print(f"✅ Generated {embeddings_generated}/{len(sample_docs)} embeddings")
+        print(f"✅ Generated {embeddings_generated}/{len(data_files)} embeddings")
         print("🔍 Index now supports semantic vector search")
 
         return embeddings_generated > 0

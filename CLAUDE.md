@@ -11,7 +11,7 @@ cd /workspace/azure-maintie-rag
 # Development (Complete workflow)
 make setup                  # Full project setup (backend + frontend)  
 make dev                    # Start API (8000) + Frontend (5174)
-make health                 # Full system health check
+make health                 # Full system health check with Azure status
 make clean                  # Clean sessions with log replacement
 
 # Testing (Real Azure services - no mocks)
@@ -26,15 +26,21 @@ black . --check && isort . --check-only              # Python formatting
 cd frontend && npm run lint && npx tsc --noEmit      # Frontend checks
 ./scripts/hooks/pre-commit-domain-bias-check.sh      # Domain bias check (CRITICAL)
 
+# 6-Phase Dataflow Pipeline (Production-ready with real data)
+make dataflow-full          # Execute all 6 phases: cleanup → validate → ingest → extract → integrate → query → advanced
+make dataflow-validate      # Phase 1: Validate all 3 PydanticAI agents
+make dataflow-extract       # Phase 3: Knowledge extraction with unified templates
+
 # Agent Testing (requires PYTHONPATH)
 PYTHONPATH=/workspace/azure-maintie-rag python agents/domain_intelligence/agent.py
 PYTHONPATH=/workspace/azure-maintie-rag python agents/knowledge_extraction/agent.py
 PYTHONPATH=/workspace/azure-maintie-rag python agents/universal_search/agent.py
 
-# Data Pipeline Scripts
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/00_check_azure_state.py      # Azure connectivity
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/00_full_pipeline.py         # Complete pipeline
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/12_query_generation_showcase.py  # Query examples
+# Direct Dataflow Phase Execution
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_01_validate_domain_intelligence.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_02_validate_knowledge_extraction.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_03_validate_universal_search.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase5_integration/05_01_full_pipeline_execution.py
 
 # Azure Deployment & Environment Management
 ./scripts/deployment/sync-env.sh prod      # Switch to production & sync backend
@@ -59,7 +65,10 @@ azd up                                     # Deploy complete Azure infrastructur
 - `agents/core/agent_toolsets.py` - Centralized FunctionToolset management
 - `agents/core/universal_deps.py` - Azure service dependency injection
 - `agents/core/azure_pydantic_provider.py` - Azure OpenAI model provider
-- `infrastructure/` - Azure service clients (471-line container)
+- `agents/core/centralized_agent1_schema.py` - Minimal essential fields with usage documentation (318 lines)
+- `infrastructure/prompt_workflows/templates/universal_knowledge_extraction.jinja2` - Unified entity+relationship extraction template
+- `infrastructure/prompt_workflows/prompt_workflow_orchestrator.py` - Template orchestration with Agent 1 variables
+- `infrastructure/` - Azure service clients with unified prompt workflow system
 
 ## Critical Development Rules
 
@@ -139,9 +148,9 @@ PYTHONPATH=/workspace/azure-maintie-rag python agents/domain_intelligence/agent.
 OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag timeout 60 pytest -m performance -v
 
 # Test specific dataflow scripts directly
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_01_validate_domain_intelligence.py
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_02_validate_knowledge_extraction.py
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_03_validate_universal_search.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_00_basic_agent_connectivity.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase2_ingestion/02_00_validate_phase2_prerequisites.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_00_validate_phase3_prerequisites.py
 ```
 
 ## Common Issues & Solutions
@@ -170,6 +179,21 @@ PYTHONPATH=/workspace/azure-maintie-rag python <script>
 - Remove hardcoded domain categories ("technical", "legal", etc.)
 - Replace fixed thresholds with measured properties
 - Use discovery patterns, not classification
+
+### Unified Template System (Current Architecture)
+The system uses a unified template approach with centralized Agent 1 schema:
+```bash
+# Multi-step Phase 3 knowledge extraction (cleaned up architecture)
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_00_validate_phase3_prerequisites.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_01_basic_entity_extraction.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_02_graph_storage.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_03_verification.py
+```
+
+**Key Components:**
+- `agents/core/centralized_agent1_schema.py:Agent1TemplateMapping` - Extracts template variables from Agent 1 output  
+- `infrastructure/prompt_workflows/templates/universal_knowledge_extraction.jinja2` - Single template for both entities and relationships
+- Template variables: `content_signature`, `discovered_entity_types`, `key_content_terms`, etc.
 
 ### Testing Directory Structure
 The project uses validation scripts instead of traditional unit tests:
@@ -217,10 +241,13 @@ Located in `scripts/dataflow/` with **6-phase execution structure**:
 - `phase2_ingestion/02_03_vector_embeddings.py` - Create vector embeddings
 - `phase2_ingestion/02_04_search_indexing.py` - Index in Azure Cognitive Search
 
-**Phase 3 - Knowledge Extraction**:
-- `phase3_knowledge/03_02_knowledge_extraction.py` - Extract entities and relationships
-- `phase3_knowledge/03_03_cosmos_storage.py` - Store knowledge graph in Cosmos DB
-- `phase3_knowledge/03_04_graph_construction.py` - Build knowledge graph structure
+**Phase 3 - Knowledge Extraction** (Streamlined with unified templates):
+- `phase3_knowledge/03_02_knowledge_extraction.py` - Extract entities and relationships with unified template
+- `phase3_knowledge/03_02_simple_extraction.py` - Simplified extraction for testing
+- `phase3_knowledge/03_02_test_unified_template.py` - Test unified template system
+- `phase3_knowledge/03_01_test_agent1_template_vars.py` - Test Agent 1 template variables
+- `phase3_knowledge/03_03_simple_storage.py` - Simplified Cosmos DB storage
+- `phase3_knowledge/03_04_simple_graph.py` - Simplified graph construction
 
 **Phase 4 - Query Pipeline**:
 - `phase4_query/04_01_query_analysis.py` - Query analysis and processing
@@ -253,6 +280,8 @@ Located in `scripts/dataflow/` with **6-phase execution structure**:
 - `config/azure_settings.py` - Service configuration with validation
 - `agents/core/simple_config_manager.py` - Runtime configuration
 - `agents/core/constants.py` - Zero-hardcoded-values constants
+- `agents/core/centralized_agent1_schema.py` - Minimal essential fields with complete usage mapping (318 lines)
+- `infrastructure/prompt_workflows/templates/universal_knowledge_extraction.jinja2` - Unified entity+relationship extraction template (101 lines)
 
 ## Technology Stack
 
@@ -299,6 +328,7 @@ pytest -m unit -v
 - `agents/core/agent_toolsets.py:1-200` - Centralized FunctionToolset management  
 - `agents/core/universal_deps.py:1-150` - Azure service dependency injection
 - `agents/core/azure_pydantic_provider.py:1-80` - Azure OpenAI model provider
+- `agents/core/centralized_agent1_schema.py:1-50+` - Minimal essential fields for Domain Intelligence Agent
 
 **Agent Implementations**:
 - `agents/domain_intelligence/agent.py:72-95` - PydanticAI agent with toolsets
@@ -312,9 +342,51 @@ pytest -m unit -v
 - `azure_storage/storage_client.py` - Document management with streaming upload
 - `azure_ml/gnn_model.py` - Graph Neural Network training and inference
 - `azure_auth/session_manager.py` - Centralized Azure authentication with DefaultAzureCredential
+- `prompt_workflows/templates/universal_knowledge_extraction.jinja2` - Unified template for entity + relationship extraction
+- `prompt_workflows/prompt_workflow_orchestrator.py` - Template orchestration and variable injection
 
 **Critical Architecture Dependencies** (Must understand together):
 - `agents/core/universal_deps.py` + `infrastructure/azure_auth/base_client.py` = Service injection pattern
-- `agents/core/agent_toolsets.py` + `agents/*/agent.py` = PydanticAI toolset registration
+- `agents/core/agent_toolsets.py` + `agents/*/agent.py` = PydanticAI toolset registration pattern
+- `agents/core/centralized_agent1_schema.py:Agent1TemplateMapping` + `infrastructure/prompt_workflows/templates/universal_knowledge_extraction.jinja2` = Template variable extraction and unified extraction
+- `agents/core/centralized_agent1_schema.py:Agent1UsageMapping` = Complete field usage documentation for downstream agent integration
 - `config/azure_settings.py` + `config/environments/*.env` = Environment-specific Azure service configuration
 - `scripts/deployment/sync-env.sh` + `azure.yaml` = Deployment environment synchronization
+
+## Current Branch State (feature/universal-agents-clean)
+
+**Status**: Agent architecture cleanup and unified template system implementation
+**Key Changes**:
+- **Modified**: Agent implementations (`agents/*/agent.py`) for PydanticAI 0.6.2 compatibility
+- **Modified**: Centralized schema system (`agents/core/centralized_agent1_schema.py`) 
+- **Modified**: Unified template system (`infrastructure/prompt_workflows/templates/universal_knowledge_extraction.jinja2`)
+- **Added**: Phase 3 knowledge extraction validation scripts (`scripts/dataflow/phase3_knowledge/`)
+- **Removed**: Individual entity/relationship templates (consolidated to unified approach)
+- **Removed**: Legacy prompt workflow files and duplicate templates
+
+**Current Issues**: Some dataflow execution scripts may reference removed files. Use validation scripts instead.
+
+## Troubleshooting Current Branch Issues
+
+### Missing Dataflow Files
+Some Phase 3 scripts were removed during cleanup:
+```bash
+# Instead of missing scripts, use:
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_02_simple_extraction.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_03_simple_storage.py  
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_04_simple_graph.py
+```
+
+### Environment Variable Setup
+Always use environment syncing before running agents:
+```bash
+./scripts/deployment/sync-env.sh prod
+# or
+USE_MANAGED_IDENTITY=false PYTHONPATH=/workspace/azure-maintie-rag python <script>
+```
+
+### OpenBLAS Threading Issues
+For GNN and numerical operations, limit threads:
+```bash
+OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag python <script>
+```

@@ -1,23 +1,24 @@
-# Phase 1: Agent Validation
+# Phase 1: Basic Agent Connectivity (Post-Cleanup)
 
-**Purpose**: Validate each PydanticAI agent individually with real data
+**Purpose**: Validate basic agent connectivity and imports ONLY (databases are empty after Phase 0 cleanup)
 
 ## Scripts in This Phase:
 
-- 01_01_validate_domain_intelligence.py - Domain Intelligence Agent validation
-- 01_02_validate_knowledge_extraction.py - Knowledge Extraction Agent validation
-- 01_03_validate_universal_search.py - Universal Search Agent validation
+- 01_00_basic_agent_connectivity.py - Basic connectivity validation (imports + initialization)
 
-## Execution Order:
+## Context:
 
-Run scripts in numerical order (01, 02, 03, ...).
+- **Runs AFTER**: Phase 0 cleanup (databases are EMPTY)
+- **Tests**: Imports, initialization, basic connectivity only
+- **Cannot Test**: Full data processing capabilities (no data exists yet)
+- **Next Step**: Phase 2 ingests data, then validates full agent processing
 
 ## Prerequisites:
 
-- Previous phase must be completed successfully
-- Azure services must be operational
-- No lock files from previous executions
+- Phase 0 cleanup must be completed successfully
+- Azure services must be operational and clean
+- All agents must be importable
 
-## Dependencies:
+## Note:
 
-Each script checks prerequisites before execution and creates completion markers.
+**Full agent functionality validation happens in Phase 2 Step 5 after data ingestion.**

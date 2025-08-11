@@ -21,9 +21,7 @@ from agents.domain_intelligence.agent import (
     run_domain_analysis,
 )
 from agents.orchestrator import UniversalOrchestrator
-from infrastructure.prompt_workflows.universal_prompt_generator import (
-    UniversalPromptGenerator,
-)
+# Removed redundant UniversalPromptGenerator - Agent 1 provides template variables directly
 
 
 async def run_universal_full_pipeline(
@@ -82,7 +80,7 @@ async def run_universal_full_pipeline(
         for file_path in sample_files:
             try:
                 content = file_path.read_text(encoding="utf-8")
-                sample_content += content[:1000] + "\n\n"  # First 1000 chars of each
+                sample_content += content + "\n\n"  # Full content of each file
             except:
                 continue
 
@@ -109,32 +107,8 @@ async def run_universal_full_pipeline(
         )
         print(f"   ⏱️  Stage duration: {stage_duration:.2f}s")
 
-        # Stage 2: Universal Prompt Generation
-        print(f"\n📝 Stage 2: Universal Prompt Generation")
-        stage_start = time.time()
-
-        prompt_generator = UniversalPromptGenerator()
-        generated_prompts = await prompt_generator.generate_domain_prompts(
-            data_directory=data_dir, max_files_to_analyze=10
-        )
-
-        stage_duration = time.time() - stage_start
-        pipeline_results["stages_completed"].append(
-            {
-                "stage": "prompt_generation",
-                "duration": stage_duration,
-                "status": "completed",
-                "prompts_generated": len(generated_prompts),
-            }
-        )
-
-        print(f"   ✅ Generated {len(generated_prompts)} domain-adaptive prompts")
-        for prompt_type, path in generated_prompts.items():
-            print(f"   📄 {prompt_type}: {Path(path).name}")
-        print(f"   ⏱️  Stage duration: {stage_duration:.2f}s")
-
-        # Stage 3: Universal Orchestrated Processing
-        print(f"\n🚀 Stage 3: Universal Orchestrated Processing")
+        # Stage 2: Universal Orchestrated Processing (Agent 1 provides template variables directly)
+        print(f"\n🚀 Stage 2: Universal Orchestrated Processing")
         stage_start = time.time()
 
         orchestrator = UniversalOrchestrator()
@@ -177,7 +151,7 @@ async def run_universal_full_pipeline(
                     "vocabulary_richness": domain_analysis.characteristics.vocabulary_richness,
                     "concept_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 },
-                "generated_prompts": list(generated_prompts.keys()),
+                "template_variables": "Provided directly via Agent 1 centralized schema",
                 "orchestration_result": {
                     "success": result.success,
                     "agents_executed": len(result.agent_metrics),

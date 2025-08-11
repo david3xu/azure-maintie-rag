@@ -33,8 +33,8 @@ class UniversalDomainCharacteristics(BaseModel):
     )
 
     # Discovered content patterns (learned from data)
-    most_frequent_terms: List[str] = Field(
-        default_factory=list, description="Top terms found in content"
+    key_content_terms: List[str] = Field(
+        default_factory=list, description="Most important content-characterizing terms (not just frequent)"
     )
     content_patterns: List[str] = Field(
         default_factory=list, description="Structural patterns discovered"

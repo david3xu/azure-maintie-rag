@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-08-11T14:53:33",
+  "verification_duration": 6.357191562652588,
+  "services_verified": [
+    "cosmos_db",
+    "cognitive_search",
+    "azure_storage",
+    "local_cache"
+  ],
+  "all_services_clean": true,
+  "results": {
+    "cosmos_db": {
+      "vertices": 0,
+      "edges": 0,
+      "clean": true
+    },
+    "cognitive_search": {
+      "documents": 0,
+      "clean": true
+    },
+    "azure_storage": {
+      "total_blobs": 0,
+      "clean": true
+    },
+    "local_cache": {
+      "files": 1,
+      "clean": true
+    }
+  }
+}

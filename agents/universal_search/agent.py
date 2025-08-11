@@ -63,6 +63,7 @@ universal_search_agent = Agent[UniversalDeps, MultiModalSearchResult](
     get_azure_openai_model(),
     output_type=MultiModalSearchResult,
     toolsets=[get_universal_search_toolset()],
+    retries=3,  # Add retry configuration for Azure OpenAI reliability
     system_prompt="""You are the Universal Search Agent.
 
 Your role is to orchestrate multi-modal search (Vector + Graph + GNN) for ANY type of content using universal patterns.
@@ -116,9 +117,8 @@ async def _execute_multi_modal_search_internal(
             search_strategy = f"adaptive_{domain_analysis.domain_signature}"
 
         except Exception as e:
-            print(
-                f"Warning: Domain analysis failed, using default search strategy: {e}"
-            )
+            # FAIL FAST - Domain analysis is required
+            raise RuntimeError(f"Domain analysis failed: {e}. Cannot proceed without domain characteristics.") from e
 
     # Generate search configuration using tools
     search_config = await generate_search_query(
@@ -138,38 +138,35 @@ async def _execute_multi_modal_search_internal(
         duplicate_results_removed=0,
     )
 
-    # 1. Vector similarity search (Azure Cognitive Search)
-    if ctx.deps.is_service_available("search"):
-        vector_start = time.time()
-        try:
-            vector_results = await _execute_vector_search(
-                ctx, user_query, search_config, max_results
-            )
-        except Exception as e:
-            print(f"Vector search failed: {e}")
-        search_metrics.vector_search_time = time.time() - vector_start
+    # MANDATORY TRI-MODAL SEARCH: Vector + Graph + GNN ALL REQUIRED
+    print("🎯 Executing MANDATORY tri-modal search (Vector + Graph + GNN)...")
+    
+    # 1. Vector similarity search (REQUIRED)
+    print("   🔍 Vector search (MANDATORY)...")
+    vector_start = time.time()
+    vector_results = await _execute_vector_search(
+        ctx, user_query, search_config, max_results
+    )
+    search_metrics.vector_search_time = time.time() - vector_start
+    print(f"   ✅ Vector search completed: {len(vector_results)} results")
 
-    # 2. Graph relationship traversal (Azure Cosmos DB)
-    if ctx.deps.is_service_available("cosmos"):
-        graph_start = time.time()
-        try:
-            graph_results = await _execute_graph_search(
-                ctx, user_query, domain_analysis, max_results
-            )
-        except Exception as e:
-            print(f"Graph search failed: {e}")
-        search_metrics.graph_search_time = time.time() - graph_start
+    # 2. Graph relationship traversal (REQUIRED) 
+    print("   🕸️  Graph search (MANDATORY)...")
+    graph_start = time.time()
+    graph_results = await _execute_graph_search(
+        ctx, user_query, domain_analysis, max_results
+    )
+    search_metrics.graph_search_time = time.time() - graph_start
+    print(f"   ✅ Graph search completed: {len(graph_results)} results")
 
-    # 3. GNN pattern inference (Azure ML)
-    if ctx.deps.is_service_available("gnn"):
-        gnn_start = time.time()
-        try:
-            gnn_results = await _execute_gnn_search(
-                ctx, user_query, vector_results, graph_results, max_results
-            )
-        except Exception as e:
-            print(f"GNN search failed: {e}")
-        search_metrics.gnn_search_time = time.time() - gnn_start
+    # 3. GNN pattern inference (REQUIRED)
+    print("   🧠 GNN search (MANDATORY)...")
+    gnn_start = time.time()
+    gnn_results = await _execute_gnn_search(
+        ctx, user_query, vector_results, graph_results, max_results
+    )
+    search_metrics.gnn_search_time = time.time() - gnn_start
+    print(f"   ✅ GNN search completed: {len(gnn_results)} results")
 
     # Unify results using universal ranking
     unified_results, metrics_update = await _unify_search_results(
@@ -237,8 +234,8 @@ async def _execute_vector_search(
         return results
 
     except Exception as e:
-        print(f"Vector search execution failed: {e}")
-        return []
+        # FAIL FAST - Don't return empty results on failure
+        raise RuntimeError(f"Vector search execution failed: {e}. Check Azure Cognitive Search service.") from e
 
 
 async def _execute_graph_search(
@@ -284,7 +281,8 @@ async def _execute_graph_search(
                 )
                 graph_response.extend(related_entities)
             except Exception as e:
-                print(f"Failed to find entities for term '{term}': {e}")
+                # FAIL FAST - Don't continue with partial failures
+                raise RuntimeError(f"Failed to find entities for term '{term}': {e}. Check Azure Cosmos DB Gremlin query execution.") from e
 
         # Convert to universal format
         results = []
@@ -307,8 +305,8 @@ async def _execute_graph_search(
         return results
 
     except Exception as e:
-        print(f"Graph search execution failed: {e}")
-        return []
+        # FAIL FAST - Don't return empty results on failure
+        raise RuntimeError(f"Graph search execution failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
 
 
 async def _execute_gnn_search(
@@ -348,8 +346,8 @@ async def _execute_gnn_search(
         return results
 
     except Exception as e:
-        print(f"GNN search execution failed: {e}")
-        return []
+        # FAIL FAST - Don't return empty results on failure
+        raise RuntimeError(f"GNN search execution failed: {e}. Check Azure ML GNN inference endpoint.") from e
 
 
 async def _unify_search_results(
@@ -406,23 +404,24 @@ async def _unify_search_results(
         # Universal relevance scoring (not domain-specific)
         relevance_score = result.score
 
-        # Use Agent 1's dynamic search weights (if available) or fallback defaults
-        vector_weight = 1.0  # fallback
-        graph_weight = 1.1   # fallback  
-        gnn_weight = 1.2     # fallback
+        # FAIL FAST - Require domain analysis for search weights
+        if not domain_analysis or not domain_analysis.processing_config:
+            raise RuntimeError("Domain analysis required for search weight calculation. Cannot proceed without proper configuration.")
+            
+        # Use Agent 1's centralized search weights (normalized 0.0-1.0)
+        vector_weight = max(0.1, domain_analysis.processing_config.vector_search_weight * 2.0)  # Scale to 0.2-2.0 range for meaningful impact
+        graph_weight = max(0.1, domain_analysis.processing_config.graph_search_weight * 2.0)    # Scale to 0.2-2.0 range for meaningful impact
         
-        if domain_analysis and domain_analysis.processing_config:
-            vector_weight = domain_analysis.processing_config.vector_search_weight + 0.5  # Scale to reasonable range
-            graph_weight = domain_analysis.processing_config.graph_search_weight + 0.5    # Scale to reasonable range
-            gnn_weight = 1.2  # Keep ML boost as computed boost
+        # Calculate GNN weight as complement (when vector + graph weights are lower, GNN gets higher weight)
+        gnn_weight = max(0.5, 2.0 - (vector_weight + graph_weight) / 2.0)  # Adaptive GNN weight based on other modalities
 
-        # Apply Agent 1's dynamic search weights
+        # Apply Agent 1's centralized search weights (from domain analysis)
         if result.source == "vector_search":
-            relevance_score *= vector_weight  # Agent 1 dynamic vector weight
+            relevance_score *= vector_weight  # Agent 1 centralized vector weight (scaled)
         elif result.source == "graph_search":
-            relevance_score *= graph_weight   # Agent 1 dynamic graph weight
+            relevance_score *= graph_weight   # Agent 1 centralized graph weight (scaled)
         elif result.source == "gnn_inference":
-            relevance_score *= gnn_weight     # Keep ML boost
+            relevance_score *= gnn_weight     # Adaptive GNN weight (computed from Agent 1 weights)
 
         # Boost based on content quality indicators
         if len(result.content) > 100:  # More substantial content
@@ -486,20 +485,25 @@ async def create_universal_search_agent() -> (
     """
     deps = await get_universal_deps()
 
-    # Validate required services
-    if not deps.is_service_available("openai"):
-        raise RuntimeError("Universal Search Agent requires Azure OpenAI service")
-
-    # Check for at least one search modality
-    search_modalities = sum(
-        1
-        for service in ["search", "cosmos", "gnn"]
-        if deps.is_service_available(service)
-    )
-
-    if search_modalities == 0:
-        print(
-            "Warning: No search modalities available. Search functionality will be limited."
+    # Validate ALL REQUIRED services for mandatory tri-modal search
+    print("🚨 Validating MANDATORY tri-modal search requirements...")
+    
+    required_services = {
+        "openai": "Azure OpenAI service",
+        "search": "Azure Cognitive Search (Vector modality)",
+        "cosmos": "Azure Cosmos DB Gremlin (Graph modality)", 
+        "gnn": "Azure ML GNN inference (GNN modality)"
+    }
+    
+    missing_services = []
+    for service_key, service_name in required_services.items():
+        if not deps.is_service_available(service_key):
+            missing_services.append(service_name)
+    
+    if missing_services:
+        raise RuntimeError(
+            f"MANDATORY tri-modal search requirements not met. Missing services: {missing_services}. "
+            f"All three modalities (Vector + Graph + GNN) require their respective Azure services."
         )
 
     return universal_search_agent
@@ -545,9 +549,9 @@ async def run_universal_search(
         unified_results.append(search_result)
     
     return MultiModalSearchResult(
-        vector_results=[],  # Included in unified
-        graph_results=search_results["graph_results"],
-        gnn_results=[],  # Not implemented yet
+        vector_results=search_results.get("vector_results", []),  # Include vector results
+        graph_results=search_results["graph_results"], 
+        gnn_results=search_results.get("gnn_results", []),  # NOW IMPLEMENTED - Include actual GNN results
         unified_results=unified_results,
         search_confidence=search_results["search_confidence"],
         total_results_found=search_results["total_results_found"],
@@ -593,9 +597,8 @@ async def main():
             break
             
         except Exception as e:
-            print(f"❌ Search failed: {e}")
-            import traceback
-            traceback.print_exc()
+            # FAIL FAST - Don't mask search failures
+            raise RuntimeError(f"Universal search orchestration failed: {e}. Check all Azure services are operational.") from e
             break
 
 

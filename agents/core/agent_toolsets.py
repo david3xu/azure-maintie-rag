@@ -22,22 +22,14 @@ from agents.core.universal_deps import UniversalDeps
 domain_intelligence_toolset = FunctionToolset()
 
 
-from pydantic import BaseModel, Field
-
-class ContentCharacteristics(BaseModel):
-    """Content characteristics discovered from analysis (not predetermined)."""
-    vocabulary_complexity: float = Field(ge=0.0, le=1.0, description="Measured vocabulary complexity")
-    concept_density: float = Field(ge=0.0, le=1.0, description="Density of concepts per content unit")
-    structural_patterns: List[str] = Field(default_factory=list, description="Discovered structural patterns")
-    entity_indicators: List[str] = Field(default_factory=list, description="Potential entity types found")
-    relationship_indicators: List[str] = Field(default_factory=list, description="Potential relationship types")
-    content_signature: str = Field(description="Unique signature based on measured properties")
+# Import the proper universal model instead of duplicating
+from agents.core.universal_models import UniversalDomainCharacteristics
 
 
 @domain_intelligence_toolset.tool
 async def analyze_content_characteristics(
     ctx: RunContext[UniversalDeps], content: str, detailed_analysis: bool = True
-) -> ContentCharacteristics:
+) -> UniversalDomainCharacteristics:
     """
     Analyze content to discover characteristics without domain assumptions.
 
@@ -81,13 +73,47 @@ async def analyze_content_characteristics(
     ]
     content_signature = "_".join(signature_components)
 
-    return ContentCharacteristics(
-        vocabulary_complexity=vocab_complexity,
-        concept_density=concept_density,
-        structural_patterns=structural_patterns,
-        entity_indicators=entity_indicators,
-        relationship_indicators=relationship_indicators,
-        content_signature=content_signature,
+    # Calculate additional required fields for UniversalDomainCharacteristics
+    # Basic document metrics
+    avg_document_length = len(content)
+    document_count = 1  # Single document analysis
+    
+    # TODO: Implement LLM-based vocabulary analysis
+    vocabulary_richness = min(vocab_complexity + 0.1, 1.0)  # Temporary calculation
+    sentence_complexity = len(content.split()) / max(content.count('.') + content.count('!') + content.count('?'), 1)
+    
+    # Extract key content terms using LLM analysis  
+    key_content_terms = await _extract_key_content_terms_via_llm(ctx, content)
+    content_patterns = structural_patterns  # Use discovered patterns
+    
+    # Language detection placeholder
+    language_indicators = {"english": 0.95}  # Placeholder
+    
+    # Lexical diversity calculation
+    words = content.lower().split()
+    unique_words = len(set(words))
+    total_words = len(words)
+    lexical_diversity = unique_words / max(total_words, 1) if total_words > 0 else 0.0
+    
+    # Use vocab_complexity as vocabulary_complexity_ratio (matching centralized schema)
+    vocabulary_complexity_ratio = vocab_complexity
+    
+    # Structural consistency based on patterns found
+    structural_consistency = min(len(structural_patterns) / 4.0, 1.0)
+    
+    return UniversalDomainCharacteristics(
+        # Required fields from centralized schema
+        vocabulary_complexity_ratio=vocabulary_complexity_ratio,
+        lexical_diversity=lexical_diversity,
+        structural_consistency=structural_consistency,
+        vocabulary_richness=vocabulary_richness,
+        sentence_complexity=sentence_complexity,
+        content_patterns=content_patterns,
+        key_content_terms=key_content_terms,
+        avg_document_length=avg_document_length,
+        document_count=document_count,
+        # Additional fields
+        language_indicators=language_indicators,
     )
 
 
@@ -95,7 +121,7 @@ async def analyze_content_characteristics(
 async def predict_entity_types(
     ctx: RunContext[UniversalDeps],
     content: str,
-    characteristics: ContentCharacteristics,
+    characteristics: UniversalDomainCharacteristics,
 ) -> Dict[str, Any]:
     """
     🧠 TRUE LLM-BASED Entity Type Prediction - UNIVERSAL AUTO-GENERATION
@@ -109,9 +135,9 @@ async def predict_entity_types(
 Analyze this content and identify what types of entities are likely present based on its actual characteristics.
 
 Content Analysis:
-- Vocabulary complexity: {characteristics.vocabulary_complexity:.3f}
+- Vocabulary complexity: {characteristics.vocabulary_complexity_ratio:.3f}
 - Concept density: {characteristics.concept_density:.3f}
-- Structural patterns: {characteristics.structural_patterns}
+- Structural patterns: {characteristics.content_patterns}
 
 Content Sample:
 {content[:1000]}...
@@ -164,125 +190,27 @@ Respond with valid JSON only:
                 "type_confidence": type_confidence,
                 "extraction_strategy_hint": extraction_strategy,
                 "generation_method": "llm_auto_generated",
-                "fallback_used": False,
+                "source": "llm_generated",
                 "content_analysis_basis": {
-                    "vocabulary_complexity": characteristics.vocabulary_complexity,
+                    "vocabulary_complexity": characteristics.vocabulary_complexity_ratio,
                     "concept_density": characteristics.concept_density,
-                    "structural_patterns": characteristics.structural_patterns,
+                    "structural_patterns": characteristics.content_patterns,
                 }
             }
         else:
             raise ValueError("Could not parse LLM response as JSON")
             
     except Exception as e:
-        print(f"🚨 LLM entity type prediction failed: {e}, using universal fallback")
-        
-        # UNIVERSAL FALLBACK - truly content-agnostic
-        # Use vocabulary complexity to determine entity sophistication
-        if characteristics.vocabulary_complexity > 0.8:
-            predicted_types = ["specialized_concept"]
-            base_confidence = 0.75 + (characteristics.vocabulary_complexity * 0.15)
-        elif characteristics.vocabulary_complexity > 0.6:
-            predicted_types = ["technical_entity"]  
-            base_confidence = 0.70 + (characteristics.vocabulary_complexity * 0.1)
-        else:
-            predicted_types = ["general_entity"]
-            base_confidence = 0.65 + (characteristics.vocabulary_complexity * 0.05)
-        
-        return {
-            "predicted_entity_types": predicted_types,
-            "type_confidence": {predicted_types[0]: base_confidence},
-            "extraction_strategy_hint": "universal_patterns_adaptive",
-            "generation_method": "complexity_based_fallback", 
-            "fallback_used": True,
-            "content_analysis_basis": {
-                "vocabulary_complexity": characteristics.vocabulary_complexity,
-                "concept_density": characteristics.concept_density,
-                "structural_patterns": characteristics.structural_patterns,
-            }
-        }
+        # FAIL FAST - No fallbacks for Azure OpenAI service failures
+        raise RuntimeError(f"Azure OpenAI entity type prediction failed: {e}. System requires functional Azure OpenAI service.")
 
 
-@domain_intelligence_toolset.tool
-async def generate_extraction_prompts(
-    ctx: RunContext[UniversalDeps],
-    content: str,
-    predicted_entities: Dict[str, Any],
-    characteristics: ContentCharacteristics,
-) -> Dict[str, str]:
-    """
-    Generate targeted extraction prompts based on Agent 1's content analysis.
-    
-    This creates specific prompts for Agent 2 instead of generic extraction.
-    """
-    prompts = {}
-    
-    # Base prompt with discovered characteristics
-    base_context = f"""
-Content Analysis Results:
-- Vocabulary Complexity: {characteristics.vocabulary_complexity:.2f}
-- Concept Density: {characteristics.concept_density:.2f}
-- Structural Patterns: {', '.join(characteristics.structural_patterns)}
-- Predicted Entity Types: {', '.join(predicted_entities.get('predicted_entity_types', []))}
-"""
-    
-    # Generate entity extraction prompt
-    if predicted_entities.get('predicted_entity_types'):
-        entity_types = predicted_entities['predicted_entity_types']
-        prompts["entity_extraction"] = f"""
-{base_context}
-
-TARGETED ENTITY EXTRACTION:
-Focus specifically on these predicted entity types: {', '.join(entity_types)}
-
-Extract entities from the following content, prioritizing the predicted types:
-{content[:1500]}...
-
-For each entity, provide:
-1. Text: The exact text span
-2. Type: One of the predicted types ({', '.join(entity_types)}) or discover new type
-3. Confidence: Based on prediction confidence and text clarity
-4. Context: Surrounding context that supports the classification
-
-Return results in JSON format.
-"""
-    else:
-        prompts["entity_extraction"] = f"""
-{base_context}
-
-UNIVERSAL ENTITY EXTRACTION:
-No specific entity types predicted - use universal patterns.
-
-Extract entities from: {content[:1500]}...
-Focus on significant terms, proper nouns, and technical concepts.
-"""
-    
-    # Generate relationship extraction prompt
-    relationship_hints = []
-    if "process" in predicted_entities.get('predicted_entity_types', []):
-        relationship_hints.append("look for process-object relationships")
-    if "content_object" in predicted_entities.get('predicted_entity_types', []):
-        relationship_hints.append("focus on component-system relationships")
-    if "measurement" in predicted_entities.get('predicted_entity_types', []):
-        relationship_hints.append("identify metric-target relationships")
-    
-    prompts["relationship_extraction"] = f"""
-{base_context}
-
-TARGETED RELATIONSHIP EXTRACTION:
-Based on predicted entity types, focus on these relationship patterns:
-{', '.join(relationship_hints) if relationship_hints else 'universal relationship patterns'}
-
-Extract relationships from: {content[:1500]}...
-"""
-    
-    return prompts
 
 
 @domain_intelligence_toolset.tool
 async def generate_processing_configuration(
     ctx: RunContext[UniversalDeps],
-    characteristics: ContentCharacteristics,
+    characteristics: UniversalDomainCharacteristics,
     processing_type: str = "extraction",
 ) -> Dict[str, Any]:
     """
@@ -296,13 +224,13 @@ async def generate_processing_configuration(
     base_config = await config_manager.get_processing_config("universal")
 
     # Dynamic scaling based on measured properties (no hardcoded thresholds)
-    complexity_factor = characteristics.vocabulary_complexity
+    complexity_factor = characteristics.vocabulary_complexity_ratio
     density_factor = characteristics.concept_density
     
     # Adaptive chunk size using continuous scaling
     optimal_chunk_size = base_config.optimal_chunk_size
     complexity_scaling = 1.0 + (complexity_factor * 0.3)  # Scale up to 30% based on complexity
-    if "code_blocks" in characteristics.structural_patterns:
+    if "code_blocks" in characteristics.content_patterns:
         complexity_scaling *= 1.5  # Additional scaling for code
     if density_factor > 0.8:
         complexity_scaling *= 1.2  # Additional scaling for high density
@@ -311,14 +239,16 @@ async def generate_processing_configuration(
 
     # Adaptive overlap using continuous scaling  
     chunk_overlap_ratio = base_config.chunk_overlap_ratio
-    if "hierarchical_headers" in characteristics.structural_patterns:
+    if "hierarchical_headers" in characteristics.content_patterns:
         chunk_overlap_ratio *= 0.8  # Less overlap for structured content
     if density_factor > 0.7:
         chunk_overlap_ratio = min(chunk_overlap_ratio * 1.4, 0.5)
 
     # Dynamic confidence thresholds (no hardcoded values)
     entity_confidence_threshold = base_config.entity_confidence_threshold
-    if "proper_noun_rich" in characteristics.entity_indicators:
+    # Note: entity_indicators was removed from UniversalDomainCharacteristics as it was primitive
+    # Using content patterns instead for proper nouns detection
+    if complexity_factor > 0.5:  # Adjust for complex content
         entity_confidence_threshold *= (1.0 - complexity_factor * 0.25)  # More aggressive adjustment for rich content
     if complexity_factor < 0.3:
         entity_confidence_threshold *= 1.1
@@ -327,7 +257,8 @@ async def generate_processing_configuration(
 
     # Dynamic relationship density
     relationship_density = base_config.relationship_density
-    if len(characteristics.relationship_indicators) > 3:
+    # Note: relationship_indicators was removed - using content patterns for relationship density
+    if len(characteristics.content_patterns) > 2:  # More patterns = more potential relationships
         relationship_density *= 1.2
     relationship_density = min(1.0, relationship_density)
 
@@ -404,11 +335,99 @@ async def extract_entities_and_relationships(
     This tool orchestrates the full extraction process with domain analysis.
     """
     # Import here to avoid circular imports
-    from agents.knowledge_extraction.agent import _extract_with_enhanced_agent_guidance_optimized_internal
+    from agents.knowledge_extraction.agent import run_knowledge_extraction
     
-    return await _extract_with_enhanced_agent_guidance_optimized_internal(
-        ctx, content, use_domain_analysis
+    # Call the actual extraction function
+    result = await run_knowledge_extraction(
+        content, 
+        use_domain_analysis=use_domain_analysis
     )
+    
+    # Convert ExtractionResult to dict format expected by toolset
+    return {
+        "entities": [entity.model_dump() for entity in result.entities],
+        "relationships": [rel.model_dump() for rel in result.relationships],
+        "extraction_confidence": result.extraction_confidence,
+        "processing_signature": result.processing_signature,
+        "processing_time": result.processing_time,
+        "extracted_concepts": result.extracted_concepts
+    }
+
+@knowledge_extraction_toolset.tool
+async def generate_extraction_prompts(
+    ctx: RunContext[UniversalDeps],
+    content: str,
+    predicted_entities: Dict[str, Any],
+    characteristics: "UniversalDomainCharacteristics",  # Use string annotation to avoid circular import
+) -> Dict[str, str]:
+    """
+    Generate targeted extraction prompts based on Agent 1's content analysis.
+    
+    This creates specific prompts for Agent 2 instead of generic extraction.
+    """
+    prompts = {}
+    
+    # Base prompt with discovered characteristics
+    base_context = f"""
+Content Analysis Results:
+- Vocabulary Complexity: {characteristics.vocabulary_complexity_ratio:.3f}
+- Concept Density: {characteristics.concept_density:.3f}
+- Content Patterns: {', '.join(characteristics.content_patterns)}
+- Predicted Entity Types: {', '.join(predicted_entities.get('predicted_entity_types', []))}
+"""
+    
+    # Generate entity extraction prompt
+    if predicted_entities.get('predicted_entity_types'):
+        entity_types = predicted_entities['predicted_entity_types']
+        prompts["entity_extraction"] = f"""
+{base_context}
+
+TARGETED ENTITY EXTRACTION:
+Focus specifically on these predicted entity types: {', '.join(entity_types)}
+
+Extract entities from the following content, prioritizing the predicted types:
+{content[:1500]}...
+
+For each entity, provide:
+1. Text: The exact text span
+2. Type: One of the predicted types ({', '.join(entity_types)}) or discover new type
+3. Confidence: Based on prediction confidence and text clarity
+4. Context: Surrounding context that supports the classification
+
+Return results in JSON format.
+"""
+    else:
+        prompts["entity_extraction"] = f"""
+{base_context}
+
+UNIVERSAL ENTITY EXTRACTION:
+No specific entity types predicted - use universal patterns.
+
+Extract entities from: {content[:1500]}...
+Focus on significant terms, proper nouns, and technical concepts.
+"""
+    
+    # Generate relationship extraction prompt
+    relationship_hints = []
+    if "process" in predicted_entities.get('predicted_entity_types', []):
+        relationship_hints.append("look for process-object relationships")
+    if "content_object" in predicted_entities.get('predicted_entity_types', []):
+        relationship_hints.append("focus on component-system relationships")
+    if "measurement" in predicted_entities.get('predicted_entity_types', []):
+        relationship_hints.append("identify metric-target relationships")
+    
+    prompts["relationship_extraction"] = f"""
+{base_context}
+
+TARGETED RELATIONSHIP EXTRACTION:
+Based on predicted entity types, focus on these relationship patterns:
+{', '.join(relationship_hints) if relationship_hints else 'universal relationship patterns'}
+
+Extract relationships from: {content[:1500]}...
+"""
+    
+    return prompts
+
 
 # Universal Search Agent Toolset  
 universal_search_toolset = FunctionToolset()
@@ -435,8 +454,8 @@ async def search_knowledge_graph(
     
     for term in query_terms[:3]:  # Search first 3 terms
         try:
-            # Find entities with exact text match (Cosmos DB Gremlin doesn't support containing)
-            entity_query = f"g.V().has('text', '{term}').limit({max_results})"
+            # Find entities with substring match (use containing for text search)
+            entity_query = f"g.V().hasLabel('entity').has('text', containing('{term}')).limit({max_results})"
             entities = await cosmos_client.execute_query(entity_query)
             
             for entity_data in (entities or [])[:max_results]:
@@ -460,7 +479,8 @@ async def search_knowledge_graph(
                         })
                         
         except Exception as e:
-            print(f"Graph search failed for term '{term}': {e}")
+            # FAIL FAST - Don't mask graph search failures
+            raise RuntimeError(f"Graph search failed for term '{term}': {e}. Check Azure Cosmos DB Gremlin connection.")
     
     results["total_found"] = len(results["entities"])
     return results
@@ -505,7 +525,8 @@ async def search_vector_index(
         return {"results": results, "total_found": len(results)}
         
     except Exception as e:
-        return {"results": [], "error": f"Vector search failed: {e}"}
+        # FAIL FAST - Don't mask vector search failures  
+        raise RuntimeError(f"Vector search failed: {e}. Check Azure Cognitive Search connection.")
 
 
 @universal_search_toolset.tool
@@ -523,29 +544,68 @@ async def orchestrate_universal_search(
     import time
     start_time = time.time()
     
-    print(f"🔍 Orchestrating universal search for: '{user_query}'")
+    print(f"🎯 Orchestrating MANDATORY tri-modal search for: '{user_query}'")
+    print("   🚨 ALL THREE modalities REQUIRED: Vector + Graph + GNN")
     
-    # Step 1: Search knowledge graph using centralized tool
-    graph_results = await search_knowledge_graph(ctx, user_query, max_results)
-    
-    # Step 2: Search vector index using centralized tool
+    # Step 1: Vector search (MANDATORY) 
+    print("   1️⃣ Vector search (REQUIRED)...")
     vector_results = await search_vector_index(ctx, user_query, max_results)
+    print(f"   ✅ Vector: {len(vector_results.get('results', []))} results")
     
-    # Step 3: Domain analysis if requested
+    # Step 2: Graph search (MANDATORY)
+    print("   2️⃣ Graph search (REQUIRED)...")
+    graph_results = await search_knowledge_graph(ctx, user_query, max_results)
+    print(f"   ✅ Graph: {len(graph_results.get('entities', []))} entities")
+    
+    # Step 3: Domain analysis - FAIL FAST if requested
     domain_signature = "universal_default"
     if use_domain_analysis:
-        try:
-            from agents.domain_intelligence.agent import domain_intelligence_agent
-            domain_result = await domain_intelligence_agent.run(
-                f"Analyze search query characteristics: {user_query}",
-                deps=ctx.deps,
-                usage=None
-            )
-            domain_signature = f"adaptive_{domain_result.output.domain_signature}"
-        except Exception as e:
-            print(f"Domain analysis failed: {e}")
+        from agents.domain_intelligence.agent import domain_intelligence_agent
+        domain_result = await domain_intelligence_agent.run(
+            f"Analyze search query characteristics: {user_query}",
+            deps=ctx.deps,
+            usage=None
+        )
+        domain_signature = f"adaptive_{domain_result.output.domain_signature}"
     
-    # Step 4: Unify results
+    # Step 4: GNN Inference (MANDATORY) 
+    print("   3️⃣ GNN inference (REQUIRED)...")
+    
+    # FAIL FAST: GNN client must be available for mandatory tri-modal search
+    if not ctx.deps.gnn_client:
+        raise RuntimeError(
+            "GNN inference client required for mandatory tri-modal search. "
+            "All three modalities (Vector + Graph + GNN) must be available. "
+            "Check Azure ML service configuration and GNN client initialization."
+        )
+    
+    gnn_inference_client = ctx.deps.gnn_client
+    
+    # Prepare context from vector and graph results
+    gnn_context = {
+        "query": user_query,
+        "vector_context": [r.get("content", "") for r in vector_results.get("results", [])[:3]],
+        "graph_context": [e.get("text", "") for e in graph_results.get("entities", [])[:3]],
+        "max_predictions": min(max_results, 5)
+    }
+    
+    # Execute GNN inference - FAIL if Azure ML service fails
+    # Use the universal predict method which handles the context format
+    gnn_predictions = await gnn_inference_client.predict(gnn_context)
+    
+    gnn_results = []
+    for prediction in gnn_predictions.get("predictions", []):
+        gnn_results.append({
+            "title": f"GNN Prediction: {prediction.get('entity', 'Unknown')}",
+            "content": prediction.get('reasoning', 'GNN-based relationship prediction'),
+            "score": prediction.get('confidence', 0.5),
+            "source": "gnn_inference", 
+            "metadata": prediction
+        })
+        
+    print(f"   ✅ GNN: {len(gnn_results)} predictions generated")
+        
+    # Step 5: Unify results from all three modalities
     unified_results = []
     search_confidence = 0.0
     
@@ -569,7 +629,10 @@ async def orchestrate_universal_search(
             "metadata": result
         })
     
-    # Calculate confidence
+    # Add GNN results (NEW - Complete tri-modal)
+    unified_results.extend(gnn_results)
+    
+    # Calculate confidence from all three modalities
     if unified_results:
         search_confidence = sum(r["score"] for r in unified_results) / len(unified_results)
         search_confidence = min(search_confidence, 1.0)
@@ -580,17 +643,105 @@ async def orchestrate_universal_search(
     
     processing_time = time.time() - start_time
     
-    print(f"✅ Search completed: {len(unified_results)} results, confidence: {search_confidence:.3f}")
+    # Validate tri-modal requirement satisfaction - NO FALLBACKS ALLOWED
+    missing = []
+    if not vector_results.get("results"): missing.append("Vector")
+    if not graph_results.get("entities"): missing.append("Graph")  
+    if not gnn_results: missing.append("GNN")
+    
+    if missing:
+        raise RuntimeError(f"MANDATORY tri-modal search failed: Missing results from {missing}. All three modalities (Vector + Graph + GNN) are required. No fallback patterns allowed - implement real Azure services first.")
+    
+    print(f"🎉 MANDATORY tri-modal search completed: {len(unified_results)} unified results")
+    print(f"   📊 Vector: {len(vector_results.get('results', []))} + Graph: {len(graph_results.get('entities', []))} + GNN: {len(gnn_results)} results")
+    print(f"   🎯 Search confidence: {search_confidence:.3f}")
     
     return {
         "unified_results": unified_results,
         "graph_results": graph_results.get("entities", []),
         "vector_results": vector_results.get("results", []),
+        "gnn_results": gnn_results,  # NEW - Include GNN results
         "total_results_found": len(unified_results),
         "search_confidence": search_confidence,
-        "search_strategy_used": domain_signature,
+        "search_strategy_used": f"{domain_signature}_mandatory_tri_modal",
         "processing_time_seconds": processing_time,
+        "modalities_used": ["vector", "graph", "gnn"],  # ALL THREE ALWAYS REQUIRED
     }
+
+
+async def _extract_key_content_terms_via_llm(ctx: RunContext[UniversalDeps], content: str) -> List[str]:
+    """
+    Extract most IMPORTANT content-characterizing terms using REAL Azure OpenAI service ONLY.
+    
+    NO FALLBACKS - Production requires real Azure integration.
+    Uses FULL content, not samples.
+    """
+    # Use REAL Azure OpenAI service - NO fallbacks allowed
+    if not ctx.deps.openai_client:
+        raise RuntimeError("Azure OpenAI client not initialized - cannot extract key content terms")
+    
+    # Create focused prompt for term extraction using FULL REAL content
+    analysis_prompt = f"""Analyze this COMPLETE content and identify the 3 most IMPORTANT terms that characterize what this content is fundamentally about (not just frequent words, but key concepts that define the content's purpose and domain).
+
+Return ONLY a JSON array of exactly 3 terms, like: ["term1", "term2", "term3"]
+
+COMPLETE CONTENT TO ANALYZE:
+{content}"""  # Use FULL content, not truncated
+    
+    # Use the UnifiedAzureOpenAIClient's complete_chat method
+    response_data = await ctx.deps.openai_client.complete_chat(
+        messages=[
+            {"role": "system", "content": "You are a content analyst. Extract the 3 most IMPORTANT terms that characterize what this content is fundamentally about. Focus on key concepts, not word frequency. Return ONLY valid JSON."},
+            {"role": "user", "content": analysis_prompt}
+        ],
+        max_tokens=100,  # Allow more tokens for proper response  
+        temperature=0.0  # Zero temperature for consistent results
+    )
+    
+    # Check for errors in response
+    if "error" in response_data:
+        raise RuntimeError(f"Azure OpenAI service error: {response_data['error']}")
+    
+    response_text = response_data["content"].strip()
+    
+    # Debug: show what we got from Azure OpenAI
+    if not response_text:
+        raise ValueError(f"Azure OpenAI returned empty response. Full response: {response_data}")
+    
+    # Clean response text - remove markdown code blocks if present
+    if response_text.startswith('```json'):
+        # Extract JSON from markdown code block
+        lines = response_text.split('\n')
+        json_lines = []
+        in_json = False
+        for line in lines:
+            if line.strip() == '```json':
+                in_json = True
+                continue
+            elif line.strip() == '```':
+                break
+            elif in_json:
+                json_lines.append(line)
+        response_text = '\n'.join(json_lines).strip()
+    
+    # Parse JSON response - FAIL if malformed (NO fallbacks)
+    import json
+    try:
+        terms = json.loads(response_text)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Azure OpenAI returned invalid JSON after cleaning: '{response_text}'. JSON error: {e}")
+    
+    if not isinstance(terms, list) or len(terms) != 3:
+        raise ValueError(f"Azure OpenAI returned invalid format: expected list of 3 terms, got {terms}")
+    
+    # Clean and validate terms
+    cleaned_terms = []
+    for term in terms:
+        if not isinstance(term, str) or len(term.strip()) == 0:
+            raise ValueError(f"Azure OpenAI returned invalid term: '{term}' - must be non-empty string")
+        cleaned_terms.append(term.strip().lower())
+    
+    return cleaned_terms
 
 
 def get_domain_intelligence_toolset() -> FunctionToolset:

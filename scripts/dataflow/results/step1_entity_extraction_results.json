@@ -1,0 +1,45 @@
+{
+  "timestamp": "2025-08-11T15:00:34",
+  "total_files_processed": 5,
+  "successful_extractions": 4,
+  "total_entities": 43,
+  "total_relationships": 6,
+  "results": [
+    {
+      "filename": "azure-ai-services-language-service_part_81.md",
+      "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_81.md",
+      "entities_count": 9,
+      "relationships_count": 0,
+      "extraction_time": 38.39284038543701,
+      "confidence": 0.8922222222222224,
+      "processing_signature": "optimized_cached_fresh_me31_mr22_ct0.65_vc0.75"
+    },
+    {
+      "filename": "azure-ai-services-language-service_part_117.md",
+      "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_117.md",
+      "entities_count": 8,
+      "relationships_count": 1,
+      "extraction_time": 31.06851625442505,
+      "confidence": 0.8788888888888888,
+      "processing_signature": "optimized_cached_fresh_me31_mr22_ct0.65_vc0.75"
+    },
+    {
+      "filename": "azure-ai-services-language-service_part_86.md",
+      "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_86.md",
+      "entities_count": 19,
+      "relationships_count": 1,
+      "extraction_time": 39.5460262298584,
+      "confidence": 0.9,
+      "processing_signature": "optimized_cached_fresh_me31_mr22_ct0.65_vc0.75"
+    },
+    {
+      "filename": "azure-ai-services-language-service_part_69.md",
+      "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_69.md",
+      "entities_count": 7,
+      "relationships_count": 4,
+      "extraction_time": 34.55755615234375,
+      "confidence": 0.6636363636363636,
+      "processing_signature": "optimized_cached_fresh_me31_mr22_ct0.65_vc0.75"
+    }
+  ]
+}

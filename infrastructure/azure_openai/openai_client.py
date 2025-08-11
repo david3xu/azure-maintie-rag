@@ -238,66 +238,35 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         except Exception as e:
             return self.handle_azure_error("extract_knowledge", e)
 
-    async def _extract_from_single_text(self, text: str, domain: str) -> Dict[str, Any]:
-        """Extract from single text using optimized prompt"""
+    # REMOVED: Legacy _extract_from_single_text method - using unified approach only
+
+    # REMOVED: Legacy _create_extraction_prompt method - using unified approach only
+
+    async def get_embedding(self, text: str, model: str = "text-embedding-ada-002") -> Dict[str, Any]:
+        """Generate embedding for text using Azure OpenAI"""
         self.ensure_initialized()
-        await self.rate_limiter.wait_if_needed()
-
-        prompt = self._create_extraction_prompt(text, domain)
-
+        
         try:
-            prompts = await self._get_prompts_async(domain)
+            if not text.strip():
+                raise ValueError("Text cannot be empty")
+            
             response = await asyncio.to_thread(
-                self._client.chat.completions.create,
-                model=prompts.model_name,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=prompts.temperature,
-                max_tokens=prompts.max_tokens,
+                self._client.embeddings.create,
+                model=model,
+                input=text.strip()
             )
-
-            content = response.choices[0].message.content
-            return self._parse_extraction_response(content)
-
+            
+            embedding = response.data[0].embedding
+            
+            return self.create_success_response("get_embedding", {
+                "embedding": embedding,
+                "dimensions": len(embedding),
+                "model": model,
+                "text_length": len(text)
+            })
+            
         except Exception as e:
-            error_response = self.handle_azure_error(
-                "extract_entities_and_relations", e
-            )
-            error_response.update({"entities": [], "relationships": []})
-            return error_response
-
-    def _create_extraction_prompt(self, text: str, domain: str) -> str:
-        """Create optimized extraction prompt using Jinja2 template"""
-        try:
-            # Use template-based prompt from prompt_flows directory
-            from infrastructure.utilities.prompt_loader import prompt_loader
-
-            return prompt_loader.render_knowledge_extraction_prompt(
-                text_content=text, domain_name=domain
-            )
-        except Exception as e:
-            logger.warning(
-                f"Failed to load template prompt, using dynamic fallback: {e}"
-            )
-            # Dynamic fallback using domain-specific extraction focus
-            extraction_focus = f"entities, relationships, {domain}-specific concepts"
-            return f"""You are a knowledge extraction system. Extract entities and relationships from this {domain} text.
-
-Text: {text}
-
-IMPORTANT: You MUST respond with valid JSON only. No additional text or explanations.
-
-Required JSON format:
-{{
-  "entities": [
-    {{"text": "entity_name", "type": "entity_type", "context": "surrounding_context"}}
-  ],
-  "relationships": [
-    {{"source": "entity1", "target": "entity2", "relation": "relationship_type", "context": "context"}}
-  ]
-}}
-
-Focus on: {extraction_focus}.
-If no clear entities exist, return empty arrays but maintain JSON format."""
+            return self.handle_azure_error("get_embedding", e)
 
     def _sanitize_unicode(self, text: str) -> str:
         """Sanitize text to remove invalid Unicode characters"""

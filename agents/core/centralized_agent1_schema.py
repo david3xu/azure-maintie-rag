@@ -58,9 +58,9 @@ class Agent1EssentialCharacteristics(BaseModel):
         default_factory=list,
         description="USED BY: Templates {{ discovered_content_patterns }} for adaptive prompts"
     )
-    most_frequent_terms: List[str] = Field(
+    key_content_terms: List[str] = Field(
         default_factory=list,
-        description="USED BY: Templates {{ discovered_entity_types }} derivation"
+        description="USED BY: Templates {{ discovered_entity_types }} derivation - most important content-characterizing terms"
     )
     
     # Used by debug output and basic metrics
@@ -106,18 +106,18 @@ class Agent1EssentialProcessingConfig(BaseModel):
         description="USED BY: Agent 2 entity extraction (line 278) - WORKING"
     )
     
-    # Should be used by Agent 3 (Universal Search) - NEEDS IMPLEMENTATION  
+    # Used by Agent 3 (Universal Search) - IMPLEMENTED AND WORKING  
     vector_search_weight: float = Field(
         ..., 
         ge=0.0, 
         le=1.0,
-        description="SHOULD BE USED BY: Agent 3 search strategy - NEEDS FIX"
+        description="USED BY: Agent 3 search strategy (scaled to 0.2-2.0 range) - WORKING"
     )
     graph_search_weight: float = Field(
         ..., 
         ge=0.0, 
         le=1.0,
-        description="SHOULD BE USED BY: Agent 3 search strategy - NEEDS FIX"
+        description="USED BY: Agent 3 search strategy (scaled to 0.2-2.0 range) - WORKING"
     )
     
     # Keep existing fields that processing_config schema expects
@@ -191,17 +191,18 @@ class Agent1UsageMapping:
         'entity_confidence_threshold': ['Agent 2 line 278 - WORKING'],
         'vocabulary_complexity_ratio': ['Agent 2 line 282 - FIXED FIELD NAME'],
         'lexical_diversity': ['Agent 2 line 283 - WORKING'],
-        'structural_consistency': ['Agent 2 line 284 - WORKING']
+        'structural_consistency': ['Agent 2 line 284 - WORKING'],
+        'vector_search_weight': ['Agent 3 search strategy (scaled 2x) - WORKING'],
+        'graph_search_weight': ['Agent 3 search strategy (scaled 2x) - WORKING'],
+        'vocabulary_richness': ['Templates via centralized mapping - WORKING'],
+        'sentence_complexity': ['Templates {{ concept_density }} via centralized mapping - WORKING'],
+        'content_patterns': ['Templates {{ discovered_content_patterns }} via centralized mapping - WORKING'],
+        'key_content_terms': ['Templates {{ discovered_entity_types }} via centralized mapping - WORKING']
     }
     
-    # Fields that need implementation in downstream agents
+    # Fields that need implementation in downstream agents  
     NEEDS_IMPLEMENTATION = {
-        'vector_search_weight': ['Agent 3 search strategy - NEEDS FIX'],
-        'graph_search_weight': ['Agent 3 search strategy - NEEDS FIX'], 
-        'vocabulary_richness': ['Templates {{ vocabulary_richness }} - NEEDS FIX'],
-        'sentence_complexity': ['Templates {{ concept_density }} calculation - NEEDS FIX'],
-        'content_patterns': ['Templates {{ discovered_content_patterns }} - NEEDS FIX'],
-        'most_frequent_terms': ['Templates {{ discovered_entity_types }} derivation - NEEDS FIX']
+        # All template variables now implemented via centralized mapping
     }
     
     # Fields with defaults (not critical)
@@ -229,9 +230,9 @@ class Agent1TemplateMapping:
                 "examples": [f"example_{i}_1", f"example_{i}_2", f"example_{i}_3"]
             })
         
-        # Derive entity types from frequent terms
+        # Derive entity types from key content terms
         entity_types = []
-        for term in agent1_output.characteristics.most_frequent_terms[:5]:
+        for term in agent1_output.characteristics.key_content_terms[:5]:
             if len(term) > 3:  # Only meaningful terms
                 entity_types.append(term.lower().replace(" ", "_"))
         
@@ -240,8 +241,9 @@ class Agent1TemplateMapping:
         
         # Template variable mapping used by infrastructure/prompt_workflows/
         return {
-            # Core identification
-            "domain_signature": agent1_output.domain_signature,
+            # Core identification (using template variable names)
+            "content_signature": agent1_output.domain_signature,  # Templates expect content_signature
+            "domain_signature": agent1_output.domain_signature,   # Keep for backward compatibility
             "content_confidence": agent1_output.content_type_confidence,
             
             # Characteristics for adaptive prompts  
@@ -253,31 +255,56 @@ class Agent1TemplateMapping:
             # Processing config for prompts
             "entity_confidence_threshold": agent1_output.processing_config.entity_confidence_threshold,
             
-            # Fallback values for missing template variables
-            "discovered_domain_description": f"content with signature {agent1_output.domain_signature}",
+            # Template-specific variables (exact names expected by templates)
+            "discovered_content_description": f"content with signature {agent1_output.domain_signature}",  # Templates expect this name
+            "discovered_domain_description": f"content with signature {agent1_output.domain_signature}",   # Keep for backward compatibility  
             "key_domain_insights": [
                 f"Domain signature: {agent1_output.domain_signature}",
                 f"Vocabulary richness: {agent1_output.characteristics.vocabulary_richness:.2f}",
                 f"Processing complexity: {agent1_output.processing_config.processing_complexity}"
-            ]
+            ],
+            
+            # Additional variables used by templates
+            "analysis_processing_time": agent1_output.processing_time,
+            "relationship_confidence_threshold": agent1_output.processing_config.entity_confidence_threshold,  # Use same threshold
+            "relationship_insights": [
+                f"Relationship density: {agent1_output.processing_config.relationship_density:.2f}",
+                f"Graph search weight: {agent1_output.processing_config.graph_search_weight:.2f}",
+                f"Expected complexity: {agent1_output.processing_config.processing_complexity}"
+            ],
+            "discovered_relationship_types": ["relates_to", "depends_on", "contains", "describes"],  # Universal types
+            "relationship_complexity": agent1_output.characteristics.lexical_diversity,
+            "pattern_confidence": agent1_output.content_type_confidence
         }
 
-    # Template files that use these variables
+    # Template files that use these variables (unified approach only)
     TEMPLATE_FILES = [
-        'infrastructure/prompt_workflows/templates/universal_entity_extraction.jinja2',
-        'infrastructure/prompt_workflows/templates/universal_relation_extraction.jinja2'
+        'infrastructure/prompt_workflows/templates/universal_knowledge_extraction.jinja2',  # Unified approach only
     ]
     
-    # Variables expected by templates (from our earlier analysis)
+    # Variables expected by templates (comprehensive mapping)
     TEMPLATE_VARIABLES = {
-        'domain_signature': '{{ domain_signature }}',
-        'entity_confidence_threshold': '{{ entity_confidence_threshold }}',
+        # Core identification
+        'content_signature': '{{ content_signature }}',
+        'domain_signature': '{{ domain_signature }}',  # Backward compatibility
         'content_confidence': '{{ content_confidence|default(0.8) }}',
+        
+        # Entity extraction template variables
+        'entity_confidence_threshold': '{{ entity_confidence_threshold }}',
         'vocabulary_richness': '{{ vocabulary_richness }}',
         'concept_density': '{{ concept_density }}',
-        'discovered_domain_description': '{{ discovered_domain_description }}',
+        'discovered_content_description': '{{ discovered_content_description }}',
         'discovered_content_patterns': '{% for pattern in discovered_content_patterns %}',
         'discovered_entity_types': '{{ discovered_entity_types|join(", ") }}',
+        'key_domain_insights': '{% for insight in key_domain_insights %}',
+        'analysis_processing_time': '{{ analysis_processing_time }}',
+        
+        # Relationship extraction template variables
+        'relationship_confidence_threshold': '{{ relationship_confidence_threshold }}',
+        'relationship_insights': '{% for insight in relationship_insights %}',
+        'discovered_relationship_types': '{{ discovered_relationship_types|join(", ") }}',
+        'relationship_complexity': '{{ relationship_complexity }}',
+        'pattern_confidence': '{{ pattern_confidence }}',
     }
 
 
