@@ -39,9 +39,9 @@ This system maintains **true universality** while providing intelligent domain-s
 ├── domain_intelligence/               # Universal domain analysis
 │   ├── __init__.py
 │   └── agent.py                       # Universal domain intelligence agent
-├── knowledge_extraction/              # Adaptive knowledge extraction  
+├── knowledge_extraction/              # Multi-method knowledge extraction  
 │   ├── __init__.py
-│   └── agent.py                       # Uses universal configurations
+│   └── agent.py                       # LLM + Pattern + Hybrid extraction tools
 ├── universal_search/                  # Multi-modal search
 │   ├── __init__.py
 │   └── agent.py                       # Adaptive search weights
@@ -148,16 +148,17 @@ graph TD
 **Input**: `UniversalDomainDeps(data_directory, max_files_to_analyze, enable_multilingual)`
 **Output**: `UniversalDomainAnalysis(domain_signature, characteristics, processing_config, key_insights)`
 
-### 2. 📚 Knowledge Extraction Agent (Adaptive)
-**Purpose**: Extract entities and relationships using domain-specific configuration from universal analysis
+### 2. 📚 Knowledge Extraction Agent (Multi-Method)
+**Purpose**: Extract entities and relationships using complementary approaches with Agent 1 → Agent 2 communication
 
-**Real Azure OpenAI Tools**:
-- `extract_entities()` - Named entity recognition with adaptive thresholds
-- `extract_relationships()` - Relationship extraction with domain-specific patterns
-- `validate_extractions()` - Quality validation using expected accuracy from domain analysis
+**Available Extraction Tools**:
+- `extract_with_generated_prompts()` - LLM-based with dynamic prompts from domain analysis (Primary)
+- `extract_entities_and_relationships()` - Fast pattern matching with Agent 1 configuration (Complementary)  
+- `hybrid_extraction_llm_plus_patterns()` - Combined LLM + Pattern approach (Best Coverage)
+- `store_knowledge_in_graph()` - Cosmos DB Gremlin storage
 
-**Input**: `ExtractionDeps(confidence_threshold, max_entities_per_chunk)` ← *Configured by universal analysis*
-**Output**: `ExtractionResult(entities, relationships, confidence, metrics)`
+**Input**: `content` + Agent 1 domain analysis → *Dynamic tool selection and configuration*
+**Output**: `ExtractionResult(entities, relationships, extraction_confidence, processing_signature)`
 
 ### 3. 🔍 Universal Search Agent (Adaptive)
 **Purpose**: Multi-modal search with adaptive weights from domain analysis

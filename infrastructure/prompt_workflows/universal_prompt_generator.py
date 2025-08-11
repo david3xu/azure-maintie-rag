@@ -173,12 +173,25 @@ class UniversalPromptGenerator:
         return "\n\n".join(content_parts[:max_files])
 
     def _extract_prompt_configuration(self, domain_analysis) -> Dict[str, Any]:
-        """Extract configuration for prompt generation from domain analysis"""
+        """Extract configuration for prompt generation from domain analysis using centralized schema"""
 
-        # Work with actual UniversalDomainAnalysis model
+        # Import centralized Agent 1 schema mapping
+        from agents.core.centralized_agent1_schema import Agent1TemplateMapping
+        
+        # Use centralized template variable extraction
+        if hasattr(domain_analysis, 'model_dump'):
+            # New UniversalDomainAnalysis format - use centralized mapping
+            try:
+                template_vars = Agent1TemplateMapping.extract_template_variables(domain_analysis)
+                print(f"✅ Using Agent 1 characteristics via centralized schema")
+                return template_vars
+            except Exception as e:
+                print(f"⚠️  Centralized schema extraction failed: {e}")
+                
+        # Fallback for old format (backward compatibility)
         discovered_patterns = getattr(domain_analysis, "discovered_patterns", [])
-        content_signature = getattr(domain_analysis, "content_signature", "unknown")
-        vocabulary_complexity = getattr(domain_analysis, "vocabulary_complexity", 0.5)
+        content_signature = getattr(domain_analysis, "content_signature", getattr(domain_analysis, "domain_signature", "unknown"))
+        vocabulary_complexity = getattr(domain_analysis, "vocabulary_complexity", getattr(domain_analysis.characteristics, "vocabulary_complexity_ratio", 0.5) if hasattr(domain_analysis, "characteristics") else 0.5)
         concept_density = getattr(domain_analysis, "concept_density", 0.5)
 
         # Discover entity types from discovered patterns

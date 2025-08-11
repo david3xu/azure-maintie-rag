@@ -222,6 +222,15 @@ clean: ## Clean session with log replacement
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@echo "✅ Clean session completed - logs replaced"
 
+clean-all: ## Comprehensive cleanup - all data except data/raw and Azure services
+	@echo "🧹 Starting comprehensive cleanup..."
+	@PYTHONPATH=$(PWD) python scripts/dataflow/00_clean_all_data.py
+	@echo "✅ Comprehensive cleanup completed"
+
+check-data: ## Check what data exists in Azure services
+	@echo "🔍 Checking Azure services data..."
+	@PYTHONPATH=$(PWD) python scripts/dataflow/00_check_azure_data.py
+
 # Legacy compatibility
 backend:
 	@cd backend && make run

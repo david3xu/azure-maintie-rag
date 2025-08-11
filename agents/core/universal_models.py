@@ -137,6 +137,11 @@ class UniversalDomainAnalysis(BaseModel):
         return self.characteristics
     
     @property
+    def content_signature(self) -> str:
+        """Alias for domain_signature to maintain API compatibility"""
+        return self.domain_signature
+    
+    @property
     def processing_configuration(self) -> UniversalProcessingConfiguration:
         """Alias for processing_config to maintain API compatibility"""
         return self.processing_config
@@ -220,9 +225,10 @@ class ExtractedEntity(BaseModel):
     """Universal entity extracted from content."""
 
     text: str = Field(description="Entity text")
-    entity_type: str = Field(description="Entity type")
+    type: str = Field(description="Entity type")  # Changed from entity_type to match validator
     confidence: float = Field(ge=0.0, le=1.0, description="Extraction confidence")
     context: Optional[str] = Field(default=None, description="Surrounding context")
+    positions: List[int] = Field(default_factory=list, description="Character positions in text")  # Added for validator
     metadata: Dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata"
     )
@@ -246,7 +252,7 @@ class SearchResult(BaseModel):
 
     title: str = Field(description="Result title")
     content: str = Field(description="Result content")
-    score: float = Field(ge=0.0, le=1.0, description="Relevance score")
+    score: float = Field(ge=0.0, description="Relevance score (Azure Search can exceed 1.0)")
     source: str = Field(description="Result source")
     metadata: Optional[Dict[str, Any]] = Field(
         default=None, description="Additional metadata"

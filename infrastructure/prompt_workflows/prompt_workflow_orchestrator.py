@@ -213,24 +213,20 @@ class PromptWorkflowOrchestrator:
                 # Use the rendered prompt with Azure OpenAI
                 openai_client = deps.openai_client
 
-                messages = [
-                    {
-                        "role": "system",
-                        "content": "You are an expert at extracting entities from text. Return results in JSON format with entity_id, text, entity_type, confidence, source_document, and context fields.",
-                    },
-                    {"role": "user", "content": prompt},
-                ]
+                # Combine system and user messages into a single prompt for get_completion
+                system_msg = "You are an expert at extracting entities from text. Return results in JSON format with entity_id, text, entity_type, confidence, source_document, and context fields."
+                full_prompt = f"{system_msg}\n\n{prompt}"
 
-                # Use the UnifiedAzureOpenAIClient interface
-                response = await openai_client.generate_chat_completion(
-                    messages=messages, model="gpt-4o", temperature=0.1, max_tokens=2000
+                # Use the correct UnifiedAzureOpenAIClient method
+                response = await openai_client.get_completion(
+                    full_prompt, max_tokens=2000, temperature=0.1
                 )
 
                 # Parse LLM response
                 try:
                     import json
 
-                    response_text = response.choices[0].message.content
+                    response_text = response if isinstance(response, str) else str(response)
 
                     # Extract JSON from response if wrapped in text
                     if "```json" in response_text:
@@ -248,37 +244,9 @@ class PromptWorkflowOrchestrator:
                     # Fall back to pattern extraction if JSON parsing fails
                     pass
 
-            # Fallback: Enhanced pattern-based extraction
+            # TODO: DELETED FALLBACK WORD-SPLITTING LOGIC - IMPLEMENT LLM-ONLY EXTRACTION
             entities = []
-            for i, text in enumerate(texts):
-                # More sophisticated entity extraction
-                words = text.split()
-
-                # Find capitalized words (proper nouns)
-                proper_nouns = [w for w in words if w and w[0].isupper() and len(w) > 2]
-
-                # Find significant terms (words > 6 chars)
-                significant_terms = [w for w in words if len(w) > 6 and w.isalpha()]
-
-                # Combine and deduplicate
-                candidates = list(set(proper_nouns + significant_terms))
-
-                for j, candidate in enumerate(candidates[: max_entities // len(texts)]):
-                    entity_type = (
-                        "proper_noun" if candidate in proper_nouns else "concept"
-                    )
-                    word_position = text.find(candidate)
-
-                    entities.append(
-                        {
-                            "entity_id": f"entity_{i}_{j}",
-                            "text": candidate,
-                            "entity_type": entity_type,
-                            "confidence": min(confidence_threshold + 0.15, 0.9),
-                            "source_document": i + 1,
-                            "context": f"...{text[max(0, word_position-30):word_position+len(candidate)+30]}...",
-                        }
-                    )
+            logger.error("❌ FALLBACK WORD-SPLITTING DELETED - LLM extraction must work")
 
             return {"entities": entities, "prompt_used": prompt}
 
@@ -319,24 +287,20 @@ class PromptWorkflowOrchestrator:
                 # Use the rendered prompt with Azure OpenAI
                 openai_client = deps.openai_client
 
-                messages = [
-                    {
-                        "role": "system",
-                        "content": "You are an expert at extracting relationships between entities. Return results in JSON format with relationship_id, subject, predicate, object, confidence, and context fields.",
-                    },
-                    {"role": "user", "content": prompt},
-                ]
+                # Combine system and user messages into a single prompt for get_completion
+                system_msg = "You are an expert at extracting relationships between entities. Return results in JSON format with relationship_id, subject, predicate, object, confidence, and context fields."
+                full_prompt = f"{system_msg}\n\n{prompt}"
 
-                # Use the UnifiedAzureOpenAIClient interface
-                response = await openai_client.generate_chat_completion(
-                    messages=messages, model="gpt-4o", temperature=0.1, max_tokens=2000
+                # Use the correct UnifiedAzureOpenAIClient method
+                response = await openai_client.get_completion(
+                    full_prompt, max_tokens=2000, temperature=0.1
                 )
 
                 # Parse LLM response
                 try:
                     import json
 
-                    response_text = response.choices[0].message.content
+                    response_text = response if isinstance(response, str) else str(response)
 
                     # Extract JSON from response if wrapped in text
                     if "```json" in response_text:
@@ -453,8 +417,9 @@ class PromptWorkflowOrchestrator:
         original_texts: List[str],
     ) -> Dict[str, Any]:
         """Assess extraction quality"""
-        total_words = sum(len(text.split()) for text in original_texts)
-        entity_density = len(entities) / max(total_words, 1)
+        # TODO: DELETED WORD-SPLITTING QUALITY ASSESSMENT - IMPLEMENT LLM-BASED
+        total_chars = sum(len(text) for text in original_texts)
+        entity_density = len(entities) / max(total_chars / 50, 1)  # Approximate char-to-word ratio
         relationship_density = len(relationships) / max(len(entities), 1)
 
         # Calculate overall confidence
@@ -470,11 +435,7 @@ class PromptWorkflowOrchestrator:
             "overall_confidence": overall_confidence,
             "entity_density": entity_density,
             "relationship_density": relationship_density,
-            "quality_tier": (
-                "high"
-                if overall_confidence > 0.8
-                else "medium" if overall_confidence > 0.6 else "low"
-            ),
+            "quality_score": overall_confidence,  # Use continuous score instead of predetermined tiers
             "total_extractions": len(entities) + len(relationships),
         }
 

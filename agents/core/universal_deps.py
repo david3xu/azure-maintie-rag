@@ -194,6 +194,54 @@ class UniversalDeps:
         }
         return service_map.get(service_name) is not None
 
+    async def cleanup(self) -> None:
+        """
+        Properly close all service connections to prevent connection leaks.
+        
+        This method should be called when shutting down the application
+        or when dependencies are no longer needed.
+        """
+        try:
+            # Close Cosmos DB Gremlin connection
+            if self.cosmos_client and hasattr(self.cosmos_client, 'close'):
+                try:
+                    self.cosmos_client.close()
+                except Exception as e:
+                    print(f"Warning: Could not close Cosmos client: {e}")
+            
+            # Close Azure OpenAI client if it has close method
+            if self.openai_client and hasattr(self.openai_client, 'close'):
+                try:
+                    await self.openai_client.close()
+                except Exception as e:
+                    print(f"Warning: Could not close OpenAI client: {e}")
+            
+            # Close storage client
+            if self.storage_client and hasattr(self.storage_client, 'close'):
+                try:
+                    self.storage_client.close()
+                except Exception as e:
+                    print(f"Warning: Could not close Storage client: {e}")
+            
+            # Close search client
+            if self.search_client and hasattr(self.search_client, 'close'):
+                try:
+                    self.search_client.close()
+                except Exception as e:
+                    print(f"Warning: Could not close Search client: {e}")
+                    
+        except Exception as e:
+            print(f"Warning during cleanup: {e}")
+            
+    def __del__(self):
+        """Ensure cleanup on garbage collection."""
+        try:
+            # Only do sync cleanup in destructor
+            if self.cosmos_client and hasattr(self.cosmos_client, 'close'):
+                self.cosmos_client.close()
+        except Exception:
+            pass  # Ignore errors during garbage collection
+
 
 # Private singleton instance for proper dependency injection
 _universal_deps: Optional[UniversalDeps] = None
@@ -229,6 +277,18 @@ def get_universal_deps_sync() -> UniversalDeps:
         _universal_deps = UniversalDeps()
         # Note: Services are not initialized - call initialize_all_services() separately
     return _universal_deps
+
+
+async def cleanup_universal_deps():
+    """
+    Cleanup global universal dependencies and close all connections.
+    
+    This function should be called at the end of scripts or application shutdown
+    to prevent connection leak warnings.
+    """
+    global _universal_deps
+    if _universal_deps is not None:
+        await _universal_deps.cleanup()
 
 
 def reset_universal_deps():

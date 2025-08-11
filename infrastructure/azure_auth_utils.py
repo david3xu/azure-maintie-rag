@@ -48,24 +48,26 @@ def get_azure_credential() -> DefaultAzureCredential:
 
 def _refresh_credential():
     """
-    Refresh Azure credential with managed identity fallback pattern.
+    Refresh Azure credential with DefaultAzureCredential (includes proper timeout handling).
 
-    Integrated from AzureSessionManager for production reliability.
+    DefaultAzureCredential handles the authentication chain properly with timeouts,
+    avoiding the 2-minute ManagedIdentityCredential timeout in non-managed environments.
     """
     global _azure_credential, _last_refresh_time
 
     try:
-        # Try managed identity first (for Azure environments)
-        _azure_credential = ManagedIdentityCredential()
-        logger.info("Azure credential refreshed with Managed Identity")
-    except Exception:
-        try:
-            # Fallback to default credential chain
-            _azure_credential = DefaultAzureCredential()
-            logger.info("Azure credential refreshed with Default Credential")
-        except Exception as e:
-            logger.error(f"Credential refresh failed: {e}")
-            raise ClientAuthenticationError(f"Failed to refresh Azure credentials: {e}")
+        # Use DefaultAzureCredential which includes proper timeout handling
+        # and authentication chain (Environment -> Managed Identity -> CLI -> etc.)
+        _azure_credential = DefaultAzureCredential(
+            # Exclude problematic credential types in local development
+            exclude_managed_identity_credential=False,  # Allow managed identity but with timeout
+            managed_identity_credential_timeout=30,     # 30 second timeout instead of 2 minutes
+            exclude_powershell_credential=True,         # Exclude PowerShell for reliability
+        )
+        logger.info("Azure credential refreshed with DefaultAzureCredential")
+    except Exception as e:
+        logger.error(f"Credential refresh failed: {e}")
+        raise ClientAuthenticationError(f"Failed to refresh Azure credentials: {e}")
 
     _last_refresh_time = time.time()
     logger.debug(f"Azure credential refreshed at {_last_refresh_time}")

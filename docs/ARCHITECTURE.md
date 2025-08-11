@@ -31,9 +31,9 @@ agents/
 │   ├── agent.py                       # Domain Intelligence Agent (Azure OpenAI integration)
 │   │   └── PydanticAI with AsyncAzureOpenAI - discovers content characteristics
 │   └── __init__.py                   # Module initialization
-├── knowledge_extraction/              # Agent 2: Universal entity/relationship extraction  
-│   ├── agent.py                       # Knowledge Extraction Agent (Cosmos DB integration)
-│   │   └── PydanticAI + Azure Cosmos DB Gremlin - domain-agnostic extraction
+├── knowledge_extraction/              # Agent 2: Multi-method entity/relationship extraction  
+│   ├── agent.py                       # Knowledge Extraction Agent (LLM + Pattern + Hybrid tools)
+│   │   └── PydanticAI + Azure services - complementary extraction approaches
 │   └── __init__.py                   # Module initialization
 ├── universal_search/                  # Agent 3: Multi-modal search orchestration
 │   ├── agent.py                       # Universal Search Agent (tri-modal search)

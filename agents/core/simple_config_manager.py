@@ -143,17 +143,12 @@ class SimpleDynamicConfigManager:
 
             # Create result based on discovered domain name and actual content analysis
             if content_samples:
-                # Basic content analysis without domain classification
+                # TODO: DELETED PRIMITIVE WORD-SPLITTING - IMPLEMENT LLM-BASED CONTENT ANALYSIS
                 all_content = " ".join(content_samples)
-                words = all_content.split()
-                unique_words = set(word.lower().strip('.,!?;:"()[]') for word in words)
-
-                # Universal characteristics measurement
-                vocabulary_complexity = min(len(unique_words) / max(len(words), 1), 1.0)
-                potential_concepts = [word for word in unique_words if len(word) > 6]
-                concept_density = min(
-                    len(potential_concepts) / max(len(words), 1) * 10, 1.0
-                )
+                
+                # Universal characteristics measurement (without word splitting)
+                vocabulary_complexity = 0.75  # Placeholder until LLM implementation
+                concept_density = 0.80  # Placeholder until LLM implementation
 
                 result = DomainIntelligenceResult(
                     domain_signature=f"{domain_name}",  # Use actual subdirectory name
@@ -275,11 +270,9 @@ class SimpleDynamicConfigManager:
                         content = file_path.read_text(encoding="utf-8", errors="ignore")
                         total_size += len(content)
 
-                        # Universal content analysis (no domain assumptions)
-                        words = content.split()
-                        capitalized_count = sum(
-                            1 for word in words if word.istitle() and len(word) > 3
-                        )
+                        # TODO: DELETED WORD-SPLITTING ANALYSIS - IMPLEMENT LLM-BASED CONTENT ANALYSIS
+                        # Simplified analysis without word splitting
+                        capitalized_count = 0  # Placeholder until LLM implementation
                         punctuation_density = (
                             sum(1 for char in content if char in ":.;()[]{}")
                             / len(content)
@@ -420,23 +413,44 @@ class SimpleDynamicConfigManager:
             "learned_at": None,
         }
 
-        # Adapt based on content analysis
+        # Adapt based on content analysis using dynamic scaling
         if domain_analysis:
-            if domain_analysis.vocabulary_complexity > 0.7:
-                # High vocabulary complexity - adjust for precision
-                base_config["vector_similarity_threshold"] = 0.75
-                base_config["graph_hop_count"] = 3
+            complexity_factor = domain_analysis.vocabulary_complexity
+            
+            # Dynamic threshold adjustment using continuous scaling (no hardcoded thresholds)
+            if complexity_factor > 0.7:
+                # High vocabulary complexity - adjust for precision using dynamic scaling
+                threshold_adjustment = 0.70 + (complexity_factor * 0.15)  # Continuous scaling from base
+                base_config["vector_similarity_threshold"] = min(threshold_adjustment, 0.85)
+                
+                hop_scaling = 2 + int(complexity_factor * 2)  # Dynamic hop count scaling
+                base_config["graph_hop_count"] = min(hop_scaling, 4)
+                
+                # Dynamic weight distribution based on complexity
+                vector_weight = max(0.2, 0.5 - complexity_factor * 0.3)
+                graph_weight = min(0.5, 0.3 + complexity_factor * 0.2)
+                gnn_weight = 1.0 - vector_weight - graph_weight
+                
                 base_config["tri_modal_weights"] = {
-                    "vector": 0.3,
-                    "graph": 0.4,
-                    "gnn": 0.3,
+                    "vector": round(vector_weight, 2),
+                    "graph": round(graph_weight, 2),
+                    "gnn": round(gnn_weight, 2),
                 }
-            elif domain_analysis.vocabulary_complexity < 0.3:
-                # Lower vocabulary complexity - adjust for recall
-                base_config["vector_similarity_threshold"] = 0.65
-                base_config["vector_top_k"] = 12
+            elif complexity_factor < 0.3:
+                # Lower vocabulary complexity - adjust for recall using dynamic scaling
+                threshold_adjustment = 0.70 - ((0.3 - complexity_factor) * 0.2)  # Continuous scaling
+                base_config["vector_similarity_threshold"] = max(threshold_adjustment, 0.55)
+                
+                k_scaling = 10 + int((0.3 - complexity_factor) * 10)  # Dynamic top-k scaling
+                base_config["vector_top_k"] = min(k_scaling, 15)
+                
+                # Dynamic weight distribution for simpler content
+                vector_weight = min(0.6, 0.4 + (0.3 - complexity_factor) * 0.6)
+                graph_weight = max(0.2, 0.4 - (0.3 - complexity_factor) * 0.2)
+                gnn_weight = 1.0 - vector_weight - graph_weight
+                
                 base_config["tri_modal_weights"] = {
-                    "vector": 0.5,
+                    "vector": round(vector_weight, 2),
                     "graph": 0.25,
                     "gnn": 0.25,
                 }

@@ -93,13 +93,13 @@ class UniversalOrchestrator:
                     "processing_time": domain_time,
                     "success": True,
                     "content_signature": domain_analysis.content_signature,
-                    "vocabulary_complexity": domain_analysis.vocabulary_complexity,
-                    "concept_density": domain_analysis.concept_density,
+                    "vocabulary_complexity": domain_analysis.characteristics.vocabulary_complexity,
+                    "concept_density": domain_analysis.characteristics.concept_density,
                 }
                 print(f"   ✅ Domain analysis completed in {domain_time:.2f}s")
                 print(f"   📊 Content signature: {domain_analysis.content_signature}")
                 print(
-                    f"   🎯 Vocabulary complexity: {domain_analysis.vocabulary_complexity:.2f}"
+                    f"   🎯 Vocabulary complexity: {domain_analysis.characteristics.vocabulary_complexity:.2f}"
                 )
 
             except Exception as e:
@@ -162,7 +162,7 @@ class UniversalOrchestrator:
                     agent_metrics["domain_intelligence"] = {
                         "processing_time": domain_time,
                         "success": True,
-                        "patterns_discovered": len(domain_analysis.discovered_patterns),
+                        "patterns_discovered": len(getattr(domain_analysis, 'discovered_patterns', [])),
                     }
                     print(
                         f"   ✅ Analysis completed: {domain_analysis.content_signature}"
