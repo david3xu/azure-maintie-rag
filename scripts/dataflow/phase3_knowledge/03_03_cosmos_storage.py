@@ -26,10 +26,9 @@ async def store_graph_data(entities: list = None, relationships: list = None):
             print("✅ Azure Cosmos DB client ready")
             cosmos_available = True
         except Exception as e:
-            cosmos_client = None
-            cosmos_available = False
-            print(f"⚠️  Azure Cosmos DB unavailable: {str(e)[:50]}...")
-            print("📊 Will simulate graph storage")
+            # NO FALLBACKS - Azure Cosmos DB required for production
+            print(f"❌ Azure Cosmos DB connection failed: {e}")
+            raise Exception(f"Azure Cosmos DB is required for production knowledge graph storage: {e}")
 
         entities = entities or ["Entity1", "Entity2", "Entity3"]
         relationships = relationships or [("Entity1", "relates_to", "Entity2")]

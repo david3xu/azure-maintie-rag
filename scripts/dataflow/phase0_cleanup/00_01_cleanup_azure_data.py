@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Clean All Data Script
-Comprehensive cleanup of all running results and cached data while preserving:
+Clean All Azure Data Script
+Comprehensive cleanup of all data from Azure services while preserving:
 - data/raw/ (original source data)  
-- Azure services (keep running, but clean data)
-- Core configuration files
+- Azure services (infrastructure remains operational, data cleaned)
+- Core configuration files and codebase
 """
 
 import asyncio

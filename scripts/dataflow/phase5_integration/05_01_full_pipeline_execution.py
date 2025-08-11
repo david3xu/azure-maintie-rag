@@ -105,7 +105,7 @@ async def run_universal_full_pipeline(
             f"   🧠 Vocabulary richness: {domain_analysis.characteristics.vocabulary_richness:.3f}"
         )
         print(
-            f"   ⚙️  Technical density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
+            f"   ⚙️  Concept density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
         )
         print(f"   ⏱️  Stage duration: {stage_duration:.2f}s")
 
@@ -175,7 +175,7 @@ async def run_universal_full_pipeline(
                     "domain_signature": domain_analysis.domain_signature,
                     "content_confidence": domain_analysis.content_type_confidence,
                     "vocabulary_richness": domain_analysis.characteristics.vocabulary_richness,
-                    "technical_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
+                    "concept_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 },
                 "generated_prompts": list(generated_prompts.keys()),
                 "orchestration_result": {

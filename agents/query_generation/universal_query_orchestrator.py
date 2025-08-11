@@ -39,18 +39,15 @@ async def generate_analysis_query_orchestrated(query: str, **kwargs) -> str:
     from agents.core.universal_deps import get_universal_deps
     
     # Create a minimal RunContext-like object
-    class MockRunContext:
+    class QueryRunContext:
         def __init__(self):
             pass
     
-    # Try to use the real function, fall back to simple passthrough
-    try:
-        deps = await get_universal_deps()
-        mock_ctx = MockRunContext()
-        mock_ctx.deps = deps
-        return await generate_analysis_query(mock_ctx, query, **kwargs)
-    except Exception:
-        return query
+    # NO FALLBACKS - Real Azure dependencies required for production
+    deps = await get_universal_deps()
+    run_ctx = QueryRunContext()
+    run_ctx.deps = deps
+    return await generate_analysis_query(run_ctx, query, **kwargs)
 
 
 async def generate_gremlin_query_orchestrated(query: str, **kwargs) -> str:
@@ -58,17 +55,15 @@ async def generate_gremlin_query_orchestrated(query: str, **kwargs) -> str:
     from agents.shared.query_tools import generate_gremlin_query
     from agents.core.universal_deps import get_universal_deps
     
-    class MockRunContext:
+    class GremlinRunContext:
         def __init__(self):
             pass
     
-    try:
-        deps = await get_universal_deps()
-        mock_ctx = MockRunContext()
-        mock_ctx.deps = deps
-        return await generate_gremlin_query(mock_ctx, query, **kwargs)
-    except Exception:
-        return f"g.V().has('text', containing('{query}'))"
+    # NO FALLBACKS - Real Azure dependencies required for production
+    deps = await get_universal_deps()
+    run_ctx = GremlinRunContext()
+    run_ctx.deps = deps
+    return await generate_gremlin_query(run_ctx, query, **kwargs)
 
 
 async def generate_search_query_orchestrated(query: str, **kwargs) -> str:

@@ -47,11 +47,11 @@ class GNNTrainingClient:
         self, config: Optional[UniversalGNNConfig] = None, device: Optional[str] = None
     ):
         """Initialize GNN training client with Azure ML workspace and original trainer."""
-        # Check dependencies
+        # Check dependencies - NO FALLBACKS for production
         if not PYTORCH_AVAILABLE:
-            logger.warning("PyTorch not available - GNN training will use fallback mode")
+            raise ImportError("PyTorch is required for production GNN training - install torch and torch-geometric")
         if not AZURE_ML_AVAILABLE:
-            logger.warning("Azure ML SDK not available - using simulation mode")
+            raise ImportError("Azure ML SDK is required for production GNN training - install azure-ai-ml")
 
         # Azure ML setup with centralized session management
         self.credential = get_azure_credential()

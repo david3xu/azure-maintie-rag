@@ -60,12 +60,60 @@ class UniversalOrchestrator:
         self._deps: Optional[UniversalDeps] = None
         self.cost_tracker = AzureServiceCostTracker()  # Added cost tracking
         self.evidence_collector: Optional[AzureDataWorkflowEvidenceCollector] = None
+        
+        # Centralized domain analysis cache to avoid redundant Agent 1 calls
+        self._domain_analysis_cache: Optional[UniversalDomainAnalysis] = None
+        self._cache_content_hash: Optional[str] = None
 
     async def _ensure_deps(self) -> UniversalDeps:
         """Ensure dependencies are initialized."""
         if self._deps is None:
             self._deps = await get_universal_deps()
         return self._deps
+
+    async def _get_or_create_domain_analysis(
+        self, 
+        content: str, 
+        use_domain_analysis: bool = True,
+        content_type: str = "content"
+    ) -> Optional[UniversalDomainAnalysis]:
+        """
+        Get domain analysis from cache or create new one.
+        This ensures Agent 1 is called only ONCE per content in the orchestrator.
+        """
+        if not use_domain_analysis:
+            return None
+            
+        # Simple content hash for caching
+        import hashlib
+        content_hash = hashlib.md5(content.encode()).hexdigest()
+        
+        # Return cached result if same content
+        if (self._domain_analysis_cache is not None and 
+            self._cache_content_hash == content_hash):
+            print(f"🔄 Using cached domain analysis for {content_type}")
+            return self._domain_analysis_cache
+        
+        # Call Agent 1 only once and cache result
+        print(f"🌍 Calling Agent 1 for {content_type} domain analysis...")
+        domain_start = time.time()
+        try:
+            domain_analysis = await run_domain_analysis(content, detailed=True)
+            domain_time = time.time() - domain_start
+            
+            # Cache the result
+            self._domain_analysis_cache = domain_analysis
+            self._cache_content_hash = content_hash
+            
+            print(f"   ✅ Domain analysis completed in {domain_time:.2f}s")
+            print(f"   📊 Content signature: {domain_analysis.content_signature}")
+            print(f"   🔄 Result cached for reuse")
+            
+            return domain_analysis
+            
+        except Exception as e:
+            print(f"   ❌ Domain analysis failed: {e}")
+            return None
 
     async def process_content_with_domain_analysis(
         self, content: str
@@ -84,11 +132,14 @@ class UniversalOrchestrator:
         try:
             print("🌍 Step 1: Universal domain analysis...")
 
-            # Step 1: Domain Intelligence Agent
+            # Step 1: Domain Intelligence Agent (use centralized method)
             domain_start = time.time()
-            try:
-                domain_analysis = await run_domain_analysis(content, detailed=True)
-                domain_time = time.time() - domain_start
+            domain_analysis = await self._get_or_create_domain_analysis(
+                content, use_domain_analysis=True, content_type="content"
+            )
+            domain_time = time.time() - domain_start
+            
+            if domain_analysis:
                 agent_metrics["domain_intelligence"] = {
                     "processing_time": domain_time,
                     "success": True,
@@ -96,21 +147,16 @@ class UniversalOrchestrator:
                     "vocabulary_complexity": domain_analysis.characteristics.vocabulary_complexity,
                     "concept_density": domain_analysis.characteristics.concept_density,
                 }
-                print(f"   ✅ Domain analysis completed in {domain_time:.2f}s")
-                print(f"   📊 Content signature: {domain_analysis.content_signature}")
                 print(
                     f"   🎯 Vocabulary complexity: {domain_analysis.characteristics.vocabulary_complexity:.2f}"
                 )
-
-            except Exception as e:
-                domain_time = time.time() - domain_start
-                errors.append(f"Domain analysis failed: {e}")
+            else:
                 agent_metrics["domain_intelligence"] = {
                     "processing_time": domain_time,
                     "success": False,
-                    "error": str(e),
+                    "error": "Domain analysis failed",
                 }
-                domain_analysis = None
+                errors.append("Domain analysis failed")
                 warnings.append("Continuing without domain analysis")
 
             return UniversalWorkflowResult(
@@ -151,31 +197,27 @@ class UniversalOrchestrator:
         try:
             print("📚 Multi-Agent Knowledge Extraction Workflow")
 
-            # Step 1: Domain analysis first (proper agent delegation)
-            domain_analysis = None
-            if use_domain_analysis:
-                print("🌍 Step 1: Domain Intelligence Agent...")
-                domain_start = time.time()
-                try:
-                    domain_analysis = await run_domain_analysis(content, detailed=True)
-                    domain_time = time.time() - domain_start
-                    agent_metrics["domain_intelligence"] = {
-                        "processing_time": domain_time,
-                        "success": True,
-                        "patterns_discovered": len(getattr(domain_analysis, 'discovered_patterns', [])),
-                    }
-                    print(
-                        f"   ✅ Analysis completed: {domain_analysis.content_signature}"
-                    )
-                except Exception as e:
-                    domain_time = time.time() - domain_start
-                    errors.append(f"Domain analysis failed: {e}")
-                    agent_metrics["domain_intelligence"] = {
-                        "processing_time": domain_time,
-                        "success": False,
-                        "error": str(e),
-                    }
-                    warnings.append("Proceeding without domain analysis")
+            # Step 1: Domain analysis first (use centralized method)
+            print("🌍 Step 1: Domain Intelligence Agent...")
+            domain_start = time.time()
+            domain_analysis = await self._get_or_create_domain_analysis(
+                content, use_domain_analysis=use_domain_analysis, content_type="content"
+            )
+            domain_time = time.time() - domain_start
+            
+            if domain_analysis:
+                agent_metrics["domain_intelligence"] = {
+                    "processing_time": domain_time,
+                    "success": True,
+                    "patterns_discovered": len(getattr(domain_analysis, 'discovered_patterns', [])),
+                }
+            else:
+                agent_metrics["domain_intelligence"] = {
+                    "processing_time": domain_time,
+                    "success": False,
+                    "error": "Domain analysis failed or disabled",
+                }
+                warnings.append("Proceeding without domain analysis")
 
             # Step 2: Knowledge extraction (with domain analysis delegation)
             print("🔬 Step 2: Knowledge Extraction Agent...")
@@ -302,33 +344,29 @@ class UniversalOrchestrator:
         try:
             print("🔍 Full Multi-Modal Search Workflow")
 
-            # Step 1: Domain analysis of query
-            domain_analysis = None
-            if use_domain_analysis:
-                print("🌍 Step 1: Query analysis with Domain Intelligence Agent...")
-                domain_start = time.time()
-                try:
-                    domain_analysis = await run_domain_analysis(
-                        f"Search query analysis: {query}", detailed=True
-                    )
-                    domain_time = time.time() - domain_start
-                    agent_metrics["domain_intelligence"] = {
-                        "processing_time": domain_time,
-                        "success": True,
-                        "query_signature": domain_analysis.content_signature,
-                    }
-                    print(
-                        f"   ✅ Query analysis completed: {domain_analysis.content_signature}"
-                    )
-                except Exception as e:
-                    domain_time = time.time() - domain_start
-                    errors.append(f"Query analysis failed: {e}")
-                    agent_metrics["domain_intelligence"] = {
-                        "processing_time": domain_time,
-                        "success": False,
-                        "error": str(e),
-                    }
-                    warnings.append("Proceeding without query analysis")
+            # Step 1: Domain analysis of query (use centralized method)
+            print("🌍 Step 1: Query analysis with Domain Intelligence Agent...")
+            domain_start = time.time()
+            domain_analysis = await self._get_or_create_domain_analysis(
+                f"Search query analysis: {query}", 
+                use_domain_analysis=use_domain_analysis, 
+                content_type="query"
+            )
+            domain_time = time.time() - domain_start
+            
+            if domain_analysis:
+                agent_metrics["domain_intelligence"] = {
+                    "processing_time": domain_time,
+                    "success": True,
+                    "query_signature": domain_analysis.content_signature,
+                }
+            else:
+                agent_metrics["domain_intelligence"] = {
+                    "processing_time": domain_time,
+                    "success": False,
+                    "error": "Query analysis failed or disabled",
+                }
+                warnings.append("Proceeding without query analysis")
 
             # Step 2: Multi-modal search
             print("🎯 Step 2: Universal Search Agent...")

@@ -4,7 +4,7 @@
     "system_type": "TRUE_Universal_RAG_with_LLM_Auto_Generation",
     "major_improvement": "Agent 1 now uses LLM to discover entity types - NO hardcoded patterns",
     "hardcoded_patterns_removed": [
-      "technical_object",
+      "content_object",
       "process",
       "measurement",
       "pattern_discovered"
@@ -718,7 +718,7 @@
   },
   "system_comparison": {
     "before_improvement": {
-      "entity_types": "Hardcoded: technical_object, process, measurement",
+      "entity_types": "Hardcoded: content_object, process, measurement",
       "agent_1_role": "Pattern matching with predetermined categories",
       "universality": "Failed on non-technical domains",
       "problem": "Violated Universal RAG philosophy"

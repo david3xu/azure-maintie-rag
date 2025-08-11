@@ -52,7 +52,7 @@ class Agent1EssentialCharacteristics(BaseModel):
         ..., 
         ge=1.0, 
         le=100.0,
-        description="USED BY: Templates {{ technical_density }} calculation"
+        description="USED BY: Templates {{ concept_density }} calculation"
     )
     content_patterns: List[str] = Field(
         default_factory=list,
@@ -199,7 +199,7 @@ class Agent1UsageMapping:
         'vector_search_weight': ['Agent 3 search strategy - NEEDS FIX'],
         'graph_search_weight': ['Agent 3 search strategy - NEEDS FIX'], 
         'vocabulary_richness': ['Templates {{ vocabulary_richness }} - NEEDS FIX'],
-        'sentence_complexity': ['Templates {{ technical_density }} calculation - NEEDS FIX'],
+        'sentence_complexity': ['Templates {{ concept_density }} calculation - NEEDS FIX'],
         'content_patterns': ['Templates {{ discovered_content_patterns }} - NEEDS FIX'],
         'most_frequent_terms': ['Templates {{ discovered_entity_types }} derivation - NEEDS FIX']
     }
@@ -246,7 +246,7 @@ class Agent1TemplateMapping:
             
             # Characteristics for adaptive prompts  
             "vocabulary_richness": agent1_output.characteristics.vocabulary_richness,
-            "technical_density": agent1_output.characteristics.sentence_complexity / 50.0,  # Normalize to 0-1
+            "concept_density": agent1_output.characteristics.sentence_complexity / 50.0,  # Normalize to 0-1
             "discovered_content_patterns": formatted_patterns,
             "discovered_entity_types": entity_types,
             
@@ -274,7 +274,7 @@ class Agent1TemplateMapping:
         'entity_confidence_threshold': '{{ entity_confidence_threshold }}',
         'content_confidence': '{{ content_confidence|default(0.8) }}',
         'vocabulary_richness': '{{ vocabulary_richness }}',
-        'technical_density': '{{ technical_density }}',
+        'concept_density': '{{ concept_density }}',
         'discovered_domain_description': '{{ discovered_domain_description }}',
         'discovered_content_patterns': '{% for pattern in discovered_content_patterns %}',
         'discovered_entity_types': '{{ discovered_entity_types|join(", ") }}',

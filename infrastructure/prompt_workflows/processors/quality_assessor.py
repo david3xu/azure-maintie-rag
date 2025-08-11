@@ -86,15 +86,8 @@ def validate_extraction_quality(
 
     except Exception as e:
         logger.error(f"Quality validation failed: {e}")
-        # Return safe fallback
-        return ExtractionQualityOutput(
-            overall_score=0.0,
-            quality_level="validation_error",
-            entities_per_text=quality_data.get("entities_per_text", 0.0),
-            relations_per_entity=quality_data.get("relations_per_entity", 0.0),
-            avg_entity_confidence=quality_data.get("avg_entity_confidence", 0.0),
-            avg_relation_confidence=quality_data.get("avg_relation_confidence", 0.0),
-        )
+        # NO FALLBACKS - Quality validation must work for production
+        raise Exception(f"Quality validation is required for production: {e}")
 
 
 def assess_extraction_quality(
@@ -183,12 +176,8 @@ def assess_extraction_quality(
 
     except Exception as e:
         logger.error(f"PydanticAI quality assessment failed: {e}", exc_info=True)
-        return {
-            "overall_score": 0.0,
-            "quality_level": "assessment_failed",
-            "error": str(e),
-            "assessment_timestamp": datetime.now().isoformat(),
-        }
+        # NO FALLBACKS - Quality assessment must work for production
+        raise Exception(f"Quality assessment is required for production: {e}")
 
 
 # Main entry point for Azure Prompt Flow

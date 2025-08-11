@@ -93,14 +93,14 @@ async def universal_search_demo_pipeline(
                 "duration": stage_duration,
                 "status": "completed",
                 "domain_discovered": domain_analysis.domain_signature,
-                "technical_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
+                "concept_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 "search_optimization": "domain_aware",
             }
         )
 
         print(f"   ✅ Domain context: {domain_analysis.domain_signature}")
         print(
-            f"   📊 Technical density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
+            f"   📊 Concept density: {domain_analysis.characteristics.vocabulary_complexity_ratio:.3f}"
         )
         print(f"   ⏱️  Duration: {stage_duration:.2f}s")
 
@@ -119,7 +119,7 @@ async def universal_search_demo_pipeline(
             filter_conditions={"domain_type": domain_analysis.domain_signature},
             domain_context={
                 "domain_signature": domain_analysis.domain_signature,
-                "technical_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
+                "concept_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 "search_mode": "semantic_similarity",
             },
             similarity_threshold=0.7,
@@ -220,38 +220,9 @@ async def universal_search_demo_pipeline(
         except Exception as search_error:
             search_stage_duration = time.time() - search_stage_start
             print(f"   ⚠️  Search execution issue: {str(search_error)[:100]}...")
-            print(f"   📝 Simulating search results for demo")
-
-            # Fallback simulated results
-            search_results = [
-                {
-                    "content": f"Azure RAG system with {domain_analysis.domain_signature} domain knowledge",
-                    "relevance_score": 0.85,
-                    "source": "simulated_vector_search",
-                    "result_type": "vector",
-                },
-                {
-                    "content": f"Knowledge extraction patterns for {domain_analysis.domain_signature}",
-                    "relevance_score": 0.78,
-                    "source": "simulated_graph_search",
-                    "result_type": "graph",
-                },
-            ]
-
-            results["stages"].append(
-                {
-                    "stage": "universal_search",
-                    "agent": "Universal Search Agent",
-                    "duration": search_stage_duration,
-                    "status": "simulated",
-                    "results_found": len(search_results),
-                    "modalities_used": ["vector", "graph"],
-                    "note": "Search unavailable - simulated results",
-                }
-            )
-
-            print(f"   📝 Simulated results: {len(search_results)}")
-            print(f"   ⏱️  Duration: {search_stage_duration:.2f}s")
+            
+            # NO FALLBACKS - Real Azure Search required for production
+            raise Exception("Universal search requires real Azure services - no fallbacks allowed")
 
         # Stage 4: Results Analysis and Performance Metrics
         print(f"\n📊 Stage 4: Results Analysis with Query Performance Metrics")
@@ -317,7 +288,7 @@ async def universal_search_demo_pipeline(
                 "domain_analysis": {
                     "domain_signature": domain_analysis.domain_signature,
                     "confidence": domain_analysis.content_type_confidence,
-                    "technical_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
+                    "concept_density": domain_analysis.characteristics.vocabulary_complexity_ratio,
                 },
                 "search_summary": {
                     "query": search_query,

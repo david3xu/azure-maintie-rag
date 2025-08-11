@@ -165,7 +165,7 @@ async def _extract_with_enhanced_agent_guidance_optimized_internal(
             try:
                 from agents.core.agent_toolsets import predict_entity_types
                 
-                # Create proper RunContext with REAL Azure dependencies (not mock)
+                # Create proper RunContext with REAL Azure dependencies
                 class RealRunContext:
                     def __init__(self, real_deps):
                         self.deps = real_deps  # These are the REAL Azure service dependencies

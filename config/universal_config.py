@@ -68,7 +68,7 @@ class ModelConfig:
 
     # Model deployments (infrastructure)
     primary_model: str = "gpt-4o"
-    fallback_model: str = "gpt-4o-mini"
+    # NO FALLBACK MODELS - Production uses primary model only
     embedding_model: str = "text-embedding-ada-002"
 
     # Azure configuration (infrastructure)

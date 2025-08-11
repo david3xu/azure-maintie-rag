@@ -26,10 +26,9 @@ async def upload_to_storage(source_path: str, container: str = "raw-data"):
             print(f"✅ Connected to Azure Blob Storage")
             storage_available = True
         except Exception as storage_error:
-            print(f"⚠️  Azure Storage unavailable: {str(storage_error)[:50]}...")
-            print(f"   📝 Will simulate uploads for demonstration")
-            storage_client = None
-            storage_available = False
+            # NO FALLBACKS - Azure Storage required for production
+            print(f"❌ Azure Storage connection failed: {storage_error}")
+            raise Exception(f"Azure Storage is required for production data uploads: {storage_error}")
 
         # Find files to upload
         source_dir = Path(source_path)
@@ -69,13 +68,12 @@ async def upload_to_storage(source_path: str, container: str = "raw-data"):
                         print(f"   ✅ Upload successful")
 
                     except Exception as upload_error:
-                        print(f"   ⚠️  Azure upload failed: {str(upload_error)[:50]}...")
-                        print(f"   📝 Fallback: simulated upload")
-                        uploaded += 1
+                        print(f"   ❌ Azure upload failed: {upload_error}")
+                        # NO FALLBACKS - Azure Storage required for production
+                        raise upload_error
                 else:
-                    # Fallback simulation
-                    print(f"   📝 Simulated upload (Azure unavailable)")
-                    uploaded += 1
+                    # NO SIMULATIONS - Azure Storage required for production
+                    raise Exception("Azure Storage client is required for production uploads")
 
             except Exception as e:
                 print(f"⚠️ Failed to process {file_path.name}: {e}")

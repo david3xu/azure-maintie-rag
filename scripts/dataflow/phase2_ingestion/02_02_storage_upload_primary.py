@@ -66,12 +66,10 @@ async def ingest_data(source_path: str, container_name: str = "raw-data"):
                     processed += 1
 
                 except Exception as upload_error:
-                    # Fallback to simulated upload if Azure storage unavailable
-                    print(f"📝 Simulated upload: {file_path.name} ({file_size} bytes)")
-                    print(
-                        f"   ⚠️  Azure storage unavailable: {str(upload_error)[:50]}..."
-                    )
-                    processed += 1
+                    # NO FALLBACKS - Azure storage MUST work for production
+                    print(f"❌ Upload failed: {file_path.name}")
+                    print(f"   Azure storage error: {upload_error}")
+                    raise upload_error
 
             except Exception as e:
                 print(f"⚠️ Failed to process {file_path.name}: {e}")

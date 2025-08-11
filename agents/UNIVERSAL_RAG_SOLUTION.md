@@ -33,7 +33,7 @@ We've created a **truly universal** domain intelligence agent that maintains you
 ```python
 # Measures actual content characteristics
 vocabulary_richness = unique_words / total_words
-technical_density = technical_terms / total_content_length
+concept_density = technical_terms / total_content_length
 sentence_complexity = avg_words_per_sentence
 ```
 

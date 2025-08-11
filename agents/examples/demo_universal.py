@@ -40,7 +40,7 @@ def demonstrate_universality():
 
     print("\n📊 Data-Driven Analysis Process:")
     print("   1. Statistical analysis of actual content")
-    print("   2. Vocabulary richness and technical density measurement")
+    print("   2. Vocabulary richness and concept density measurement")
     print("   3. Structural pattern discovery")
     print("   4. Adaptive configuration generation")
     print("   5. Dynamic signature creation from characteristics")

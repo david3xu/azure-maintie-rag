@@ -75,11 +75,15 @@ help: ## Azure Universal RAG Multi-Agent Commands (Production Ready)
 	@echo "  make azure-status    - Azure service container health check"
 	@echo "  make sync-env        - Sync with azd environment (development/staging/production)"
 	@echo ""
-	@echo "🧠 Data Processing Pipeline:"
-	@echo "  make data-prep-full  - Complete pipeline: upload → extract → index"
-	@echo "  make knowledge-extract - Knowledge Extraction Agent processing"
-	@echo "  make query-demo      - Universal Search Agent demonstration"
-	@echo "  make unified-search-demo - Tri-modal search (Vector + Graph + GNN)"
+	@echo "🧠 Data Processing Pipeline (6-Phase Architecture):"
+	@echo "  make dataflow-cleanup  - Phase 0: Clean all Azure services (always runs first)"
+	@echo "  make dataflow-validate - Phase 1: Validate all 3 PydanticAI agents with real Azure"
+	@echo "  make dataflow-ingest   - Phase 2: Upload real data to Azure Storage + embeddings"
+	@echo "  make dataflow-extract  - Phase 3: Knowledge extraction + graph building"
+	@echo "  make dataflow-integrate - Phase 5: Full pipeline integration testing"
+	@echo "  make dataflow-query    - Phase 4: Query analysis + universal search"
+	@echo "  make dataflow-advanced - Phase 6: GNN training + monitoring"
+	@echo "  make dataflow-full     - Execute all phases: 0→1→2→3→5→4→6 (with cleanup first)"
 	@echo ""
 	@echo "📊 Production Operations:"
 	@echo "  make session-report  - Performance metrics and Azure status"
@@ -230,6 +234,116 @@ clean-all: ## Comprehensive cleanup - all data except data/raw and Azure service
 check-data: ## Check what data exists in Azure services
 	@echo "🔍 Checking Azure services data..."
 	@PYTHONPATH=$(PWD) python scripts/dataflow/00_check_azure_data.py
+
+# 6-Phase Dataflow Pipeline - Real Azure Services with Real Data
+.PHONY: dataflow-cleanup dataflow-validate dataflow-ingest dataflow-extract dataflow-query dataflow-integrate dataflow-advanced dataflow-full
+
+dataflow-cleanup: ## Phase 0 - Clean all Azure services
+	@$(call start_clean_session)
+	@echo "🧹 PHASE 0: Azure Services Cleanup - Session: $(SESSION_ID)"
+	@echo "Phase 0 cleanup initiated at $(shell date)" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase0_cleanup/00_01_cleanup_azure_data.py 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Phase 0 completed - Azure services cleaned"
+
+dataflow-validate: ## Phase 1 - Validate all 3 PydanticAI agents
+	@$(call start_clean_session)
+	@echo "🧪 PHASE 1: Agent Validation - Session: $(SESSION_ID)"
+	@echo "Phase 1 validation initiated at $(shell date)" >> $(SESSION_REPORT)
+	@echo "## Domain Intelligence Agent" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase1_validation/01_01_validate_domain_intelligence.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Knowledge Extraction Agent" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase1_validation/01_02_validate_knowledge_extraction.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Universal Search Agent" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase1_validation/01_03_validate_universal_search.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Phase 1 completed - All agents validated with real Azure"
+
+dataflow-ingest: ## Phase 2 - Data ingestion with real data
+	@$(call start_clean_session)
+	@echo "📥 PHASE 2: Data Ingestion - Session: $(SESSION_ID)"
+	@echo "Phase 2 ingestion initiated at $(shell date)" >> $(SESSION_REPORT)
+	@echo "## Storage Upload" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase2_ingestion/02_02_storage_upload_primary.py --container documents-prod 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Vector Embeddings" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase2_ingestion/02_03_vector_embeddings.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Search Indexing" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase2_ingestion/02_04_search_indexing.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Phase 2 completed - Real data ingested to Azure"
+
+dataflow-extract: ## Phase 3 - Knowledge extraction with real processing
+	@$(call start_clean_session)
+	@echo "🧠 PHASE 3: Knowledge Extraction - Session: $(SESSION_ID)"
+	@echo "Phase 3 extraction initiated at $(shell date)" >> $(SESSION_REPORT)
+	@echo "## Knowledge Extraction" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase3_knowledge/03_02_knowledge_extraction.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Cosmos DB Storage" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase3_knowledge/03_03_cosmos_storage.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Graph Construction" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase3_knowledge/03_04_graph_construction.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Phase 3 completed - Knowledge graphs built"
+
+dataflow-query: ## Phase 4 - Query pipeline with real search
+	@$(call start_clean_session)
+	@echo "🔍 PHASE 4: Query Pipeline - Session: $(SESSION_ID)"
+	@echo "Phase 4 query pipeline initiated at $(shell date)" >> $(SESSION_REPORT)
+	@echo "## Query Analysis" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase4_query/04_01_query_analysis.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Universal Search Demo" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase4_query/04_02_universal_search_demo.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Complete Query Pipeline" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase4_query/04_06_complete_query_pipeline.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Phase 4 completed - Query pipeline operational"
+
+dataflow-integrate: ## Phase 5 - Full pipeline integration testing
+	@$(call start_clean_session)
+	@echo "🔄 PHASE 5: Integration Testing - Session: $(SESSION_ID)"
+	@echo "Phase 5 integration initiated at $(shell date)" >> $(SESSION_REPORT)
+	@echo "## Full Pipeline Execution" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase5_integration/05_01_full_pipeline_execution.py 2>&1 | tail -10 >> $(SESSION_REPORT)
+	@echo "## Query Generation Showcase" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase5_integration/05_03_query_generation_showcase.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Phase 5 completed - End-to-end integration validated"
+
+dataflow-advanced: ## Phase 6 - Advanced features (GNN training + monitoring)
+	@$(call start_clean_session)
+	@echo "🚀 PHASE 6: Advanced Features - Session: $(SESSION_ID)"
+	@echo "Phase 6 advanced features initiated at $(shell date)" >> $(SESSION_REPORT)
+	@echo "## GNN Training" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_01_gnn_training.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Real-time Monitoring" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_02_streaming_monitor.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@echo "## Configuration System Demo" >> $(SESSION_REPORT)
+	@PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_03_config_system_demo.py 2>&1 | tail -5 >> $(SESSION_REPORT)
+	@$(call finalize_session_report)
+	@echo "✅ Phase 6 completed - Advanced features operational"
+
+dataflow-full: ## Execute all 6 phases sequentially with cleanup
+	@echo "🌊 EXECUTING COMPLETE 6-PHASE DATAFLOW PIPELINE"
+	@echo "=================================================="
+	@echo "Using REAL Azure services with REAL data from data/raw/"
+	@echo ""
+	@echo "🧹 Phase 0: Cleaning Azure services for fresh start..."
+	@make dataflow-cleanup
+	@echo ""
+	@make dataflow-validate
+	@echo ""
+	@make dataflow-ingest
+	@echo ""
+	@make dataflow-extract
+	@echo ""
+	@make dataflow-integrate
+	@echo ""
+	@make dataflow-query
+	@echo ""
+	@make dataflow-advanced
+	@echo ""
+	@echo "🎉 COMPLETE 6-PHASE PIPELINE EXECUTED"
+	@echo "Check session reports in logs/ for detailed results"
 
 # Legacy compatibility
 backend:

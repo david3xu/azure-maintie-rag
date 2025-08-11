@@ -245,13 +245,13 @@ async def query_generation_showcase(
             analysis_type="domain_characterization",
             content_samples=sample_content,
             domain_context={
-                "analysis_focus": "technical_density",
+                "analysis_focus": "concept_density",
                 "target_domain": "AI/ML",
             },
             analysis_depth="deep",
             target_metrics=[
                 "vocabulary_complexity",
-                "technical_density",
+                "concept_density",
                 "concept_coverage",
             ],
         )

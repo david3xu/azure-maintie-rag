@@ -27,7 +27,7 @@ async def store_knowledge_graph(
     entities: List[Dict[str, Any]],
     relations: List[Dict[str, Any]],
     summary: Dict[str, Any],
-    domain_name: str = "universal",  # Domain-agnostic default,
+    content_name: str = "universal",  # Content-agnostic default,
 ) -> Dict[str, Any]:
     """
     Store universal knowledge graph in Azure services
@@ -36,7 +36,7 @@ async def store_knowledge_graph(
         entities: List of extracted entity dictionaries
         relations: List of extracted relation dictionaries
         summary: Quality assessment and metrics
-        domain_name: Domain context (remains universal)
+        content_name: Content context (remains universal)
 
     Returns:
         Storage results and statistics
@@ -59,7 +59,7 @@ async def store_knowledge_graph(
         entity_storage_tasks = []
         for entity in entities:
             try:
-                cosmos_client.add_entity(entity, domain_name)
+                cosmos_client.add_entity(entity, content_name)
                 storage_results["entities_stored"] += 1
 
                 if storage_results["entities_stored"] % 10 == 0:
@@ -77,7 +77,7 @@ async def store_knowledge_graph(
         # Store relations in Cosmos DB
         for relation in relations:
             try:
-                cosmos_client.add_relationship(relation, domain_name)
+                cosmos_client.add_relationship(relation, content_name)
                 storage_results["relations_stored"] += 1
 
                 if storage_results["relations_stored"] % 10 == 0:
@@ -100,7 +100,7 @@ async def store_knowledge_graph(
                 "content": entity.get("text", ""),
                 "entity_type": entity.get("entity_type", ""),
                 "confidence": entity.get("confidence", 0.0),
-                "domain": domain_name,
+                "domain": content_name,
                 "item_type": "entity",
                 "metadata": json.dumps(entity.get("metadata", {})),
                 "timestamp": datetime.now().isoformat(),
@@ -114,7 +114,7 @@ async def store_knowledge_graph(
                 "content": relation.get("relation_type", ""),
                 "relation_type": relation.get("relation_type", ""),
                 "confidence": relation.get("confidence", 0.0),
-                "domain": domain_name,
+                "domain": content_name,
                 "item_type": "relation",
                 "metadata": json.dumps(relation.get("metadata", {})),
                 "timestamp": datetime.now().isoformat(),
@@ -137,7 +137,7 @@ async def store_knowledge_graph(
         # Store extraction metadata
         extraction_metadata = {
             "extraction_id": f"extraction_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            "domain": domain_name,
+            "domain": content_name,
             "extraction_summary": summary,
             "storage_results": storage_results,
             "prompt_flow_version": "1.0.0",
@@ -184,7 +184,7 @@ def main(
     entities: List[Dict[str, Any]],
     relations: List[Dict[str, Any]],
     summary: Dict[str, Any],
-    domain_name: str = "universal",  # Domain-agnostic default,
+    content_name: str = "universal",  # Content-agnostic default,
 ) -> Dict[str, Any]:
     """
     Main function called by Azure Prompt Flow
@@ -196,7 +196,7 @@ def main(
         asyncio.set_event_loop(loop)
 
         result = loop.run_until_complete(
-            store_knowledge_graph(entities, relations, summary, domain_name)
+            store_knowledge_graph(entities, relations, summary, content_name)
         )
 
         loop.close()

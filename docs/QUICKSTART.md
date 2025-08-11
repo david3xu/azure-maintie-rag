@@ -300,16 +300,38 @@ az login
 # Set environment variables for your Azure services
 ```
 
-**2. Missing Dependencies:**
+**2. Missing Dependencies (PydanticAI Import Errors):**
 ```bash
+# Clean all local data and caches first
+make clean-all
+
+# Reinstall all dependencies 
 pip install -r requirements.txt
-# Ensure PydanticAI and Azure SDKs are installed
+
+# Verify PydanticAI installation
+pip show pydantic-ai
+python -c "import pydantic_ai; print('✅ PydanticAI working')"
 ```
 
 **3. Configuration Errors:**
 ```bash
 # Check that azure_settings can load your endpoints
 python -c "from config.settings import azure_settings; print(azure_settings.azure_openai_endpoint)"
+```
+
+**4. System Cleanup Commands:**
+```bash
+# Clean current session and logs only
+make clean
+
+# Clean ALL local data and caches (preserves data/raw/ and Azure services)
+make clean-all
+
+# Clean ALL Azure services data (Cosmos DB, Storage, Search indexes)
+make dataflow-cleanup
+
+# Complete fresh start (clean everything + reinstall)
+make clean-all && pip install -r requirements.txt
 ```
 
 ## ✅ Success Indicators
@@ -322,11 +344,222 @@ When everything is working correctly:
 - **Configuration**: Centralized config functions load without circular dependency issues
 - **Shared Utilities**: Text statistics and content preprocessing work correctly
 
+## 🌊 6-Phase Dataflow Pipeline
+
+The Azure Universal RAG system includes a comprehensive 6-phase dataflow pipeline that processes real data through real Azure services:
+
+### **Quick Dataflow Commands**
+
+```bash
+# Execute individual phases (optimal order)
+make dataflow-cleanup     # Phase 0: Clean all Azure services (fresh start)
+make dataflow-validate    # Phase 1: Validate all 3 PydanticAI agents
+make dataflow-ingest      # Phase 2: Upload real data to Azure Storage
+make dataflow-extract     # Phase 3: Extract knowledge and build graphs
+make dataflow-integrate   # Phase 5: Full pipeline integration testing
+make dataflow-query       # Phase 4: Query analysis and universal search
+make dataflow-advanced    # Phase 6: GNN training and monitoring
+
+# Execute complete pipeline (auto-runs cleanup first)
+make dataflow-full        # Run all phases: 0→1→2→3→5→4→6
+
+# Manual cleanup if needed
+make dataflow-cleanup     # Phase 0: Clean all Azure services only
+```
+
+### **Phase 0 - Azure Services Cleanup (1 minute)**
+
+Ensures clean start by removing all previous Azure service data:
+
+```bash
+make dataflow-cleanup
+
+# What it does:
+# 🧹 Cleans Azure Storage blob containers (documents, processed data)
+# 🔍 Cleans Azure Cognitive Search indexes (removes all documents)
+# 🕸️ Cleans Azure Cosmos DB knowledge graphs (removes vertices & edges)
+# 📊 Preserves Azure service infrastructure (services stay operational)
+# ✅ Provides fresh environment for reliable pipeline execution
+```
+
+### **Phase 1 - Agent Validation (2 minutes)**
+
+Validates all 3 PydanticAI agents with real Azure services:
+
+```bash
+make dataflow-validate
+
+# What it does:
+# ✅ Tests Domain Intelligence Agent with real Azure AI documentation
+# ✅ Tests Knowledge Extraction Agent with entity/relationship extraction
+# ✅ Tests Universal Search Agent with tri-modal search capabilities
+# ✅ Uses real data from data/raw/azure-ai-services-language-service_output/
+# ✅ Reports actual performance metrics and success rates
+```
+
+### **Phase 2 - Data Ingestion (3 minutes)**
+
+Uploads real Azure AI documentation to Azure services:
+
+```bash
+make dataflow-ingest
+
+# What it does:
+# 📤 Uploads 5 Azure AI Language Service documents to Azure Blob Storage
+# 🔢 Creates 1536-dimensional vector embeddings using Azure OpenAI
+# 🔍 Indexes documents in Azure Cognitive Search with vector support
+# 📊 Reports actual upload sizes and indexing statistics
+```
+
+### **Phase 3 - Knowledge Extraction (5 minutes)**
+
+Extracts entities and relationships, builds knowledge graphs:
+
+```bash
+make dataflow-extract
+
+# What it does:
+# 🧠 Runs Knowledge Extraction Agent on real Azure AI documentation
+# 🕸️ Builds knowledge graphs in Azure Cosmos DB (Gremlin API)
+# 📈 Creates entity and relationship networks
+# 💾 Stores structured knowledge for graph neural network training
+```
+
+### **Phase 4 - Query Pipeline (3 minutes)**
+
+Tests universal search with real queries:
+
+```bash
+make dataflow-query
+
+# What it does:
+# 🔍 Runs query analysis on real search terms
+# 🎯 Demonstrates tri-modal search (Vector + Graph + GNN)
+# 📊 Shows actual search results and confidence scores
+# ⚡ Reports real query response times and accuracy
+```
+
+### **Phase 5 - Integration Testing (5 minutes)**
+
+Validates end-to-end pipeline integration:
+
+```bash
+make dataflow-integrate
+
+# What it does:
+# 🔄 Executes complete document-to-query pipeline
+# 📋 Demonstrates query generation showcase
+# 🧪 Tests inter-agent communication and data flow
+# 📈 Validates production readiness with real metrics
+```
+
+### **Phase 6 - Advanced Features (10 minutes)**
+
+Demonstrates advanced capabilities:
+
+```bash
+make dataflow-advanced
+
+# What it does:
+# 🤖 Trains Graph Neural Networks on real knowledge graphs
+# 📊 Sets up real-time monitoring and streaming
+# ⚙️ Demonstrates configuration system adaptability
+# 🚀 Shows production-scale feature capabilities
+```
+
+### **Complete Pipeline Execution**
+
+Run the entire 6-phase pipeline in optimal logical order:
+
+```bash
+# Complete execution (25-30 minutes)
+make dataflow-full
+
+# Execution order optimized for clean start and data dependencies:
+# Phase 0 → Phase 1 → Phase 2 → Phase 3 → Phase 5 → Phase 4 → Phase 6
+# (Cleanup first, then Integration before Query to ensure knowledge graphs are built)
+
+# Expected results (corrected execution order):
+# ✅ Phase 0: Azure services cleaned for fresh start
+# ✅ Phase 1: All 3 PydanticAI agents validated with real Azure services
+# ✅ Phase 2: Real Azure AI documentation processed (5 files, ~52KB)  
+# ✅ Phase 3: Knowledge graphs built in Azure Cosmos DB
+# ✅ Phase 5: End-to-end integration validated with data pipeline
+# ✅ Phase 4: Query pipeline tested with populated knowledge graphs
+# ✅ Phase 6: GNN models trained on real relationship data
+```
+
+### **Session Management & Cleanup**
+
+All dataflow commands create detailed session reports:
+
+```bash
+# View current session report
+make session-report
+
+# Check session logs
+ls -la logs/
+
+# Clean previous sessions (logs only)
+make clean
+```
+
+### **System Cleanup Options**
+
+When encountering issues or starting fresh:
+
+```bash
+# 1. Clean current session and logs only
+make clean
+
+# 2. Clean ALL local data and caches (keeps data/raw/ and Azure services)
+make clean-all
+
+# 3. Clean ALL Azure services data (Cosmos DB, Storage, Search indexes)
+make dataflow-cleanup
+
+# 4. Complete fresh start (everything + reinstall dependencies)
+make clean-all && pip install -r requirements.txt
+
+# 5. Reset Azure services and start pipeline fresh
+make dataflow-cleanup && make dataflow-full
+```
+
+**What each cleanup removes:**
+- `make clean`: Session logs, Python cache files only
+- `make clean-all`: All local processing results, preserves original data and Azure
+- `make dataflow-cleanup`: All Azure service data (Storage blobs, Search indexes, Cosmos DB graphs)
+
+**Always preserved:**
+- Original data in `data/raw/azure-ai-services-language-service_output/`
+- Azure service infrastructure (services stay operational)
+- Core codebase and configuration files
+
+## 🧪 Real Data Validation
+
+The dataflow pipeline processes actual Azure AI Language Service documentation:
+
+```bash
+# Check real data corpus
+ls -la data/raw/azure-ai-services-language-service_output/
+# Shows: azure-ai-services-language-service_part_*.md files
+
+# Sample real content
+head -10 data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_81.md
+# Real Azure AI training documentation
+
+# Count actual files being processed
+find data/raw/ -name "*.md" | wc -l
+# Output: 5 real Azure AI documentation files
+```
+
 ## 🎯 Next Steps
 
-1. **Explore the Architecture**: Review `docs/ARCHITECTURE.md` for detailed implementation analysis
-2. **Development Workflow**: See `docs/DEVELOPMENT_GUIDE.md` for real development patterns  
-3. **Azure Services**: Check `docs/TROUBLESHOOTING.md` for Azure service integration details
-4. **Frontend Integration**: See `docs/FRONTEND.md` if planning to use the React frontend
+1. **Start with Fresh Environment**: `make dataflow-cleanup` - Clean Azure services for fresh start
+2. **Validate All Agents**: `make dataflow-validate` - Test all 3 PydanticAI agents with real Azure
+3. **Run Complete Pipeline**: `make dataflow-full` - Full system validation (auto-runs cleanup first)
+4. **Explore Architecture**: Review `docs/ARCHITECTURE.md` for implementation details
+5. **Development Workflow**: See `docs/DEVELOPMENT_GUIDE.md` for development patterns  
+6. **Troubleshooting**: Check `docs/TROUBLESHOOTING.md` for Azure service issues
 
-This system represents a **real, production-ready implementation** with genuine Azure service integration, PydanticAI agents, and comprehensive data models - no mock components.
+This system represents a **real, production-ready implementation** with genuine Azure service integration, PydanticAI agents, and comprehensive data models processing actual Azure AI documentation - no mock components or sample data.

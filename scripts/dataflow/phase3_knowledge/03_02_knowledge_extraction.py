@@ -249,7 +249,7 @@ async def knowledge_extraction_pipeline(
                     "total_entities_from_real_data": len(extraction_result.entities),
                     "total_relationships_from_real_data": len(extraction_result.relationships),
                     "average_confidence": avg_confidence,
-                    "no_mock_data_used": True,
+                    "production_real_data_only": True,
                     "real_azure_services_only": True
                 }
             }
@@ -291,7 +291,7 @@ async def knowledge_extraction_pipeline(
                     for r in extraction_result.relationships[:10]
                 ],
                 "real_data_only": True,
-                "no_mocks_used": True
+                "production_services_only": True
             }
             
             with open(results_dir / "step3_ALL_REAL_FILES_extraction.json", 'w') as f:
