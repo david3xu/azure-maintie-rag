@@ -1,0 +1,14 @@
+# Directories to ignore during Black formatting
+/.venv/
+/node_modules/
+/.git/
+/__pycache__/
+/.pytest_cache/
+/.mypy_cache/
+/build/
+/dist/
+*.egg-info/
+.azure/
+logs/
+archive/
+.DS_Store
