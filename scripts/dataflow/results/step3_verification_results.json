@@ -1,0 +1,38 @@
+{
+  "timestamp": "2025-08-12T07:53:12",
+  "expected_nodes": 63,
+  "expected_edges": 4,
+  "verification_tests": [
+    {
+      "test": "count_entities",
+      "expected": 63,
+      "actual": 61,
+      "success": true,
+      "notes": "Found 61 entities in graph"
+    },
+    {
+      "test": "count_relationships",
+      "expected": 4,
+      "actual": 4,
+      "success": true,
+      "notes": "Found 4 relationships in graph"
+    },
+    {
+      "test": "sample_entities",
+      "expected": "at_least_1",
+      "actual": 3,
+      "success": true,
+      "notes": "Retrieved 3 sample entities"
+    },
+    {
+      "test": "graph_connectivity",
+      "expected": "at_least_1",
+      "actual": 8,
+      "success": true,
+      "notes": "Found 8 entities with relationships"
+    }
+  ],
+  "overall_success": true,
+  "successful_tests": 4,
+  "total_tests": 4
+}

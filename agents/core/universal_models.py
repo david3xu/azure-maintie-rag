@@ -34,7 +34,8 @@ class UniversalDomainCharacteristics(BaseModel):
 
     # Discovered content patterns (learned from data)
     key_content_terms: List[str] = Field(
-        default_factory=list, description="Most important content-characterizing terms (not just frequent)"
+        default_factory=list,
+        description="Most important content-characterizing terms (not just frequent)",
     )
     content_patterns: List[str] = Field(
         default_factory=list, description="Structural patterns discovered"
@@ -54,23 +55,23 @@ class UniversalDomainCharacteristics(BaseModel):
     structural_consistency: float = Field(
         ..., ge=0.0, le=1.0, description="Document structure consistency"
     )
-    
+
     # Backward compatibility aliases for test compatibility
     @property
     def vocabulary_complexity(self) -> float:
         """Alias for vocabulary_complexity_ratio to maintain API compatibility"""
         return self.vocabulary_complexity_ratio
-    
+
     @property
     def concept_density(self) -> float:
         """Calculated concept density based on vocabulary richness and lexical diversity"""
         return (self.vocabulary_richness + self.lexical_diversity) / 2.0
-    
+
     @property
     def structural_patterns(self) -> List[str]:
         """Alias for content_patterns to maintain API compatibility"""
         return self.content_patterns
-    
+
     @property
     def content_signature(self) -> str:
         """Generate content signature from characteristics for API compatibility"""
@@ -127,18 +128,18 @@ class UniversalDomainAnalysis(BaseModel):
     # Discovered characteristics and adaptive configuration
     characteristics: UniversalDomainCharacteristics
     processing_config: UniversalProcessingConfiguration
-    
+
     # Backward compatibility aliases for API compatibility
     @property
     def discovered_characteristics(self) -> UniversalDomainCharacteristics:
         """Alias for characteristics to maintain API compatibility"""
         return self.characteristics
-    
+
     @property
     def content_signature(self) -> str:
         """Alias for domain_signature to maintain API compatibility"""
         return self.domain_signature
-    
+
     @property
     def processing_configuration(self) -> UniversalProcessingConfiguration:
         """Alias for processing_config to maintain API compatibility"""
@@ -223,10 +224,14 @@ class ExtractedEntity(BaseModel):
     """Universal entity extracted from content."""
 
     text: str = Field(description="Entity text")
-    type: str = Field(description="Entity type")  # Changed from entity_type to match validator
+    type: str = Field(
+        description="Entity type"
+    )  # Changed from entity_type to match validator
     confidence: float = Field(ge=0.0, le=1.0, description="Extraction confidence")
     context: Optional[str] = Field(default=None, description="Surrounding context")
-    positions: List[int] = Field(default_factory=list, description="Character positions in text")  # Added for validator
+    positions: List[int] = Field(
+        default_factory=list, description="Character positions in text"
+    )  # Added for validator
     metadata: Dict[str, Any] = Field(
         default_factory=dict, description="Additional metadata"
     )
@@ -250,7 +255,9 @@ class SearchResult(BaseModel):
 
     title: str = Field(description="Result title")
     content: str = Field(description="Result content")
-    score: float = Field(ge=0.0, description="Relevance score (Azure Search can exceed 1.0)")
+    score: float = Field(
+        ge=0.0, description="Relevance score (Azure Search can exceed 1.0)"
+    )
     source: str = Field(description="Result source")
     metadata: Optional[Dict[str, Any]] = Field(
         default=None, description="Additional metadata"

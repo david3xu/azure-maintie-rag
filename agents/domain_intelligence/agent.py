@@ -14,10 +14,15 @@ Key Principles:
 """
 
 import asyncio
+
+# Create the Domain Intelligence Agent with proper PydanticAI patterns
+import os
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent, RunContext, PromptedOutput
+from pydantic_ai import Agent, PromptedOutput, RunContext
+from pydantic_ai.models.openai import OpenAIModel
 
 from agents.core.universal_deps import UniversalDeps, get_universal_deps
 from agents.core.universal_models import (
@@ -32,12 +37,6 @@ from agents.core.universal_models import (
 # ContentCharacteristics model removed - using UniversalDomainCharacteristics from universal_models
 
 
-# Create the Domain Intelligence Agent with proper PydanticAI patterns
-import os
-
-from dotenv import load_dotenv
-from pydantic_ai.models.openai import OpenAIModel
-
 # Load environment variables from .env file
 load_dotenv()
 
@@ -45,9 +44,10 @@ load_dotenv()
 # PydanticAI will use OPENAI_API_KEY and OPENAI_BASE_URL from environment
 os.environ.setdefault("OPENAI_BASE_URL", os.getenv("AZURE_OPENAI_ENDPOINT", ""))
 
+from agents.core.agent_toolsets import get_domain_intelligence_toolset
+
 # Use centralized Azure PydanticAI provider and toolsets
 from agents.core.azure_pydantic_provider import get_azure_openai_model
-from agents.core.agent_toolsets import get_domain_intelligence_toolset
 
 domain_intelligence_agent = Agent[UniversalDeps, UniversalDomainAnalysis](
     get_azure_openai_model(),

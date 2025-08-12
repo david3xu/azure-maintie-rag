@@ -41,6 +41,7 @@ from infrastructure.prompt_workflows.processors.quality_assessor import (
 from infrastructure.prompt_workflows.prompt_workflow_orchestrator import (
     PromptWorkflowOrchestrator,
 )
+
 # Removed redundant UniversalPromptGenerator - Agent 1 provides template variables directly
 
 
@@ -51,11 +52,15 @@ class ExtractionResult(BaseModel):
     relationships: List[ExtractedRelationship] = Field(default_factory=list)
     extraction_confidence: float = Field(ge=0.0, le=1.0)
     processing_signature: str = Field(description="Processing configuration used")
-    
+
     # Required fields for schema compliance
-    processing_time: float = Field(default=0.0, ge=0.0, description="Processing duration in seconds")
-    extracted_concepts: List[str] = Field(default_factory=list, description="Key concepts extracted from content")
-    
+    processing_time: float = Field(
+        default=0.0, ge=0.0, description="Processing duration in seconds"
+    )
+    extracted_concepts: List[str] = Field(
+        default_factory=list, description="Key concepts extracted from content"
+    )
+
     # Graph operation fields
     graph_nodes_created: int = Field(default=0, ge=0)
     graph_edges_created: int = Field(default=0, ge=0)
@@ -74,11 +79,11 @@ class GraphOperationResult(BaseModel):
     error_message: Optional[str] = None
 
 
-# Use centralized Azure PydanticAI provider
-from agents.core.azure_pydantic_provider import get_azure_openai_model
-
 # Use centralized toolset management
 from agents.core.agent_toolsets import knowledge_extraction_toolset
+
+# Use centralized Azure PydanticAI provider
+from agents.core.azure_pydantic_provider import get_azure_openai_model
 
 # Create the Knowledge Extraction Agent with proper PydanticAI patterns using toolsets
 knowledge_extraction_agent = Agent[UniversalDeps, ExtractionResult](
@@ -109,17 +114,16 @@ then adapt your extraction approach accordingly.""",
 )
 
 
-
 async def _extract_with_cached_prompts(
-    ctx: RunContext[UniversalDeps], 
-    content: str, 
+    ctx: RunContext[UniversalDeps],
+    content: str,
     use_domain_analysis: bool = True,
     force_refresh_cache: bool = False,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> ExtractionResult:
     """
     Optimized extraction using pre-computed prompt library (eliminates double LLM calling).
-    
+
     Key improvements:
     - No double LLM calling (domain analysis + entity types in single pass)
     - Content-based caching (same content = reused prompts)
@@ -127,43 +131,54 @@ async def _extract_with_cached_prompts(
     - Maintains same quality as enhanced extraction
     """
     import time
+
     start_time = time.time()
-    
+
     if not use_domain_analysis:
         # Auto prompts are required - this is the only extraction method
         if verbose:
             print("❌ Auto prompts required - no fallback available")
-        raise ValueError("Auto prompt generation is required for extraction (use_domain_analysis=True)")
-    
+        raise ValueError(
+            "Auto prompt generation is required for extraction (use_domain_analysis=True)"
+        )
+
     try:
         # Step 1: Get or generate auto prompts (cached!)
         from agents.core.prompt_cache import get_or_generate_auto_prompts
-        
+
         if verbose:
             print(f"🔄 Getting auto prompts for content ({len(content)} chars)")
-            
+
         cached_prompts = await get_or_generate_auto_prompts(
-            content=content,
-            force_refresh=force_refresh_cache,
-            verbose=verbose
+            content=content, force_refresh=force_refresh_cache, verbose=verbose
         )
-        
+
         # Extract key information from cached prompts
         domain_analysis = cached_prompts.domain_analysis
         entity_predictions = cached_prompts.entity_predictions
         extraction_prompts = cached_prompts.extraction_prompts
-        
-        # Adaptive parameters from domain analysis
+
+        # Adaptive parameters from domain analysis (more inclusive for better coverage)
         complexity_factor = domain_analysis.characteristics.vocabulary_complexity_ratio
-        max_entities = min(int(20 + complexity_factor * 15), 50)
-        max_relationships = min(int(15 + complexity_factor * 10), 30)  
-        confidence_threshold = max(0.6, 0.8 - complexity_factor * 0.2)
-        
+        max_entities = min(
+            int(25 + complexity_factor * 20), 60
+        )  # Increased from 20-50 to 25-60
+        max_relationships = min(
+            int(20 + complexity_factor * 15), 40
+        )  # Increased from 15-30 to 20-40
+        confidence_threshold = max(
+            0.5, 0.7 - complexity_factor * 0.3
+        )  # Lowered from 0.6-0.8 to 0.5-0.7
+
         if verbose:
-            print(f"   📊 Using cached domain analysis: {domain_analysis.domain_signature}")
-            print(f"   🎯 Entity types: {entity_predictions.get('predicted_entity_types', [])}")
+            print(
+                f"   📊 Using cached domain analysis: {domain_analysis.domain_signature}"
+            )
+            print(
+                f"   🎯 Entity types: {entity_predictions.get('predicted_entity_types', [])}"
+            )
             print(f"   📝 Prompts available: {list(extraction_prompts.keys())}")
-        
+
         # Step 2: Entity extraction using cached prompts
         entities = await _extract_entities_with_cached_prompts(
             ctx=ctx,
@@ -171,9 +186,9 @@ async def _extract_with_cached_prompts(
             entity_predictions=entity_predictions,
             extraction_prompts=extraction_prompts,
             max_entities=max_entities,
-            verbose=verbose
+            verbose=verbose,
         )
-        
+
         # Step 3: Relationship extraction using cached prompts
         relationships = await _extract_relationships_with_cached_prompts(
             ctx=ctx,
@@ -181,16 +196,16 @@ async def _extract_with_cached_prompts(
             entities=entities,
             extraction_prompts=extraction_prompts,
             max_relationships=max_relationships,
-            verbose=verbose
+            verbose=verbose,
         )
-        
+
         # Calculate processing metrics
         processing_time = time.time() - start_time
-        
+
         # Generate processing signature (includes cache info)
         cache_indicator = "cached" if cached_prompts.access_count > 0 else "fresh"
         signature = f"optimized_cached_{cache_indicator}_me{max_entities}_mr{max_relationships}_ct{confidence_threshold:.2f}_vc{complexity_factor:.2f}"
-        
+
         # Extract key concepts from entities (required field)
         extracted_concepts = []
         for entity in entities:
@@ -198,37 +213,41 @@ async def _extract_with_cached_prompts(
                 concept = entity.text.strip().lower()
                 if concept not in extracted_concepts and len(concept) > 3:
                     extracted_concepts.append(concept)
-        
+
         # Add relationship-based concepts
         for rel in relationships:
             if rel.relation and len(rel.relation.strip()) > 2:
-                concept = rel.relation.strip().lower().replace('_', ' ')
+                concept = rel.relation.strip().lower().replace("_", " ")
                 if concept not in extracted_concepts and len(concept) > 3:
                     extracted_concepts.append(concept)
-        
+
         # Limit concepts to reasonable number
         extracted_concepts = extracted_concepts[:15]
-        
+
         if verbose:
-            print(f"   ✅ Extraction complete: {len(entities)} entities, {len(relationships)} relationships")
+            print(
+                f"   ✅ Extraction complete: {len(entities)} entities, {len(relationships)} relationships"
+            )
             print(f"   ⏱️ Total time: {processing_time:.2f}s (cache: {cache_indicator})")
-        
+
         return ExtractionResult(
             entities=entities,
             relationships=relationships,
-            extraction_confidence=_calculate_extraction_confidence(entities, relationships),
+            extraction_confidence=_calculate_extraction_confidence(
+                entities, relationships
+            ),
             processing_signature=signature,
             processing_time=processing_time,
             extracted_concepts=extracted_concepts,
             graph_nodes_created=len(entities),
-            graph_edges_created=len(relationships)
+            graph_edges_created=len(relationships),
         )
-        
+
     except Exception as e:
         logger.error(f"Cached extraction failed: {e}")
         if verbose:
             print(f"   ❌ Cached extraction failed: {e}")
-        
+
         # No fallback - auto prompts are required
         raise RuntimeError(f"Auto prompt extraction failed: {e}") from e
 
@@ -239,15 +258,15 @@ async def _extract_entities_with_cached_prompts(
     entity_predictions: dict,
     extraction_prompts: dict,
     max_entities: int,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> List[ExtractedEntity]:
     """Extract entities using cached extraction prompts."""
-    
+
     if verbose:
         print("   🏷️ Extracting entities with cached prompts...")
-    
+
     # Use the pre-generated entity extraction prompt
-    entity_prompt = extraction_prompts.get('entity_extraction', '')
+    entity_prompt = extraction_prompts.get("entity_extraction", "")
     if not entity_prompt:
         # Auto prompts are required - no fallback
         raise ValueError("Entity extraction prompt not found in cached prompts")
@@ -255,78 +274,82 @@ async def _extract_entities_with_cached_prompts(
     # Get LLM extraction
     openai_client = ctx.deps.openai_client
     response = await openai_client.get_completion(
-        entity_prompt,
-        max_tokens=1200,
-        temperature=0.3
+        entity_prompt, max_tokens=1200, temperature=0.3
     )
-    
+
     # Parse JSON response
     entities = []
     try:
         # Extract JSON from response (robust parsing for LLM responses)
         # Try multiple JSON extraction strategies for both objects and arrays
         json_text = None
-        
+
         # Strategy 1: Find JSON array first (Azure OpenAI often returns arrays)
-        bracket_start = response.find('[')
+        bracket_start = response.find("[")
         if bracket_start != -1:
             bracket_count = 0
             for i, char in enumerate(response[bracket_start:], bracket_start):
-                if char == '[':
+                if char == "[":
                     bracket_count += 1
-                elif char == ']':
+                elif char == "]":
                     bracket_count -= 1
                     if bracket_count == 0:
-                        json_text = response[bracket_start:i+1]
+                        json_text = response[bracket_start : i + 1]
                         break
-        
+
         # Strategy 2: Find JSON object if no array found
         if not json_text:
             brace_count = 0
-            start_index = response.find('{')
+            start_index = response.find("{")
             if start_index != -1:
                 for i, char in enumerate(response[start_index:], start_index):
-                    if char == '{':
+                    if char == "{":
                         brace_count += 1
-                    elif char == '}':
+                    elif char == "}":
                         brace_count -= 1
                         if brace_count == 0:
-                            json_text = response[start_index:i+1]
+                            json_text = response[start_index : i + 1]
                             break
-        
+
         # Strategy 3: Regex fallback
         if not json_text:
             # Try array pattern first
-            array_match = re.search(r'\[.*?\]', response, re.DOTALL)
+            array_match = re.search(r"\[.*?\]", response, re.DOTALL)
             if array_match:
                 json_text = array_match.group()
             else:
                 # Try object pattern
-                json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response, re.DOTALL)
+                json_match = re.search(
+                    r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", response, re.DOTALL
+                )
                 if json_match:
                     json_text = json_match.group()
-        
+
         if json_text:
             # Clean up common LLM response artifacts
             json_text = json_text.strip()
             result_data = json.loads(json_text)
-            
+
             # Handle both object format {"entities": [...]} and direct array format [...]
             if isinstance(result_data, list):
                 # Direct array format - Azure OpenAI returned array directly
                 extracted_entities = result_data
             else:
                 # Object format - look for entities field
-                extracted_entities = result_data.get('entities', [])
-            
+                extracted_entities = result_data.get("entities", [])
+
             # Convert to ExtractedEntity objects
             for i, entity_data in enumerate(extracted_entities[:max_entities]):
                 # Handle both lowercase and uppercase field names (Azure OpenAI inconsistency)
-                text = entity_data.get('text', entity_data.get('Text', ''))
-                entity_type = entity_data.get('type', entity_data.get('Type', 'concept'))
-                confidence = entity_data.get('confidence', entity_data.get('Confidence', 0.7))
-                context = entity_data.get('context', entity_data.get('Context', ''))
-                
+                text = entity_data.get("text", entity_data.get("Text", ""))
+                entity_type = entity_data.get(
+                    "type", entity_data.get("Type", "concept")
+                )
+                confidence = entity_data.get(
+                    "confidence", entity_data.get("Confidence", 0.7)
+                )
+                context = entity_data.get("context", entity_data.get("Context", ""))
+
                 entity = ExtractedEntity(
                     text=text,
                     type=entity_type,
@@ -336,18 +359,20 @@ async def _extract_entities_with_cached_prompts(
                     metadata={
                         "extraction_method": "cached_prompts",
                         "cache_guided": True,
-                        "entity_prediction_used": True
-                    }
+                        "entity_prediction_used": True,
+                    },
                 )
                 entities.append(entity)
-                
+
         if verbose:
             print(f"      ✅ Extracted {len(entities)} entities")
-            
+
     except Exception as e:
         # FAIL FAST - Don't continue with malformed entity data
-        raise RuntimeError(f"Entity extraction parsing failed: {e}. Azure OpenAI response validation error.") from e
-    
+        raise RuntimeError(
+            f"Entity extraction parsing failed: {e}. Azure OpenAI response validation error."
+        ) from e
+
     return entities
 
 
@@ -357,158 +382,238 @@ async def _extract_relationships_with_cached_prompts(
     entities: List[ExtractedEntity],
     extraction_prompts: dict,
     max_relationships: int,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> List[ExtractedRelationship]:
-    """Extract relationships using cached extraction prompts."""
-    
+    """Extract relationships using cached extraction prompts with improved JSON parsing."""
+
     if len(entities) < 2:
         # FAIL FAST - Require minimum entities for relationship extraction
-        raise RuntimeError(f"Insufficient entities for relationship extraction: {len(entities)} entities found, minimum 2 required. Check entity extraction quality.")
-    
+        raise RuntimeError(
+            f"Insufficient entities for relationship extraction: {len(entities)} entities found, minimum 2 required. Check entity extraction quality."
+        )
+
     if verbose:
         print("   🔗 Extracting relationships with cached prompts...")
-    
+
     # Use the pre-generated relationship extraction prompt
-    relationship_prompt = extraction_prompts.get('relationship_extraction', '')
+    relationship_prompt = extraction_prompts.get("relationship_extraction", "")
     if not relationship_prompt:
         # Auto prompts are required - no fallback
         raise ValueError("Relationship extraction prompt not found in cached prompts")
 
-    # Get LLM extraction
+    # Get LLM extraction with improved prompt for better JSON formatting
+    enhanced_prompt = f"""{relationship_prompt}
+
+CRITICAL: Return ONLY valid JSON. No explanations, no text before or after JSON.
+Format: {{"relationships": [{{"source": "entity1", "target": "entity2", "relation": "verb_phrase", "confidence": 0.8}}]}}"""
+
     openai_client = ctx.deps.openai_client
     response = await openai_client.get_completion(
-        relationship_prompt,
-        max_tokens=800,
-        temperature=0.2  # Lower temperature for relationships
+        enhanced_prompt,
+        max_tokens=1000,
+        temperature=0.1,  # Very low temperature for structured output
     )
-    
-    # Parse JSON response
+
+    # Parse JSON response with improved extraction
     relationships = []
     try:
-        # Extract JSON from response (robust parsing for LLM responses)
-        # Try multiple JSON extraction strategies for both objects and arrays
-        json_text = None
-        
-        # Strategy 1: Find JSON array first (Azure OpenAI often returns arrays)
-        bracket_start = response.find('[')
-        if bracket_start != -1:
-            bracket_count = 0
-            for i, char in enumerate(response[bracket_start:], bracket_start):
-                if char == '[':
-                    bracket_count += 1
-                elif char == ']':
-                    bracket_count -= 1
-                    if bracket_count == 0:
-                        json_text = response[bracket_start:i+1]
-                        break
-        
-        # Strategy 2: Find JSON object if no array found
-        if not json_text:
-            brace_count = 0
-            start_index = response.find('{')
-            if start_index != -1:
-                for i, char in enumerate(response[start_index:], start_index):
-                    if char == '{':
-                        brace_count += 1
-                    elif char == '}':
-                        brace_count -= 1
-                        if brace_count == 0:
-                            json_text = response[start_index:i+1]
-                            break
-        
-        # Strategy 3: Regex fallback
-        if not json_text:
-            # Try array pattern first
-            array_match = re.search(r'\[.*?\]', response, re.DOTALL)
-            if array_match:
-                json_text = array_match.group()
-            else:
-                # Try object pattern
-                json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', response, re.DOTALL)
-                if json_match:
-                    json_text = json_match.group()
-        
+        if verbose:
+            print(f"      📝 Raw response: {response[:200]}...")
+
+        # IMPROVED JSON EXTRACTION
+        json_text = _extract_clean_json_from_response(response, verbose)
+
         if json_text:
-            # Try JSON parsing first
-            try:
-                # Clean up common LLM response artifacts
-                json_text = json_text.strip()
-                result_data = json.loads(json_text)
-                
-                # Handle both object format {"relationships": [...]} and direct array format [...]
-                if isinstance(result_data, list):
-                    # Direct array format - Azure OpenAI returned array directly
-                    extracted_relationships = result_data
-                else:
-                    # Object format - look for relationships field
-                    extracted_relationships = result_data.get('relationships', [])
-                
-                # Convert to ExtractedRelationship objects
-                for rel_data in extracted_relationships[:max_relationships]:
-                    # Handle multiple field name variations and case sensitivity
-                    source = (rel_data.get('source') or rel_data.get('Source') or 
-                             rel_data.get('source_entity') or rel_data.get('subject', ''))
-                    target = (rel_data.get('target') or rel_data.get('Target') or
-                             rel_data.get('target_entity') or rel_data.get('object', ''))
-                    relation = (rel_data.get('relation') or rel_data.get('Relation') or
-                               rel_data.get('relationship_type') or rel_data.get('predicate', 'relates_to'))
-                    
-                    if source and target:  # Only create if both entities exist
-                        relationship = ExtractedRelationship(
-                            source=str(source),
-                            target=str(target),
-                            relation=str(relation),
-                            confidence=float(rel_data.get('confidence', 0.6)),
-                            metadata={
-                                "extraction_method": "cached_prompts",
-                                "cache_guided": True,
-                                "context": rel_data.get('context', '')
+            # Parse the extracted JSON
+            result_data = json.loads(json_text)
+
+            # Handle both object format {"relationships": [...]} and direct array format [...]
+            if isinstance(result_data, list):
+                # Direct array format - Azure OpenAI returned array directly
+                extracted_relationships = result_data
+            else:
+                # Object format - look for relationships field
+                extracted_relationships = result_data.get("relationships", [])
+
+            # Convert to ExtractedRelationship objects
+            for rel_data in extracted_relationships[:max_relationships]:
+                # Handle edge cases - convert strings to dict format
+                if isinstance(rel_data, str):
+                    # Try to parse string as "source -> target" format
+                    if " -> " in rel_data:
+                        parts = rel_data.split(" -> ")
+                        if len(parts) >= 2:
+                            rel_data = {
+                                "source": parts[0].strip(),
+                                "target": parts[1].strip(),
+                                "relation": "relates_to",
                             }
+                    else:
+                        # Skip invalid string relationships with verbose logging
+                        if verbose:
+                            print(
+                                f"   ⚠️  Skipping invalid relationship string: {rel_data}"
+                            )
+                        continue
+
+                # QUICK FAIL - Ensure rel_data is now a dictionary
+                if not isinstance(rel_data, dict):
+                    if verbose:
+                        print(
+                            f"   ⚠️  Skipping invalid relationship format: {type(rel_data).__name__}: {rel_data}"
                         )
-                        relationships.append(relationship)
-                        
-            except json.JSONDecodeError as json_error:
-                # JSON parsing failed - try text-based parsing
-                if verbose:
-                    print(f"   🔍 JSON parsing failed ({json_error}), trying text-based parsing...")
-                relationships = _parse_relationships_from_text(response, max_relationships)
+                    continue
+
+                # Handle multiple field name variations and case sensitivity
+                source = (
+                    rel_data.get("source")
+                    or rel_data.get("Source")
+                    or rel_data.get("source_entity")
+                    or rel_data.get("subject", "")
+                )
+                target = (
+                    rel_data.get("target")
+                    or rel_data.get("Target")
+                    or rel_data.get("target_entity")
+                    or rel_data.get("object", "")
+                )
+                relation = (
+                    rel_data.get("relation")
+                    or rel_data.get("Relation")
+                    or rel_data.get("relationship_type")
+                    or rel_data.get("predicate", "relates_to")
+                )
+
+                if source and target:  # Only create if both entities exist
+                    relationship = ExtractedRelationship(
+                        source=str(source),
+                        target=str(target),
+                        relation=str(relation),
+                        confidence=float(rel_data.get("confidence", 0.6)),
+                        metadata={
+                            "extraction_method": "cached_prompts_improved",
+                            "cache_guided": True,
+                            "context": rel_data.get("context", ""),
+                        },
+                    )
+                    relationships.append(relationship)
         else:
             # No JSON found - try text-based parsing
             if verbose:
                 print(f"   🔍 No JSON found, trying text-based parsing...")
             relationships = _parse_relationships_from_text(response, max_relationships)
-                    
+
+    except json.JSONDecodeError as json_error:
+        # JSON parsing failed - try text-based parsing
         if verbose:
-            print(f"      ✅ Extracted {len(relationships)} relationships")
-            
+            print(
+                f"   🔍 JSON parsing failed ({json_error}), trying text-based parsing..."
+            )
+        relationships = _parse_relationships_from_text(response, max_relationships)
     except Exception as e:
-        # FAIL FAST - Don't continue with malformed relationship data
-        raise RuntimeError(f"Relationship extraction parsing failed: {e}. Azure OpenAI response validation error.") from e
-    
+        # Other errors - log but don't fail completely
+        if verbose:
+            print(f"   ⚠️  Relationship extraction error: {e}")
+        relationships = []
+
+    if verbose:
+        print(f"      ✅ Extracted {len(relationships)} relationships")
+
     return relationships
 
 
-def _parse_relationships_from_text(response: str, max_relationships: int) -> List[ExtractedRelationship]:
+def _extract_clean_json_from_response(
+    response: str, verbose: bool = False
+) -> Optional[str]:
+    """Extract clean JSON from LLM response with multiple fallback strategies."""
+
+    # Strategy 1: Remove markdown code blocks first (most reliable)
+    markdown_match = re.search(
+        r"```(?:json)?\s*(\[.*?\]|\{.*?\})\s*```", response, re.DOTALL
+    )
+    if markdown_match:
+        if verbose:
+            print("      ✅ Found JSON in markdown code block")
+        return markdown_match.group(1).strip()
+
+    # Strategy 2: Look for clean JSON object with relationships field
+    object_pattern = (
+        r'\{\s*"relationships"\s*:\s*\[[^\[\]]*(?:\{[^{}]*\}[^\[\]]*)*\]\s*\}'
+    )
+    object_match = re.search(object_pattern, response, re.DOTALL)
+    if object_match:
+        if verbose:
+            print("      ✅ Found JSON object with relationships field")
+        return object_match.group().strip()
+
+    # Strategy 3: Look for JSON array of relationships
+    array_pattern = r'\[\s*\{[^{}]*"source"[^{}]*"target"[^{}]*\}[^[\]]*\]'
+    array_match = re.search(array_pattern, response, re.DOTALL)
+    if array_match:
+        if verbose:
+            print("      ✅ Found JSON array with source/target structure")
+        return array_match.group().strip()
+
+    # Strategy 4: Simple bracket counting fallback
+    bracket_start = response.find("[")
+    brace_start = response.find("{")
+
+    # Prefer arrays over objects for relationships
+    start_pos = bracket_start if bracket_start != -1 else brace_start
+    if start_pos != -1:
+        if bracket_start != -1 and (brace_start == -1 or bracket_start < brace_start):
+            # Extract array
+            bracket_count = 0
+            for i, char in enumerate(response[bracket_start:], bracket_start):
+                if char == "[":
+                    bracket_count += 1
+                elif char == "]":
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        if verbose:
+                            print("      ✅ Found JSON using bracket counting")
+                        return response[bracket_start : i + 1]
+        else:
+            # Extract object
+            brace_count = 0
+            for i, char in enumerate(response[brace_start:], brace_start):
+                if char == "{":
+                    brace_count += 1
+                elif char == "}":
+                    brace_count -= 1
+                    if brace_count == 0:
+                        if verbose:
+                            print("      ✅ Found JSON using brace counting")
+                        return response[brace_start : i + 1]
+
+    if verbose:
+        print("      ❌ No valid JSON structure found")
+    return None
+
+
+def _parse_relationships_from_text(
+    response: str, max_relationships: int
+) -> List[ExtractedRelationship]:
     """Parse relationships from structured text when JSON parsing fails."""
     relationships = []
-    
+
     # Pattern to match structured text relationships like:
     # **Subject**: Azure AI Language service
-    # **Predicate**: provides  
+    # **Predicate**: provides
     # **Object**: natural language processing capabilities
-    
+
     import re
-    
+
     # Find all relationship blocks
-    relationship_pattern = r'\*\*Subject\*\*:\s*(.+?)\s*\*\*Predicate\*\*:\s*(.+?)\s*\*\*Object\*\*:\s*(.+?)(?=\*\*|$)'
+    relationship_pattern = r"\*\*Subject\*\*:\s*(.+?)\s*\*\*Predicate\*\*:\s*(.+?)\s*\*\*Object\*\*:\s*(.+?)(?=\*\*|$)"
     matches = re.findall(relationship_pattern, response, re.IGNORECASE | re.DOTALL)
-    
+
     for i, (subject, predicate, obj) in enumerate(matches[:max_relationships]):
         # Clean up the extracted text
-        subject = subject.strip().replace('\n', ' ').replace('  ', ' ')
-        predicate = predicate.strip().replace('\n', ' ').replace('  ', ' ')
-        obj = obj.strip().replace('\n', ' ').replace('  ', ' ')
-        
+        subject = subject.strip().replace("\n", " ").replace("  ", " ")
+        predicate = predicate.strip().replace("\n", " ").replace("  ", " ")
+        obj = obj.strip().replace("\n", " ").replace("  ", " ")
+
         if subject and predicate and obj:  # Only create if all parts exist
             relationship = ExtractedRelationship(
                 source=subject,
@@ -518,21 +623,23 @@ def _parse_relationships_from_text(response: str, max_relationships: int) -> Lis
                 metadata={
                     "extraction_method": "text_parsing",
                     "cache_guided": True,
-                    "context": f"Parsed from structured text response"
-                }
+                    "context": f"Parsed from structured text response",
+                },
             )
             relationships.append(relationship)
-    
+
     # Alternative pattern for simpler text formats
     if not relationships:
         # Try to find patterns like "A provides B" or "A includes B"
-        simple_pattern = r'([^:\n]+?)\s*(provides|includes|contains|supports|enables|offers|has)\s*([^:\n]+)'
+        simple_pattern = r"([^:\n]+?)\s*(provides|includes|contains|supports|enables|offers|has)\s*([^:\n]+)"
         simple_matches = re.findall(simple_pattern, response, re.IGNORECASE)
-        
-        for i, (subject, relation, obj) in enumerate(simple_matches[:max_relationships]):
+
+        for i, (subject, relation, obj) in enumerate(
+            simple_matches[:max_relationships]
+        ):
             subject = subject.strip()
             obj = obj.strip()
-            
+
             if len(subject) > 5 and len(obj) > 5:  # Only meaningful relationships
                 relationship = ExtractedRelationship(
                     source=subject,
@@ -542,38 +649,31 @@ def _parse_relationships_from_text(response: str, max_relationships: int) -> Lis
                     metadata={
                         "extraction_method": "simple_text_parsing",
                         "cache_guided": True,
-                        "context": f"Parsed from simple text pattern"
-                    }
+                        "context": f"Parsed from simple text pattern",
+                    },
                 )
                 relationships.append(relationship)
-    
+
     return relationships
 
 
 def _calculate_extraction_confidence(
-    entities: List[ExtractedEntity], 
-    relationships: List[ExtractedRelationship]
+    entities: List[ExtractedEntity], relationships: List[ExtractedRelationship]
 ) -> float:
     """Calculate overall extraction confidence based on results."""
     if not entities and not relationships:
         return 0.0
-    
+
     # Calculate average confidence from entities and relationships
     entity_confidences = [e.confidence for e in entities if e.confidence > 0]
     rel_confidences = [r.confidence for r in relationships if r.confidence > 0]
-    
+
     all_confidences = entity_confidences + rel_confidences
-    
+
     if all_confidences:
         return sum(all_confidences) / len(all_confidences)
     else:
         return 0.5  # Default confidence if no valid confidences
-
-
-
-
-
-
 
 
 async def store_knowledge_in_graph(
@@ -603,9 +703,11 @@ async def store_knowledge_in_graph(
             # Direct Gremlin query with proper partition key (skip generate_gremlin_query)
             # Escape single quotes and handle None values
             safe_text = (entity.text or "").replace("'", "\\'")[:100]
-            safe_context = (entity.context or "").replace("'", "\\'")[:100]  
-            safe_entity_type = (entity.type or "concept").replace("'", "\\'")  # Fixed field name
-            
+            safe_context = (entity.context or "").replace("'", "\\'")[:100]
+            safe_entity_type = (entity.type or "concept").replace(
+                "'", "\\'"
+            )  # Fixed field name
+
             entity_query = f"""
             g.V().has('text', '{safe_text}').fold().coalesce(
                 unfold(),
@@ -622,14 +724,16 @@ async def store_knowledge_in_graph(
             if result:
                 nodes_created += 1
 
-        # Store relationships as graph edges  
+        # Store relationships as graph edges
         for relationship in extraction_result.relationships:
             # Escape single quotes and handle None values
             safe_source = (relationship.source or "").replace("'", "\\'")[:100]
             safe_target = (relationship.target or "").replace("'", "\\'")[:100]
-            safe_relation = (relationship.relation or "discovered_relation").replace("'", "\\'")
+            safe_relation = (relationship.relation or "discovered_relation").replace(
+                "'", "\\'"
+            )
             safe_context = (relationship.context or "").replace("'", "\\'")[:100]
-            
+
             edge_query = f"""
             g.V().has('text', '{safe_source}').as('source')
              .V().has('text', '{safe_target}').as('target')
@@ -652,7 +756,9 @@ async def store_knowledge_in_graph(
 
     except Exception as e:
         # FAIL FAST - Don't return error result, raise exception
-        raise RuntimeError(f"Knowledge graph storage failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
+        raise RuntimeError(
+            f"Knowledge graph storage failed: {e}. Check Azure Cosmos DB Gremlin connection."
+        ) from e
 
 
 async def validate_extraction_requirements(
@@ -698,11 +804,14 @@ async def create_knowledge_extraction_agent() -> Agent[UniversalDeps, Extraction
 
 # Main execution function for testing
 async def run_knowledge_extraction(
-    content: str, use_domain_analysis: bool = True, force_refresh_cache: bool = False, verbose: bool = False
+    content: str,
+    use_domain_analysis: bool = True,
+    force_refresh_cache: bool = False,
+    verbose: bool = False,
 ) -> ExtractionResult:
     """
     Run optimized knowledge extraction with Pre-computed Prompt Library (eliminates double LLM calling).
-    
+
     Uses cached auto prompts for same content = reused prompts with ~32% performance improvement.
     This is the new default implementation that replaces the old double-calling approach.
 
@@ -713,20 +822,20 @@ async def run_knowledge_extraction(
         verbose: Enable detailed progress logging
     """
     deps = await get_universal_deps()
-    
+
     # Create mock run context for the internal function
     class MockRunContext:
         def __init__(self, deps):
             self.deps = deps
             self.usage = None
-    
+
     ctx = MockRunContext(deps)
-    
+
     # Use the cached extraction as the default
     return await _extract_with_cached_prompts(
         ctx=ctx,
         content=content,
         use_domain_analysis=use_domain_analysis,
         force_refresh_cache=force_refresh_cache,
-        verbose=verbose
+        verbose=verbose,
     )

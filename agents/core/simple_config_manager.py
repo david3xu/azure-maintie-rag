@@ -145,26 +145,30 @@ class SimpleDynamicConfigManager:
             if content_samples:
                 # Use REAL Azure OpenAI LLM analysis via agent toolsets
                 all_content = " ".join(content_samples)
-                
+
                 # Import and call the real LLM analysis functions from agent toolsets
-                from agents.core.universal_deps import get_universal_deps
                 from agents.core.agent_toolsets import (
+                    _analyze_concept_density_via_llm,
                     _analyze_vocabulary_complexity_via_llm,
-                    _analyze_concept_density_via_llm
                 )
-                
+                from agents.core.universal_deps import get_universal_deps
+
                 # Create RunContext for calling the LLM functions
                 deps = await get_universal_deps()
-                
+
                 class LLMRunContext:
                     def __init__(self, deps):
                         self.deps = deps
-                
+
                 ctx = LLMRunContext(deps)
-                
+
                 # Use REAL Azure OpenAI for all analysis
-                vocabulary_complexity = await _analyze_vocabulary_complexity_via_llm(ctx, all_content)
-                concept_density = await _analyze_concept_density_via_llm(ctx, all_content)
+                vocabulary_complexity = await _analyze_vocabulary_complexity_via_llm(
+                    ctx, all_content
+                )
+                concept_density = await _analyze_concept_density_via_llm(
+                    ctx, all_content
+                )
 
                 result = DomainIntelligenceResult(
                     domain_signature=f"{domain_name}",  # Use actual subdirectory name
@@ -220,7 +224,9 @@ class SimpleDynamicConfigManager:
         except Exception as e:
             logger.error(f"Domain discovery failed - no fallbacks allowed: {e}")
             # NO FALLBACKS - Domain intelligence MUST work for production
-            raise Exception(f"Domain discovery required for production Universal RAG: {e}")
+            raise Exception(
+                f"Domain discovery required for production Universal RAG: {e}"
+            )
 
     def _create_fallback_analysis(
         self, data_directory: str
@@ -288,7 +294,9 @@ class SimpleDynamicConfigManager:
 
                         # QUICK FAIL MODE - Remove fallback analysis from production
                         # This fallback method should not be used in production Universal RAG system
-                        raise RuntimeError("Fallback analysis not allowed in production - use main analyze_domain_if_needed method with LLM analysis")
+                        raise RuntimeError(
+                            "Fallback analysis not allowed in production - use main analyze_domain_if_needed method with LLM analysis"
+                        )
                     except:
                         pass
 
@@ -420,21 +428,27 @@ class SimpleDynamicConfigManager:
         # Adapt based on content analysis using dynamic scaling
         if domain_analysis:
             complexity_factor = domain_analysis.vocabulary_complexity
-            
+
             # Dynamic threshold adjustment using continuous scaling (no hardcoded thresholds)
             if complexity_factor > 0.7:
                 # High vocabulary complexity - adjust for precision using dynamic scaling
-                threshold_adjustment = 0.70 + (complexity_factor * 0.15)  # Continuous scaling from base
-                base_config["vector_similarity_threshold"] = min(threshold_adjustment, 0.85)
-                
-                hop_scaling = 2 + int(complexity_factor * 2)  # Dynamic hop count scaling
+                threshold_adjustment = 0.70 + (
+                    complexity_factor * 0.15
+                )  # Continuous scaling from base
+                base_config["vector_similarity_threshold"] = min(
+                    threshold_adjustment, 0.85
+                )
+
+                hop_scaling = 2 + int(
+                    complexity_factor * 2
+                )  # Dynamic hop count scaling
                 base_config["graph_hop_count"] = min(hop_scaling, 4)
-                
+
                 # Dynamic weight distribution based on complexity
                 vector_weight = max(0.2, 0.5 - complexity_factor * 0.3)
                 graph_weight = min(0.5, 0.3 + complexity_factor * 0.2)
                 gnn_weight = 1.0 - vector_weight - graph_weight
-                
+
                 base_config["tri_modal_weights"] = {
                     "vector": round(vector_weight, 2),
                     "graph": round(graph_weight, 2),
@@ -442,17 +456,23 @@ class SimpleDynamicConfigManager:
                 }
             elif complexity_factor < 0.3:
                 # Lower vocabulary complexity - adjust for recall using dynamic scaling
-                threshold_adjustment = 0.70 - ((0.3 - complexity_factor) * 0.2)  # Continuous scaling
-                base_config["vector_similarity_threshold"] = max(threshold_adjustment, 0.55)
-                
-                k_scaling = 10 + int((0.3 - complexity_factor) * 10)  # Dynamic top-k scaling
+                threshold_adjustment = 0.70 - (
+                    (0.3 - complexity_factor) * 0.2
+                )  # Continuous scaling
+                base_config["vector_similarity_threshold"] = max(
+                    threshold_adjustment, 0.55
+                )
+
+                k_scaling = 10 + int(
+                    (0.3 - complexity_factor) * 10
+                )  # Dynamic top-k scaling
                 base_config["vector_top_k"] = min(k_scaling, 15)
-                
+
                 # Dynamic weight distribution for simpler content
                 vector_weight = min(0.6, 0.4 + (0.3 - complexity_factor) * 0.6)
                 graph_weight = max(0.2, 0.4 - (0.3 - complexity_factor) * 0.2)
                 gnn_weight = 1.0 - vector_weight - graph_weight
-                
+
                 base_config["tri_modal_weights"] = {
                     "vector": round(vector_weight, 2),
                     "graph": 0.25,

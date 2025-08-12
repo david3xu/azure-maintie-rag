@@ -10,6 +10,7 @@ try:
     import torch.nn.functional as F
     from torch_geometric.data import Data, DataLoader
     from torch_geometric.nn import GATConv, GCNConv, SAGEConv
+
     PYTORCH_AVAILABLE = True
 except ImportError:
     # Fallback for environments without PyTorch
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 if PYTORCH_AVAILABLE:
+
     class UniversalGNN(nn.Module):
         """Universal Graph Neural Network for any domain knowledge graph"""
 
@@ -141,7 +143,9 @@ if PYTORCH_AVAILABLE:
 
             return torch.stack(pooled_features)
 
-        def get_embeddings(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
+        def get_embeddings(
+            self, x: torch.Tensor, edge_index: torch.Tensor
+        ) -> torch.Tensor:
             """Get node embeddings (without classification layer)"""
             # Graph convolution layers
             for i, conv in enumerate(self.conv_layers):
@@ -188,15 +192,21 @@ else:
 
         def forward(self, x, edge_index, batch=None):
             """NO FALLBACKS - PyTorch REQUIRED for production GNN"""
-            raise ImportError("PyTorch is required for GNN operations - install PyTorch for production")
+            raise ImportError(
+                "PyTorch is required for GNN operations - install PyTorch for production"
+            )
 
         def get_embeddings(self, x, edge_index):
             """NO FALLBACKS - PyTorch REQUIRED for production GNN"""
-            raise ImportError("PyTorch is required for GNN embeddings - install PyTorch for production")
+            raise ImportError(
+                "PyTorch is required for GNN embeddings - install PyTorch for production"
+            )
 
         def predict_node_classes(self, x, edge_index):
             """NO FALLBACKS - PyTorch REQUIRED for production GNN"""
-            raise ImportError("PyTorch is required for GNN node prediction - install PyTorch for production")
+            raise ImportError(
+                "PyTorch is required for GNN node prediction - install PyTorch for production"
+            )
 
 
 class UniversalGNNConfig:

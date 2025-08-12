@@ -52,11 +52,13 @@ async def ingest_data(source_path: str, container_name: str = "raw-data"):
                 total_size += file_size
 
                 # Upload to Azure Blob Storage
-                blob_name = file_path.name  # Just the file name, container is set in client
+                blob_name = (
+                    file_path.name
+                )  # Just the file name, container is set in client
 
                 try:
                     # Use storage client to upload (correct signature)
-                    data_bytes = content.encode('utf-8')
+                    data_bytes = content.encode("utf-8")
                     upload_result = await storage_client.upload_blob(
                         blob_name=blob_name, data=data_bytes
                     )

@@ -61,8 +61,8 @@ def _refresh_credential():
         _azure_credential = DefaultAzureCredential(
             # Exclude problematic credential types in local development
             exclude_managed_identity_credential=False,  # Allow managed identity but with timeout
-            managed_identity_credential_timeout=30,     # 30 second timeout instead of 2 minutes
-            exclude_powershell_credential=True,         # Exclude PowerShell for reliability
+            managed_identity_credential_timeout=30,  # 30 second timeout instead of 2 minutes
+            exclude_powershell_credential=True,  # Exclude PowerShell for reliability
         )
         logger.info("Azure credential refreshed with DefaultAzureCredential")
     except Exception as e:

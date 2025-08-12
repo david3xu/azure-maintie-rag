@@ -264,7 +264,8 @@ Located in `scripts/dataflow/` with **6-phase execution structure**:
 - `phase5_integration/05_03_query_generation_showcase.py` - Query generation examples
 
 **Phase 6 - Advanced Features**:
-- `phase6_advanced/06_01_gnn_training.py` - GNN model training
+- `phase6_advanced/06_01_gnn_training.py` - GNN model training (requires numerical stability setup)
+- `phase6_advanced/06_05_gnn_query_demo.py` - GNN-enhanced query demonstration 
 - `phase6_advanced/06_02_streaming_monitor.py` - Real-time monitoring
 - `phase6_advanced/06_03_config_system_demo.py` - Configuration system demo
 
@@ -319,10 +320,13 @@ make health
 # 3. Start development
 make dev
 
-# 4. Run quick validation
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/00_check_azure_state.py
+# 4. Run quick validation (with proper environment setup)
+USE_MANAGED_IDENTITY=false PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase0_cleanup/00_03_verify_clean_state.py
 
-# 5. Test all agents
+# 5. Test all agents with validation scripts
+OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_01_validate_domain_intelligence.py
+
+# 6. Run traditional pytest (when available)
 pytest -m unit -v
 ```
 
@@ -396,3 +400,22 @@ For GNN and numerical operations, limit threads:
 ```bash
 OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag python <script>
 ```
+
+### Environment Variable Requirements
+All dataflow scripts require specific environment setup:
+```bash
+# For Azure authentication without managed identity
+USE_MANAGED_IDENTITY=false PYTHONPATH=/workspace/azure-maintie-rag python <script>
+
+# For numerical stability (PyTorch/NumPy operations)
+OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag python <script>
+
+# Combined for production stability
+OPENBLAS_NUM_THREADS=1 USE_MANAGED_IDENTITY=false PYTHONPATH=/workspace/azure-maintie-rag python <script>
+```
+
+### Current Branch Specific Issues
+On `feature/universal-agents-clean` branch, some legacy scripts may reference consolidated files:
+- Use validation scripts from `scripts/dataflow/phase*_*/` directories
+- Avoid direct execution of removed prompt workflow files
+- Always check `scripts/dataflow/results/*.json` for execution status

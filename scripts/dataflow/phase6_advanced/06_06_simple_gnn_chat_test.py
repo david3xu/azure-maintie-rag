@@ -43,68 +43,84 @@ class SimpleGNNChat:
             "graph_nodes": 45,
             "graph_edges": 0,
             "training_success": True,
-            "production_ready": True
+            "production_ready": True,
         }
-        logger.info(f"🧠 Simple GNN Chat initialized with model: {self.model_info['model_id']}")
+        logger.info(
+            f"🧠 Simple GNN Chat initialized with model: {self.model_info['model_id']}"
+        )
 
     async def process_message(self, message: str) -> Dict[str, Any]:
         """Process a chat message using GNN-enhanced reasoning."""
         start_time = time.time()
-        
+
         logger.info(f"💬 Processing: {message}")
-        
+
         # Simulate GNN analysis based on our trained model
         gnn_analysis = await self._analyze_with_gnn(message)
-        
+
         # Generate response
         response = await self._generate_response(message, gnn_analysis)
-        
+
         processing_time = time.time() - start_time
-        
+
         return {
             "success": True,
             "message": message,
             "response": response,
             "gnn_analysis": gnn_analysis,
             "processing_time": processing_time,
-            "model_info": self.model_info
+            "model_info": self.model_info,
         }
 
     async def _analyze_with_gnn(self, message: str) -> Dict[str, Any]:
         """Analyze message using our trained GNN model."""
-        
+
         # Use the actual performance metrics from our trained model
         confidence_base = self.model_info["accuracy"]  # 0.974
-        
+
         # Analyze message characteristics
         message_lower = message.lower()
         domain_relevance = 0.8
-        
+
         if "azure" in message_lower:
             domain_relevance = 0.95
         elif "gnn" in message_lower or "model" in message_lower:
             domain_relevance = 0.92
         elif "train" in message_lower or "chat" in message_lower:
             domain_relevance = 0.88
-        
+
         # Calculate final confidence using our trained model's precision
         final_confidence = min(0.98, confidence_base * domain_relevance)
-        
+
         # Simulate graph paths based on our 45-node graph
         graph_paths = []
         if "azure" in message_lower:
-            graph_paths.append({
-                "path": ["Azure AI", "Language Service", "Custom Training", "Production"],
-                "weight": 0.94,
-                "nodes_traversed": 4
-            })
+            graph_paths.append(
+                {
+                    "path": [
+                        "Azure AI",
+                        "Language Service",
+                        "Custom Training",
+                        "Production",
+                    ],
+                    "weight": 0.94,
+                    "nodes_traversed": 4,
+                }
+            )
         if "gnn" in message_lower:
-            graph_paths.append({
-                "path": ["GNN Model", "Graph Analysis", "Relationship Mining", "Inference"],
-                "weight": 0.91,
-                "nodes_traversed": 4
-            })
-        
+            graph_paths.append(
+                {
+                    "path": [
+                        "GNN Model",
+                        "Graph Analysis",
+                        "Relationship Mining",
+                        "Inference",
+                    ],
+                    "weight": 0.91,
+                    "nodes_traversed": 4,
+                }
+            )
+
         return {
             "model_used": self.model_info["model_id"],
             "confidence": final_confidence,
@@ -113,18 +129,20 @@ class SimpleGNNChat:
             "model_accuracy": self.model_info["accuracy"],
             "model_f1": self.model_info["f1_score"],
             "analysis_time": 0.08,  # Fast inference
-            "graph_nodes_available": self.model_info["graph_nodes"]
+            "graph_nodes_available": self.model_info["graph_nodes"],
         }
 
-    async def _generate_response(self, message: str, gnn_analysis: Dict[str, Any]) -> str:
+    async def _generate_response(
+        self, message: str, gnn_analysis: Dict[str, Any]
+    ) -> str:
         """Generate response using GNN insights."""
-        
+
         confidence = gnn_analysis["confidence"]
         model_id = gnn_analysis["model_used"]
-        
+
         # Build response based on query type and GNN confidence
         message_lower = message.lower()
-        
+
         if "train" in message_lower and "gnn" in message_lower:
             return f"""🧠 **GNN Training with Azure Universal RAG**
 
@@ -169,7 +187,7 @@ Our chat system (confidence: {confidence:.1%}) combines:
                 top_path = gnn_analysis["graph_paths"][0]
                 path_str = " → ".join(top_path["path"])
                 paths_info = f"\n\n🕸️ **Graph Path Analysis:**\n• {path_str} ({top_path['weight']:.0%} relevance)"
-            
+
             return f"""☁️ **Azure AI Integration with GNN**
 
 GNN Analysis (confidence: {confidence:.1%}):
@@ -201,31 +219,31 @@ The system can provide detailed, contextually-aware responses about Azure AI, GN
 
     async def demo_conversation(self):
         """Run a demo conversation."""
-        
+
         print("🧠 Simple GNN Chat Demo")
         print("=" * 50)
         print(f"Model: {self.model_info['model_id']}")
         print(f"Accuracy: {self.model_info['accuracy']:.1%}")
         print(f"Graph: {self.model_info['graph_nodes']} nodes")
         print("=" * 50)
-        
+
         demo_messages = [
             "How does GNN training work?",
             "Tell me about the chat interface",
             "What Azure services are integrated?",
-            "Explain the Universal RAG architecture"
+            "Explain the Universal RAG architecture",
         ]
-        
+
         for i, message in enumerate(demo_messages, 1):
             print(f"\n💬 Message {i}: {message}")
             print("-" * 40)
-            
+
             result = await self.process_message(message)
-            
+
             if result["success"]:
                 print(f"🤖 Response:")
                 print(result["response"])
-                
+
                 analysis = result["gnn_analysis"]
                 print(f"\n📊 GNN Analysis:")
                 print(f"   • Confidence: {analysis['confidence']:.1%}")
@@ -233,17 +251,17 @@ The system can provide detailed, contextually-aware responses about Azure AI, GN
                 print(f"   • Graph paths: {len(analysis['graph_paths'])}")
             else:
                 print(f"❌ Error: {result.get('error')}")
-            
+
             await asyncio.sleep(0.5)  # Brief pause between messages
 
 
 async def main():
     """Main execution for simple GNN chat test."""
     logger.info("🧠 Starting Simple GNN Chat Test")
-    
+
     chat = SimpleGNNChat()
     await chat.demo_conversation()
-    
+
     print("\n" + "=" * 50)
     print("✅ GNN Chat Demo Complete!")
     print("🎯 The trained GNN model is ready for production conversations")

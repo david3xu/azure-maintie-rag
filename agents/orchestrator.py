@@ -60,7 +60,7 @@ class UniversalOrchestrator:
         self._deps: Optional[UniversalDeps] = None
         self.cost_tracker = AzureServiceCostTracker()  # Added cost tracking
         self.evidence_collector: Optional[AzureDataWorkflowEvidenceCollector] = None
-        
+
         # Centralized domain analysis cache to avoid redundant Agent 1 calls
         self._domain_analysis_cache: Optional[UniversalDomainAnalysis] = None
         self._cache_content_hash: Optional[str] = None
@@ -72,10 +72,10 @@ class UniversalOrchestrator:
         return self._deps
 
     async def _get_or_create_domain_analysis(
-        self, 
-        content: str, 
+        self,
+        content: str,
         use_domain_analysis: bool = True,
-        content_type: str = "content"
+        content_type: str = "content",
     ) -> Optional[UniversalDomainAnalysis]:
         """
         Get domain analysis from cache or create new one.
@@ -83,34 +83,37 @@ class UniversalOrchestrator:
         """
         if not use_domain_analysis:
             return None
-            
+
         # Simple content hash for caching
         import hashlib
+
         content_hash = hashlib.md5(content.encode()).hexdigest()
-        
+
         # Return cached result if same content
-        if (self._domain_analysis_cache is not None and 
-            self._cache_content_hash == content_hash):
+        if (
+            self._domain_analysis_cache is not None
+            and self._cache_content_hash == content_hash
+        ):
             print(f"🔄 Using cached domain analysis for {content_type}")
             return self._domain_analysis_cache
-        
+
         # Call Agent 1 only once and cache result
         print(f"🌍 Calling Agent 1 for {content_type} domain analysis...")
         domain_start = time.time()
         try:
             domain_analysis = await run_domain_analysis(content, detailed=True)
             domain_time = time.time() - domain_start
-            
+
             # Cache the result
             self._domain_analysis_cache = domain_analysis
             self._cache_content_hash = content_hash
-            
+
             print(f"   ✅ Domain analysis completed in {domain_time:.2f}s")
             print(f"   📊 Content signature: {domain_analysis.content_signature}")
             print(f"   🔄 Result cached for reuse")
-            
+
             return domain_analysis
-            
+
         except Exception as e:
             print(f"   ❌ Domain analysis failed: {e}")
             return None
@@ -138,7 +141,7 @@ class UniversalOrchestrator:
                 content, use_domain_analysis=True, content_type="content"
             )
             domain_time = time.time() - domain_start
-            
+
             if domain_analysis:
                 agent_metrics["domain_intelligence"] = {
                     "processing_time": domain_time,
@@ -204,12 +207,14 @@ class UniversalOrchestrator:
                 content, use_domain_analysis=use_domain_analysis, content_type="content"
             )
             domain_time = time.time() - domain_start
-            
+
             if domain_analysis:
                 agent_metrics["domain_intelligence"] = {
                     "processing_time": domain_time,
                     "success": True,
-                    "patterns_discovered": len(getattr(domain_analysis, 'discovered_patterns', [])),
+                    "patterns_discovered": len(
+                        getattr(domain_analysis, "discovered_patterns", [])
+                    ),
                 }
             else:
                 agent_metrics["domain_intelligence"] = {
@@ -348,12 +353,12 @@ class UniversalOrchestrator:
             print("🌍 Step 1: Query analysis with Domain Intelligence Agent...")
             domain_start = time.time()
             domain_analysis = await self._get_or_create_domain_analysis(
-                f"Search query analysis: {query}", 
-                use_domain_analysis=use_domain_analysis, 
-                content_type="query"
+                f"Search query analysis: {query}",
+                use_domain_analysis=use_domain_analysis,
+                content_type="query",
             )
             domain_time = time.time() - domain_start
-            
+
             if domain_analysis:
                 agent_metrics["domain_intelligence"] = {
                     "processing_time": domain_time,

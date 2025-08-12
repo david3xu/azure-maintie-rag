@@ -6,11 +6,13 @@ Backward compatibility wrapper for query orchestration.
 """
 
 from typing import Any, Dict
+
 from pydantic import BaseModel
 
 
 class QueryRequest(BaseModel):
     """Query request model for backward compatibility."""
+
     query: str
     query_type: str = "analysis"
     parameters: Dict[str, Any] = {}
@@ -18,11 +20,13 @@ class QueryRequest(BaseModel):
 
 class UniversalQueryOrchestrator:
     """Universal query orchestrator for backward compatibility."""
-    
+
     async def orchestrate_query(self, request: QueryRequest) -> Dict[str, Any]:
         """Orchestrate a query request."""
         # FAIL FAST: No placeholder results allowed
-        raise RuntimeError(f"Query orchestration not implemented. Cannot process query '{request.query}' without real query processing implementation. No placeholder results allowed.")
+        raise RuntimeError(
+            f"Query orchestration not implemented. Cannot process query '{request.query}' without real query processing implementation. No placeholder results allowed."
+        )
 
 
 # Global orchestrator instance
@@ -32,14 +36,14 @@ query_orchestrator = UniversalQueryOrchestrator()
 # Orchestrated functions for backward compatibility
 async def generate_analysis_query_orchestrated(query: str, **kwargs) -> str:
     """Generate analysis query via orchestrator."""
-    from agents.shared.query_tools import generate_analysis_query
     from agents.core.universal_deps import get_universal_deps
-    
+    from agents.shared.query_tools import generate_analysis_query
+
     # Create a minimal RunContext-like object
     class QueryRunContext:
         def __init__(self):
             pass
-    
+
     # NO FALLBACKS - Real Azure dependencies required for production
     deps = await get_universal_deps()
     run_ctx = QueryRunContext()
@@ -49,13 +53,13 @@ async def generate_analysis_query_orchestrated(query: str, **kwargs) -> str:
 
 async def generate_gremlin_query_orchestrated(query: str, **kwargs) -> str:
     """Generate Gremlin query via orchestrator."""
-    from agents.shared.query_tools import generate_gremlin_query
     from agents.core.universal_deps import get_universal_deps
-    
+    from agents.shared.query_tools import generate_gremlin_query
+
     class GremlinRunContext:
         def __init__(self):
             pass
-    
+
     # NO FALLBACKS - Real Azure dependencies required for production
     deps = await get_universal_deps()
     run_ctx = GremlinRunContext()
@@ -71,7 +75,7 @@ async def generate_search_query_orchestrated(query: str, **kwargs) -> str:
 # Re-export for backward compatibility
 __all__ = [
     "QueryRequest",
-    "UniversalQueryOrchestrator", 
+    "UniversalQueryOrchestrator",
     "query_orchestrator",
     "generate_analysis_query_orchestrated",
     "generate_gremlin_query_orchestrated",

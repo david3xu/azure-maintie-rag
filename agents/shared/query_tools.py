@@ -80,16 +80,20 @@ async def generate_search_query(
 
     # Adapt based on discovered characteristics using dynamic scaling (not hardcoded thresholds)
     if domain_characteristics:
-        complexity_factor = domain_characteristics.characteristics.vocabulary_complexity_ratio
+        complexity_factor = (
+            domain_characteristics.characteristics.vocabulary_complexity_ratio
+        )
         diversity_factor = domain_characteristics.characteristics.lexical_diversity
-        
+
         # Dynamic search mode adjustment using continuous scaling
         if complexity_factor > 0.7:
             search_config["search_mode"] = "all"  # More precise for complex content
 
         # Dynamic top-k adjustment using continuous scaling (no hardcoded threshold)
         if diversity_factor > 0.8:
-            diversity_multiplier = 1.0 + ((diversity_factor - 0.8) * 2.5)  # Scale dynamically
+            diversity_multiplier = 1.0 + (
+                (diversity_factor - 0.8) * 2.5
+            )  # Scale dynamically
             search_config["top"] = min(
                 int(config.get("max_results", 10) * diversity_multiplier), 50
             )  # More results for concept-rich content

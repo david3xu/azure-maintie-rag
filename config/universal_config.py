@@ -301,54 +301,64 @@ class UniversalConfigManager:
 
         # Use REAL Azure OpenAI LLM analysis via agent toolsets
         all_text = " ".join(content_samples)
-        
+
         # Import and call the real LLM analysis functions from agent toolsets
-        from agents.core.universal_deps import get_universal_deps
         from agents.core.agent_toolsets import (
-            _analyze_vocabulary_complexity_via_llm,
             _analyze_concept_density_via_llm,
-            _analyze_sentence_complexity_via_llm,
             _analyze_lexical_diversity_via_llm,
-            _analyze_structural_consistency_via_llm
+            _analyze_sentence_complexity_via_llm,
+            _analyze_structural_consistency_via_llm,
+            _analyze_vocabulary_complexity_via_llm,
         )
-        
+        from agents.core.universal_deps import get_universal_deps
+
         # Create a mock RunContext for calling the LLM functions
         deps = await get_universal_deps()
-        
+
         class MockRunContext:
             def __init__(self, deps):
                 self.deps = deps
-        
+
         ctx = MockRunContext(deps)
-        
+
         # Use REAL Azure OpenAI for all analysis
-        vocabulary_complexity = await _analyze_vocabulary_complexity_via_llm(ctx, all_text)
+        vocabulary_complexity = await _analyze_vocabulary_complexity_via_llm(
+            ctx, all_text
+        )
         concept_density = await _analyze_concept_density_via_llm(ctx, all_text)
 
         # Use REAL Azure OpenAI for all remaining analysis
         sentence_complexity = await _analyze_sentence_complexity_via_llm(ctx, all_text)
         lexical_diversity = await _analyze_lexical_diversity_via_llm(ctx, all_text)
-        structural_consistency = await _analyze_structural_consistency_via_llm(ctx, all_text)
-        
+        structural_consistency = await _analyze_structural_consistency_via_llm(
+            ctx, all_text
+        )
+
         # Calculate relationship complexity using LLM-derived values
-        relationship_complexity = min(concept_density * 1.2, 1.0)  # Derive from concept density
-        
+        relationship_complexity = min(
+            concept_density * 1.2, 1.0
+        )  # Derive from concept density
+
         # Calculate structural complexity using LLM analysis
-        structural_complexity = structural_consistency  # Use LLM-analyzed consistency as complexity
-        
+        structural_complexity = (
+            structural_consistency  # Use LLM-analyzed consistency as complexity
+        )
+
         # Calculate terminology uniqueness using LLM analysis
         terminology_uniqueness = lexical_diversity  # Use LLM-analyzed diversity
-        
+
         # Calculate cross-reference ratio using LLM-derived values
-        cross_reference_ratio = min(structural_complexity * 0.5, 1.0)  # Derive from structure
-        
+        cross_reference_ratio = min(
+            structural_complexity * 0.5, 1.0
+        )  # Derive from structure
+
         # Calculate text complexity level from LLM sentence complexity
         measured_text_complexity_level = min(12, max(6, int(sentence_complexity / 2)))
 
         # Calculate paragraph metrics using LLM-derived values
         paragraphs = all_text.split("\n\n")
         avg_paragraph_length = len(all_text) / max(len(paragraphs), 1)
-        
+
         characteristics = ContentCharacteristics(
             vocabulary_complexity=vocabulary_complexity,
             concept_density=max(0.0, concept_density),
@@ -371,32 +381,34 @@ class UniversalConfigManager:
 
         return characteristics
 
-    async def _analyze_query_characteristics_via_llm(self, query: str) -> Dict[str, float]:
+    async def _analyze_query_characteristics_via_llm(
+        self, query: str
+    ) -> Dict[str, float]:
         """Analyze query characteristics using REAL Azure OpenAI LLM analysis"""
-        
+
         # Import LLM analysis functions
-        from agents.core.universal_deps import get_universal_deps
         from agents.core.agent_toolsets import (
+            _analyze_sentence_complexity_via_llm,
             _analyze_vocabulary_complexity_via_llm,
-            _analyze_sentence_complexity_via_llm
         )
-        
+        from agents.core.universal_deps import get_universal_deps
+
         # Create RunContext for LLM analysis
         deps = await get_universal_deps()
-        
+
         class MockRunContext:
             def __init__(self, deps):
                 self.deps = deps
-        
+
         ctx = MockRunContext(deps)
-        
+
         # Analyze query with LLM
         complexity = await _analyze_vocabulary_complexity_via_llm(ctx, query)
         sentence_complexity = await _analyze_sentence_complexity_via_llm(ctx, query)
-        
+
         # Calculate length factor from sentence complexity
         length_factor = min(sentence_complexity / 10.0, 2.0)  # Scale to 0-2 range
-        
+
         return {
             "complexity": complexity,
             "length_factor": length_factor,
@@ -428,7 +440,9 @@ class UniversalConfigManager:
         # Use REAL Azure OpenAI for query analysis
         query_characteristics = {}
         if query:
-            query_characteristics = await self._analyze_query_characteristics_via_llm(query)
+            query_characteristics = await self._analyze_query_characteristics_via_llm(
+                query
+            )
 
         # Get content characteristics
         if content_samples:
@@ -525,7 +539,9 @@ async def get_extraction_config_universal(
 ) -> UniversalExtractionConfig:
     """Get extraction configuration adapted to discovered content characteristics"""
     config_manager = get_universal_config_manager()
-    return await config_manager.get_extraction_config(content_samples, content_signature)
+    return await config_manager.get_extraction_config(
+        content_samples, content_signature
+    )
 
 
 async def get_search_config_universal(
@@ -533,7 +549,9 @@ async def get_search_config_universal(
 ) -> UniversalSearchConfig:
     """Get search configuration adapted to query and content characteristics"""
     config_manager = get_universal_config_manager()
-    return await config_manager.get_search_config(query, content_samples, content_signature)
+    return await config_manager.get_search_config(
+        query, content_samples, content_signature
+    )
 
 
 def get_query_config() -> UniversalQueryConfig:

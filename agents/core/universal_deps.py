@@ -19,14 +19,18 @@ from agents.core.universal_models import (
     UniversalProcessingConfiguration,
 )
 from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosGremlinClient
+
+
 # Optional GNN import - use lazy loading to avoid PyTorch resource issues
 def _get_gnn_client_class():
     """Lazy import of GNN client to avoid PyTorch resource exhaustion."""
     try:
         from infrastructure.azure_ml.gnn_inference_client import GNNInferenceClient
+
         return GNNInferenceClient
     except ImportError:
         return None
+
 
 GNN_AVAILABLE = False  # Will be set to True when GNN client is successfully accessed
 from infrastructure.azure_monitoring.app_insights_client import (
@@ -197,47 +201,47 @@ class UniversalDeps:
     async def cleanup(self) -> None:
         """
         Properly close all service connections to prevent connection leaks.
-        
+
         This method should be called when shutting down the application
         or when dependencies are no longer needed.
         """
         try:
             # Close Cosmos DB Gremlin connection
-            if self.cosmos_client and hasattr(self.cosmos_client, 'close'):
+            if self.cosmos_client and hasattr(self.cosmos_client, "close"):
                 try:
                     self.cosmos_client.close()
                 except Exception as e:
                     print(f"Warning: Could not close Cosmos client: {e}")
-            
+
             # Close Azure OpenAI client if it has close method
-            if self.openai_client and hasattr(self.openai_client, 'close'):
+            if self.openai_client and hasattr(self.openai_client, "close"):
                 try:
                     await self.openai_client.close()
                 except Exception as e:
                     print(f"Warning: Could not close OpenAI client: {e}")
-            
+
             # Close storage client
-            if self.storage_client and hasattr(self.storage_client, 'close'):
+            if self.storage_client and hasattr(self.storage_client, "close"):
                 try:
                     self.storage_client.close()
                 except Exception as e:
                     print(f"Warning: Could not close Storage client: {e}")
-            
+
             # Close search client
-            if self.search_client and hasattr(self.search_client, 'close'):
+            if self.search_client and hasattr(self.search_client, "close"):
                 try:
                     self.search_client.close()
                 except Exception as e:
                     print(f"Warning: Could not close Search client: {e}")
-                    
+
         except Exception as e:
             print(f"Warning during cleanup: {e}")
-            
+
     def __del__(self):
         """Ensure cleanup on garbage collection."""
         try:
             # Only do sync cleanup in destructor
-            if self.cosmos_client and hasattr(self.cosmos_client, 'close'):
+            if self.cosmos_client and hasattr(self.cosmos_client, "close"):
                 self.cosmos_client.close()
         except Exception:
             pass  # Ignore errors during garbage collection
@@ -282,7 +286,7 @@ def get_universal_deps_sync() -> UniversalDeps:
 async def cleanup_universal_deps():
     """
     Cleanup global universal dependencies and close all connections.
-    
+
     This function should be called at the end of scripts or application shutdown
     to prevent connection leak warnings.
     """
