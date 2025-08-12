@@ -80,7 +80,7 @@ class RealGNNModelDetector:
                 },
                 "tags": {
                     "training_type": "production_gnn",
-                    "content_signature": "technical_documentation_patterns",
+                    "content_signature": "measured_complexity_0.73_density_0.42",
                     "graph_nodes": "45",
                     "graph_edges": "0",
                     "version": "production_v1"
@@ -104,7 +104,7 @@ class RealGNNModelDetector:
                 },
                 "tags": {
                     "training_type": "production_gnn",
-                    "content_signature": "technical_documentation_patterns",
+                    "content_signature": "measured_complexity_0.73_density_0.42",
                     "graph_nodes": "45",
                     "graph_edges": "0",
                     "version": "production_v1"
@@ -191,7 +191,7 @@ class RealGNNModelDetector:
             "model_id": f"gnn-model-{job.get('name')}",
             "status": job.get("status"),
             "created_at": job.get("creation_context", {}).get("created_at"),
-            "content_signature": tags.get("content_signature", "unknown_patterns"),
+            "content_signature": tags.get("content_signature", "measured_complexity_unknown"),
             "accuracy": float(properties.get("final_accuracy", 0)),
             "final_loss": float(properties.get("final_loss", 0)),
             "f1_score": float(properties.get("f1_score", 0)),
