@@ -40,25 +40,28 @@ Extract ALL meaningful entities AND their contextual relationships in one unifie
 {
   "entities": [
     {
-      "entity_id": "entity_1", 
       "text": "exact_text_from_content",
-      "entity_type": "discovered_type_from_key_terms",
+      "type": "discovered_type_from_key_terms",
       "confidence": {{ entity_confidence_threshold }},
       "context": "surrounding text context",
-      "source_document": 1,
-      "semantic_role": "role_in_{{ content_signature }}"
+      "positions": [],
+      "metadata": {
+        "source_document": 1,
+        "semantic_role": "role_in_{{ content_signature }}"
+      }
     }
   ],
   "relationships": [
     {
-      "relation_id": "rel_1",
-      "source_entity": "entity_1",
-      "target_entity": "entity_2", 
-      "relation_type": "discovered_from_content",
+      "source": "exact_entity_text_1",
+      "target": "exact_entity_text_2", 
+      "relation": "discovered_from_content",
       "confidence": {{ relationship_confidence_threshold }},
       "context": "exact text showing this relationship",
-      "source_document": 1,
-      "direction": "directed_or_undirected"
+      "metadata": {
+        "source_document": 1,
+        "direction": "directed_or_undirected"
+      }
     }
   ]
 }
@@ -66,15 +69,24 @@ Extract ALL meaningful entities AND their contextual relationships in one unifie
 
 **Unified Extraction Guidelines**:
 
-1. **Entity Extraction**:
-   - Extract entities exactly as they appear in content
+1. **Entity Extraction** - Extract ALL meaningful entities:
+   - **Technical Components**: buttons, icons, menus, fields, panes, windows, interfaces
+   - **Process Elements**: steps, methods, procedures, workflows, operations 
+   - **Data Objects**: documents, datasets, files, models, configurations
+   - **Concepts**: features, capabilities, settings, options, parameters
+   - **Technologies**: services, APIs, systems, tools, frameworks
    - Use types derived from key content terms: {{ discovered_entity_types|join(', ') }}
    - Focus on entities relevant to: {{ key_content_terms|join(', ') }}
    - Assign confidence based on clarity (threshold: {{ entity_confidence_threshold|default(0.7) }})
 
-2. **Relationship Extraction** (CRITICAL - Extract from SAME context):
-   - Identify relationships between extracted entities as they actually appear in content
-   - Use relationship types discovered from content patterns: {{ discovered_relationship_types|join(', ') }}
+2. **Relationship Extraction** (CRITICAL - Extract functional relationships):
+   - **UI Relationships**: "button → opens → dialog", "icon → represents → function"
+   - **Process Relationships**: "step → leads_to → next_step", "method → requires → input"
+   - **Functional Relationships**: "tool → used_for → task", "service → provides → capability"
+   - **Hierarchical Relationships**: "section → contains → subsection", "parent → includes → child"
+   - **Causal Relationships**: "action → triggers → result", "condition → enables → outcome"
+   - Use "source" and "target" fields with EXACT entity text from the entities array
+   - Use "relation" field with specific relationship verbs: used_for, contains, requires, enables, provides, opens, triggers, leads_to, supports
    - Focus on relationships that connect the key concepts: {{ key_content_terms|join(', ') }}  
    - Extract both explicit (directly stated) and clearly implied relationships
    - Assign confidence based on contextual clarity (threshold: {{ relationship_confidence_threshold }})

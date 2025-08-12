@@ -19,7 +19,7 @@ async def generate_embeddings(domain: str = "universal"):
     print(f"🎯 Vector Embeddings Generation (domain: {domain})")
 
     try:
-        # Initialize universal dependencies  
+        # Initialize universal dependencies
         deps = await get_universal_deps()
         openai_client = deps.openai_client
         search_client = deps.search_client
@@ -27,12 +27,16 @@ async def generate_embeddings(domain: str = "universal"):
 
         if not openai_client:
             # NO SIMULATIONS - Azure OpenAI required for production embeddings
-            raise Exception("Azure OpenAI client is required for production vector embeddings")
+            raise Exception(
+                "Azure OpenAI client is required for production vector embeddings"
+            )
 
         # Load actual uploaded files for embedding generation
-        data_dir = Path('/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output')
-        data_files = list(data_dir.glob('*.md'))
-        
+        data_dir = Path(
+            "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output"
+        )
+        data_files = list(data_dir.glob("*.md"))
+
         if not data_files:
             raise Exception(f"No data files found in {data_dir}")
 
@@ -45,9 +49,9 @@ async def generate_embeddings(domain: str = "universal"):
                 print(f"🎯 Generating embedding for document {i}: {data_file.name}")
 
                 # Load actual file content (first 1000 chars for embedding)
-                content = data_file.read_text(encoding='utf-8', errors='ignore')
+                content = data_file.read_text(encoding="utf-8", errors="ignore")
                 content_chunk = content[:1000] if len(content) > 1000 else content
-                
+
                 if not content_chunk.strip():
                     print(f"⚠️  Skipping empty file: {data_file.name}")
                     continue
@@ -60,12 +64,18 @@ async def generate_embeddings(domain: str = "universal"):
                         embeddings_generated += 1
                         print(f"✅ Generated 1536D embedding for {data_file.name}")
                     else:
-                        raise Exception(f"Invalid embedding dimension: {len(embedding)}, expected 1536")
+                        raise Exception(
+                            f"Invalid embedding dimension: {len(embedding)}, expected 1536"
+                        )
                 else:
-                    raise Exception(f"Failed to generate valid 1536D embedding for {data_file.name}")
+                    raise Exception(
+                        f"Failed to generate valid 1536D embedding for {data_file.name}"
+                    )
 
             except Exception as e:
-                print(f"⚠️ Embedding generation failed for document {i} ({data_file.name}): {e}")
+                print(
+                    f"⚠️ Embedding generation failed for document {i} ({data_file.name}): {e}"
+                )
 
         print(f"✅ Generated {embeddings_generated}/{len(data_files)} embeddings")
         print("🔍 Index now supports semantic vector search")

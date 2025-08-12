@@ -242,29 +242,32 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
 
     # REMOVED: Legacy _create_extraction_prompt method - using unified approach only
 
-    async def get_embedding(self, text: str, model: str = "text-embedding-ada-002") -> Dict[str, Any]:
+    async def get_embedding(
+        self, text: str, model: str = "text-embedding-ada-002"
+    ) -> Dict[str, Any]:
         """Generate embedding for text using Azure OpenAI"""
         self.ensure_initialized()
-        
+
         try:
             if not text.strip():
                 raise ValueError("Text cannot be empty")
-            
+
             response = await asyncio.to_thread(
-                self._client.embeddings.create,
-                model=model,
-                input=text.strip()
+                self._client.embeddings.create, model=model, input=text.strip()
             )
-            
+
             embedding = response.data[0].embedding
-            
-            return self.create_success_response("get_embedding", {
-                "embedding": embedding,
-                "dimensions": len(embedding),
-                "model": model,
-                "text_length": len(text)
-            })
-            
+
+            return self.create_success_response(
+                "get_embedding",
+                {
+                    "embedding": embedding,
+                    "dimensions": len(embedding),
+                    "model": model,
+                    "text_length": len(text),
+                },
+            )
+
         except Exception as e:
             return self.handle_azure_error("get_embedding", e)
 
@@ -364,7 +367,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         temperature: float = 0.3,
         model: str = None,
         max_tokens: int = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Chat completion interface for PydanticAI agents"""
         self.ensure_initialized()
@@ -378,14 +381,14 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens or prompts.max_tokens,
-                **kwargs
+                **kwargs,
             )
-            
+
             return {
                 "content": response.choices[0].message.content,
                 "model": response.model,
                 "usage": response.usage.model_dump() if response.usage else {},
-                "finish_reason": response.choices[0].finish_reason
+                "finish_reason": response.choices[0].finish_reason,
             }
 
         except Exception as e:
@@ -395,7 +398,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                 "error": str(e),
                 "model": model or "unknown",
                 "usage": {},
-                "finish_reason": "error"
+                "finish_reason": "error",
             }
 
     # === TEXT PROCESSING ===
@@ -434,7 +437,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         # Simple character-based chunking as placeholder
         char_chunk_size = chunk_size * 6  # Approximate words to chars
         for i in range(0, len(text), char_chunk_size):
-            chunk = text[i:i + char_chunk_size]
+            chunk = text[i : i + char_chunk_size]
             chunks.append(chunk)
 
         return chunks

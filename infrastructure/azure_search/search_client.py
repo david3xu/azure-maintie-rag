@@ -105,13 +105,19 @@ class SimpleSearchClient(BaseAzureClient):
                     "content": doc.get("content", ""),
                     "title": doc.get("title", ""),
                 }
-                
+
                 # Add optional schema fields only if they exist in the document AND schema
                 if "file_path" in doc:
                     search_doc["file_path"] = doc["file_path"]
                 # Include any metadata fields dynamically (Universal RAG approach)
                 # Discover available metadata fields without hardcoding domain-specific field names
-                metadata_fields = [key for key in doc.keys() if key.startswith('metadata_') or key.endswith('_type') or key.endswith('_category')]
+                metadata_fields = [
+                    key
+                    for key in doc.keys()
+                    if key.startswith("metadata_")
+                    or key.endswith("_type")
+                    or key.endswith("_category")
+                ]
                 for field in metadata_fields:
                     search_doc[field] = doc[field]
 
@@ -162,16 +168,22 @@ class SimpleSearchClient(BaseAzureClient):
                         "@search.score", SearchConstants.DEFAULT_SEARCH_SCORE
                     ),
                 }
-                
+
                 # Add optional fields only if they exist in the result
                 if "file_path" in result:
                     doc["file_path"] = result["file_path"]
                 # Include any metadata fields dynamically (Universal RAG approach)
                 # Discover available metadata fields without hardcoding domain-specific field names
-                metadata_fields = [key for key in result.keys() if key.startswith('metadata_') or key.endswith('_type') or key.endswith('_category')]
+                metadata_fields = [
+                    key
+                    for key in result.keys()
+                    if key.startswith("metadata_")
+                    or key.endswith("_type")
+                    or key.endswith("_category")
+                ]
                 for field in metadata_fields:
                     doc[field] = result[field]
-                    
+
                 documents.append(doc)
 
             return self.create_success_response(
@@ -211,16 +223,22 @@ class SimpleSearchClient(BaseAzureClient):
                         "@search.score", SearchConstants.DEFAULT_SEARCH_SCORE
                     ),
                 }
-                
+
                 # Add optional fields only if they exist in the result
                 if "file_path" in result:
                     doc["file_path"] = result["file_path"]
                 # Include any metadata fields dynamically (Universal RAG approach)
                 # Discover available metadata fields without hardcoding domain-specific field names
-                metadata_fields = [key for key in result.keys() if key.startswith('metadata_') or key.endswith('_type') or key.endswith('_category')]
+                metadata_fields = [
+                    key
+                    for key in result.keys()
+                    if key.startswith("metadata_")
+                    or key.endswith("_type")
+                    or key.endswith("_category")
+                ]
                 for field in metadata_fields:
                     doc[field] = result[field]
-                    
+
                 documents.append(doc)
 
             return self.create_success_response(
@@ -256,9 +274,9 @@ class SimpleSearchClient(BaseAzureClient):
             results_list = [r for r in result]
             successful_deletions = 0
             failed_deletions = 0
-            
+
             for r in results_list:
-                if hasattr(r, 'succeeded') and r.succeeded:
+                if hasattr(r, "succeeded") and r.succeeded:
                     successful_deletions += 1
                 else:
                     failed_deletions += 1
@@ -267,8 +285,8 @@ class SimpleSearchClient(BaseAzureClient):
                 "delete_documents",
                 {
                     "deleted_count": successful_deletions,
-                    "failed_count": failed_deletions, 
-                    "results": results_list
+                    "failed_count": failed_deletions,
+                    "results": results_list,
                 },
             )
 

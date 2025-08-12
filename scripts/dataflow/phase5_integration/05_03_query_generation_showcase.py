@@ -87,7 +87,9 @@ async def query_generation_showcase(
         ]
 
         # ZERO TOLERANCE: No placeholder queries allowed
-        raise RuntimeError("Query generation showcase using placeholder queries. No fake Gremlin queries allowed - implement real query generation agents first.")
+        raise RuntimeError(
+            "Query generation showcase using placeholder queries. No fake Gremlin queries allowed - implement real query generation agents first."
+        )
 
         gremlin_duration = time.time() - gremlin_start
 
@@ -129,15 +131,9 @@ async def query_generation_showcase(
 
         results["showcases"].append(gremlin_showcase)
 
-        print(
-            f"   ✅ Entity insertion query: low complexity"
-        )
-        print(
-            f"   ✅ Relationship insertion query: low complexity"
-        )
-        print(
-            f"   ✅ Graph traversal query: low complexity"
-        )
+        print(f"   ✅ Entity insertion query: low complexity")
+        print(f"   ✅ Relationship insertion query: low complexity")
+        print(f"   ✅ Graph traversal query: low complexity")
         print(f"   ⏱️  Gremlin generation: {gremlin_duration:.2f}s\n")
 
         # Showcase 2: Azure Cognitive Search Query Generation
@@ -180,12 +176,8 @@ async def query_generation_showcase(
 
         results["showcases"].append(search_showcase)
 
-        print(
-            f"   ✅ Vector search query: high performance"
-        )
-        print(
-            f"   ✅ Hybrid search query: high performance"
-        )
+        print(f"   ✅ Vector search query: high performance")
+        print(f"   ✅ Hybrid search query: high performance")
         print(f"   ⏱️  Search generation: {search_duration:.2f}s\n")
 
         # Showcase 3: Domain Analysis Query Generation
@@ -200,7 +192,9 @@ async def query_generation_showcase(
         ]
 
         # ZERO TOLERANCE: No placeholder analysis queries allowed
-        raise RuntimeError("Query generation showcase using placeholder analysis queries. No fake domain analysis queries allowed - implement real analysis query generation first.")
+        raise RuntimeError(
+            "Query generation showcase using placeholder analysis queries. No fake domain analysis queries allowed - implement real analysis query generation first."
+        )
 
         analysis_duration = time.time() - analysis_start
 
@@ -227,12 +221,8 @@ async def query_generation_showcase(
 
         results["showcases"].append(analysis_showcase)
 
-        print(
-            f"   ✅ Domain characterization: medium complexity"
-        )
-        print(
-            f"   ✅ Performance optimization: high complexity"
-        )
+        print(f"   ✅ Domain characterization: medium complexity")
+        print(f"   ✅ Performance optimization: high complexity")
         print(f"   ⏱️  Analysis generation: {analysis_duration:.2f}s\n")
 
         # Showcase 4: Query Orchestration and Batch Processing
@@ -266,7 +256,9 @@ async def query_generation_showcase(
         ]
 
         # ZERO TOLERANCE: No fake batch processing allowed
-        raise RuntimeError("Query generation showcase using fake batch processing. No fake orchestration responses allowed - implement real query orchestrator first.")
+        raise RuntimeError(
+            "Query generation showcase using fake batch processing. No fake orchestration responses allowed - implement real query orchestrator first."
+        )
 
         orchestration_duration = time.time() - orchestration_start
 

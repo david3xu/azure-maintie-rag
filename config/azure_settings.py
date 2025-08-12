@@ -15,6 +15,7 @@ from pydantic_settings import BaseSettings
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except ImportError:
     pass
@@ -178,7 +179,9 @@ class Settings(BaseSettings):
     azure_search_api_version: str = Field(
         default="2023-11-01", env="AZURE_SEARCH_API_VERSION"
     )
-    azure_search_index: str = Field(default="maintie-prod-index", env="AZURE_SEARCH_INDEX")  # azd output
+    azure_search_index: str = Field(
+        default="maintie-prod-index", env="AZURE_SEARCH_INDEX"
+    )  # azd output
 
     # Backward compatibility properties
     @property
@@ -193,7 +196,9 @@ class Settings(BaseSettings):
     cosmos_database_name: str = Field(
         default="maintie-rag-prod", env="COSMOS_DATABASE_NAME"
     )  # azd output
-    cosmos_graph_name: str = Field(default="knowledge-graph-prod", env="COSMOS_GRAPH_NAME")  # azd output
+    cosmos_graph_name: str = Field(
+        default="knowledge-graph-prod", env="COSMOS_GRAPH_NAME"
+    )  # azd output
     azure_cosmos_container: str = Field(
         default="", env="COSMOS_CONTAINER_NAME"
     )  # azd output
@@ -288,11 +293,15 @@ class Settings(BaseSettings):
 
     # Azure Container Apps Settings - Deployment Infrastructure
     azure_container_app_name: str = Field(default="", env="AZURE_CONTAINER_APP_NAME")
-    azure_container_apps_environment: str = Field(default="", env="AZURE_CONTAINER_APPS_ENVIRONMENT")
+    azure_container_apps_environment: str = Field(
+        default="", env="AZURE_CONTAINER_APPS_ENVIRONMENT"
+    )
 
     # Azure Container Registry Settings - Image Management
     azure_container_registry: str = Field(default="", env="AZURE_CONTAINER_REGISTRY")
-    azure_container_registry_endpoint: str = Field(default="", env="AZURE_CONTAINER_REGISTRY_ENDPOINT")
+    azure_container_registry_endpoint: str = Field(
+        default="", env="AZURE_CONTAINER_REGISTRY_ENDPOINT"
+    )
 
     # Azure Resource Naming Convention
     azure_resource_prefix: str = Field(default="maintie", env="AZURE_RESOURCE_PREFIX")

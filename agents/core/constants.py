@@ -74,11 +74,16 @@ class ConfidenceConstants:
 # Complexity Thresholds for Adaptive Processing
 class ComplexityConstants:
     """Content complexity measurement thresholds"""
-    
+
     COMPLEXITY_LOW_THRESHOLD = 0.4
     COMPLEXITY_MEDIUM_THRESHOLD = 0.7
     COMPLEXITY_HIGH_THRESHOLD = 0.8
 
 
 # Export all constants
-__all__ = ["AzureConstants", "ProcessingConstants", "ConfidenceConstants", "ComplexityConstants"]
+__all__ = [
+    "AzureConstants",
+    "ProcessingConstants",
+    "ConfidenceConstants",
+    "ComplexityConstants",
+]

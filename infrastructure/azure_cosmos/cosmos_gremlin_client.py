@@ -68,7 +68,7 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             self.config.get("container") or azure_settings.cosmos_graph_name
         )
         self.gremlin_client = None
-        
+
         # ThreadPoolExecutor for async event loop isolation
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="gremlin")
         self._thread_local = threading.local()
@@ -117,22 +117,26 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
 
     def _get_thread_local_client(self):
         """Get thread-local Gremlin client to avoid connection sharing"""
-        if not hasattr(self._thread_local, 'client'):
+        if not hasattr(self._thread_local, "client"):
             try:
                 if not self.endpoint or "documents.azure.com" not in self.endpoint:
                     raise ValueError(f"Invalid Cosmos endpoint: {self.endpoint}")
 
                 # Extract account name and create Gremlin endpoint
                 account_name = self.endpoint.replace("https://", "").split(".")[0]
-                gremlin_endpoint = f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
+                gremlin_endpoint = (
+                    f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
+                )
 
                 # Use appropriate authentication method
                 if self.use_managed_identity:
                     from azure.identity import DefaultAzureCredential
+
                     credential = DefaultAzureCredential()
                     token = credential.get_token("https://cosmos.azure.com/.default")
                 else:
                     from azure.identity import AzureCliCredential
+
                     credential = AzureCliCredential()
                     token = credential.get_token("https://cosmos.azure.com/.default")
 
@@ -144,13 +148,15 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
                     password=token.token,
                     message_serializer=serializer.GraphSONSerializersV2d0(),
                 )
-                
-                logger.debug(f"Thread-local Gremlin client created for thread {threading.current_thread().name}")
-                
+
+                logger.debug(
+                    f"Thread-local Gremlin client created for thread {threading.current_thread().name}"
+                )
+
             except Exception as e:
                 logger.error(f"Thread-local client creation failed: {e}")
                 raise
-                
+
         return self._thread_local.client
 
     def _execute_query_sync(self, query: str) -> List[Any]:
@@ -161,7 +167,7 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             query_result = result.all().result(
                 timeout=AzureServiceLimits.DEFAULT_GREMLIN_TIMEOUT_SECONDS
             )
-            
+
             # Try to flush/reset connection state to minimize warnings
             # This is a best-effort attempt to clean connection state
             try:
@@ -169,12 +175,14 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
                 del result
             except:
                 pass
-                
+
             return query_result
         except Exception as e:
             # FAIL FAST - Don't return empty results on Cosmos DB failures
             logger.error(f"Sync query failed: {e}")
-            raise RuntimeError(f"Cosmos DB Gremlin sync query failed: {e}. Check Azure Cosmos DB connection.") from e
+            raise RuntimeError(
+                f"Cosmos DB Gremlin sync query failed: {e}. Check Azure Cosmos DB connection."
+            ) from e
 
     async def _execute_query(self, query: str) -> List[Any]:
         """Execute Gremlin query asynchronously using ThreadPoolExecutor"""
@@ -182,14 +190,14 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             self.ensure_initialized()  # Ensure main client is initialized for config
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(
-                self._executor,
-                self._execute_query_sync,
-                query
+                self._executor, self._execute_query_sync, query
             )
         except Exception as e:
             # FAIL FAST - Don't return empty results on Cosmos DB failures
             logger.error(f"Async query failed: {e}")
-            raise RuntimeError(f"Cosmos DB Gremlin async query failed: {e}. Check Azure Cosmos DB connection.") from e
+            raise RuntimeError(
+                f"Cosmos DB Gremlin async query failed: {e}. Check Azure Cosmos DB connection."
+            ) from e
 
     async def execute_query(self, query: str) -> List[Any]:
         """Public method for executing Gremlin queries"""
@@ -225,7 +233,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             # FAIL FAST - Don't return error response, raise exception
             logger.error(f"Add entity failed: {e}")
-            raise RuntimeError(f"Cosmos DB entity creation failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
+            raise RuntimeError(
+                f"Cosmos DB entity creation failed: {e}. Check Azure Cosmos DB Gremlin connection."
+            ) from e
 
     async def add_relationship(
         self, relation_data: Dict[str, Any], domain: str
@@ -255,7 +265,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             # FAIL FAST - Don't return error response, raise exception
             logger.error(f"Add relationship failed: {e}")
-            raise RuntimeError(f"Cosmos DB relationship creation failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
+            raise RuntimeError(
+                f"Cosmos DB relationship creation failed: {e}. Check Azure Cosmos DB Gremlin connection."
+            ) from e
 
     async def find_entities_by_type(
         self,
@@ -291,7 +303,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             # FAIL FAST - Don't return empty results on query failures
             logger.error(f"Find entities failed: {e}")
-            raise RuntimeError(f"Cosmos DB entity search failed: {e}. Check Azure Cosmos DB Gremlin query execution.") from e
+            raise RuntimeError(
+                f"Cosmos DB entity search failed: {e}. Check Azure Cosmos DB Gremlin query execution."
+            ) from e
 
     async def find_related_entities(
         self,
@@ -332,7 +346,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             # FAIL FAST - Don't return empty results on relationship queries
             logger.error(f"Find related entities failed: {e}")
-            raise RuntimeError(f"Cosmos DB relationship search failed: {e}. Check Azure Cosmos DB Gremlin traversal.") from e
+            raise RuntimeError(
+                f"Cosmos DB relationship search failed: {e}. Check Azure Cosmos DB Gremlin traversal."
+            ) from e
 
     async def count_vertices(self, domain: str) -> int:
         """Count vertices in domain"""
@@ -343,7 +359,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             # FAIL FAST - Don't return fallback count on failures
             logger.error(f"Count vertices failed: {e}")
-            raise RuntimeError(f"Cosmos DB vertex count failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
+            raise RuntimeError(
+                f"Cosmos DB vertex count failed: {e}. Check Azure Cosmos DB Gremlin connection."
+            ) from e
 
     async def get_all_entities(self, domain: str) -> List[Dict[str, Any]]:
         """Get all entities for domain"""
@@ -370,7 +388,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             # FAIL FAST - Don't return empty results on entity retrieval failures
             logger.error(f"Get all entities failed: {e}")
-            raise RuntimeError(f"Cosmos DB entity retrieval failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
+            raise RuntimeError(
+                f"Cosmos DB entity retrieval failed: {e}. Check Azure Cosmos DB Gremlin connection."
+            ) from e
 
     async def get_all_relations(self, domain: str) -> List[Dict[str, Any]]:
         """Get all relations for domain"""
@@ -401,7 +421,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             # FAIL FAST - Don't return empty results on relation retrieval failures
             logger.error(f"Get all relations failed: {e}")
-            raise RuntimeError(f"Cosmos DB relation retrieval failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
+            raise RuntimeError(
+                f"Cosmos DB relation retrieval failed: {e}. Check Azure Cosmos DB Gremlin connection."
+            ) from e
 
     async def export_graph_for_training(self, domain: str) -> Dict[str, Any]:
         """Export graph data for training"""
@@ -421,7 +443,9 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         except Exception as e:
             # FAIL FAST - Don't return error response, raise exception
             logger.error(f"Graph export failed: {e}")
-            raise RuntimeError(f"Cosmos DB graph export failed: {e}. Check Azure Cosmos DB Gremlin connection.") from e
+            raise RuntimeError(
+                f"Cosmos DB graph export failed: {e}. Check Azure Cosmos DB Gremlin connection."
+            ) from e
 
     def _get_value(self, prop_value):
         """Extract value from Gremlin property format"""
@@ -437,20 +461,20 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
                 self.gremlin_client.close()
                 self.gremlin_client = None
                 logger.info("Main Gremlin client closed")
-            
+
             # Close thread-local clients
-            if hasattr(self._thread_local, 'client') and self._thread_local.client:
+            if hasattr(self._thread_local, "client") and self._thread_local.client:
                 try:
                     self._thread_local.client.close()
                     logger.debug("Thread-local Gremlin client closed")
                 except Exception as e:
                     logger.warning(f"Thread-local client close warning: {e}")
-            
+
             # Shutdown ThreadPoolExecutor
-            if hasattr(self, '_executor') and self._executor:
+            if hasattr(self, "_executor") and self._executor:
                 self._executor.shutdown(wait=True)
                 logger.info("ThreadPoolExecutor shutdown complete")
-                
+
         except Exception as e:
             logger.warning(f"Client close warning: {e}")
 

@@ -1,6 +1,6 @@
 {
-  "validation_timestamp": "2025-08-12T01:14:44.527511",
-  "overall_status": "failed",
+  "validation_timestamp": "2025-08-12T07:40:19.334402",
+  "overall_status": "passed",
   "validation_steps": {
     "data_availability": {
       "status": "passed",
@@ -18,35 +18,321 @@
       "status": "passed"
     },
     "agent1_testing": {
-      "status": "failed",
-      "successful_tests": 0,
+      "status": "passed",
+      "successful_tests": 5,
       "total_tests": 5,
-      "success_rate": 0.0,
-      "total_processing_time": 143.22639894485474,
+      "success_rate": 1.0,
+      "total_processing_time": 279.237295627594,
       "individual_results": {
         "azure-ai-services-language-service_part_81.md": {
-          "status": "failed",
-          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
+          "status": "success",
+          "processing_time_seconds": 87.01200723648071,
+          "domain_signature": "968ad5c1fa2c458986e288d571c2028d",
+          "content_confidence": 0.85,
+          "agent1_output": {
+            "domain_signature": "968ad5c1fa2c458986e288d571c2028d",
+            "content_type_confidence": 0.85,
+            "characteristics": {
+              "avg_document_length": 11592,
+              "document_count": 1,
+              "vocabulary_richness": 0.65,
+              "sentence_complexity": 12.5,
+              "key_content_terms": [
+                "orchestration workflow",
+                "model training",
+                "model deployment"
+              ],
+              "content_patterns": [
+                "hierarchical_headers",
+                "process_steps",
+                "list_structures",
+                "technical_definitions",
+                "examples_and_explanations",
+                "notes",
+                "tabular_data"
+              ],
+              "lexical_diversity": 0.5,
+              "vocabulary_complexity_ratio": 0.6,
+              "structural_consistency": 0.8
+            },
+            "processing_config": {
+              "optimal_chunk_size": 1180,
+              "chunk_overlap_ratio": 0.16,
+              "entity_confidence_threshold": 0.8,
+              "relationship_density": 0.84,
+              "vector_search_weight": 0.4,
+              "graph_search_weight": 0.6,
+              "expected_extraction_quality": 0.75,
+              "processing_complexity": "medium"
+            },
+            "key_insights": [
+              "Content has a high structural consistency, indicating clarity in its organization and formatting.",
+              "High vocabulary richness and complexity ratio suggest a specialized and technical vocabulary.",
+              "Frequent use of hierarchical headers and process steps indicates structured instructional content.",
+              "Terms like 'orchestration workflow', 'model training', and 'model deployment' signify importance to system or process design."
+            ],
+            "adaptation_recommendations": [
+              "Prioritize identifying ML processes, data objects, and technical components during processing.",
+              "Use medium processing complexity to balance structured consistency with extraction quality.",
+              "Enable detailed focus on hierarchical headers and lists for context-rich entities.",
+              "Adjust chunking parameters to leverage optimal chunk size and overlap for content coherence."
+            ],
+            "analysis_timestamp": "2023-11-01T12:34:00",
+            "processing_time": 15.2,
+            "data_source_path": "provided_documentation_sample.txt",
+            "analysis_reliability": 0.9
+          }
         },
         "azure-ai-services-language-service_part_83.md": {
-          "status": "failed",
-          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
+          "status": "success",
+          "processing_time_seconds": 26.637399435043335,
+          "domain_signature": "c3ddf632dd2a9dc12b0bc8c6990b44a6",
+          "content_confidence": 0.95,
+          "agent1_output": {
+            "domain_signature": "c3ddf632dd2a9dc12b0bc8c6990b44a6",
+            "content_type_confidence": 0.95,
+            "characteristics": {
+              "avg_document_length": 962,
+              "document_count": 1,
+              "vocabulary_richness": 0.45,
+              "sentence_complexity": 16.5,
+              "key_content_terms": [
+                "conversation",
+                "intents",
+                "entities"
+              ],
+              "content_patterns": [
+                "hierarchical_headers",
+                "technical_definitions",
+                "tabular_data",
+                "examples_and_explanations"
+              ],
+              "lexical_diversity": 0.4,
+              "vocabulary_complexity_ratio": 0.6,
+              "structural_consistency": 0.8
+            },
+            "processing_config": {
+              "optimal_chunk_size": 1180,
+              "chunk_overlap_ratio": 0.16,
+              "entity_confidence_threshold": 0.8,
+              "relationship_density": 0.84,
+              "vector_search_weight": 0.4,
+              "graph_search_weight": 0.6,
+              "expected_extraction_quality": 0.75,
+              "processing_complexity": "medium"
+            },
+            "key_insights": [
+              "High usage of hierarchical patterns and technical definitions; content dedicated to process descriptions, UI elements, and structured data.",
+              "Clear indication of conceptual density and structured vocabulary targeted at technical topics.",
+              "Potential entity extraction processes optimized for UI elements, machine learning workflows, and tabular data organization."
+            ],
+            "adaptation_recommendations": [
+              "Chunk size should be optimized at 1180 characters for enhanced structural clarity and reduced semantic overlap.",
+              "Overlap ratio can be maintained at 16% to balance cohesion with redundancy.",
+              "Recommended to focus on extracting technical elements from hierarchical definitions and examples.",
+              "Graph-based search can be slightly weighted over vector search to align with structural richness."
+            ],
+            "analysis_timestamp": "2023-10-03T06:58:52.302Z",
+            "processing_time": 5.813,
+            "data_source_path": "user_provided_content",
+            "analysis_reliability": 0.93
+          }
         },
         "azure-ai-services-language-service_part_117.md": {
-          "status": "failed",
-          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
+          "status": "success",
+          "processing_time_seconds": 51.99600529670715,
+          "domain_signature": "676b5bf9c5e7a130e295af1ea1934a56",
+          "content_confidence": 0.95,
+          "agent1_output": {
+            "domain_signature": "676b5bf9c5e7a130e295af1ea1934a56",
+            "content_type_confidence": 0.95,
+            "characteristics": {
+              "avg_document_length": 6569,
+              "document_count": 1,
+              "vocabulary_richness": 0.72,
+              "sentence_complexity": 14.5,
+              "key_content_terms": [
+                "multi-turn prompts",
+                "active learning",
+                "custom question answering"
+              ],
+              "content_patterns": [
+                "process_steps",
+                "examples_and_explanations",
+                "technical_definitions",
+                "list_structures",
+                "hierarchical_headers",
+                "tabular_data",
+                "code_blocks"
+              ],
+              "lexical_diversity": 0.5,
+              "vocabulary_complexity_ratio": 0.6,
+              "structural_consistency": 0.8
+            },
+            "processing_config": {
+              "optimal_chunk_size": 1770,
+              "chunk_overlap_ratio": 0.16,
+              "entity_confidence_threshold": 0.8,
+              "relationship_density": 0.84,
+              "vector_search_weight": 0.4,
+              "graph_search_weight": 0.6,
+              "expected_extraction_quality": 0.75,
+              "processing_complexity": "medium"
+            },
+            "key_insights": [
+              "Content heavily utilizes structured explanations and technical vocabulary, indicating instructional content.",
+              "Multi-turn prompts and active learning are recurring themes indicating possible conversational design.",
+              "Context is hierarchically represented with tables, rows, and key-value constructs, enhancing structure clarity."
+            ],
+            "adaptation_recommendations": [
+              "Use overlapping chunks to capture context-sensitive elements in multi-turn workflows.",
+              "Prioritize high-confidence extractions for entities such as UI components and technical processes.",
+              "Optimize graph search for relationship-intensive sections like hierarchy-oriented workflows."
+            ],
+            "analysis_timestamp": "2023-10-06T12:48:00Z",
+            "processing_time": 30.2,
+            "data_source_path": "content_analysis_input_20231006",
+            "analysis_reliability": 0.96
+          }
         },
         "azure-ai-services-language-service_part_86.md": {
-          "status": "failed",
-          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
+          "status": "success",
+          "processing_time_seconds": 80.2464530467987,
+          "domain_signature": "694a0c2ded1e581492f3420d3efb4e4c",
+          "content_confidence": 0.97,
+          "agent1_output": {
+            "domain_signature": "694a0c2ded1e581492f3420d3efb4e4c",
+            "content_type_confidence": 0.97,
+            "characteristics": {
+              "avg_document_length": 11505,
+              "document_count": 1,
+              "vocabulary_richness": 0.45,
+              "sentence_complexity": 14.5,
+              "key_content_terms": [
+                "orchestration workflow",
+                "model deployment",
+                "api integration"
+              ],
+              "content_patterns": [
+                "technical_definitions",
+                "examples_and_explanations",
+                "process_steps",
+                "code_blocks",
+                "tabular_data",
+                "list_structures",
+                "hierarchical_headers"
+              ],
+              "lexical_diversity": 0.4,
+              "vocabulary_complexity_ratio": 0.6,
+              "structural_consistency": 0.5
+            },
+            "processing_config": {
+              "optimal_chunk_size": 1770,
+              "chunk_overlap_ratio": 0.16,
+              "entity_confidence_threshold": 0.8,
+              "relationship_density": 0.84,
+              "vector_search_weight": 0.4,
+              "graph_search_weight": 0.6,
+              "expected_extraction_quality": 0.75,
+              "processing_complexity": "medium"
+            },
+            "key_insights": [
+              "Content is focused around technical processes like model orchestration and deployment.",
+              "Highly structured data patterns with hierarchical headers, tables, and code blocks.",
+              "Moderate complexity in relationships with medium entity density.",
+              "Process documentation and operational instructions dominate the text."
+            ],
+            "adaptation_recommendations": [
+              "Apply medium-grained chunking due to structured but diverse content.",
+              "Focus on relationships and entity overlaps in process descriptions.",
+              "Optimize processing for extracting tabular and hierarchical data structures.",
+              "Enhance extraction mechanisms for step-by-step procedural guides."
+            ],
+            "analysis_timestamp": "2023-10-03T16:55:50Z",
+            "processing_time": 7.5,
+            "data_source_path": "user_provided_text",
+            "analysis_reliability": 0.92
+          }
         },
         "azure-ai-services-language-service_part_69.md": {
-          "status": "failed",
-          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
+          "status": "success",
+          "processing_time_seconds": 33.33442544937134,
+          "domain_signature": "9c67df3012a4d214e958dd6459b6b906c16845e5",
+          "content_confidence": 0.95,
+          "agent1_output": {
+            "domain_signature": "9c67df3012a4d214e958dd6459b6b906c16845e5",
+            "content_type_confidence": 0.95,
+            "characteristics": {
+              "avg_document_length": 2161,
+              "document_count": 1,
+              "vocabulary_richness": 0.62,
+              "sentence_complexity": 12.7,
+              "key_content_terms": [
+                "entity labeling",
+                "autolabeling",
+                "named entity recognition"
+              ],
+              "content_patterns": [
+                "list_structures",
+                "process_steps",
+                "examples_and_explanations",
+                "hierarchical_headers",
+                "technical_definitions"
+              ],
+              "lexical_diversity": 0.5,
+              "vocabulary_complexity_ratio": 0.5,
+              "structural_consistency": 0.8
+            },
+            "processing_config": {
+              "optimal_chunk_size": 1150,
+              "chunk_overlap_ratio": 0.16,
+              "entity_confidence_threshold": 0.8,
+              "relationship_density": 0.84,
+              "vector_search_weight": 0.4,
+              "graph_search_weight": 0.6,
+              "expected_extraction_quality": 0.75,
+              "processing_complexity": "medium"
+            },
+            "key_insights": [
+              "The content is heavily structured with lists, hierarchical headers, and explanations.",
+              "Key topics include entity labeling and autolabeling using machine learning models.",
+              "Technical vocabulary like 'custom named entity recognition' and procedural descriptions are frequent.",
+              "Structural patterns align with user guides or procedural manuals.",
+              "Focus on procedural steps for entity labeling, training set distinction, and autolabeling optimizations."
+            ],
+            "adaptation_recommendations": [
+              "Divide content into chunks of approximately 1150 characters for coherent processing.",
+              "Maintain overlap ratio of 0.16 to ensure semantic connection between chunks.",
+              "Adjust graph search weight higher (0.6) due to the interconnected procedural steps.",
+              "Prioritize UI element detection and steps related to labeling processes.",
+              "Optimize entity extraction for 'UI_Element', 'Process_Step', and 'ML_Process' types."
+            ],
+            "analysis_timestamp": "2023-10-03T13:00:00Z",
+            "processing_time": 12.5,
+            "data_source_path": "input-provided-content",
+            "analysis_reliability": 0.92
+          }
         }
       }
+    },
+    "schema_validation": {
+      "status": "passed",
+      "schema_coverage_passed": true,
+      "centralized_coverage_passed": true
+    },
+    "template_system": {
+      "status": "passed"
+    },
+    "storage_validation": {
+      "status": "passed",
+      "cosmos_db_ready": true
     }
   },
-  "quality_metrics": {},
+  "quality_metrics": {
+    "schema_coverage_percentage": 100.0,
+    "centralized_coverage_percentage": 100.0,
+    "missing_fields": [],
+    "centralized_missing": []
+  },
   "recommendations": []
 }

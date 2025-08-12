@@ -11,8 +11,8 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.domain_intelligence.agent import run_domain_analysis
 from agents.core.universal_deps import UniversalDeps
+from agents.domain_intelligence.agent import run_domain_analysis
 from agents.universal_search.agent import run_universal_search
 
 
@@ -34,12 +34,10 @@ async def universal_query_analysis(
         sample_files = list(data_dir.glob("*.md"))[:3]
         sample_content = ""
         for file_path in sample_files:
-            content = file_path.read_text(encoding='utf-8', errors='ignore')
+            content = file_path.read_text(encoding="utf-8", errors="ignore")
             sample_content += content + "\n\n"
-        
-        domain_analysis = await run_domain_analysis(
-            sample_content, detailed=True
-        )
+
+        domain_analysis = await run_domain_analysis(sample_content, detailed=True)
 
         print(f"   ✅ Domain context: {domain_analysis.domain_signature}")
         print(
@@ -68,7 +66,7 @@ async def universal_query_analysis(
         search_result = await run_universal_search(
             f"Query: {query} (context: {domain_analysis.domain_signature})",
             max_results=15,
-            use_domain_analysis=True
+            use_domain_analysis=True,
         )
 
         print(f"   ✅ Query analysis completed")
@@ -85,7 +83,7 @@ async def universal_query_analysis(
             "search_result": {
                 "total_results": search_result.total_results_found,
                 "search_confidence": search_result.search_confidence,
-                "strategy_used": search_result.search_strategy_used
+                "strategy_used": search_result.search_strategy_used,
             },
             "adaptive_configuration": {
                 "vector_weight": domain_analysis.processing_config.vector_search_weight,

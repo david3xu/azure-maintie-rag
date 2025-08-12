@@ -220,9 +220,11 @@ async def universal_search_demo_pipeline(
         except Exception as search_error:
             search_stage_duration = time.time() - search_stage_start
             print(f"   ⚠️  Search execution issue: {str(search_error)[:100]}...")
-            
+
             # NO FALLBACKS - Real Azure Search required for production
-            raise Exception("Universal search requires real Azure services - no fallbacks allowed")
+            raise Exception(
+                "Universal search requires real Azure services - no fallbacks allowed"
+            )
 
         # Stage 4: Results Analysis and Performance Metrics
         print(f"\n📊 Stage 4: Results Analysis with Query Performance Metrics")
