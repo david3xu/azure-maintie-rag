@@ -7,6 +7,7 @@ export interface QueryRequest {
   enable_safety_warnings?: boolean;
 }
 
+// Unified response interface matching our current backend API
 export interface QueryResponse {
   query: string;
   generated_response: string;
@@ -31,28 +32,13 @@ export interface UniversalQueryRequest {
   enable_safety_warnings: boolean;
 }
 
+// Updated to match QueryResponse structure for compatibility
 export interface UniversalQueryResponse {
-  success: boolean;
   query: string;
-  domain: string;
-  generated_response: {
-    answer?: string;
-    explanation?: string;
-    confidence?: number;
-    content?: string;
-    response?: string;
-  } | string;
-  search_results: Array<{
-    content: string;
-    source: string;
-    score: number;
-    metadata?: {
-      source: string;
-    };
-  }>;
+  generated_response: string;
+  confidence_score: number;
   processing_time: number;
-  system_stats: Record<string, unknown>;
-  timestamp: string;
-  error?: string;
-  safety_warnings?: string[];
+  safety_warnings: string[];
+  sources: string[];
+  citations: string[];
 }

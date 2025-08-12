@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { postUniversalQuery } from '../services/api';
-import type { UniversalQueryResponse } from '../types/api';
+import type { QueryResponse } from '../types/api';
 
 export const useUniversalRAG = () => {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<UniversalQueryResponse | null>(null);
+  const [result, setResult] = useState<QueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const runUniversalRAG = async (request: { query: string; domain: string }) => {

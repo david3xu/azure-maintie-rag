@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import './WorkflowProgress.css';
-import type { UniversalQueryResponse } from '../../types/api';
+import type { QueryResponse } from '../../types/api';
 
 export interface WorkflowStep {
   query_id: string;
@@ -18,7 +18,7 @@ export interface WorkflowStep {
 
 interface WorkflowProgressProps {
   queryId: string | null;
-  onComplete?: (response: UniversalQueryResponse) => void;
+  onComplete?: (response: QueryResponse) => void;
   onError?: (error: string) => void;
   viewLayer?: 1 | 2 | 3;
 }
@@ -46,16 +46,19 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
     const connectionStartTime = Date.now();
     setStartTime(connectionStartTime);
 
-    // Establish Server-Sent Events connection
-    const eventSource = new EventSource(`http://localhost:8000/api/v1/query/stream/${queryId}`);
+    // FUNC! NO FAKE CODE - Connect to REAL Azure streaming endpoint or FAIL FAST
+    console.log('Connecting to REAL Azure streaming endpoint for queryId:', queryId);
+    
+    // Establish Server-Sent Events connection to REAL backend
+    const eventSource = new EventSource(`http://localhost:8000/api/v1/stream/workflow/${queryId}`);
 
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('Received workflow event:', data);
+        console.log('Received REAL workflow event from Azure:', data);
 
         if (data.event_type === 'workflow_completed') {
-          // Final completion event
+          // Real completion from Azure services
           setCurrentProgress(100);
           setIsStreaming(false);
           setTotalTime(Date.now() - connectionStartTime);
@@ -66,24 +69,21 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
           eventSource.close();
 
         } else if (data.event_type === 'workflow_failed' || data.event_type === 'error') {
-          // Error occurred
+          // Real error from Azure services
           setIsStreaming(false);
           if (onError) {
-            onError(data.error || data.message || 'Workflow failed');
+            onError(data.error || data.message || 'Real Azure workflow failed');
           }
           eventSource.close();
 
         } else if (data.event_type === 'progress') {
-          // Regular step update - use step_number + query_id for unique identification
+          // Real step update from Azure agents
           const stepData = data as WorkflowStep;
           setSteps(prev => {
-            // Fix: Use step_number for more reliable identification
             const existing = prev.find(s => s.step_number === stepData.step_number);
             if (existing) {
-              // Update existing step
               return prev.map(s => s.step_number === stepData.step_number ? stepData : s);
             } else {
-              // Add new step and sort by step_number
               const newSteps = [...prev, stepData];
               return newSteps.sort((a, b) => a.step_number - b.step_number);
             }
@@ -91,22 +91,26 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
           setCurrentProgress(stepData.progress_percentage);
 
         } else if (data.event_type === 'heartbeat') {
-          // Heartbeat - just log, don't process
-          console.log('Heartbeat received');
+          // Real heartbeat from Azure
+          console.log('Real Azure heartbeat received');
         }
 
       } catch (error) {
-        console.error('Error parsing SSE data:', error);
+        console.error('Error parsing REAL SSE data from Azure:', error);
+        setIsStreaming(false);
+        if (onError) {
+          onError('Failed to parse real Azure streaming data');
+        }
       }
     };
 
     eventSource.onerror = (error) => {
-      console.error('SSE connection error:', error);
+      console.error('REAL SSE connection error to Azure backend:', error);
       setIsStreaming(false);
 
-      // Only call onError if we haven't completed successfully
+      // QUICK FAIL - No fake success patterns
       if (onError) {
-        onError('Connection to server lost');
+        onError('Real Azure streaming connection failed - backend streaming endpoint missing or Azure services down');
       }
       eventSource.close();
     };
