@@ -248,9 +248,10 @@ async def generate_processing_configuration(
     entity_confidence_threshold = base_config.entity_confidence_threshold
     # Note: entity_indicators was removed from UniversalDomainCharacteristics as it was primitive
     # Using content patterns instead for proper nouns detection
-    if complexity_factor > 0.5:  # Adjust for complex content
+    # Adaptive threshold based on measured content characteristics
+    if complexity_factor > COMPLEXITY_HIGH_THRESHOLD:  # Dynamically adjust for measured complexity
         entity_confidence_threshold *= (1.0 - complexity_factor * 0.25)  # More aggressive adjustment for rich content
-    if complexity_factor < 0.3:
+    elif complexity_factor < COMPLEXITY_LOW_THRESHOLD:
         entity_confidence_threshold *= 1.1
     # More permissive clamping for rich technical content
     entity_confidence_threshold = max(0.45, min(1.0, entity_confidence_threshold))

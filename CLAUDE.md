@@ -37,9 +37,9 @@ PYTHONPATH=/workspace/azure-maintie-rag python agents/knowledge_extraction/agent
 PYTHONPATH=/workspace/azure-maintie-rag python agents/universal_search/agent.py
 
 # Direct Dataflow Phase Execution
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_01_validate_domain_intelligence.py
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_02_validate_knowledge_extraction.py
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_03_validate_universal_search.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_00_basic_agent_connectivity.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase2_ingestion/02_00_validate_phase2_prerequisites.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_00_validate_phase3_prerequisites.py
 PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase5_integration/05_01_full_pipeline_execution.py
 
 # Azure Deployment & Environment Management
@@ -195,16 +195,23 @@ PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge
 - `infrastructure/prompt_workflows/templates/universal_knowledge_extraction.jinja2` - Single template for both entities and relationships
 - Template variables: `content_signature`, `discovered_entity_types`, `key_content_terms`, etc.
 
-### Testing Directory Structure
-The project uses validation scripts instead of traditional unit tests:
+### Testing Strategy
+The project primarily uses validation scripts instead of traditional unit tests:
 ```bash
-# Instead of pytest tests/test_agents.py, use:
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_01_validate_domain_intelligence.py
+# Validation scripts (preferred for agent testing)
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_00_basic_agent_connectivity.py
 
-# Test markers are defined in pytest.ini but validation is script-based
-pytest -m unit                # Uses pytest.ini markers for any future unit tests
+# Test markers are defined in pytest.ini for future unit tests
+pytest -m unit                # Agent logic and configuration tests
 pytest -m azure_validation    # Azure service health validation
 pytest -m performance        # Performance and SLA compliance tests
+
+# Direct agent testing with debug output
+export DEBUG=1
+PYTHONPATH=/workspace/azure-maintie-rag python agents/domain_intelligence/agent.py
+
+# Performance testing with threading controls
+OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag timeout 60 pytest -m performance -v
 ```
 
 ## Session Management
@@ -242,12 +249,10 @@ Located in `scripts/dataflow/` with **6-phase execution structure**:
 - `phase2_ingestion/02_04_search_indexing.py` - Index in Azure Cognitive Search
 
 **Phase 3 - Knowledge Extraction** (Streamlined with unified templates):
-- `phase3_knowledge/03_02_knowledge_extraction.py` - Extract entities and relationships with unified template
-- `phase3_knowledge/03_02_simple_extraction.py` - Simplified extraction for testing
-- `phase3_knowledge/03_02_test_unified_template.py` - Test unified template system
-- `phase3_knowledge/03_01_test_agent1_template_vars.py` - Test Agent 1 template variables
-- `phase3_knowledge/03_03_simple_storage.py` - Simplified Cosmos DB storage
-- `phase3_knowledge/03_04_simple_graph.py` - Simplified graph construction
+- `phase3_knowledge/03_00_validate_phase3_prerequisites.py` - Prerequisites validation 
+- `phase3_knowledge/03_01_basic_entity_extraction.py` - Basic entity extraction
+- `phase3_knowledge/03_02_graph_storage.py` - Graph storage in Cosmos DB
+- `phase3_knowledge/03_03_verification.py` - Verification and validation
 
 **Phase 4 - Query Pipeline**:
 - `phase4_query/04_01_query_analysis.py` - Query analysis and processing
@@ -368,13 +373,14 @@ pytest -m unit -v
 
 ## Troubleshooting Current Branch Issues
 
-### Missing Dataflow Files
-Some Phase 3 scripts were removed during cleanup:
+### Current Branch: feature/universal-agents-clean
+Some scripts were consolidated during architecture cleanup. Use the current streamlined approach:
 ```bash
-# Instead of missing scripts, use:
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_02_simple_extraction.py
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_03_simple_storage.py  
-PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_04_simple_graph.py
+# Multi-step Phase 3 knowledge extraction (current architecture)
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_00_validate_phase3_prerequisites.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_01_basic_entity_extraction.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_02_graph_storage.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase3_knowledge/03_03_verification.py
 ```
 
 ### Environment Variable Setup
