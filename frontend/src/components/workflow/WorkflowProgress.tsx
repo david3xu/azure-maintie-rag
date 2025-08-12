@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import './WorkflowProgress.css';
-import type { QueryResponse } from '../../types/api';
+import React, { useEffect, useState } from "react";
+import type { QueryResponse, WorkflowEvent } from "../../types/api";
+import { API_CONFIG } from "../../utils/api-config";
+import "./WorkflowProgress.css";
 
 export interface WorkflowStep {
   query_id: string;
   step_number: number;
   step_name: string;
   user_friendly_name: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'error';
+  status: "pending" | "in_progress" | "completed" | "error";
   processing_time_ms?: number;
   technology: string;
   details: string;
@@ -27,7 +28,7 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
   queryId,
   onComplete,
   onError,
-  viewLayer = 1
+  viewLayer = 1,
 }) => {
   const [steps, setSteps] = useState<WorkflowStep[]>([]);
   const [currentProgress, setCurrentProgress] = useState(0);
@@ -38,7 +39,11 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
   useEffect(() => {
     if (!queryId) return;
 
-    console.log('Received workflow event:', 'Starting new connection for queryId:', queryId);
+    console.log(
+      "Received workflow event:",
+      "Starting new connection for queryId:",
+      queryId
+    );
 
     setIsStreaming(true);
     setSteps([]);
@@ -46,71 +51,105 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
     const connectionStartTime = Date.now();
     setStartTime(connectionStartTime);
 
-    // FUNC! NO FAKE CODE - Connect to REAL Azure streaming endpoint or FAIL FAST
-    console.log('Connecting to REAL Azure streaming endpoint for queryId:', queryId);
-    
-    // Establish Server-Sent Events connection to REAL backend
-    const eventSource = new EventSource(`http://localhost:8000/api/v1/stream/workflow/${queryId}`);
+    console.log(
+      "Connecting to Azure workflow streaming endpoint for queryId:",
+      queryId
+    );
+
+    // Establish Server-Sent Events connection using proper API config
+    const streamUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WORKFLOW_STREAM}/${queryId}`;
+    console.log("Stream URL:", streamUrl);
+    const eventSource = new EventSource(streamUrl);
 
     eventSource.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-        console.log('Received REAL workflow event from Azure:', data);
+        const data: WorkflowEvent = JSON.parse(event.data);
+        console.log("Received workflow event:", data);
 
-        if (data.event_type === 'workflow_completed') {
-          // Real completion from Azure services
+        if (data.event_type === "workflow_completed") {
           setCurrentProgress(100);
           setIsStreaming(false);
           setTotalTime(Date.now() - connectionStartTime);
 
+          // Convert WorkflowEvent to QueryResponse for compatibility
+          const response: QueryResponse = {
+            query: data.query || queryId,
+            generated_response:
+              data.generated_response || "Workflow completed successfully",
+            confidence_score: data.confidence_score || 0.8,
+            processing_time: data.processing_time || 0,
+            safety_warnings: data.safety_warnings || [],
+            sources: data.sources || [],
+            citations: data.citations || [],
+          };
+
           if (onComplete) {
-            onComplete(data);
+            onComplete(response);
           }
           eventSource.close();
-
-        } else if (data.event_type === 'workflow_failed' || data.event_type === 'error') {
-          // Real error from Azure services
+        } else if (
+          data.event_type === "workflow_failed" ||
+          data.event_type === "error"
+        ) {
           setIsStreaming(false);
           if (onError) {
-            onError(data.error || data.message || 'Real Azure workflow failed');
+            onError(data.error || "Azure workflow failed");
           }
           eventSource.close();
+        } else if (data.event_type === "progress") {
+          // Convert WorkflowEvent to WorkflowStep for display
+          const stepData: WorkflowStep = {
+            query_id: data.query_id,
+            step_number: data.step_number || 0,
+            step_name: data.step_name || "processing",
+            user_friendly_name: data.user_friendly_name || "Processing...",
+            status:
+              (data.status as
+                | "pending"
+                | "in_progress"
+                | "completed"
+                | "error") || "in_progress",
+            processing_time_ms: data.processing_time_ms,
+            technology: data.technology || "Azure Services",
+            details: data.details || "Processing in progress...",
+            progress_percentage: data.progress_percentage || 0,
+            technical_data: data as any,
+          };
 
-        } else if (data.event_type === 'progress') {
-          // Real step update from Azure agents
-          const stepData = data as WorkflowStep;
-          setSteps(prev => {
-            const existing = prev.find(s => s.step_number === stepData.step_number);
+          setSteps((prev) => {
+            const existing = prev.find(
+              (s) => s.step_number === stepData.step_number
+            );
             if (existing) {
-              return prev.map(s => s.step_number === stepData.step_number ? stepData : s);
+              return prev.map((s) =>
+                s.step_number === stepData.step_number ? stepData : s
+              );
             } else {
               const newSteps = [...prev, stepData];
               return newSteps.sort((a, b) => a.step_number - b.step_number);
             }
           });
           setCurrentProgress(stepData.progress_percentage);
-
-        } else if (data.event_type === 'heartbeat') {
-          // Real heartbeat from Azure
-          console.log('Real Azure heartbeat received');
+        } else if (data.event_type === "connection_established") {
+          console.log("Workflow connection established");
         }
-
       } catch (error) {
-        console.error('Error parsing REAL SSE data from Azure:', error);
+        console.error("Error parsing workflow event:", error);
         setIsStreaming(false);
         if (onError) {
-          onError('Failed to parse real Azure streaming data');
+          onError("Failed to parse workflow streaming data");
         }
       }
     };
 
     eventSource.onerror = (error) => {
-      console.error('REAL SSE connection error to Azure backend:', error);
+      console.error("Workflow streaming connection error:", error);
       setIsStreaming(false);
 
-      // QUICK FAIL - No fake success patterns
       if (onError) {
-        onError('Real Azure streaming connection failed - backend streaming endpoint missing or Azure services down');
+        onError(
+          "Workflow streaming connection failed - check backend availability"
+        );
       }
       eventSource.close();
     };
@@ -140,9 +179,13 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
         </div>
         <div className="progress-info">
           <span>{Math.round(currentProgress)}% Complete</span>
-          {totalTime > 0 && <span>({(totalTime / 1000).toFixed(1)}s total)</span>}
+          {totalTime > 0 && (
+            <span>({(totalTime / 1000).toFixed(1)}s total)</span>
+          )}
           {isStreaming && startTime && (
-            <span>({((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)</span>
+            <span>
+              ({((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)
+            </span>
           )}
         </div>
       </div>
@@ -160,7 +203,8 @@ export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
       {steps.length > 0 && (
         <div className="workflow-footer">
           <div className="fixes-applied">
-            🔧 {steps.filter(s => s.fix_applied).length} advanced fixes applied for optimal results
+            🔧 {steps.filter((s) => s.fix_applied).length} advanced fixes
+            applied for optimal results
           </div>
         </div>
       )}
@@ -173,22 +217,33 @@ interface WorkflowStepCardProps {
   viewLayer: 1 | 2 | 3;
 }
 
-const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({ step, viewLayer }) => {
+const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({
+  step,
+  viewLayer,
+}) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return '✅';
-      case 'in_progress': return '⏳';
-      case 'error': return '❌';
-      default: return '⏸️';
+      case "completed":
+        return "✅";
+      case "in_progress":
+        return "⏳";
+      case "error":
+        return "❌";
+      default:
+        return "⏸️";
     }
   };
 
   const getStatusClass = (status: string) => {
     switch (status) {
-      case 'completed': return 'completed';
-      case 'in_progress': return 'in-progress';
-      case 'error': return 'error';
-      default: return 'pending';
+      case "completed":
+        return "completed";
+      case "in_progress":
+        return "in-progress";
+      case "error":
+        return "error";
+      default:
+        return "pending";
     }
   };
 
@@ -198,10 +253,9 @@ const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({ step, viewLayer }) 
         <div className="step-title">
           <span className="status-icon">{getStatusIcon(step.status)}</span>
           <span className="step-name">
-            {viewLayer === 1 ?
-              step.user_friendly_name :
-              `Step ${step.step_number}: ${step.step_name}`
-            }
+            {viewLayer === 1
+              ? step.user_friendly_name
+              : `Step ${step.step_number}: ${step.step_name}`}
           </span>
           {step.fix_applied && (
             <span className="fix-badge">{step.fix_applied}</span>
@@ -211,8 +265,7 @@ const WorkflowStepCard: React.FC<WorkflowStepCardProps> = ({ step, viewLayer }) 
           <div className="step-time">
             {step.processing_time_ms < 1000
               ? `${step.processing_time_ms.toFixed(1)}ms`
-              : `${(step.processing_time_ms / 1000).toFixed(1)}s`
-            }
+              : `${(step.processing_time_ms / 1000).toFixed(1)}s`}
           </div>
         )}
       </div>

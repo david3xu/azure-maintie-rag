@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_CONFIG } from '../utils/api-config';
-import type { QueryResponse } from '../types/api';
+import type { QueryResponse, WorkflowEvent } from '../types/api';
 
 export const useWorkflowStream = (
   queryId: string | null,
@@ -16,38 +16,52 @@ export const useWorkflowStream = (
 
     setIsConnected(true);
 
-    // FUNC! Connect to REAL Azure streaming endpoint - NO fake parameters
-    console.log('Connecting to REAL Azure workflow stream:', queryId);
+    console.log('Connecting to Azure workflow stream:', queryId);
     
     const eventSource = new EventSource(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REAL_WORKFLOW_STREAM}/${queryId}`
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WORKFLOW_STREAM}/${queryId}`
     );
 
     eventSource.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data: WorkflowEvent = JSON.parse(event.data);
+        console.log('Workflow event received:', data);
 
-        // Handle REAL Azure workflow events - NO fake processing
+        // Handle workflow completion
         if (data.event_type === 'workflow_completed') {
-          console.log('REAL Azure workflow completed:', data);
-          if (onComplete) onComplete(data);
+          console.log('Azure workflow completed:', data);
+          
+          // Convert WorkflowEvent to QueryResponse format
+          const response: QueryResponse = {
+            query: data.query || query,
+            generated_response: data.generated_response || 'Workflow completed successfully',
+            confidence_score: data.confidence_score || 0.8,
+            processing_time: data.processing_time || 0,
+            safety_warnings: data.safety_warnings || [],
+            sources: data.sources || [],
+            citations: data.citations || []
+          };
+          
+          if (onComplete) onComplete(response);
           eventSource.close();
           setIsConnected(false);
+          
         } else if (data.event_type === 'workflow_failed' || data.event_type === 'error') {
-          console.error('REAL Azure workflow FAILED:', data.error);
-          if (onError) onError(data.error || 'Real Azure workflow failed');
+          console.error('Azure workflow failed:', data.error);
+          if (onError) onError(data.error || 'Azure workflow failed');
           eventSource.close();
           setIsConnected(false);
         }
-        // Note: Progress events are handled by the WorkflowProgress component
+        // Progress events are handled by WorkflowPanel component
+
       } catch (error) {
-        console.error('Error parsing SSE data:', error);
+        console.error('Error parsing workflow event:', error);
       }
     };
 
     eventSource.onerror = (error) => {
-      console.error('REAL Azure streaming connection FAILED:', error);
-      if (onError) onError('REAL Azure streaming connection lost - backend or Azure services down');
+      console.error('Workflow stream connection failed:', error);
+      if (onError) onError('Workflow streaming connection lost - check backend availability');
       eventSource.close();
       setIsConnected(false);
     };

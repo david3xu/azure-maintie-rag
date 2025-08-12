@@ -35,13 +35,13 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 
 ### **Essential Documentation (5 Files - Streamlined & Current)**
 
-| File                                                     | Purpose                 | Real Implementation Content                                                |
-| -------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------- |
-| **[CLAUDE.md](CLAUDE.md)**                               | Development guidance    | Claude Code workflows, commands, and development patterns                  |
-| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**         | Technical architecture  | Multi-agent system, Azure integration, production-ready architecture      |
-| **[docs/FRONTEND.md](docs/FRONTEND.md)**                 | Frontend development    | React 19.1.0 + TypeScript 5.8.3, real components and custom hooks      |
-| **[agents/README.md](agents/README.md)**                 | Multi-agent system      | Universal RAG principles, agent architecture, zero-bias implementation     |
-| **[scripts/dataflow/README.md](scripts/dataflow/README.md)** | 6-phase pipeline    | Complete dataflow execution guide with real Azure services                |
+| File                                                         | Purpose                | Real Implementation Content                                            |
+| ------------------------------------------------------------ | ---------------------- | ---------------------------------------------------------------------- |
+| **[CLAUDE.md](CLAUDE.md)**                                   | Development guidance   | Claude Code workflows, commands, and development patterns              |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**             | Technical architecture | Multi-agent system, Azure integration, production-ready architecture   |
+| **[docs/FRONTEND.md](docs/FRONTEND.md)**                     | Frontend development   | React 19.1.0 + TypeScript 5.8.3, real components and custom hooks      |
+| **[agents/README.md](agents/README.md)**                     | Multi-agent system     | Universal RAG principles, agent architecture, zero-bias implementation |
+| **[scripts/dataflow/README.md](scripts/dataflow/README.md)** | 6-phase pipeline       | Complete dataflow execution guide with real Azure services             |
 
 ### **Data Source**
 
@@ -69,16 +69,33 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 └─ Configuration Management (config/azure_settings.py + agents/core/simple_config_manager.py)
 ```
 
-### **Frontend Stack (Verified Versions)**
+### **Frontend Stack (Current Implementation)**
 
 ```
 ├─ React 19.1.0 + TypeScript 5.8.3 (frontend/package.json)
 ├─ Vite 7.0.4 (build tool and HMR)
 ├─ Axios 1.10.0 (HTTP client)
 ├─ ESLint 9.30.1 (React-specific rules)
-├─ Custom Hooks (useUniversalRAG 30 lines, useWorkflowStream)
-├─ Server-Sent Events (real-time agent workflow updates)
-└─ Progressive disclosure UI (chat/, domain/, workflow/, shared/ components)
+├─ Advanced Features:
+│  ├─ Dark Mode Toggle (system preference detection)
+│  ├─ Progressive Disclosure (3-layer view: User/Technical/Diagnostic)
+│  ├─ Real-Time Streaming (Server-Sent Events)
+│  ├─ Chat History Management (persistent state)
+│  └─ Domain-Aware Query Processing
+├─ Custom Hooks:
+│  ├─ useUniversalRAG (32 lines) - Core RAG orchestration
+│  ├─ useWorkflowStream (streaming SSE) - Real-time updates
+│  ├─ useChat (chat state) - History management
+│  └─ useWorkflow (workflow state) - Progress tracking
+├─ Component Architecture:
+│  ├─ chat/ (ChatHistory, ChatMessage, QueryForm)
+│  ├─ workflow/ (WorkflowPanel, WorkflowProgress, WorkflowStepCard)
+│  ├─ domain/ (DomainSelector)
+│  └─ shared/ (Layout with theme/view controls)
+└─ Services Layer:
+   ├─ api.ts (REST endpoints: search, extract, health)
+   ├─ streaming.ts (SSE workflow events)
+   └─ universal-rag.ts (RAG orchestration)
 ```
 
 ### **Infrastructure Stack**
@@ -95,24 +112,42 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 
 ## 🚀 Quick Start
 
-### **Option 1: One-Command Production Deployment (Recommended)**
+### **⚡ Fastest Start (Try It Now)**
 
 ```bash
 # 1. Clone and setup
-git clone <repository-url>
+git clone https://github.com/your-org/azure-maintie-rag.git
 cd azure-maintie-rag
 
-# 2. Azure authentication
+# 2. Install dependencies
+pip install -r requirements.txt
+cd frontend && npm install && cd ..
+
+# 3. Run health check (works without Azure services)
+python -c "
+from agents.core.universal_models import UniversalDomainAnalysis
+print('✅ Core models working')
+print('📊 Universal RAG system ready for configuration')
+"
+
+# 4. Next: Configure Azure services (see options below)
+```
+
+### **Option 1: One-Command Production Deployment (Recommended)**
+
+```bash
+# Prerequisites: Azure CLI installed
+docker exec -it claude-session bash
 az login
 az account set --subscription "<your-subscription-id>"
 
-# 3. Deploy complete Azure infrastructure (9 services)
+# Deploy complete Azure infrastructure (9 services)
 azd up
 # ✅ Creates: OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, App Insights, Log Analytics, Container Apps
 # ✅ Deploys: Backend API + Frontend UI + Real Azure integration
 # ✅ Configures: RBAC permissions, Managed Identity, Environment sync
 
-# 4. Access your deployment
+# Access your deployment
 # Frontend: https://<your-app>.azurecontainerapps.io
 # Backend API: https://<your-api>.azurecontainerapps.io/api/v1/health
 ```
@@ -120,20 +155,22 @@ azd up
 ### **Option 2: Local Development with REAL Azure Services**
 
 ```bash
-# 1. Setup local environment
-cd azure-maintie-rag
-make setup                    # Install Python + Node.js dependencies
+# 1. Setup dependencies
+pip install -r requirements.txt
+cd frontend && npm install && cd ..
 
-# 2. Configure Azure services (one-time)
+# 2. Configure Azure services (one-time setup required)
 ./scripts/deployment/sync-env.sh prod    # Sync with Azure environment
 export AZURE_CLIENT_ID="<your-client-id>"
 export AZURE_TENANT_ID="<your-tenant-id>"
 
 # 3. Start development servers
-make dev                      # Starts backend (8000) + frontend (5174)
-# ✅ Backend: http://localhost:8000/api/v1/health
-# ✅ Frontend: http://localhost:5174
-# ✅ Streaming: http://localhost:8000/api/v1/stream/workflow/{query_id}
+# Backend
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload &
+
+# Frontend
+cd frontend && npm run dev &
+cd ..
 
 # 4. Test REAL Azure integration
 curl http://localhost:8000/api/v1/health
@@ -196,7 +233,7 @@ curl http://localhost:8000/   # API info with FUNC principles
   "total_services": 6,
   "agent_status": {
     "domain_intelligence": "healthy",
-    "knowledge_extraction": "healthy", 
+    "knowledge_extraction": "healthy",
     "universal_search": "healthy"
   }
 }
@@ -209,6 +246,12 @@ curl http://localhost:8000/   # API info with FUNC principles
 ### **Setup & Development**
 
 ```bash
+
+  # Clear Azure CLI cache
+  rm -rf ~/.azure
+  az login
+  az account show
+  azd env set AZURE_LOCATION westus2
 # Environment Management (Universal RAG)
 ./scripts/deployment/sync-env.sh prod        # Switch to production & sync backend config (default)
 ./scripts/deployment/sync-env.sh staging     # Switch to staging & sync backend config
@@ -217,11 +260,16 @@ make sync-env                                 # Sync backend with current azd en
 # One-command deployment
 azd up                  # Deploy complete Azure infrastructure
 
-# Development workflow
-make setup              # Full project setup (backend + frontend)
-make dev                # Start both backend API and frontend UI
-make health             # Check service health
+# Development workflow (direct commands - Makefile has known issues)
+pip install -r requirements.txt              # Install Python dependencies
+cd frontend && npm install && cd ..          # Install frontend dependencies
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload  # Start backend
+cd frontend && npm run dev                    # Start frontend (separate terminal)
+
+# Alternative using fixed Makefile commands
+make health             # Check service health and Azure status
 make clean              # Clean sessions and logs
+make dataflow-validate  # Test all 3 PydanticAI agents
 ```
 
 ### **Data Processing**
@@ -294,8 +342,9 @@ flowchart TD
 ## 🚀 Deployment Ready
 
 > **✅ CURRENT STATUS**: All components validated and working with REAL Azure services
+>
 > - Backend API: ✅ Operational with streaming endpoints
-> - Frontend: ✅ Build ready (235KB JS, 13KB CSS)  
+> - Frontend: ✅ Build ready (235KB JS, 13KB CSS)
 > - Azure Integration: ✅ 6 services operational
 > - Data Processing: ✅ 5 real Azure AI files ready
 > - FUNC Compliance: ✅ No fake code, QUICK FAIL enabled
@@ -423,38 +472,46 @@ Azure Universal:    Text → Entities/Relations → Vector + Graph + GNN → Uni
 
 ## 📊 Progressive Real-Time Workflow
 
-### **Three-Layer Smart Disclosure**
+### **Three-Layer Smart Disclosure (Current Implementation)**
 
-Our frontend provides **progressive disclosure** for different user types:
+The frontend provides **progressive disclosure** controlled by view layer selector (1|2|3):
 
-**Layer 1: User-Friendly** (90% of users)
+**Layer 1: User-Friendly Interface** (Default for general users)
 
-```
-🔍 Understanding your question...
-☁️ Searching Azure services...
-📝 Generating comprehensive answer...
-```
+- Simple query form with domain selector
+- Clean chat-style results
+- Basic progress indicators
+- Dark/light mode toggle
 
-**Layer 2: Technical Workflow** (power users)
+**Layer 2: Technical Workflow View** (Power users - development/debugging)
 
-```
-📊 Knowledge Extraction (Azure OpenAI): 15 entities, 10 relations
-🔧 Vector Indexing (Azure Cognitive Search): 7 documents, 1536D vectors
-🔍 Query Processing: Troubleshooting type, 18 concepts
-⚡ Vector Search: 3 results, top score 0.826
-📝 Response Generation (Azure OpenAI): 2400+ chars, 3 citations
-```
+- Detailed agent step progression
+- Real-time workflow panel
+- Agent metrics and performance data
+- Service health indicators
+- Processing time breakdowns
 
-**Layer 3: System Diagnostics** (administrators)
+**Layer 3: System Diagnostics** (Administrators - full transparency)
 
-```json
-{
-  "step": "azure_cognitive_search",
-  "status": "completed",
-  "duration": 2.7,
-  "azure_service": "cognitive_search",
-  "details": { "documents_found": 15, "search_score": 0.826 }
-}
+- Raw API responses and error details
+- Azure service connection status
+- Complete workflow event stream
+- Performance profiling data
+- Debug console integration
+
+### **Current UI Features**
+
+```typescript
+// View layer state management
+const [viewLayer, setViewLayer] = useState<1 | 2 | 3>(1);
+
+// Dark mode with system preference
+const [isDarkMode, setIsDarkMode] = useState(() => {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+});
+
+// Workflow streaming toggle
+const [showWorkflow, setShowWorkflow] = useState(false);
 ```
 
 ### **Streaming API Endpoints**

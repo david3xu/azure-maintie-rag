@@ -1,6 +1,8 @@
 // Streaming service for Universal RAG workflow events
+import { API_CONFIG } from '../utils/api-config';
+
 export function createWorkflowEventSource(queryId: string, onMessage: (data: Record<string, unknown>) => void, onError: (error: Event) => void): EventSource {
-  const eventSource = new EventSource(`http://localhost:8000/api/v1/query/stream/${queryId}`);
+  const eventSource = new EventSource(`${API_CONFIG.BASE_URL}/api/v1/stream/workflow/${queryId}`);
 
   eventSource.onmessage = (event) => {
     try {

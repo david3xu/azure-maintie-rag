@@ -33,10 +33,15 @@ async def root():
     """Simple root endpoint"""
     return {
         "message": "Azure Universal RAG API - FUNC! Real Azure Services Only",
-        "version": "1.0.0", 
-        "endpoints": ["/api/v1/search", "/api/v1/extract", "/api/v1/health", "/api/v1/stream/workflow/{query_id}"],
+        "version": "1.0.0",
+        "endpoints": [
+            "/api/v1/search",
+            "/api/v1/extract",
+            "/api/v1/health",
+            "/api/v1/stream/workflow/{query_id}",
+        ],
         "data_source": "REAL Azure data from data/raw/azure-ai-services-language-service_output/",
-        "principles": "NO fake data, NO simulation, QUICK FAIL on errors"
+        "principles": "NO fake data, NO simulation, QUICK FAIL on errors",
     }
 
 

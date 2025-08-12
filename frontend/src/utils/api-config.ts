@@ -5,9 +5,13 @@ export const API_CONFIG = {
     EXTRACT: '/api/v1/extract', 
     HEALTH: '/api/v1/health',
     ROOT: '/',
-    // FUNC! REAL Azure streaming endpoint - NO fake endpoints
-    REAL_WORKFLOW_STREAM: '/api/v1/stream/workflow'
+    // REAL Azure streaming endpoint - matches backend implementation
+    WORKFLOW_STREAM: '/api/v1/stream/workflow'
   }
 };
 
-console.log('API URL:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SEARCH}`);
+console.log('API Configuration:', {
+  baseUrl: API_CONFIG.BASE_URL,
+  searchEndpoint: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SEARCH}`,
+  streamEndpoint: `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WORKFLOW_STREAM}`
+});
