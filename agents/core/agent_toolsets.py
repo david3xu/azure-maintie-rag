@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 from pydantic_ai import RunContext
 from pydantic_ai.toolsets import FunctionToolset
 from agents.core.universal_deps import UniversalDeps
+from agents.core.constants import ComplexityConstants
 
 
 # Domain Intelligence Agent Toolset
@@ -35,12 +36,11 @@ async def analyze_content_characteristics(
 
     This tool performs atomic content analysis and discovery.
     """
-    # TODO: DELETED PRIMITIVE WORD-SPLITTING - IMPLEMENT LLM-BASED ANALYSIS
-    # Statistical analysis should use LLM, not word counting
-    vocab_complexity = 0.75  # Placeholder until LLM implementation
+    # Use REAL Azure OpenAI for vocabulary complexity analysis
+    vocab_complexity = await _analyze_vocabulary_complexity_via_llm(ctx, content)
 
-    # TODO: DELETED WORD-BASED CONCEPT ANALYSIS - USE LLM
-    concept_density = 0.80  # Placeholder until LLM implementation
+    # Use REAL Azure OpenAI for concept density analysis  
+    concept_density = await _analyze_concept_density_via_llm(ctx, content)
 
     # Discover structural patterns (not hardcoded types)
     structural_patterns = []
@@ -78,28 +78,25 @@ async def analyze_content_characteristics(
     avg_document_length = len(content)
     document_count = 1  # Single document analysis
     
-    # TODO: Implement LLM-based vocabulary analysis
-    vocabulary_richness = min(vocab_complexity + 0.1, 1.0)  # Temporary calculation
-    sentence_complexity = len(content.split()) / max(content.count('.') + content.count('!') + content.count('?'), 1)
+    # Use REAL Azure OpenAI for vocabulary richness analysis
+    vocabulary_richness = await _analyze_vocabulary_richness_via_llm(ctx, content, vocab_complexity)
+    # Use REAL Azure OpenAI for sentence complexity analysis
+    sentence_complexity = await _analyze_sentence_complexity_via_llm(ctx, content)
     
     # Extract key content terms using LLM analysis  
     key_content_terms = await _extract_key_content_terms_via_llm(ctx, content)
-    content_patterns = structural_patterns  # Use discovered patterns
     
-    # Language detection placeholder
-    language_indicators = {"english": 0.95}  # Placeholder
+    # Use REAL Azure OpenAI for content patterns analysis
+    content_patterns = await _analyze_content_patterns_via_llm(ctx, content)
     
-    # Lexical diversity calculation
-    words = content.lower().split()
-    unique_words = len(set(words))
-    total_words = len(words)
-    lexical_diversity = unique_words / max(total_words, 1) if total_words > 0 else 0.0
+    # Use REAL Azure OpenAI for lexical diversity analysis
+    lexical_diversity = await _analyze_lexical_diversity_via_llm(ctx, content)
     
     # Use vocab_complexity as vocabulary_complexity_ratio (matching centralized schema)
     vocabulary_complexity_ratio = vocab_complexity
     
-    # Structural consistency based on patterns found
-    structural_consistency = min(len(structural_patterns) / 4.0, 1.0)
+    # Use REAL Azure OpenAI for structural consistency analysis
+    structural_consistency = await _analyze_structural_consistency_via_llm(ctx, content)
     
     return UniversalDomainCharacteristics(
         # Required fields from centralized schema
@@ -112,8 +109,7 @@ async def analyze_content_characteristics(
         key_content_terms=key_content_terms,
         avg_document_length=avg_document_length,
         document_count=document_count,
-        # Additional fields
-        language_indicators=language_indicators,
+        # No language_indicators needed - English only system
     )
 
 
@@ -249,9 +245,9 @@ async def generate_processing_configuration(
     # Note: entity_indicators was removed from UniversalDomainCharacteristics as it was primitive
     # Using content patterns instead for proper nouns detection
     # Adaptive threshold based on measured content characteristics
-    if complexity_factor > COMPLEXITY_HIGH_THRESHOLD:  # Dynamically adjust for measured complexity
+    if complexity_factor > ComplexityConstants.COMPLEXITY_HIGH_THRESHOLD:  # Dynamically adjust for measured complexity
         entity_confidence_threshold *= (1.0 - complexity_factor * 0.25)  # More aggressive adjustment for rich content
-    elif complexity_factor < COMPLEXITY_LOW_THRESHOLD:
+    elif complexity_factor < ComplexityConstants.COMPLEXITY_LOW_THRESHOLD:
         entity_confidence_threshold *= 1.1
     # More permissive clamping for rich technical content
     entity_confidence_threshold = max(0.45, min(1.0, entity_confidence_threshold))
@@ -668,6 +664,293 @@ async def orchestrate_universal_search(
         "processing_time_seconds": processing_time,
         "modalities_used": ["vector", "graph", "gnn"],  # ALL THREE ALWAYS REQUIRED
     }
+
+
+async def _analyze_sentence_complexity_via_llm(ctx: RunContext[UniversalDeps], content: str) -> float:
+    """
+    Analyze sentence complexity using REAL Azure OpenAI service ONLY.
+    
+    NO FALLBACKS - Production requires real Azure integration.
+    """
+    if not ctx.deps.openai_client:
+        raise RuntimeError("Azure OpenAI client not initialized - cannot analyze sentence complexity")
+    
+    analysis_prompt = f"""Analyze the sentence complexity of this content on a scale from 1.0 to 20.0, where:
+- 1.0-5.0: Simple sentences (short, basic structure)
+- 6.0-10.0: Moderate sentences (average length and structure)
+- 11.0-15.0: Complex sentences (longer, sophisticated structure)
+- 16.0-20.0: Very complex sentences (academic/technical writing)
+
+Return ONLY a decimal number between 1.0 and 20.0.
+
+CONTENT TO ANALYZE:
+{content}"""
+    
+    response_data = await ctx.deps.openai_client.complete_chat(
+        messages=[
+            {"role": "system", "content": "You are a sentence complexity analyzer. Return ONLY a decimal number between 1.0 and 20.0."},
+            {"role": "user", "content": analysis_prompt}
+        ],
+        max_tokens=10,
+        temperature=0.0
+    )
+    
+    if "error" in response_data:
+        raise RuntimeError(f"Azure OpenAI sentence complexity analysis failed: {response_data['error']}")
+    
+    try:
+        complexity = float(response_data["content"].strip())
+        if not (1.0 <= complexity <= 20.0):
+            raise ValueError(f"Invalid sentence complexity: {complexity}")
+        return complexity
+    except (ValueError, TypeError) as e:
+        raise RuntimeError(f"Azure OpenAI returned invalid sentence complexity: {response_data['content']}. Error: {e}")
+
+
+async def _analyze_content_patterns_via_llm(ctx: RunContext[UniversalDeps], content: str) -> List[str]:
+    """
+    Analyze content patterns using REAL Azure OpenAI service ONLY.
+    
+    NO FALLBACKS - Production requires real Azure integration.
+    """
+    if not ctx.deps.openai_client:
+        raise RuntimeError("Azure OpenAI client not initialized - cannot analyze content patterns")
+    
+    analysis_prompt = f"""Identify structural and content patterns in this text. Return ONLY a JSON array of pattern names.
+
+Examples of patterns: ["code_blocks", "list_structures", "hierarchical_headers", "tabular_data", "process_steps", "technical_definitions", "examples_and_explanations"]
+
+Return ONLY valid JSON array format: ["pattern1", "pattern2", ...]
+
+CONTENT TO ANALYZE:
+{content}"""
+    
+    response_data = await ctx.deps.openai_client.complete_chat(
+        messages=[
+            {"role": "system", "content": "You are a content pattern analyzer. Return ONLY a valid JSON array of pattern strings."},
+            {"role": "user", "content": analysis_prompt}
+        ],
+        max_tokens=100,
+        temperature=0.0
+    )
+    
+    if "error" in response_data:
+        raise RuntimeError(f"Azure OpenAI content patterns analysis failed: {response_data['error']}")
+    
+    try:
+        import json
+        patterns = json.loads(response_data["content"].strip())
+        if not isinstance(patterns, list):
+            raise ValueError("Must return a list")
+        return [str(p) for p in patterns]
+    except (json.JSONDecodeError, ValueError, TypeError) as e:
+        raise RuntimeError(f"Azure OpenAI returned invalid content patterns: {response_data['content']}. Error: {e}")
+
+
+async def _analyze_lexical_diversity_via_llm(ctx: RunContext[UniversalDeps], content: str) -> float:
+    """
+    Analyze lexical diversity using REAL Azure OpenAI service ONLY.
+    
+    NO FALLBACKS - Production requires real Azure integration.
+    """
+    if not ctx.deps.openai_client:
+        raise RuntimeError("Azure OpenAI client not initialized - cannot analyze lexical diversity")
+    
+    analysis_prompt = f"""Analyze the lexical diversity of this content on a scale from 0.0 to 1.0, where:
+- 0.0-0.3: Low diversity (repetitive vocabulary, limited word variety)
+- 0.4-0.6: Moderate diversity (balanced word usage)
+- 0.7-0.9: High diversity (rich vocabulary, varied word choice)
+- 0.9-1.0: Very high diversity (extensive vocabulary range)
+
+Return ONLY a decimal number between 0.0 and 1.0.
+
+CONTENT TO ANALYZE:
+{content}"""
+    
+    response_data = await ctx.deps.openai_client.complete_chat(
+        messages=[
+            {"role": "system", "content": "You are a lexical diversity analyzer. Return ONLY a decimal number between 0.0 and 1.0."},
+            {"role": "user", "content": analysis_prompt}
+        ],
+        max_tokens=10,
+        temperature=0.0
+    )
+    
+    if "error" in response_data:
+        raise RuntimeError(f"Azure OpenAI lexical diversity analysis failed: {response_data['error']}")
+    
+    try:
+        diversity = float(response_data["content"].strip())
+        if not (0.0 <= diversity <= 1.0):
+            raise ValueError(f"Invalid lexical diversity: {diversity}")
+        return diversity
+    except (ValueError, TypeError) as e:
+        raise RuntimeError(f"Azure OpenAI returned invalid lexical diversity: {response_data['content']}. Error: {e}")
+
+
+async def _analyze_structural_consistency_via_llm(ctx: RunContext[UniversalDeps], content: str) -> float:
+    """
+    Analyze structural consistency using REAL Azure OpenAI service ONLY.
+    
+    NO FALLBACKS - Production requires real Azure integration.
+    """
+    if not ctx.deps.openai_client:
+        raise RuntimeError("Azure OpenAI client not initialized - cannot analyze structural consistency")
+    
+    analysis_prompt = f"""Analyze the structural consistency of this content on a scale from 0.0 to 1.0, where:
+- 0.0-0.3: Inconsistent structure (random formatting, no clear organization)
+- 0.4-0.6: Moderate consistency (some organizational patterns)
+- 0.7-0.9: High consistency (clear structure, consistent formatting)
+- 0.9-1.0: Very high consistency (professional formatting, systematic organization)
+
+Return ONLY a decimal number between 0.0 and 1.0.
+
+CONTENT TO ANALYZE:
+{content}"""
+    
+    response_data = await ctx.deps.openai_client.complete_chat(
+        messages=[
+            {"role": "system", "content": "You are a structural consistency analyzer. Return ONLY a decimal number between 0.0 and 1.0."},
+            {"role": "user", "content": analysis_prompt}
+        ],
+        max_tokens=10,
+        temperature=0.0
+    )
+    
+    if "error" in response_data:
+        raise RuntimeError(f"Azure OpenAI structural consistency analysis failed: {response_data['error']}")
+    
+    try:
+        consistency = float(response_data["content"].strip())
+        if not (0.0 <= consistency <= 1.0):
+            raise ValueError(f"Invalid structural consistency: {consistency}")
+        return consistency
+    except (ValueError, TypeError) as e:
+        raise RuntimeError(f"Azure OpenAI returned invalid structural consistency: {response_data['content']}. Error: {e}")
+
+
+async def _analyze_vocabulary_complexity_via_llm(ctx: RunContext[UniversalDeps], content: str) -> float:
+    """
+    Analyze vocabulary complexity using REAL Azure OpenAI service ONLY.
+    
+    NO FALLBACKS - Production requires real Azure integration.
+    """
+    # Use REAL Azure OpenAI service - NO fallbacks allowed
+    if not ctx.deps.openai_client:
+        raise RuntimeError("Azure OpenAI client not initialized - cannot analyze vocabulary complexity")
+    
+    analysis_prompt = f"""Analyze the vocabulary complexity of this content on a scale from 0.0 to 1.0, where:
+- 0.0-0.3: Simple vocabulary (basic words, common terms)
+- 0.4-0.6: Moderate vocabulary (some technical terms, varied word choice)
+- 0.7-0.9: Complex vocabulary (technical jargon, specialized terms, advanced concepts)
+- 0.9-1.0: Highly complex vocabulary (expert-level terminology, academic language)
+
+Return ONLY a decimal number between 0.0 and 1.0.
+
+CONTENT TO ANALYZE:
+{content}"""
+    
+    response_data = await ctx.deps.openai_client.complete_chat(
+        messages=[
+            {"role": "system", "content": "You are a vocabulary complexity analyzer. Return ONLY a decimal number between 0.0 and 1.0."},
+            {"role": "user", "content": analysis_prompt}
+        ],
+        max_tokens=10,
+        temperature=0.0
+    )
+    
+    if "error" in response_data:
+        raise RuntimeError(f"Azure OpenAI vocabulary complexity analysis failed: {response_data['error']}")
+    
+    try:
+        complexity = float(response_data["content"].strip())
+        if not (0.0 <= complexity <= 1.0):
+            raise ValueError(f"Invalid complexity score: {complexity}")
+        return complexity
+    except (ValueError, TypeError) as e:
+        raise RuntimeError(f"Azure OpenAI returned invalid vocabulary complexity: {response_data['content']}. Error: {e}")
+
+
+async def _analyze_concept_density_via_llm(ctx: RunContext[UniversalDeps], content: str) -> float:
+    """
+    Analyze concept density using REAL Azure OpenAI service ONLY.
+    
+    NO FALLBACKS - Production requires real Azure integration.
+    """
+    if not ctx.deps.openai_client:
+        raise RuntimeError("Azure OpenAI client not initialized - cannot analyze concept density")
+    
+    analysis_prompt = f"""Analyze the concept density of this content on a scale from 0.0 to 1.0, where:
+- 0.0-0.3: Low density (few concepts, simple ideas, mostly narrative)
+- 0.4-0.6: Moderate density (balanced mix of concepts and explanation)
+- 0.7-0.9: High density (many concepts, technical explanations, dense information)
+- 0.9-1.0: Very high density (concentrated technical concepts, minimal fluff)
+
+Return ONLY a decimal number between 0.0 and 1.0.
+
+CONTENT TO ANALYZE:
+{content}"""
+    
+    response_data = await ctx.deps.openai_client.complete_chat(
+        messages=[
+            {"role": "system", "content": "You are a concept density analyzer. Return ONLY a decimal number between 0.0 and 1.0."},
+            {"role": "user", "content": analysis_prompt}
+        ],
+        max_tokens=10,
+        temperature=0.0
+    )
+    
+    if "error" in response_data:
+        raise RuntimeError(f"Azure OpenAI concept density analysis failed: {response_data['error']}")
+    
+    try:
+        density = float(response_data["content"].strip())
+        if not (0.0 <= density <= 1.0):
+            raise ValueError(f"Invalid density score: {density}")
+        return density
+    except (ValueError, TypeError) as e:
+        raise RuntimeError(f"Azure OpenAI returned invalid concept density: {response_data['content']}. Error: {e}")
+
+
+async def _analyze_vocabulary_richness_via_llm(ctx: RunContext[UniversalDeps], content: str, vocab_complexity: float) -> float:
+    """
+    Analyze vocabulary richness using REAL Azure OpenAI service ONLY.
+    
+    NO FALLBACKS - Production requires real Azure integration.
+    """
+    if not ctx.deps.openai_client:
+        raise RuntimeError("Azure OpenAI client not initialized - cannot analyze vocabulary richness")
+    
+    analysis_prompt = f"""Analyze the vocabulary richness of this content on a scale from 0.0 to 1.0, considering:
+- Word variety and uniqueness
+- Range of vocabulary used
+- Sophistication of word choices
+- Context: vocabulary complexity is {vocab_complexity:.3f}
+
+Return ONLY a decimal number between 0.0 and 1.0.
+
+CONTENT TO ANALYZE:
+{content}"""
+    
+    response_data = await ctx.deps.openai_client.complete_chat(
+        messages=[
+            {"role": "system", "content": "You are a vocabulary richness analyzer. Return ONLY a decimal number between 0.0 and 1.0."},
+            {"role": "user", "content": analysis_prompt}
+        ],
+        max_tokens=10,
+        temperature=0.0
+    )
+    
+    if "error" in response_data:
+        raise RuntimeError(f"Azure OpenAI vocabulary richness analysis failed: {response_data['error']}")
+    
+    try:
+        richness = float(response_data["content"].strip())
+        if not (0.0 <= richness <= 1.0):
+            raise ValueError(f"Invalid richness score: {richness}")
+        return richness
+    except (ValueError, TypeError) as e:
+        raise RuntimeError(f"Azure OpenAI returned invalid vocabulary richness: {response_data['content']}. Error: {e}")
 
 
 async def _extract_key_content_terms_via_llm(ctx: RunContext[UniversalDeps], content: str) -> List[str]:

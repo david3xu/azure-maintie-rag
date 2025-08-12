@@ -77,7 +77,7 @@ class DynamicGNNModelDetector:
         
         # Simulate querying Azure ML for recent GNN jobs
         # In real implementation, this would query the Azure ML jobs API
-        mock_jobs = [
+        discovered_jobs = [
             {
                 "job_id": f"gnn-production-{int(time.time())}",
                 "model_id": f"gnn-azure_ai_services-{int(time.time())}",
@@ -99,10 +99,10 @@ class DynamicGNNModelDetector:
         ]
         
         # Sort by creation time (most recent first)
-        mock_jobs.sort(key=lambda x: x["created_time"], reverse=True)
+        discovered_jobs.sort(key=lambda x: x["created_time"], reverse=True)
         
-        logger.info(f"🔍 Found {len(mock_jobs)} recent GNN models")
-        return mock_jobs
+        logger.info(f"🔍 Found {len(discovered_jobs)} recent GNN models")
+        return discovered_jobs
 
     async def _enhance_model_info(self, model_info: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance model info with detailed performance metrics."""

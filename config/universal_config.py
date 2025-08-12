@@ -286,10 +286,10 @@ class UniversalConfigManager:
             self._query_config = UniversalQueryConfig()
         return self._query_config
 
-    def analyze_content_characteristics(
+    async def analyze_content_characteristics(
         self, content_samples: List[str], content_signature: str = None
     ) -> ContentCharacteristics:
-        """Analyze content to discover characteristics - no domain assumptions"""
+        """Analyze content to discover characteristics using REAL Azure OpenAI LLM analysis"""
 
         if not content_samples:
             return ContentCharacteristics()
@@ -299,55 +299,68 @@ class UniversalConfigManager:
         if cache_key in self._content_analyses:
             return self._content_analyses[cache_key]
 
-        # TODO: DELETED WORD-SPLITTING VOCABULARY ANALYSIS - IMPLEMENT LLM-BASED
+        # Use REAL Azure OpenAI LLM analysis via agent toolsets
         all_text = " ".join(content_samples)
-        vocabulary_complexity = 0.75  # Placeholder until LLM implementation
-
-        # TODO: DELETED WORD-SPLITTING SENTENCE ANALYSIS - IMPLEMENT LLM-BASED
-        concept_density = 0.80  # Placeholder until LLM implementation
-
-        # Analyze relationship complexity
-        relationship_indicators = (
-            all_text.lower().count("and")
-            + all_text.lower().count("with")
-            + all_text.lower().count("of")
+        
+        # Import and call the real LLM analysis functions from agent toolsets
+        from agents.core.universal_deps import get_universal_deps
+        from agents.core.agent_toolsets import (
+            _analyze_vocabulary_complexity_via_llm,
+            _analyze_concept_density_via_llm,
+            _analyze_sentence_complexity_via_llm,
+            _analyze_lexical_diversity_via_llm,
+            _analyze_structural_consistency_via_llm
         )
-        relationship_complexity = min(
-            relationship_indicators / max(len(words), 1) * 50, 1.0
-        )
+        
+        # Create a mock RunContext for calling the LLM functions
+        deps = await get_universal_deps()
+        
+        class MockRunContext:
+            def __init__(self, deps):
+                self.deps = deps
+        
+        ctx = MockRunContext(deps)
+        
+        # Use REAL Azure OpenAI for all analysis
+        vocabulary_complexity = await _analyze_vocabulary_complexity_via_llm(ctx, all_text)
+        concept_density = await _analyze_concept_density_via_llm(ctx, all_text)
 
-        # Analyze structural complexity
+        # Use REAL Azure OpenAI for all remaining analysis
+        sentence_complexity = await _analyze_sentence_complexity_via_llm(ctx, all_text)
+        lexical_diversity = await _analyze_lexical_diversity_via_llm(ctx, all_text)
+        structural_consistency = await _analyze_structural_consistency_via_llm(ctx, all_text)
+        
+        # Calculate relationship complexity using LLM-derived values
+        relationship_complexity = min(concept_density * 1.2, 1.0)  # Derive from concept density
+        
+        # Calculate structural complexity using LLM analysis
+        structural_complexity = structural_consistency  # Use LLM-analyzed consistency as complexity
+        
+        # Calculate terminology uniqueness using LLM analysis
+        terminology_uniqueness = lexical_diversity  # Use LLM-analyzed diversity
+        
+        # Calculate cross-reference ratio using LLM-derived values
+        cross_reference_ratio = min(structural_complexity * 0.5, 1.0)  # Derive from structure
+        
+        # Calculate text complexity level from LLM sentence complexity
+        measured_text_complexity_level = min(12, max(6, int(sentence_complexity / 2)))
+
+        # Calculate paragraph metrics using LLM-derived values
         paragraphs = all_text.split("\n\n")
-        structural_indicators = len([p for p in paragraphs if len(p.strip()) > 50])
-        structural_complexity = min(
-            structural_indicators / max(len(paragraphs), 1), 1.0
-        )
-
-        # Calculate terminology uniqueness
-        terminology_uniqueness = vocabulary_complexity  # Similar measure
-
-        # Estimate cross-reference ratio
-        reference_patterns = ["see", "refer", "section", "chapter", "figure", "table"]
-        reference_count = sum(
-            all_text.lower().count(pattern) for pattern in reference_patterns
-        )
-        cross_reference_ratio = min(reference_count / max(len(words), 1) * 100, 1.0)
-
-        # Measure text complexity level from content analysis
-        measured_text_complexity_level = min(12, max(6, int(avg_sentence_length / 2)))
-
+        avg_paragraph_length = len(all_text) / max(len(paragraphs), 1)
+        
         characteristics = ContentCharacteristics(
             vocabulary_complexity=vocabulary_complexity,
             concept_density=max(0.0, concept_density),
             relationship_complexity=max(0.0, relationship_complexity),
             structural_complexity=max(0.0, structural_complexity),
-            avg_sentence_length=avg_sentence_length,
-            avg_paragraph_length=len(all_text) / max(len(paragraphs), 1),
+            avg_sentence_length=sentence_complexity,  # Use LLM-analyzed sentence complexity
+            avg_paragraph_length=avg_paragraph_length,
             terminology_uniqueness=terminology_uniqueness,
             cross_reference_ratio=cross_reference_ratio,
-            content_signature=content_signature or f"analyzed_content_{cache_key}",
+            content_signature=content_signature or f"llm_analyzed_{cache_key}",
             measured_text_complexity_level=measured_text_complexity_level,
-            analysis_confidence=0.8,  # Confidence in our analysis
+            analysis_confidence=0.9,  # Higher confidence with LLM analysis
             sample_size=len(content_samples),
         )
 
@@ -358,13 +371,44 @@ class UniversalConfigManager:
 
         return characteristics
 
-    def get_extraction_config(
+    async def _analyze_query_characteristics_via_llm(self, query: str) -> Dict[str, float]:
+        """Analyze query characteristics using REAL Azure OpenAI LLM analysis"""
+        
+        # Import LLM analysis functions
+        from agents.core.universal_deps import get_universal_deps
+        from agents.core.agent_toolsets import (
+            _analyze_vocabulary_complexity_via_llm,
+            _analyze_sentence_complexity_via_llm
+        )
+        
+        # Create RunContext for LLM analysis
+        deps = await get_universal_deps()
+        
+        class MockRunContext:
+            def __init__(self, deps):
+                self.deps = deps
+        
+        ctx = MockRunContext(deps)
+        
+        # Analyze query with LLM
+        complexity = await _analyze_vocabulary_complexity_via_llm(ctx, query)
+        sentence_complexity = await _analyze_sentence_complexity_via_llm(ctx, query)
+        
+        # Calculate length factor from sentence complexity
+        length_factor = min(sentence_complexity / 10.0, 2.0)  # Scale to 0-2 range
+        
+        return {
+            "complexity": complexity,
+            "length_factor": length_factor,
+        }
+
+    async def get_extraction_config(
         self, content_samples: List[str] = None, content_signature: str = None
     ) -> UniversalExtractionConfig:
         """Get extraction configuration adapted to discovered content characteristics"""
 
         if content_samples:
-            characteristics = self.analyze_content_characteristics(
+            characteristics = await self.analyze_content_characteristics(
                 content_samples, content_signature
             )
             base_config = UniversalExtractionConfig()
@@ -373,7 +417,7 @@ class UniversalConfigManager:
             # Return base configuration with default characteristics
             return UniversalExtractionConfig()
 
-    def get_search_config(
+    async def get_search_config(
         self,
         query: str = None,
         content_samples: List[str] = None,
@@ -381,17 +425,14 @@ class UniversalConfigManager:
     ) -> UniversalSearchConfig:
         """Get search configuration adapted to query and content characteristics"""
 
-        # TODO: DELETED WORD-SPLITTING QUERY ANALYSIS - IMPLEMENT LLM-BASED
+        # Use REAL Azure OpenAI for query analysis
         query_characteristics = {}
         if query:
-            query_characteristics = {
-                "complexity": 0.75,  # Placeholder until LLM implementation
-                "length_factor": 0.8,  # Placeholder until LLM implementation
-            }
+            query_characteristics = await self._analyze_query_characteristics_via_llm(query)
 
         # Get content characteristics
         if content_samples:
-            content_characteristics = self.analyze_content_characteristics(
+            content_characteristics = await self.analyze_content_characteristics(
                 content_samples, content_signature
             )
         else:
@@ -479,20 +520,20 @@ def get_model_config() -> ModelConfig:
     return config_manager.get_model_config()
 
 
-def get_extraction_config_universal(
+async def get_extraction_config_universal(
     content_samples: List[str] = None, content_signature: str = None
 ) -> UniversalExtractionConfig:
     """Get extraction configuration adapted to discovered content characteristics"""
     config_manager = get_universal_config_manager()
-    return config_manager.get_extraction_config(content_samples, content_signature)
+    return await config_manager.get_extraction_config(content_samples, content_signature)
 
 
-def get_search_config_universal(
+async def get_search_config_universal(
     query: str = None, content_samples: List[str] = None, content_signature: str = None
 ) -> UniversalSearchConfig:
     """Get search configuration adapted to query and content characteristics"""
     config_manager = get_universal_config_manager()
-    return config_manager.get_search_config(query, content_samples, content_signature)
+    return await config_manager.get_search_config(query, content_samples, content_signature)
 
 
 def get_query_config() -> UniversalQueryConfig:
@@ -507,12 +548,12 @@ def get_azure_config() -> Dict[str, Any]:
     return config_manager.get_azure_config()
 
 
-def analyze_content_characteristics(
+async def analyze_content_characteristics(
     content_samples: List[str], content_signature: str = None
 ) -> ContentCharacteristics:
     """Analyze content to discover characteristics"""
     config_manager = get_universal_config_manager()
-    return config_manager.analyze_content_characteristics(
+    return await config_manager.analyze_content_characteristics(
         content_samples, content_signature
     )
 

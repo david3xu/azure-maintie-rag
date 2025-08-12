@@ -1,6 +1,6 @@
 {
-  "validation_timestamp": "2025-08-11T14:54:21.986844",
-  "overall_status": "passed",
+  "validation_timestamp": "2025-08-12T01:14:44.527511",
+  "overall_status": "failed",
   "validation_steps": {
     "data_availability": {
       "status": "passed",
@@ -18,301 +18,35 @@
       "status": "passed"
     },
     "agent1_testing": {
-      "status": "passed",
-      "successful_tests": 5,
+      "status": "failed",
+      "successful_tests": 0,
       "total_tests": 5,
-      "success_rate": 1.0,
-      "total_processing_time": 188.14553260803223,
+      "success_rate": 0.0,
+      "total_processing_time": 143.22639894485474,
       "individual_results": {
         "azure-ai-services-language-service_part_81.md": {
-          "status": "success",
-          "processing_time_seconds": 39.945144176483154,
-          "domain_signature": "eb0d48b3c79e5bc3fa45a5bf1314ed97",
-          "content_confidence": 0.95,
-          "agent1_output": {
-            "domain_signature": "eb0d48b3c79e5bc3fa45a5bf1314ed97",
-            "content_type_confidence": 0.95,
-            "characteristics": {
-              "avg_document_length": 11599,
-              "document_count": 1,
-              "vocabulary_richness": 0.85,
-              "sentence_complexity": 14.365671641791044,
-              "key_content_terms": [
-                "orchestration workflow",
-                "model training",
-                "deployment process"
-              ],
-              "content_patterns": [
-                "list_structures"
-              ],
-              "language_indicators": {
-                "english": 0.95
-              },
-              "lexical_diversity": 0.23844155844155845,
-              "vocabulary_complexity_ratio": 0.75,
-              "structural_consistency": 0.25
-            },
-            "processing_config": {
-              "optimal_chunk_size": 1225,
-              "chunk_overlap_ratio": 0.2,
-              "entity_confidence_threshold": 0.65,
-              "relationship_density": 0.7,
-              "vector_search_weight": 0.28,
-              "graph_search_weight": 0.72,
-              "expected_extraction_quality": 0.75,
-              "processing_complexity": "medium"
-            },
-            "key_insights": [
-              "The content focuses heavily on procedural steps for model training and deployment workflows.",
-              "Structured elements like numbered lists and notes guide users through complex procedures.",
-              "High sentence complexity paired with low structural consistency suggests mixed clarity in presentation."
-            ],
-            "adaptation_recommendations": [
-              "Use smaller content chunks (approx. 1225 characters) with moderate overlap to retain coherence in structured sections.",
-              "Optimize graph-based relationship extraction for highlighted terms like 'model evaluation' and 'deployment process'.",
-              "Increase attention to formatting consistency to enhance structural fidelity and accessibility."
-            ],
-            "analysis_timestamp": "2023-11-20T04:47:13Z",
-            "processing_time": 4.2,
-            "data_source_path": "input-provided-content",
-            "analysis_reliability": 0.92
-          }
+          "status": "failed",
+          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
         },
         "azure-ai-services-language-service_part_83.md": {
-          "status": "success",
-          "processing_time_seconds": 56.09364199638367,
-          "domain_signature": "1e7d74508a4aa38abc3f8972e5ebbd2cf83d361c",
-          "content_confidence": 0.85,
-          "agent1_output": {
-            "domain_signature": "1e7d74508a4aa38abc3f8972e5ebbd2cf83d361c",
-            "content_type_confidence": 0.85,
-            "characteristics": {
-              "avg_document_length": 7577,
-              "document_count": 1,
-              "vocabulary_richness": 0.85,
-              "sentence_complexity": 13.23611111111111,
-              "key_content_terms": [
-                "conversation-analysis",
-                "model-training",
-                "api-integration"
-              ],
-              "content_patterns": [],
-              "language_indicators": {
-                "english": 0.95
-              },
-              "lexical_diversity": 0.36306400839454356,
-              "vocabulary_complexity_ratio": 0.75,
-              "structural_consistency": 0.0
-            },
-            "processing_config": {
-              "optimal_chunk_size": 1225,
-              "chunk_overlap_ratio": 0.2,
-              "entity_confidence_threshold": 0.65,
-              "relationship_density": 0.7,
-              "vector_search_weight": 0.28,
-              "graph_search_weight": 0.72,
-              "expected_extraction_quality": 0.75,
-              "processing_complexity": "medium"
-            },
-            "key_insights": [
-              "The content is heavily structured around API-related operations and procedures.",
-              "High vocabulary richness and complexity suggest specialized terminology.",
-              "Limited structural consistency detected due to placeholder notes.",
-              "Focus on conversational AI models and deployment operations."
-            ],
-            "adaptation_recommendations": [
-              "Consider optimizing structural organization to enhance parsing reliability for automated systems.",
-              "Leverage graph-based entity extraction due to moderate relationship density.",
-              "High vocabulary complexity indicates need for domain-aware entity recognition."
-            ],
-            "analysis_timestamp": "2023-11-03T12:15:00Z",
-            "processing_time": 5.6,
-            "data_source_path": "provided_user_content",
-            "analysis_reliability": 0.9
-          }
+          "status": "failed",
+          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
         },
         "azure-ai-services-language-service_part_117.md": {
-          "status": "success",
-          "processing_time_seconds": 45.63449239730835,
-          "domain_signature": "488a11e95a4550234c98b2e6168ff53c",
-          "content_confidence": 0.95,
-          "agent1_output": {
-            "domain_signature": "488a11e95a4550234c98b2e6168ff53c",
-            "content_type_confidence": 0.95,
-            "characteristics": {
-              "avg_document_length": 6706,
-              "document_count": 1,
-              "vocabulary_richness": 0.85,
-              "sentence_complexity": 21.73469387755102,
-              "key_content_terms": [
-                "multi-turn prompts",
-                "active learning",
-                "surface pen troubleshooting"
-              ],
-              "content_patterns": [],
-              "language_indicators": {
-                "english": 0.95
-              },
-              "lexical_diversity": 0.34178403755868547,
-              "vocabulary_complexity_ratio": 0.75,
-              "structural_consistency": 0.0
-            },
-            "processing_config": {
-              "optimal_chunk_size": 1225,
-              "chunk_overlap_ratio": 0.2,
-              "entity_confidence_threshold": 0.65,
-              "relationship_density": 0.7,
-              "vector_search_weight": 0.28,
-              "graph_search_weight": 0.72,
-              "expected_extraction_quality": 0.75,
-              "processing_complexity": "medium"
-            },
-            "key_insights": [
-              "The content is instructional in nature and explains multi-step processes for setting up and optimizing projects in a software-related context.",
-              "It includes actions and steps related to resource management, active learning features, and user guidance for troubleshooting and improving responses in a question-answering tool.",
-              "Vocabulary richness and concept complexity suggest specialized terminology focused on a digital or software usage domain."
-            ],
-            "adaptation_recommendations": [
-              "Apply a graph-based search algorithm to emphasize relationship-based query refinement due to high relational density in content structure.",
-              "Use a moderate chunk size (1225 characters) to capture detailed multi-step instructions within individual segments.",
-              "Lower entity confidence threshold to 0.65 to ensure detecting complex domain-specific entities accurately."
-            ],
-            "analysis_timestamp": "2023-10-06T12:45:00Z",
-            "processing_time": 4.2,
-            "data_source_path": "input_text_v1_analysis",
-            "analysis_reliability": 0.92
-          }
+          "status": "failed",
+          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
         },
         "azure-ai-services-language-service_part_86.md": {
-          "status": "success",
-          "processing_time_seconds": 15.264511823654175,
-          "domain_signature": "b9fad1e0-12d9-4a22-bc05-acb9edb0fb33",
-          "content_confidence": 0.95,
-          "agent1_output": {
-            "domain_signature": "b9fad1e0-12d9-4a22-bc05-acb9edb0fb33",
-            "content_type_confidence": 0.95,
-            "characteristics": {
-              "avg_document_length": 770,
-              "document_count": 1,
-              "vocabulary_richness": 0.85,
-              "sentence_complexity": 23.5,
-              "key_content_terms": [
-                "training",
-                "model",
-                "runtime prediction"
-              ],
-              "content_patterns": [],
-              "language_indicators": {
-                "english": 0.95
-              },
-              "lexical_diversity": 0.648936170212766,
-              "vocabulary_complexity_ratio": 0.75,
-              "structural_consistency": 0.0
-            },
-            "processing_config": {
-              "optimal_chunk_size": 1225,
-              "chunk_overlap_ratio": 0.27999999999999997,
-              "entity_confidence_threshold": 0.65,
-              "relationship_density": 0.7,
-              "vector_search_weight": 0.28,
-              "graph_search_weight": 0.72,
-              "expected_extraction_quality": 0.75,
-              "processing_complexity": "medium"
-            },
-            "key_insights": [
-              "The content has a moderately high vocabulary richness and a notable lexical diversity, indicating specialized terms and varied language usage.",
-              "The average sentence complexity is relatively high, potentially reflecting detailed instructions and descriptions.",
-              "Structural consistency was not evident, suggesting a mixture of narrative and formatted components.",
-              "The text emphasizes domain-specific terms like 'training', 'model', and 'runtime prediction', hinting at procedural or configuration-type content."
-            ],
-            "adaptation_recommendations": [
-              "Increase entity extraction confidence threshold for content with well-defined terms.",
-              "Leverage graph-based search capabilities due to mentions of relationships like 'training' and 'runtime'.",
-              "Focus on medium processing pipelines to balance detailed processing requirements."
-            ],
-            "analysis_timestamp": "2023-11-01T20:36:25Z",
-            "processing_time": 2.3,
-            "data_source_path": "input_data_source",
-            "analysis_reliability": 0.93
-          }
+          "status": "failed",
+          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
         },
         "azure-ai-services-language-service_part_69.md": {
-          "status": "success",
-          "processing_time_seconds": 31.201558828353882,
-          "domain_signature": "aa2b3e59f35b5d9b6342c2fbd5e7566f",
-          "content_confidence": 0.95,
-          "agent1_output": {
-            "domain_signature": "aa2b3e59f35b5d9b6342c2fbd5e7566f",
-            "content_type_confidence": 0.95,
-            "characteristics": {
-              "avg_document_length": 9605,
-              "document_count": 1,
-              "vocabulary_richness": 0.85,
-              "sentence_complexity": 12.581967213114755,
-              "key_content_terms": [
-                "data labeling",
-                "named entity recognition",
-                "azure machine learning"
-              ],
-              "content_patterns": [
-                "code_blocks"
-              ],
-              "language_indicators": {
-                "english": 0.95
-              },
-              "lexical_diversity": 0.3055374592833876,
-              "vocabulary_complexity_ratio": 0.75,
-              "structural_consistency": 0.25
-            },
-            "processing_config": {
-              "optimal_chunk_size": 1837,
-              "chunk_overlap_ratio": 0.2,
-              "entity_confidence_threshold": 0.65,
-              "relationship_density": 0.7,
-              "vector_search_weight": 0.28,
-              "graph_search_weight": 0.72,
-              "expected_extraction_quality": 0.75,
-              "processing_complexity": "medium"
-            },
-            "key_insights": [
-              "Content heavily emphasizes processes for 'data labeling' and 'named entity recognition.'",
-              "High structural inconsistency detected, indicating mixed structural elements such as tables and visual references.",
-              "Sufficiently high vocabulary richness reflecting domain-specific language.",
-              "Optimal processing strategy requires medium chunking with overlap.",
-              "Code-like snippets and visual references detected, suggesting tutorial-like or procedural content."
-            ],
-            "adaptation_recommendations": [
-              "Improve labeling entity detection to handle mixed structured and unstructured data.",
-              "Leverage graph-based model training given the high relationship density between sections.",
-              "Enhance visual processing for embedded code blocks.",
-              "Use pre-trained language models fine-tuned to storage service terminology for NLP tasks."
-            ],
-            "analysis_timestamp": "2023-10-05T13:52:31Z",
-            "processing_time": 9.12,
-            "data_source_path": "provided_text_input",
-            "analysis_reliability": 0.92
-          }
+          "status": "failed",
+          "error": "name 'COMPLEXITY_HIGH_THRESHOLD' is not defined"
         }
       }
-    },
-    "schema_validation": {
-      "status": "passed",
-      "schema_coverage_passed": true,
-      "centralized_coverage_passed": true
-    },
-    "template_system": {
-      "status": "passed"
-    },
-    "storage_validation": {
-      "status": "passed",
-      "cosmos_db_ready": true
     }
   },
-  "quality_metrics": {
-    "schema_coverage_percentage": 100.0,
-    "centralized_coverage_percentage": 100.0,
-    "missing_fields": [],
-    "centralized_missing": []
-  },
+  "quality_metrics": {},
   "recommendations": []
 }

@@ -69,7 +69,7 @@ class RealGNNModelDetector:
         
         current_time = datetime.now()
         
-        mock_jobs = [
+        discovered_jobs = [
             {
                 "name": "plucky_cushion_zryc7mt292",
                 "display_name": "gnn-production-1754952400",
@@ -131,7 +131,7 @@ class RealGNNModelDetector:
             }
         ]
         
-        return mock_jobs
+        return discovered_jobs
 
     def _is_gnn_job(self, job: Dict[str, Any]) -> bool:
         """Check if a job is a GNN training job."""

@@ -39,9 +39,7 @@ class UniversalDomainCharacteristics(BaseModel):
     content_patterns: List[str] = Field(
         default_factory=list, description="Structural patterns discovered"
     )
-    language_indicators: Dict[str, float] = Field(
-        default_factory=dict, description="Language detection scores"
-    )
+    # No language_indicators - English only system
 
     # Complexity indicators (measured from actual content)
     lexical_diversity: float = Field(
