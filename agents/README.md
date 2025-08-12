@@ -25,67 +25,68 @@ This system maintains **true universality** while providing intelligent domain-s
 
 ### Universal Architecture
 ```
-@agents/
+agents/
 ├── README.md                          # Universal RAG documentation
 ├── __init__.py                        # Universal exports
-├── orchestrator.py                    # Universal workflow orchestration
 ├── core/                              # Universal core utilities
 │   ├── __init__.py
 │   ├── universal_models.py            # Zero-hardcoded-values data models
+│   ├── universal_deps.py              # Dependency injection
+│   ├── agent_toolsets.py              # PydanticAI toolsets
+│   ├── azure_pydantic_provider.py     # Azure OpenAI provider
 │   └── constants.py                   # Minimal constants only
 ├── shared/                            # Universal utilities
 │   ├── __init__.py
-│   └── utils.py                       # Universal helper functions
+│   └── query_tools.py                 # Universal helper functions
 ├── domain_intelligence/               # Universal domain analysis
 │   ├── __init__.py
-│   └── agent.py                       # Universal domain intelligence agent
+│   └── agent.py                       # Domain Intelligence PydanticAI agent
 ├── knowledge_extraction/              # Multi-method knowledge extraction  
 │   ├── __init__.py
-│   └── agent.py                       # LLM + Pattern + Hybrid extraction tools
-├── universal_search/                  # Multi-modal search
-│   ├── __init__.py
-│   └── agent.py                       # Adaptive search weights
-└── examples/                          # Usage demonstrations
+│   └── agent.py                       # Knowledge Extraction PydanticAI agent
+└── universal_search/                  # Multi-modal search
     ├── __init__.py
-    ├── demo_universal.py              # Universal agent demonstration
-    └── full_workflow_demo.py          # Complete RAG workflow
+    └── agent.py                       # Universal Search PydanticAI agent
 ```
 
 ## 🚀 Quick Start
 
 ### Universal Domain Analysis with Real Azure OpenAI
 ```python
-from @agents.domain_intelligence.agent import run_universal_domain_analysis, UniversalDomainDeps
+from agents.domain_intelligence.agent import run_domain_analysis
 
-# Analyze ANY content type using real Azure services and your actual data
-deps = UniversalDomainDeps(data_directory="/workspace/azure-maintie-rag/data/raw")
-analysis = await run_universal_domain_analysis(deps)
+# Analyze ANY content type using real Azure services and your actual data  
+content = "Your content to analyze here..."
+analysis = await run_domain_analysis(content, detailed=True)
 
 print(f"Domain signature: {analysis.domain_signature}")
-print(f"Content confidence: {analysis.content_type_confidence}")
-print(f"Adaptive chunk size: {analysis.processing_config.optimal_chunk_size}")
-print(f"Search weights: Vector {analysis.processing_config.vector_search_weight:.1%}, Graph {analysis.processing_config.graph_search_weight:.1%}")
+print(f"Vocabulary complexity: {analysis.characteristics.vocabulary_complexity}")
+print(f"Optimal chunk size: {analysis.processing_config.chunk_size}")
+print(f"Search weights configured based on content characteristics")
 ```
 
 ### Complete Universal RAG Workflow with Real Agents
 ```python
-from @agents.orchestrator import UniversalOrchestrator
+from agents.domain_intelligence.agent import run_domain_analysis
+from agents.knowledge_extraction.agent import run_knowledge_extraction  
+from agents.universal_search.agent import run_universal_search
 
-# Create universal orchestrator with real Azure service integration
-orchestrator = UniversalOrchestrator()
+# Complete workflow with real Azure services
+content = "Your content to process..."
 
-# Process your actual content with real agents
-result = await orchestrator.process_universal_workflow(
-    data_directory="/workspace/azure-maintie-rag/data/raw",  # Your real data
-    query="machine learning algorithms",  # Real search query
-    enable_extraction=True,  # Real knowledge extraction agent
-    enable_search=True       # Real universal search agent
-)
+# Step 1: Domain Analysis
+domain_analysis = await run_domain_analysis(content, detailed=True)
+print(f"Domain signature: {domain_analysis.domain_signature}")
 
-print(f"Success: {result.success}")
-print(f"Domain signature: {result.domain_analysis.domain_signature}")
-print(f"Quality score: {result.quality_score}")
-print(f"Processing time: {result.total_processing_time:.2f}s")
+# Step 2: Knowledge Extraction  
+extraction_result = await run_knowledge_extraction(content, use_domain_analysis=True)
+print(f"Entities: {len(extraction_result.entities)}")
+print(f"Relationships: {len(extraction_result.relationships)}")
+
+# Step 3: Universal Search
+search_result = await run_universal_search("machine learning algorithms", max_results=5)
+print(f"Search results: {search_result.total_results_found}")
+print(f"Search confidence: {search_result.search_confidence}")
 ```
 
 ## 🔧 Universal RAG Workflow
@@ -236,17 +237,21 @@ data/raw/
 
 Test the universal system with your real data:
 ```bash
-# Test universal domain analysis
-python examples/demo_universal.py
+# Test individual agents directly
+PYTHONPATH=/workspace/azure-maintie-rag python agents/domain_intelligence/agent.py
+PYTHONPATH=/workspace/azure-maintie-rag python agents/knowledge_extraction/agent.py
+PYTHONPATH=/workspace/azure-maintie-rag python agents/universal_search/agent.py
 
-# Test complete workflow
-python examples/full_workflow_demo.py
+# Test complete dataflow pipeline
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_01_validate_domain_intelligence.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_02_validate_knowledge_extraction.py
+PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase1_validation/01_03_validate_universal_search.py
 ```
 
 Expected output:
 ```
 🌍 Universal domain analysis complete!
-📊 Discovered signature: code_rich_high_concept_density_medium_sentences
+📊 Discovered signature: azure_ai_services_technical_documentation
 ⚙️  Adaptive configuration generated for your specific content
 ```
 
@@ -259,16 +264,18 @@ Your system uses real Azure services (no additional setup required):
 
 ### 2. **Universal Agent Integration**
 ```python
-from @agents import UniversalOrchestrator
+from agents.core.universal_deps import get_universal_deps
+from agents.domain_intelligence.agent import domain_intelligence_agent
+from agents.knowledge_extraction.agent import knowledge_extraction_agent
+from agents.universal_search.agent import universal_search_agent
 
 # In your production application
-orchestrator = UniversalOrchestrator()
-result = await orchestrator.process_universal_workflow(
-    data_directory="/your/content/path",
-    query=user_query,
-    enable_extraction=True,
-    enable_search=True
-)
+deps = await get_universal_deps()
+
+# Use agents directly with PydanticAI
+domain_result = await domain_intelligence_agent.run("Analyze this content", deps=deps)
+extraction_result = await knowledge_extraction_agent.run("Extract from content", deps=deps) 
+search_result = await universal_search_agent.run("Search query", deps=deps)
 ```
 
 ### 3. **Production Error Handling**
