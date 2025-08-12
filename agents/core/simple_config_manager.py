@@ -143,12 +143,28 @@ class SimpleDynamicConfigManager:
 
             # Create result based on discovered domain name and actual content analysis
             if content_samples:
-                # TODO: DELETED PRIMITIVE WORD-SPLITTING - IMPLEMENT LLM-BASED CONTENT ANALYSIS
+                # Use REAL Azure OpenAI LLM analysis via agent toolsets
                 all_content = " ".join(content_samples)
                 
-                # Universal characteristics measurement (without word splitting)
-                vocabulary_complexity = 0.75  # Placeholder until LLM implementation
-                concept_density = 0.80  # Placeholder until LLM implementation
+                # Import and call the real LLM analysis functions from agent toolsets
+                from agents.core.universal_deps import get_universal_deps
+                from agents.core.agent_toolsets import (
+                    _analyze_vocabulary_complexity_via_llm,
+                    _analyze_concept_density_via_llm
+                )
+                
+                # Create RunContext for calling the LLM functions
+                deps = await get_universal_deps()
+                
+                class LLMRunContext:
+                    def __init__(self, deps):
+                        self.deps = deps
+                
+                ctx = LLMRunContext(deps)
+                
+                # Use REAL Azure OpenAI for all analysis
+                vocabulary_complexity = await _analyze_vocabulary_complexity_via_llm(ctx, all_content)
+                concept_density = await _analyze_concept_density_via_llm(ctx, all_content)
 
                 result = DomainIntelligenceResult(
                     domain_signature=f"{domain_name}",  # Use actual subdirectory name
@@ -270,21 +286,9 @@ class SimpleDynamicConfigManager:
                         content = file_path.read_text(encoding="utf-8", errors="ignore")
                         total_size += len(content)
 
-                        # TODO: DELETED WORD-SPLITTING ANALYSIS - IMPLEMENT LLM-BASED CONTENT ANALYSIS
-                        # Simplified analysis without word splitting
-                        capitalized_count = 0  # Placeholder until LLM implementation
-                        punctuation_density = (
-                            sum(1 for char in content if char in ":.;()[]{}")
-                            / len(content)
-                            if content
-                            else 0
-                        )
-
-                        if (
-                            capitalized_count > len(words) * 0.1
-                            or punctuation_density > 0.05
-                        ):
-                            complexity_indicators += 1
+                        # QUICK FAIL MODE - Remove fallback analysis from production
+                        # This fallback method should not be used in production Universal RAG system
+                        raise RuntimeError("Fallback analysis not allowed in production - use main analyze_domain_if_needed method with LLM analysis")
                     except:
                         pass
 
