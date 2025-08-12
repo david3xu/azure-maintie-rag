@@ -52,21 +52,25 @@ jobs:
         npm ci
 
     - name: Code quality checks
+      timeout-minutes: 10
       run: |
-        black . --check
-        isort . --check-only
+        black . --check --fast
+        isort . --check-only --fast
         cd frontend && npm run lint
 
     - name: Run domain bias validation
+      timeout-minutes: 5
       run: |
         ./scripts/hooks/pre-commit-domain-bias-check.sh
 
     - name: Build frontend
+      timeout-minutes: 10
       run: |
         cd frontend
         npm run build
 
     - name: Run unit tests
+      timeout-minutes: 15
       run: |
         pytest -m unit -v --tb=short
 
