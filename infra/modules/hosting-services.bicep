@@ -134,7 +134,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: '${containerRegistry.properties.loginServer}/backend:latest'
+          image: '${containerRegistry.properties.loginServer}/azure-maintie-rag/backend-prod:latest'
           name: 'backend'
           env: [
             // Azure Service Endpoints
@@ -304,7 +304,7 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: '${containerRegistry.properties.loginServer}/frontend:latest'
+          image: '${containerRegistry.properties.loginServer}/azure-maintie-rag/frontend-prod:latest'
           name: 'frontend'
           env: [
             {
