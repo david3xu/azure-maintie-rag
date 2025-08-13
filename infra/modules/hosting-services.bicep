@@ -174,7 +174,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             // Model Deployments
             {
               name: 'OPENAI_MODEL_DEPLOYMENT'
-              value: 'gpt-4'
+              value: 'gpt-4o'
             }
             {
               name: 'EMBEDDING_MODEL_DEPLOYMENT'
