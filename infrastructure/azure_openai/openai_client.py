@@ -74,20 +74,15 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         # Get configuration from universal config
         model_config = UniversalConfig.get_openai_config()
 
-        # Use credential from Universal Dependencies if available, otherwise fall back to defaults
+        # QUICK FAIL: Must use credential from Universal Dependencies - NO FALLBACK
         from azure.identity import get_bearer_token_provider
         
-        if hasattr(self, 'credential') and self.credential:
-            # Use the credential passed from Universal Dependencies (managed identity aware)
-            credential = self.credential
-        elif self.use_managed_identity:
-            # Use managed identity for azd deployments
-            from azure.identity import DefaultAzureCredential
-            credential = DefaultAzureCredential()
-        else:
-            # Use Azure CLI credential for local development
-            from azure.identity import AzureCliCredential
-            credential = AzureCliCredential()
+        if not hasattr(self, 'credential') or not self.credential:
+            raise RuntimeError(
+                "OpenAI client MUST receive credential from Universal Dependencies. "
+                "No fallback authentication allowed. Ensure UniversalDeps passes credential."
+            )
+        credential = self.credential
 
         token_provider = get_bearer_token_provider(
             credential, "https://cognitiveservices.azure.com/.default"

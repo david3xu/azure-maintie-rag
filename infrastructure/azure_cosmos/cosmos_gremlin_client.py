@@ -87,21 +87,14 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             account_name = self.endpoint.replace("https://", "").split(".")[0]
             gremlin_endpoint = f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
 
-            # Use credential from Universal Dependencies if available, otherwise fall back to defaults
-            if hasattr(self, 'credential') and self.credential:
-                # Use the credential passed from Universal Dependencies (managed identity aware)
-                credential = self.credential
-                token = credential.get_token("https://cosmos.azure.com/.default")
-            elif self.use_managed_identity:
-                from azure.identity import DefaultAzureCredential
-
-                credential = DefaultAzureCredential()
-                token = credential.get_token("https://cosmos.azure.com/.default")
-            else:
-                from azure.identity import AzureCliCredential
-
-                credential = AzureCliCredential()
-                token = credential.get_token("https://cosmos.azure.com/.default")
+            # QUICK FAIL: Must use credential from Universal Dependencies - NO FALLBACK
+            if not hasattr(self, 'credential') or not self.credential:
+                raise RuntimeError(
+                    "Cosmos DB client MUST receive credential from Universal Dependencies. "
+                    "No fallback authentication allowed. Ensure UniversalDeps passes credential."
+                )
+            credential = self.credential
+            token = credential.get_token("https://cosmos.azure.com/.default")
 
             # Create simple Gremlin client
             self.gremlin_client = client.Client(
@@ -132,21 +125,14 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
                     f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
                 )
 
-                # Use credential from Universal Dependencies if available, otherwise fall back to defaults
-                if hasattr(self, 'credential') and self.credential:
-                    # Use the credential passed from Universal Dependencies (managed identity aware)
-                    credential = self.credential
-                    token = credential.get_token("https://cosmos.azure.com/.default")
-                elif self.use_managed_identity:
-                    from azure.identity import DefaultAzureCredential
-
-                    credential = DefaultAzureCredential()
-                    token = credential.get_token("https://cosmos.azure.com/.default")
-                else:
-                    from azure.identity import AzureCliCredential
-
-                    credential = AzureCliCredential()
-                    token = credential.get_token("https://cosmos.azure.com/.default")
+                # QUICK FAIL: Must use credential from Universal Dependencies - NO FALLBACK
+                if not hasattr(self, 'credential') or not self.credential:
+                    raise RuntimeError(
+                        "Cosmos DB thread-local client MUST receive credential from Universal Dependencies. "
+                        "No fallback authentication allowed. Ensure UniversalDeps passes credential."
+                    )
+                credential = self.credential
+                token = credential.get_token("https://cosmos.azure.com/.default")
 
                 # Create thread-local Gremlin client
                 self._thread_local.client = client.Client(
