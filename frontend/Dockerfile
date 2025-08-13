@@ -21,9 +21,9 @@ FROM nginx:alpine
 # Copy built files to nginx
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration for SPA routing
+# Copy nginx configuration for SPA routing (port 3000)
 RUN echo 'server { \
-  listen 80; \
+  listen 3000; \
   location / { \
     root /usr/share/nginx/html; \
     index index.html index.htm; \
@@ -41,5 +41,5 @@ RUN echo 'server { \
 # Expose port 3000 (matches Container App configuration)
 EXPOSE 3000
 
-# Start nginx on port 3000
-CMD ["sh", "-c", "sed -i 's/listen 80;/listen 3000;/g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
