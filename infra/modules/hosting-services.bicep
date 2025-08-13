@@ -12,9 +12,9 @@ param storageAccountName string
 param keyVaultName string
 param appInsightsConnectionString string
 
-// Container image names (passed from azd)
-param backendImageName string = 'azure-maintie-rag/backend-prod:latest'
-param frontendImageName string = 'azure-maintie-rag/frontend-prod:latest'
+// Container image names (temporarily hardcoded for debugging)
+param backendImageName string = 'azure-maintie-rag/backend-prod:azd-deploy-1755080994'
+param frontendImageName string = 'azure-maintie-rag/frontend-prod:azd-deploy-1755080996'
 
 // Environment-specific configuration
 var environmentConfig = {
