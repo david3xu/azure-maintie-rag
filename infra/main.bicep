@@ -15,10 +15,10 @@ param location string
 param principalId string = ''
 
 @description('Backend container image name')
-param backendImageName string = 'azure-maintie-rag/backend-prod:azd-deploy-1755080994'
+param backendImageName string = 'azure-maintie-rag/backend-prod:azd-deploy-1755081578'
 
 @description('Frontend container image name') 
-param frontendImageName string = 'azure-maintie-rag/frontend-prod:azd-deploy-1755080996'
+param frontendImageName string = 'azure-maintie-rag/frontend-prod:azd-deploy-1755081580'
 
 // Resource naming configuration
 var resourcePrefix = 'maintie-rag'
