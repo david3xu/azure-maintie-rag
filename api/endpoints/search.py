@@ -71,6 +71,9 @@ class KnowledgeExtractionRequest(BaseModel):
     use_domain_analysis: bool = Field(
         True, description="Enable domain intelligence for extraction optimization"
     )
+    use_generated_prompts: bool = Field(
+        False, description="Enable auto-generated prompts (requires Azure CLI authentication)"
+    )
 
 
 class KnowledgeExtractionResponse(BaseModel):
@@ -196,7 +199,7 @@ async def extract_knowledge(
                     "type": entity.type,
                     "confidence": entity.confidence,
                     "context": entity.context,
-                    "properties": entity.properties or {},
+                    "properties": entity.metadata or {},
                 }
             )
 
@@ -209,7 +212,7 @@ async def extract_knowledge(
                     "relationship_type": rel.relationship_type,
                     "confidence": rel.confidence,
                     "context": rel.context,
-                    "properties": rel.properties or {},
+                    "properties": rel.metadata or {},
                 }
             )
 
