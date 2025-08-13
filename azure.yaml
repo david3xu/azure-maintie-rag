@@ -10,10 +10,14 @@ services:
     project: .
     language: py
     host: containerapp
+    docker:
+      path: ./Dockerfile
   frontend:
     project: ./frontend
-    language: js
+    language: js  
     host: containerapp
+    docker:
+      path: ./frontend/Dockerfile
 
 # Infrastructure configuration
 infra:
@@ -54,11 +58,6 @@ hooks:
       echo "🏗️ Preparing Azure Universal RAG infrastructure..."
       echo "Environment: ${AZURE_ENV_NAME}"
       echo "Location: ${AZURE_LOCATION}"
-      
-      echo "🔧 Setting container image names for deployment..."
-      # Set image names to match the actual built images from azd package
-      azd env set backendImageName "${SERVICE_BACKEND_IMAGE_NAME}"
-      azd env set frontendImageName "${SERVICE_FRONTEND_IMAGE_NAME}"
       
   postprovision:
     shell: sh

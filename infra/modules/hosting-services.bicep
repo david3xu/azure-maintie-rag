@@ -13,8 +13,8 @@ param keyVaultName string
 param appInsightsConnectionString string
 
 // Container image names (passed from azd)
-param backendImageName string = 'azure-maintie-rag/backend-prod:latest'
-param frontendImageName string = 'azure-maintie-rag/frontend-prod:latest'
+param backendImageName string = '${SERVICE_BACKEND_IMAGE_NAME}'
+param frontendImageName string = '${SERVICE_FRONTEND_IMAGE_NAME}'
 
 // Environment-specific configuration
 var environmentConfig = {
