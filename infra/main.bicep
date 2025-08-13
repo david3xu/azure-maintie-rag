@@ -14,6 +14,12 @@ param location string
 @description('Principal ID for the current user (from azd auth)')
 param principalId string = ''
 
+@description('Backend container image name')
+param backendImageName string = 'azure-maintie-rag/backend-prod:latest'
+
+@description('Frontend container image name') 
+param frontendImageName string = 'azure-maintie-rag/frontend-prod:latest'
+
 // Resource naming configuration
 var resourcePrefix = 'maintie-rag'
 var resourceGroupName = 'rg-${resourcePrefix}-${environmentName}'
@@ -81,6 +87,8 @@ module hosting 'modules/hosting-services.bicep' = {
     storageAccountName: coreServices.outputs.storageAccountName
     keyVaultName: coreServices.outputs.keyVaultName
     appInsightsConnectionString: coreServices.outputs.appInsightsConnectionString
+    backendImageName: backendImageName
+    frontendImageName: frontendImageName
   }
 }
 
