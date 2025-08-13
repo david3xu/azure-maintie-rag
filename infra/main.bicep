@@ -115,6 +115,7 @@ output AZURE_LOG_ANALYTICS_WORKSPACE_ID string = coreServices.outputs.logAnalyti
 
 // Hosting
 output SERVICE_BACKEND_URI string = hosting.outputs.backendUri
+output SERVICE_FRONTEND_URI string = hosting.outputs.frontendUri
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = hosting.outputs.registryLoginServer
 output AZURE_CONTAINER_ENVIRONMENT_NAME string = hosting.outputs.containerEnvironmentName
 

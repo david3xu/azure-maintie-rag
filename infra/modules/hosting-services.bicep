@@ -268,6 +268,83 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
   }
 }
 
+// Frontend Container App
+resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
+  name: 'ca-frontend-${resourcePrefix}-${environmentName}'
+  location: location
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
+  }
+  properties: {
+    managedEnvironmentId: containerEnvironment.id
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: {
+        external: true
+        targetPort: 3000
+        transport: 'http'
+        allowInsecure: environmentName == 'development'
+        traffic: [
+          {
+            weight: 100
+            latestRevision: true
+          }
+        ]
+      }
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          identity: managedIdentity.id
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          image: '${containerRegistry.properties.loginServer}/frontend:latest'
+          name: 'frontend'
+          env: [
+            {
+              name: 'REACT_APP_API_URL'
+              value: 'https://${backendApp.properties.configuration.ingress.fqdn}'
+            }
+            {
+              name: 'NODE_ENV'
+              value: environmentName == 'development' ? 'development' : 'production'
+            }
+          ]
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 5
+        rules: [
+          {
+            name: 'http-scaling'
+            http: {
+              metadata: {
+                concurrentRequests: '30'
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+  tags: {
+    Environment: environmentName
+    Purpose: 'Universal RAG React frontend application'
+    'azd-service-name': 'frontend'
+  }
+}
+
 // RBAC for Container Registry
 resource registryPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: containerRegistry
@@ -320,3 +397,7 @@ output containerEnvironmentDefaultDomain string = containerEnvironment.propertie
 output backendAppName string = backendApp.name
 output backendUri string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
 output backendFqdn string = backendApp.properties.configuration.ingress.fqdn
+
+output frontendAppName string = frontendApp.name
+output frontendUri string = 'https://${frontendApp.properties.configuration.ingress.fqdn}'
+output frontendFqdn string = frontendApp.properties.configuration.ingress.fqdn
