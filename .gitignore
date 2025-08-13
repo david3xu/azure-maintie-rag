@@ -130,9 +130,21 @@ wandb/
 *.tmp.md
 *.temp.md
 
+# Dataflow execution results (development artifacts)
+scripts/dataflow/results/
+data/processed/
+data/indices/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Build artifacts
 backend/build/
-.claude/settings.local.json
-.claude/settings.local.json
 *.npz
 backend/data/gnn_models/*.json
 backend/data/gnn_training/*.json
+
+# Session logs (enterprise feature)
+logs/session_report.md
+logs/performance.log
+logs/azure_status.log
