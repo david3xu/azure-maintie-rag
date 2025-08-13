@@ -27,7 +27,7 @@ env:
   AZURE_RESOURCE_GROUP_PREFIX: rg-maintie-rag
   
   # Application Configuration
-  OPENAI_MODEL_DEPLOYMENT: gpt-4
+  OPENAI_MODEL_DEPLOYMENT: gpt-4o
   EMBEDDING_MODEL_DEPLOYMENT: text-embedding-ada-002
   SEARCH_INDEX_NAME: maintie-index
   COSMOS_DATABASE_NAME: maintie-rag-db
