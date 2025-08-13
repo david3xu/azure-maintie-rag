@@ -39,12 +39,26 @@ env:
 
 # Deployment hooks
 hooks:
+  prepackage:
+    shell: sh
+    run: |
+      echo "📦 Building Azure Universal RAG container..."
+      # Ensure requirements are up to date for the API service
+      if [ -f "requirements.txt" ]; then
+        echo "Building Python Azure Universal RAG API for container deployment..."
+      fi
+      
   preprovision:
     shell: sh
     run: |
       echo "🏗️ Preparing Azure Universal RAG infrastructure..."
       echo "Environment: ${AZURE_ENV_NAME}"
       echo "Location: ${AZURE_LOCATION}"
+      
+      echo "🔧 Setting container image names for deployment..."
+      # Set image names to match the actual built images from azd package
+      azd env set backendImageName "${SERVICE_BACKEND_IMAGE_NAME}"
+      azd env set frontendImageName "${SERVICE_FRONTEND_IMAGE_NAME}"
       
   postprovision:
     shell: sh
@@ -53,15 +67,6 @@ hooks:
       # Update backend configuration with deployed endpoints
       if [ -f "./scripts/update-env-from-deployment.sh" ]; then
         ./scripts/update-env-from-deployment.sh
-      fi
-      
-  prepackage:
-    shell: sh
-    run: |
-      echo "📦 Building Azure Universal RAG container..."
-      # Ensure requirements are up to date for the API service
-      if [ -f "requirements.txt" ]; then
-        echo "Building Python Azure Universal RAG API for container deployment..."
       fi
       
   postdeploy:

@@ -12,6 +12,10 @@ param storageAccountName string
 param keyVaultName string
 param appInsightsConnectionString string
 
+// Container image names (passed from azd)
+param backendImageName string = 'azure-maintie-rag/backend-prod:latest'
+param frontendImageName string = 'azure-maintie-rag/frontend-prod:latest'
+
 // Environment-specific configuration
 var environmentConfig = {
   development: {
@@ -134,7 +138,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: '${containerRegistry.properties.loginServer}/azure-maintie-rag/backend-prod:latest'
+          image: '${containerRegistry.properties.loginServer}/${backendImageName}'
           name: 'backend'
           env: [
             // Azure Service Endpoints
@@ -304,7 +308,7 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: '${containerRegistry.properties.loginServer}/azure-maintie-rag/frontend-prod:latest'
+          image: '${containerRegistry.properties.loginServer}/${frontendImageName}'
           name: 'frontend'
           env: [
             {
