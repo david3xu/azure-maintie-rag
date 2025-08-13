@@ -207,9 +207,9 @@ async def extract_knowledge(
         for rel in extraction_result.relationships:
             relationships_data.append(
                 {
-                    "source_entity": rel.source_entity,
-                    "target_entity": rel.target_entity,
-                    "relationship_type": rel.relationship_type,
+                    "source_entity": rel.source,
+                    "target_entity": rel.target,
+                    "relationship_type": rel.relation,
                     "confidence": rel.confidence,
                     "context": rel.context,
                     "properties": rel.metadata or {},
