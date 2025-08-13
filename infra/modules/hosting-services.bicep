@@ -134,7 +134,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          image: '${containerRegistry.properties.loginServer}/backend:latest'
           name: 'backend'
           env: [
             // Azure Service Endpoints
