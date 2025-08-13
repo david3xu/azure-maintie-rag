@@ -264,6 +264,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
   tags: {
     Environment: environmentName
     Purpose: 'Universal RAG FastAPI backend application'
+    'azd-service-name': 'backend'
   }
 }
 

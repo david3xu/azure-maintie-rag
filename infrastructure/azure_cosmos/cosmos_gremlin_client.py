@@ -87,8 +87,12 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             account_name = self.endpoint.replace("https://", "").split(".")[0]
             gremlin_endpoint = f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
 
-            # Use appropriate authentication method
-            if self.use_managed_identity:
+            # Use credential from Universal Dependencies if available, otherwise fall back to defaults
+            if hasattr(self, 'credential') and self.credential:
+                # Use the credential passed from Universal Dependencies (managed identity aware)
+                credential = self.credential
+                token = credential.get_token("https://cosmos.azure.com/.default")
+            elif self.use_managed_identity:
                 from azure.identity import DefaultAzureCredential
 
                 credential = DefaultAzureCredential()
@@ -128,8 +132,12 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
                     f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
                 )
 
-                # Use appropriate authentication method
-                if self.use_managed_identity:
+                # Use credential from Universal Dependencies if available, otherwise fall back to defaults
+                if hasattr(self, 'credential') and self.credential:
+                    # Use the credential passed from Universal Dependencies (managed identity aware)
+                    credential = self.credential
+                    token = credential.get_token("https://cosmos.azure.com/.default")
+                elif self.use_managed_identity:
                     from azure.identity import DefaultAzureCredential
 
                     credential = DefaultAzureCredential()

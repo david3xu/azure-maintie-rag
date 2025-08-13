@@ -10,7 +10,9 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from azure.identity import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+from azure.core.credentials import TokenCredential
+import os
 from openai import AsyncAzureOpenAI
 
 from agents.core.simple_config_manager import SimpleDynamicConfigManager
@@ -18,6 +20,23 @@ from agents.core.universal_models import (
     UniversalDomainAnalysis,
     UniversalProcessingConfiguration,
 )
+
+
+def get_azure_credential():
+    """
+    Get appropriate Azure credential based on environment.
+    
+    Uses ManagedIdentityCredential in Container Apps to avoid Azure CLI authentication issues.
+    Falls back to DefaultAzureCredential for local development.
+    """
+    # Check if running in Azure Container Apps (has AZURE_CLIENT_ID)
+    client_id = os.getenv('AZURE_CLIENT_ID')
+    if client_id:
+        # Running in Container App - use managed identity directly
+        return ManagedIdentityCredential(client_id=client_id)
+    else:
+        # Local development - use default credential chain
+        return DefaultAzureCredential()
 from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosGremlinClient
 
 
@@ -59,7 +78,7 @@ class UniversalDeps:
     )
 
     # Azure Authentication (shared across all services)
-    credential: DefaultAzureCredential = field(default_factory=DefaultAzureCredential)
+    credential: TokenCredential = field(default_factory=get_azure_credential)
 
     # Core Azure Services
     openai_client: Optional[UnifiedAzureOpenAIClient] = None
@@ -102,6 +121,8 @@ class UniversalDeps:
             try:
                 if not self.cosmos_client:
                     self.cosmos_client = SimpleCosmosGremlinClient()
+                    # Pass the managed identity credential to the client
+                    self.cosmos_client.credential = self.credential
                     self.cosmos_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["cosmos"] = True
             except Exception as e:
