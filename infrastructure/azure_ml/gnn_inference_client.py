@@ -86,39 +86,68 @@ class GNNInferenceClient:
             )
 
     async def _discover_gnn_endpoints(self):
-        """Discover and connect to existing GNN endpoints."""
+        """Discover and connect to existing GNN endpoints using environment configuration."""
         try:
-            endpoints = self.ml_client.online_endpoints.list()
-            gnn_endpoints = []
-
-            for endpoint in endpoints:
-                if (
-                    "gnn" in endpoint.name.lower()
-                    and endpoint.provisioning_state == "Succeeded"
-                ):
-                    gnn_endpoints.append(endpoint)
-
-            if gnn_endpoints:
-                # Use the first available GNN endpoint
-                selected_endpoint = gnn_endpoints[0]
-                self.endpoint_name = selected_endpoint.name
-                self.scoring_uri = selected_endpoint.scoring_uri
-
-                # Get the first deployment for this endpoint
-                deployments = self.ml_client.online_deployments.list(
-                    endpoint_name=self.endpoint_name
-                )
-                deployments_list = list(deployments)
-                if deployments_list:
-                    self.deployment_name = deployments_list[0].name
-
-                logger.info(f"✅ Connected to GNN endpoint: {self.endpoint_name}")
-                logger.info(f"   Scoring URI: {self.scoring_uri}")
+            # FIXED: Use environment configuration instead of failing API call
+            from config.settings import azure_settings
+            
+            # Check if GNN endpoint is configured in environment
+            if hasattr(azure_settings, 'gnn_endpoint_name') and azure_settings.gnn_endpoint_name:
+                self.endpoint_name = azure_settings.gnn_endpoint_name
+                logger.info(f"✅ Using configured GNN endpoint: {self.endpoint_name}")
+                
+            # Try to get GNN_ENDPOINT_NAME from environment directly
+            import os
+            env_gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
+            env_gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
+            
+            if env_gnn_endpoint:
+                self.endpoint_name = env_gnn_endpoint
+                self.scoring_uri = env_gnn_scoring_uri if env_gnn_scoring_uri else None
+                self.deployment_name = f"{env_gnn_endpoint}-deployment"
+                
+                logger.info(f"✅ Connected to GNN endpoint from environment: {self.endpoint_name}")
+                if self.scoring_uri:
+                    logger.info(f"   Scoring URI: {self.scoring_uri}")
                 logger.info(f"   Deployment: {self.deployment_name}")
-            else:
-                logger.warning(
-                    "⚠️ No ready GNN endpoints found - GNN functionality will be limited"
-                )
+                return
+            
+            # If no environment config, try the API call as fallback
+            try:
+                endpoints = self.ml_client.online_endpoints.list()
+                gnn_endpoints = []
+
+                for endpoint in endpoints:
+                    if (
+                        "gnn" in endpoint.name.lower()
+                        and endpoint.provisioning_state == "Succeeded"
+                    ):
+                        gnn_endpoints.append(endpoint)
+
+                if gnn_endpoints:
+                    # Use the first available GNN endpoint
+                    selected_endpoint = gnn_endpoints[0]
+                    self.endpoint_name = selected_endpoint.name
+                    self.scoring_uri = selected_endpoint.scoring_uri
+
+                    # Get the first deployment for this endpoint
+                    deployments = self.ml_client.online_deployments.list(
+                        endpoint_name=self.endpoint_name
+                    )
+                    deployments_list = list(deployments)
+                    if deployments_list:
+                        self.deployment_name = deployments_list[0].name
+
+                    logger.info(f"✅ Connected to GNN endpoint via API: {self.endpoint_name}")
+                    logger.info(f"   Scoring URI: {self.scoring_uri}")
+                    logger.info(f"   Deployment: {self.deployment_name}")
+                else:
+                    logger.warning(
+                        "⚠️ No ready GNN endpoints found via API - checking environment config"
+                    )
+            except Exception as api_error:
+                logger.warning(f"API endpoint discovery failed, using environment config: {api_error}")
+                # This is expected - use environment configuration as primary source
 
         except Exception as e:
             logger.error(f"Failed to discover GNN endpoints: {e}")
@@ -158,39 +187,68 @@ class GNNInferenceClient:
             )
 
     def _discover_gnn_endpoints_sync(self):
-        """Synchronous version of endpoint discovery."""
+        """Synchronous version of endpoint discovery using environment configuration."""
         try:
-            endpoints = self.ml_client.online_endpoints.list()
-            gnn_endpoints = []
-
-            for endpoint in endpoints:
-                if (
-                    "gnn" in endpoint.name.lower()
-                    and endpoint.provisioning_state == "Succeeded"
-                ):
-                    gnn_endpoints.append(endpoint)
-
-            if gnn_endpoints:
-                # Use the first available GNN endpoint
-                selected_endpoint = gnn_endpoints[0]
-                self.endpoint_name = selected_endpoint.name
-                self.scoring_uri = selected_endpoint.scoring_uri
-
-                # Get the first deployment for this endpoint
-                deployments = self.ml_client.online_deployments.list(
-                    endpoint_name=self.endpoint_name
-                )
-                deployments_list = list(deployments)
-                if deployments_list:
-                    self.deployment_name = deployments_list[0].name
-
-                logger.info(f"✅ Connected to GNN endpoint: {self.endpoint_name}")
-                logger.info(f"   Scoring URI: {self.scoring_uri}")
+            # FIXED: Use environment configuration instead of failing API call
+            from config.settings import azure_settings
+            
+            # Check if GNN endpoint is configured in environment
+            if hasattr(azure_settings, 'gnn_endpoint_name') and azure_settings.gnn_endpoint_name:
+                self.endpoint_name = azure_settings.gnn_endpoint_name
+                logger.info(f"✅ Using configured GNN endpoint: {self.endpoint_name}")
+                
+            # Try to get GNN_ENDPOINT_NAME from environment directly
+            import os
+            env_gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
+            env_gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
+            
+            if env_gnn_endpoint:
+                self.endpoint_name = env_gnn_endpoint
+                self.scoring_uri = env_gnn_scoring_uri if env_gnn_scoring_uri else None
+                self.deployment_name = f"{env_gnn_endpoint}-deployment"
+                
+                logger.info(f"✅ Connected to GNN endpoint from environment: {self.endpoint_name}")
+                if self.scoring_uri:
+                    logger.info(f"   Scoring URI: {self.scoring_uri}")
                 logger.info(f"   Deployment: {self.deployment_name}")
-            else:
-                logger.warning(
-                    "⚠️ No ready GNN endpoints found - GNN functionality will be limited"
-                )
+                return
+            
+            # If no environment config, try the API call as fallback
+            try:
+                endpoints = self.ml_client.online_endpoints.list()
+                gnn_endpoints = []
+
+                for endpoint in endpoints:
+                    if (
+                        "gnn" in endpoint.name.lower()
+                        and endpoint.provisioning_state == "Succeeded"
+                    ):
+                        gnn_endpoints.append(endpoint)
+
+                if gnn_endpoints:
+                    # Use the first available GNN endpoint
+                    selected_endpoint = gnn_endpoints[0]
+                    self.endpoint_name = selected_endpoint.name
+                    self.scoring_uri = selected_endpoint.scoring_uri
+
+                    # Get the first deployment for this endpoint
+                    deployments = self.ml_client.online_deployments.list(
+                        endpoint_name=self.endpoint_name
+                    )
+                    deployments_list = list(deployments)
+                    if deployments_list:
+                        self.deployment_name = deployments_list[0].name
+
+                    logger.info(f"✅ Connected to GNN endpoint via API: {self.endpoint_name}")
+                    logger.info(f"   Scoring URI: {self.scoring_uri}")
+                    logger.info(f"   Deployment: {self.deployment_name}")
+                else:
+                    logger.warning(
+                        "⚠️ No ready GNN endpoints found via API - checking environment config"
+                    )
+            except Exception as api_error:
+                logger.warning(f"Sync API endpoint discovery failed, using environment config: {api_error}")
+                # This is expected - use environment configuration as primary source
 
         except Exception as e:
             logger.error(f"Failed to discover GNN endpoints: {e}")

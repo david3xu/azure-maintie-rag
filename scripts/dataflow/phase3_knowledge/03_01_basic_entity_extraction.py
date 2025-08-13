@@ -22,9 +22,9 @@ async def basic_entity_extraction():
     print("🔬 STEP 1: BASIC ENTITY EXTRACTION")
     print("=" * 50)
 
-    # Load data files
-    data_dir = Path("/workspace/azure-maintie-rag/data/raw")
-    data_files = list(data_dir.glob("**/*.md"))
+    # Load data files - DISCOVER files dynamically (no hardcoded paths)
+    data_root = Path("/workspace/azure-maintie-rag/data/raw")
+    data_files = list(data_root.glob("**/*.md"))  # Find all .md files recursively
 
     print(f"📂 Found {len(data_files)} files to process")
 
