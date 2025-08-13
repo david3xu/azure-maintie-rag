@@ -42,36 +42,20 @@ def get_azure_openai_model(model_deployment: Optional[str] = None) -> OpenAIMode
             "AZURE_OPENAI_ENDPOINT not set. Run 'azd up' to deploy Azure services."
         )
 
-    # Use appropriate credential based on environment setting
-    use_managed_identity = os.getenv("USE_MANAGED_IDENTITY", "true").lower() == "true"
+    # Use credential from Universal Dependencies for consistency with all other services
+    from azure.identity import get_bearer_token_provider
+    from agents.core.universal_deps import get_azure_credential
 
-    if not use_managed_identity:
-        # For testing, use CLI credentials with proper token provider
-        from azure.identity import AzureCliCredential, get_bearer_token_provider
+    # Get the same credential that Universal Dependencies uses
+    credential = get_azure_credential()
+    token_provider = get_bearer_token_provider(
+        credential, "https://cognitiveservices.azure.com/.default"
+    )
 
-        credential = AzureCliCredential()
-        token_provider = get_bearer_token_provider(
-            credential, "https://cognitiveservices.azure.com/.default"
-        )
-
-        azure_client = AsyncAzureOpenAI(
-            azure_endpoint=azure_endpoint,
-            azure_ad_token_provider=token_provider,
-            api_version=api_version,
-        )
-    else:
-        # For production, use managed identity with proper token provider
-        from azure.identity import get_bearer_token_provider
-
-        credential = DefaultAzureCredential()
-        token_provider = get_bearer_token_provider(
-            credential, "https://cognitiveservices.azure.com/.default"
-        )
-
-        azure_client = AsyncAzureOpenAI(
-            azure_endpoint=azure_endpoint,
-            azure_ad_token_provider=token_provider,
-            api_version=api_version,
+    azure_client = AsyncAzureOpenAI(
+        azure_endpoint=azure_endpoint,
+        azure_ad_token_provider=token_provider,
+        api_version=api_version,
         )
 
     # Use OpenAIProvider with custom AsyncAzureOpenAI client
