@@ -10,14 +10,10 @@ services:
     project: .
     language: py
     host: containerapp
-    docker:
-      path: ./Dockerfile
   frontend:
     project: ./frontend
     language: js  
     host: containerapp
-    docker:
-      path: ./frontend/Dockerfile
 
 # Infrastructure configuration
 infra:
