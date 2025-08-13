@@ -111,6 +111,8 @@ class UniversalDeps:
             try:
                 if not self.openai_client:
                     self.openai_client = UnifiedAzureOpenAIClient()
+                    # Pass the managed identity credential to the client
+                    self.openai_client.credential = self.credential
                     self.openai_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["openai"] = True
             except Exception as e:

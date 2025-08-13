@@ -248,11 +248,11 @@ class SimpleDynamicConfigManager:
         if discovered_domains:
             domain_name = None
 
-            # Match the requested data_directory to the correct subdirectory domain
-            for domain in discovered_domains:
-                domain_path = raw_data_path / domain
-                if str(domain_path) in str(data_directory) or data_path.name == domain:
-                    domain_name = domain
+            # Match the requested data_directory to the correct subdirectory path
+            for content_path in discovered_domains:
+                content_dir_path = raw_data_path / content_path
+                if str(content_dir_path) in str(data_directory) or data_path.name == content_path:
+                    domain_name = content_path
                     break
 
             # If no specific match found, handle root analysis or use first domain

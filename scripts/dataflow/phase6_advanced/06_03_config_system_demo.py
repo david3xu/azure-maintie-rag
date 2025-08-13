@@ -87,28 +87,38 @@ from config.azure_settings import azure_settings
 
 
 # Simple configuration functions for demo
-def get_extraction_config(domain_type, vocabulary_complexity=0.5):
-    """Get extraction configuration for domain type"""
+def get_extraction_config(content_characteristics, vocabulary_complexity=0.5):
+    """Get extraction configuration based on discovered content characteristics"""
+    # Adapt configuration based on measured properties instead of domain assumptions
+    base_threshold = 0.6 + (vocabulary_complexity * 0.2)  # Higher complexity = higher threshold
+    base_chunk_size = int(2000 - (vocabulary_complexity * 500))  # Higher complexity = smaller chunks
+    
     base_config = type(
         "Config",
         (),
         {
-            "entity_confidence_threshold": 0.6 if domain_type == "general" else 0.8,
-            "chunk_size": 2000 if domain_type == "general" else 1500,
+            "entity_confidence_threshold": base_threshold,
+            "chunk_size": base_chunk_size,
         },
     )()
     return base_config
 
 
-def get_search_config(domain_type, query=""):
-    """Get search configuration for domain type"""
+def get_search_config(query_characteristics, query=""):
+    """Get search configuration based on discovered query characteristics"""
+    # Adapt search based on query complexity instead of domain assumptions
+    query_complexity = len(query.split()) / 10.0  # Simple complexity measure
+    base_top_k = max(5, min(15, int(5 + query_complexity * 5)))  # 5-15 based on complexity
+    base_hop_count = max(2, min(4, int(2 + query_complexity)))  # 2-4 based on complexity
+    base_threshold = 0.7 + (query_complexity * 0.1)  # Higher complexity = higher threshold
+    
     base_config = type(
         "Config",
         (),
         {
-            "vector_top_k": 5 if domain_type == "general" else 10,
-            "graph_hop_count": 2 if domain_type == "general" else 3,
-            "vector_similarity_threshold": 0.7 if domain_type == "general" else 0.85,
+            "vector_top_k": base_top_k,
+            "graph_hop_count": base_hop_count,
+            "vector_similarity_threshold": min(0.9, base_threshold),
         },
     )()
     return base_config
@@ -297,14 +307,14 @@ async def configuration_system_demo(
 
         # Get static domain configurations
         print("   📊 Loading static domain configurations...")
-        general_extraction = get_extraction_config("general")
+        general_extraction = get_extraction_config("simple_characteristics", vocabulary_complexity=0.3)
         complex_extraction = get_extraction_config(
-            "complex_content", vocabulary_complexity=0.8
+            "complex_characteristics", vocabulary_complexity=0.8
         )
 
-        general_search = get_search_config("general")
+        general_search = get_search_config("simple_characteristics")
         complex_search = get_search_config(
-            "research_content",
+            "complex_characteristics",
             query="machine learning neural networks artificial intelligence",
         )
 
@@ -504,7 +514,7 @@ async def configuration_system_demo(
         cleared_cache_size = len(config_manager._universal_configs)
 
         # Re-load configurations
-        reloaded_extraction = get_extraction_config("test_reload")
+        reloaded_extraction = get_extraction_config("test_characteristics")
         final_cache_size = len(config_manager._universal_configs)
 
         # Test validation
