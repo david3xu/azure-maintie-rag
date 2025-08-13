@@ -32,7 +32,7 @@ app.include_router(search_router)
 async def root():
     """Simple root endpoint"""
     return {
-        "message": "Azure Universal RAG API - FUNC! Real Azure Services Only",
+        "message": "Azure Universal RAG API - Real Azure Services Only",
         "version": "1.0.0",
         "endpoints": [
             "/api/v1/search",

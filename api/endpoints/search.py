@@ -315,7 +315,7 @@ async def health_check() -> HealthResponse:
 @router.get("/stream/workflow/{query_id}")
 async def stream_workflow_progress(query_id: str):
     """
-    FUNC! REAL Azure streaming endpoint - NO FAKE CODE
+    REAL Azure streaming endpoint - NO FAKE CODE
 
     Streams real workflow progress from Azure Universal RAG agents:
     - Domain Intelligence Agent analysis from REAL Azure OpenAI
