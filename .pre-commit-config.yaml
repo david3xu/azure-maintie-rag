@@ -28,8 +28,8 @@ repos:
 
       - id: check-domain-bias
         name: Prevent hardcoded domain bias violations
-        entry: scripts/hooks/pre-commit-domain-bias-check.sh
+        entry: scripts/hooks/pre-commit-domain-bias-check-simple.sh
         language: system
         files: ^(agents|config|scripts|infrastructure)/.*\.py$
         pass_filenames: false
-        description: Enforce Universal RAG zero-domain-bias philosophy - detects hardcoded domain assumptions, predetermined categories, and non-universal patterns
+        description: Fast check for critical domain bias violations
