@@ -74,34 +74,30 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
         # Get configuration from universal config
         model_config = UniversalConfig.get_openai_config()
 
-        if self.use_managed_identity:
+        # Use credential from Universal Dependencies if available, otherwise fall back to defaults
+        from azure.identity import get_bearer_token_provider
+        
+        if hasattr(self, 'credential') and self.credential:
+            # Use the credential passed from Universal Dependencies (managed identity aware)
+            credential = self.credential
+        elif self.use_managed_identity:
             # Use managed identity for azd deployments
-            from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-
+            from azure.identity import DefaultAzureCredential
             credential = DefaultAzureCredential()
-            token_provider = get_bearer_token_provider(
-                credential, "https://cognitiveservices.azure.com/.default"
-            )
-
-            self._client = AzureOpenAI(
-                azure_ad_token_provider=token_provider,
-                api_version=model_config.api_version,
-                azure_endpoint=self.endpoint,
-            )
         else:
             # Use Azure CLI credential for local development
-            from azure.identity import AzureCliCredential, get_bearer_token_provider
-
+            from azure.identity import AzureCliCredential
             credential = AzureCliCredential()
-            token_provider = get_bearer_token_provider(
-                credential, "https://cognitiveservices.azure.com/.default"
-            )
 
-            self._client = AzureOpenAI(
-                azure_ad_token_provider=token_provider,
-                api_version=model_config.api_version,
-                azure_endpoint=self.endpoint,
-            )
+        token_provider = get_bearer_token_provider(
+            credential, "https://cognitiveservices.azure.com/.default"
+        )
+
+        self._client = AzureOpenAI(
+            azure_ad_token_provider=token_provider,
+            api_version=model_config.api_version,
+            azure_endpoint=self.endpoint,
+        )
 
     async def initialize(self):
         """Initialize the Azure OpenAI client for async usage"""
