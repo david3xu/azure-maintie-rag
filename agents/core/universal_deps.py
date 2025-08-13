@@ -135,6 +135,8 @@ class UniversalDeps:
             try:
                 if not self.search_client:
                     self.search_client = UnifiedSearchClient()
+                    # Pass the managed identity credential to the client
+                    self.search_client.credential = self.credential
                     self.search_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["search"] = True
             except Exception as e:
@@ -145,6 +147,8 @@ class UniversalDeps:
             try:
                 if not self.storage_client:
                     self.storage_client = SimpleStorageClient()
+                    # Pass the managed identity credential to the client
+                    self.storage_client.credential = self.credential
                     self.storage_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["storage"] = True
             except Exception as e:
