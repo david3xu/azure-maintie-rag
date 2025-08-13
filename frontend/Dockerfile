@@ -38,8 +38,8 @@ RUN echo 'server { \
   } \
 }' > /etc/nginx/conf.d/default.conf
 
-# Expose port
-EXPOSE 80
+# Expose port 3000 (matches Container App configuration)
+EXPOSE 3000
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start nginx on port 3000
+CMD ["sh", "-c", "sed -i 's/listen 80;/listen 3000;/g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
