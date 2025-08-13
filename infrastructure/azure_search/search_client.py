@@ -69,16 +69,13 @@ class SimpleSearchClient(BaseAzureClient):
     def _initialize_client(self):
         """Simple client initialization"""
         try:
-            # Use credential from Universal Dependencies if available, otherwise fall back to defaults
-            if hasattr(self, 'credential') and self.credential:
-                # Use the credential passed from Universal Dependencies (managed identity aware)
-                credential = self.credential
-            elif self.use_managed_identity:
-                from azure.identity import DefaultAzureCredential
-                credential = DefaultAzureCredential()
-            else:
-                from azure.identity import DefaultAzureCredential
-                credential = DefaultAzureCredential()
+            # QUICK FAIL: Must use credential from Universal Dependencies - NO FALLBACK
+            if not hasattr(self, 'credential') or not self.credential:
+                raise RuntimeError(
+                    "Search client MUST receive credential from Universal Dependencies. "
+                    "No fallback authentication allowed. Ensure UniversalDeps passes credential."
+                )
+            credential = self.credential
 
             # Create simple search clients
             self._search_client = SearchClient(
