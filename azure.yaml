@@ -55,6 +55,16 @@ hooks:
       echo "Environment: ${AZURE_ENV_NAME}"
       echo "Location: ${AZURE_LOCATION}"
       
+      # Set container image names from packaged services
+      if [ ! -z "${SERVICE_BACKEND_IMAGE_NAME:-}" ]; then
+        echo "Setting backend image: ${SERVICE_BACKEND_IMAGE_NAME}"
+        azd env set backendImageName "${SERVICE_BACKEND_IMAGE_NAME}"
+      fi
+      if [ ! -z "${SERVICE_FRONTEND_IMAGE_NAME:-}" ]; then
+        echo "Setting frontend image: ${SERVICE_FRONTEND_IMAGE_NAME}"
+        azd env set frontendImageName "${SERVICE_FRONTEND_IMAGE_NAME}"
+      fi
+      
   postprovision:
     shell: sh
     run: |
