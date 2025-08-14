@@ -473,35 +473,68 @@ async def search_knowledge_graph(
 
     results = {"entities": [], "relationships": [], "total_found": 0}
 
-    # First try fuzzy matching approach like in Universal Search Agent
+    # OPTIMIZED: Direct targeted Gremlin queries instead of get_all_entities() scan
     try:
-        # Get all entities in the azure_ai domain (our actual domain)
-        all_entities = await cosmos_client.get_all_entities("azure_ai")
+        # PERFORMANCE OPTIMIZATION: Use targeted text-based Gremlin queries for each term
+        # This replaces the expensive get_all_entities() + fuzzy matching approach
         matching_entities = []
         
-        for entity in all_entities:
-            entity_text = entity.get("text", "").lower()
-            for term in query_terms:
-                if term.lower() in entity_text:
-                    matching_entities.append(entity)
-                    break
+        # Execute parallel targeted queries for each search term
+        search_tasks = []
+        for term in query_terms[:3]:  # Limit to top 3 terms for performance
+            # Direct Gremlin query with text containment filter
+            targeted_query = f"""g.V().has('domain', 'azure_ai')
+                .where(values('text').is(containing('{term.lower()}')))
+                .limit({min(max_results, 10)})
+                .valueMap().with(WithOptions.tokens)"""
+            search_tasks.append(cosmos_client.execute_query(targeted_query))
         
-        # Add matching entities to results
+        # Execute all search queries in parallel
+        if search_tasks:
+            parallel_results = await asyncio.gather(*search_tasks, return_exceptions=True)
+            
+            for i, result in enumerate(parallel_results):
+                if isinstance(result, Exception):
+                    # Skip failed queries but continue with others
+                    continue
+                    
+                # Process successful query results
+                for entity_data in (result or []):
+                    if isinstance(entity_data, dict):
+                        # Extract values from Gremlin token format
+                        text_value = entity_data.get("text", [""])
+                        text_value = text_value[0] if isinstance(text_value, list) else str(text_value)
+                        
+                        entity_type_value = entity_data.get("entity_type", ["unknown"])
+                        entity_type_value = entity_type_value[0] if isinstance(entity_type_value, list) else str(entity_type_value)
+                        
+                        if text_value:  # Only add entities with actual text
+                            matching_entities.append({
+                                "text": text_value,
+                                "entity_type": entity_type_value,
+                                "domain": "azure_ai",
+                                "search_term": query_terms[i] if i < len(query_terms) else "unknown"
+                            })
+        
+        # Add unique matching entities to results (deduplicate by text)
+        seen_texts = set()
         for entity in matching_entities[:max_results]:
-            results["entities"].append({
-                "text": entity.get("text", ""),
-                "entity_type": entity.get("entity_type", "unknown"),
-                "confidence": 0.8,  # Default confidence for matched entities
-                "context": "",
-                "search_term": "fuzzy_match",
-            })
+            if entity["text"] not in seen_texts:
+                seen_texts.add(entity["text"])
+                results["entities"].append({
+                    "text": entity["text"],
+                    "entity_type": entity["entity_type"],
+                    "confidence": 0.8,
+                    "context": "",
+                    "search_term": entity["search_term"],
+                })
         
-        # Get relationships for matching entities
-        for entity in matching_entities[:3]:
+        # OPTIMIZED: Get relationships for top matching entities (max 2 for performance)
+        for entity in matching_entities[:2]:
             related_entities = await cosmos_client.find_related_entities(
-                entity_text=entity.get("text", ""),
+                entity_text=entity["text"],
                 domain="azure_ai",
-                limit=5
+                limit=3  # Reduced from 5 to 3 for performance
             )
             for rel in related_entities:
                 results["relationships"].append({
