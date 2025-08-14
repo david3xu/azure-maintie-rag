@@ -101,18 +101,18 @@ open http://localhost:5174
 ```typescript
 // Real hook from src/hooks/useUniversalRAG.ts
 import { useState } from 'react';
-import { postUniversalQuery } from '../services/api';
+import { postRAGQuery } from '../services/api';
 
 export const useUniversalRAG = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const runUniversalRAG = async (request: { query: string; domain: string }) => {
+  const runUniversalRAG = async (query: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await postUniversalQuery(request.query, request.domain);
+      const response = await postRAGQuery(query); // Complete RAG workflow - zero bias
       setResult(response);
       return response;
     } catch (err: any) {
@@ -142,10 +142,10 @@ export const useUniversalRAG = () => {
 - QueryForm.tsx        // User input form with validation
 ```
 
-**Domain Selection:**
+**Content Characteristic Analysis:**
 ```typescript  
 // src/components/domain/
-- DomainSelector.tsx   // Domain selection interface
+- DomainSelector.tsx   // Content characteristic analysis interface (zero hardcoded bias)
 ```
 
 **Workflow Visualization:**
@@ -194,15 +194,22 @@ export const useUniversalRAG = () => {
 Based on the real `useUniversalRAG` hook implementation:
 
 ```typescript
-// Query submission to Universal Search Agent
-const response = await postUniversalQuery(query, domain);
+// Query submission to Complete RAG Agent (Search + Answer Generation)
+const response = await postRAGQuery(query);
 
-// Response structure matches the backend API
-interface UniversalRAGResponse {
-  results: SearchResult[];
-  domain_detected?: string;
-  processing_time?: number;
-  // Additional response fields from Universal Search Agent
+// Response structure matches the current backend RAG API
+interface RAGResponse {
+  success: boolean;
+  query: string;
+  generated_answer: string;          // Real Azure OpenAI generated answer
+  confidence_score: number;
+  sources_used: string[];
+  search_results?: SearchResult[];   // Tri-modal search results  
+  total_results_found: number;
+  search_confidence: number;
+  strategy_used: string;             // "adaptive_mandatory_tri_modal"
+  execution_time: number;
+  timestamp: string;
 }
 ```
 
@@ -213,10 +220,12 @@ Frontend integrates with real FastAPI endpoints:
 // Base URL configuration (src/utils/api-config.ts)
 const API_BASE_URL = 'http://localhost:8000';
 
-// Endpoint integration
-POST /api/v1/search          // Universal search endpoint
+// Current API endpoints (after recent fixes)
+POST /api/v1/rag             // Complete RAG workflow (Search → Azure OpenAI → Generated Answer)
 GET  /health                 // Health check endpoint
 GET  /                       // API root information
+POST /api/v1/extract         // Knowledge extraction endpoint
+GET  /api/v1/stream/{id}     // Server-sent events streaming
 ```
 
 ### **Real-Time Features**

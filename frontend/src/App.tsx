@@ -99,9 +99,11 @@ function App() {
     setWorkflowError(null);
 
     if (showWorkflow) {
+      // Start workflow with streaming - the useWorkflowStream hook will handle the RAG query
       setIsStreaming(true);
       setQueryId(chatId); // Use chatId as queryId for streaming
     } else {
+      // Normal RAG query without streaming
       try {
         const queryResponse = await runUniversalRAG({ query: query.trim() });
         setChatHistory(prev =>

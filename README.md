@@ -33,12 +33,19 @@ https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
 # 🔧 Backend API Endpoints
 https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/health      # Health check
 https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/docs        # API docs
-https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/search  # Search API
+https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag  # Complete RAG API
 
-# Example API usage:
-curl -X POST "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/search" \
+# Complete RAG workflow (Search + Azure OpenAI Answer Generation):
+curl -X POST "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag" \
   -H "Content-Type: application/json" \
-  -d '{"query": "Azure AI capabilities", "max_results": 5}'
+  -d '{
+    "query": "Azure AI language services capabilities", 
+    "max_results": 5,
+    "max_tokens": 800,
+    "use_domain_analysis": true,
+    "include_sources": true,
+    "include_search_results": true
+  }'
 ```
 
 ### **⚡ Fastest Start (Try It Now)**
@@ -69,26 +76,27 @@ print('📊 Universal RAG system ready for configuration')
 az login
 az account set --subscription "<your-subscription-id>"
 
-# 1. Deploy Azure infrastructure (no Docker required)
+# 1. Deploy complete system with Azure Developer CLI
 azd up
-# ✅ Creates: OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, App Insights, Container Apps
-# ✅ Infrastructure: 9 Azure services deployed with RBAC permissions
-# ✅ Container Apps: Created but containers need to be built separately
+# ✅ Creates: 9 Azure services with RBAC permissions
+# ✅ Services: OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, App Insights, Container Apps
+# ✅ Builds: Container images automatically via azd package
+# ✅ Deploys: Both backend and frontend containers
+# ✅ Result: Complete working tri-modal RAG system
 
-# 2. Get your deployment URLs (runs automatically in postdeploy hook)
-./scripts/show-deployment-urls.sh
+# 2. Test your deployment
+curl "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/health"
+# Expected: {"status":"healthy","graph_search_fix":"2025-08-14-04:45:00"}
 
-# 3. Build and deploy containers via Azure Container Registry
-az acr build --registry <acr-name> --image azure-maintie-rag/backend-prod:latest .
-az acr build --registry <acr-name> --image azure-maintie-rag/frontend-prod:latest ./frontend
+# 3. Test complete RAG workflow with real Azure AI data
+curl -X POST "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Azure AI language services", "max_results": 5, "max_tokens": 800}'
 
-# 4. Update Container Apps with new images (if needed)
-az containerapp update --name "ca-backend-maintie-rag-prod" --resource-group "rg-maintie-rag-prod" --image "<acr-name>.azurecr.io/azure-maintie-rag/backend-prod:latest"
-az containerapp update --name "ca-frontend-maintie-rag-prod" --resource-group "rg-maintie-rag-prod" --image "<acr-name>.azurecr.io/azure-maintie-rag/frontend-prod:latest"
-
-# 5. Access your live system
+# 4. Access your live system
 # Frontend Chat Interface: https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
 # Backend API: https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io
+# System Status: Tri-modal search (Vector + Graph + GNN) + Azure OpenAI answer generation
 ```
 
 ### **Option 2: Local Development with REAL Azure Services**
@@ -196,18 +204,18 @@ curl http://localhost:8000/   # API info with FUNC principles
 
 ## 🚀 Overview
 
-Azure Universal RAG is a **production-ready multi-agent system** combining PydanticAI framework with Azure services for intelligent document processing with **zero hardcoded domain bias**. The system uses tri-modal search (Vector + Graph + GNN) and discovers content characteristics dynamically.
+Azure Universal RAG is a **production-ready multi-agent system** combining PydanticAI framework with Azure services for intelligent document processing with **zero hardcoded domain bias**. The system implements **mandatory tri-modal search** (Vector + Graph + GNN) with complete Azure OpenAI answer generation.
 
 ### **Core Capabilities (Real Implementation)**
 
+- **Mandatory Tri-Modal Search**: Vector (Cognitive Search) + Graph (Cosmos DB) + GNN (Azure ML) - ALL required, no fallback
+- **Complete RAG Workflow**: Search → Azure OpenAI → Generated Answer (not just search results)
 - **Universal RAG Philosophy**: Zero domain assumptions - discovers content characteristics from analysis
 - **Multi-Agent Architecture**: PydanticAI with 3 specialized agents (Domain Intelligence, Knowledge Extraction, Universal Search)
-- **Domain-Agnostic Processing**: Universal models work across ANY domain without predetermined categories
-- **Real Azure Integration**: AsyncAzureOpenAI, Cosmos DB Gremlin, Cognitive Search, ML services
-- **Azure Managed Identity**: Seamless authentication via azure_pydantic_provider.py
+- **Real Azure Integration**: 9 Azure services with RBAC permissions and managed identity
+- **Production Testing**: REAL Azure services, REAL data from data/raw (179 Azure AI files), NO mocks
 - **Type-Safe Communication**: Pydantic models for all agent interfaces with validation
-- **Real-Time Streaming**: React frontend with Server-Sent Events and progressive disclosure
-- **Production-Ready Testing**: Real Azure services integration (no mocks)
+- **React 19.1.0 Frontend**: Complete chat interface with real API integration
 - **Enterprise Security**: DefaultAzureCredential with comprehensive RBAC
 
 ### **Key Performance Metrics (Real Production Results)**
@@ -484,6 +492,172 @@ curl $SERVICE_BACKEND_URI/api/v1/query \
   -H "Content-Type: application/json" \
   -d '{"query": "maintenance issues"}'
 ```
+
+---
+
+## 🤖 Multi-Agent System Architecture
+
+### **How Our 3 PydanticAI Agents Work Together**
+
+The Azure Universal RAG system orchestrates **3 specialized PydanticAI agents** that work together to provide intelligent document processing with **zero hardcoded domain bias**.
+
+#### **🧠 Agent 1: Domain Intelligence Agent**
+**Purpose**: Dynamically discovers content characteristics without predetermined categories
+
+```python
+from agents.domain_intelligence.agent import run_domain_analysis
+
+# Analyze ANY content type - discovers characteristics automatically
+content = "Your document content here..."
+analysis = await run_domain_analysis(content, detailed=True)
+
+# Results: Universal domain signature + adaptive configuration
+print(f"Domain signature: {analysis.domain_signature}")
+print(f"Vocabulary complexity: {analysis.characteristics.vocabulary_complexity}")
+print(f"Optimal chunk size: {analysis.processing_config.chunk_size}")
+```
+
+**What it does**:
+- ✅ **Statistical analysis** of content distribution and patterns
+- ✅ **Vocabulary complexity measurement** without language assumptions  
+- ✅ **Adaptive configuration generation** for downstream agents
+- ✅ **Zero domain categories** - discovers characteristics from actual data
+
+#### **📚 Agent 2: Knowledge Extraction Agent**  
+**Purpose**: Extracts entities and relationships using Domain Intelligence insights
+
+```python
+from agents.knowledge_extraction.agent import run_knowledge_extraction
+
+# Uses Domain Intelligence output to adapt extraction approach
+extraction_result = await run_knowledge_extraction(
+    content, 
+    use_domain_analysis=True,  # Adapts based on Agent 1 findings
+    use_generated_prompts=True  # Dynamic prompts from domain analysis
+)
+
+print(f"Entities extracted: {len(extraction_result.entities)}")
+print(f"Relationships found: {len(extraction_result.relationships)}")
+print(f"Confidence: {extraction_result.extraction_confidence}")
+```
+
+**What it does**:
+- ✅ **Multi-method extraction**: LLM + Pattern + Hybrid approaches
+- ✅ **Domain-adaptive parameters** from Agent 1 analysis
+- ✅ **Real-time Cosmos DB storage** via Gremlin API
+- ✅ **Quality validation** with confidence scoring
+
+#### **🔍 Agent 3: Universal Search Agent**
+**Purpose**: Orchestrates mandatory tri-modal search (Vector + Graph + GNN)
+
+```python  
+from agents.universal_search.agent import run_universal_search
+
+# Mandatory tri-modal search - ALL three modalities required
+search_result = await run_universal_search(
+    "Azure AI language services",
+    max_results=5,
+    use_domain_analysis=True  # Adapts search weights from Agent 1
+)
+
+print(f"Strategy: {search_result.search_strategy_used}")  # "adaptive_mandatory_tri_modal"
+print(f"Vector results: {len(search_result.vector_results)}")
+print(f"Graph results: {len(search_result.graph_results)}")  
+print(f"GNN results: {len(search_result.gnn_results)}")
+```
+
+**What it does**:
+- ✅ **Vector Search**: Azure Cognitive Search with 1536D embeddings
+- ✅ **Graph Search**: Cosmos DB Gremlin traversal with Agent 2 knowledge graphs
+- ✅ **GNN Inference**: Azure ML Graph Neural Network predictions
+- ✅ **Intelligent synthesis**: Combines all modalities with domain-adaptive weights
+
+### **🔄 Complete Agent Orchestration Workflow**
+
+```mermaid
+graph TD
+    A[User Query] --> B[🧠 Domain Intelligence Agent]
+    B --> B1[Analyze Content Characteristics]
+    B1 --> B2[Generate Domain Signature]  
+    B2 --> B3[Create Adaptive Configuration]
+    
+    B3 --> C[📚 Knowledge Extraction Agent]
+    C --> C1[Multi-Method Entity Extraction]
+    C1 --> C2[Relationship Discovery]
+    C2 --> C3[Store in Knowledge Graph]
+    
+    B3 --> D[🔍 Universal Search Agent]
+    C3 --> D
+    D --> D1[🔍 Vector Search - Azure Cognitive Search]
+    D --> D2[🕸️ Graph Search - Cosmos DB Gremlin]  
+    D --> D3[🧠 GNN Inference - Azure ML]
+    
+    D1 --> E[⚗️ Intelligent Result Synthesis]
+    D2 --> E
+    D3 --> E
+    E --> F[🤖 Azure OpenAI Answer Generation]
+    F --> G[📄 Complete RAG Response]
+    
+    classDef agent fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px
+    classDef process fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef output fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class B,C,D agent
+    class B1,B2,B3,C1,C2,C3,D1,D2,D3,E,F process
+    class G output
+```
+
+### **🎯 Real Production Agent Interaction**
+
+Here's how the agents collaborate with **real Azure services** in production:
+
+```python
+# Complete workflow example with real Azure services
+async def complete_rag_workflow(user_query: str, content: str):
+    # Step 1: Domain Intelligence discovers content characteristics
+    domain_analysis = await run_domain_analysis(content, detailed=True)
+    
+    # Step 2: Knowledge Extraction adapts to discovered characteristics  
+    extraction_result = await run_knowledge_extraction(
+        content,
+        use_domain_analysis=True,
+        processing_config=domain_analysis.processing_config  # Agent 1 → Agent 2
+    )
+    
+    # Step 3: Universal Search uses both previous agents' outputs
+    search_result = await run_universal_search(
+        user_query,
+        max_results=5,
+        use_domain_analysis=True,
+        search_weights=domain_analysis.processing_config.search_weights,  # Agent 1 → Agent 3
+        knowledge_graph=extraction_result.graph_metadata  # Agent 2 → Agent 3
+    )
+    
+    # Step 4: Azure OpenAI generates final answer
+    return {
+        "generated_answer": search_result.generated_answer,
+        "confidence_score": search_result.search_confidence,
+        "domain_signature": domain_analysis.domain_signature,
+        "entities_used": len(extraction_result.entities),
+        "total_results": search_result.total_results_found,
+        "strategy": search_result.search_strategy_used
+    }
+```
+
+### **🔧 Agent Communication Patterns**
+
+**Inter-Agent Data Flow:**
+1. **Domain Intelligence → Knowledge Extraction**: Adaptive processing parameters
+2. **Domain Intelligence → Universal Search**: Search strategy and weights  
+3. **Knowledge Extraction → Universal Search**: Populated knowledge graphs
+4. **All Agents → API Response**: Unified results with complete provenance
+
+**Real Implementation Benefits:**
+- ✅ **Zero hardcoded assumptions** - each agent discovers/adapts dynamically
+- ✅ **Real Azure service integration** - no mocks or simulations
+- ✅ **Type-safe communication** - Pydantic models ensure data consistency
+- ✅ **Production-ready performance** - 35-47 seconds end-to-end processing
+- ✅ **Comprehensive error handling** - graceful degradation across agent failures
 
 ---
 

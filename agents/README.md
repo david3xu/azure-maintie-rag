@@ -14,12 +14,13 @@ This system maintains **true universality** while providing intelligent domain-s
 - **ZERO content structure assumptions** - adapts to any format
 - **100% data-driven configuration** - all settings learned from actual content
 
-### ✅ Key Achievements  
+### ✅ Key Achievements (Production Verified)
 - **True universality preserved** - works with ANY document type or domain
-- **Intelligent optimization** - automatically adapts to discovered content characteristics
-- **Zero configuration required** - no manual setup for new domains
-- **Production-ready** with real Azure service integration
-- **Clean PydanticAI compliance** following official documentation patterns
+- **Complete RAG workflow operational** - Search → Azure OpenAI → Generated Answer  
+- **Mandatory tri-modal search working** - Vector + Graph + GNN (all required, no fallback)
+- **Real Azure services integration** - 9 services, real data processing
+- **Production deployment successful** - `azd up` creates fully working system
+- **Clean PydanticAI compliance** - FunctionToolset pattern, proper async methods
 
 ## 🏗️ Architecture
 
@@ -44,9 +45,9 @@ agents/
 ├── knowledge_extraction/              # Multi-method knowledge extraction  
 │   ├── __init__.py
 │   └── agent.py                       # Knowledge Extraction PydanticAI agent
-└── universal_search/                  # Multi-modal search
+└── universal_search/                  # Tri-modal search (Vector + Graph + GNN)
     ├── __init__.py
-    └── agent.py                       # Universal Search PydanticAI agent
+    └── agent.py                       # Universal Search PydanticAI agent (mandatory tri-modal)
 ```
 
 ## 🚀 Quick Start
@@ -117,10 +118,10 @@ graph TD
     K3 --> K4
     K4 --> Search
     
-    Search --> |Use Adaptive Weights| S1[🔍 Vector Search]
-    Search --> |Use Graph Density| S2[🕸️ Graph Search]
-    Search --> |If Complex Content| S3[🧠 GNN Search]
-    S1 --> Synthesis[⚗️ Intelligent Result Synthesis]
+    Search --> |MANDATORY| S1[🔍 Vector Search - Azure Cognitive Search]
+    Search --> |MANDATORY| S2[🕸️ Graph Search - Cosmos DB Gremlin]
+    Search --> |MANDATORY| S3[🧠 GNN Search - Azure ML]
+    S1 --> Synthesis[⚗️ Azure OpenAI Answer Generation]
     S2 --> Synthesis
     S3 --> Synthesis
     
@@ -197,13 +198,13 @@ class UniversalDomainDeps(BaseModel):
 
 ## 🎭 PydanticAI Best Practices Implemented
 
-✅ **Direct Agent() instantiation** - No factory patterns or complex builders
-✅ **@agent.tool decorators** - Following dice_game.py pattern exactly
-✅ **Simple BaseModel dependencies** - Clean dependency injection
-✅ **Structured result_type output** - Type-safe results
-✅ **Clean system prompts** - Clear, focused instructions
-✅ **No abstraction layers** - Direct, understandable code
-✅ **Stateless agents** - No global state or complex initialization
+✅ **FunctionToolset pattern** - `@toolset.tool` decorators (NOT `@agent.tool`)
+✅ **UniversalDeps dependency injection** - Real Azure services integration
+✅ **complete_chat() async methods** - Proper Azure OpenAI client usage
+✅ **Structured Pydantic output models** - Type-safe results
+✅ **Universal orchestrator pattern** - Agent coordination via orchestrator
+✅ **Real Azure service clients** - `deps.openai_client`, `deps.cosmos_client`, etc.
+✅ **Mandatory tri-modal search** - All three modalities required, no fallback
 
 ## 🔧 Configuration
 

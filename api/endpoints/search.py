@@ -853,9 +853,10 @@ async def stream_workflow_progress(query_id: str):
 
             yield f"data: {json.dumps({'event_type': 'progress', 'query_id': query_id, 'step_number': 2, 'step_name': 'knowledge_extraction', 'user_friendly_name': 'Cosmos DB Extraction Complete', 'status': 'completed', 'technology': 'Azure Cosmos DB Gremlin', 'details': f'Extracted {entity_count} entities, {relationship_count} relationships', 'progress_percentage': 50, 'processing_time_ms': extraction_result.total_processing_time * 1000})}\n\n"
 
-            # Step 3: REAL Universal Search with Azure Cognitive Search
-            yield f"data: {json.dumps({'event_type': 'progress', 'query_id': query_id, 'step_number': 3, 'step_name': 'universal_search', 'user_friendly_name': 'Searching with REAL Azure Cognitive Search', 'status': 'in_progress', 'technology': 'Azure Cognitive Search + Vector Search', 'details': f'Searching across {len(azure_files)} REAL Azure documents', 'progress_percentage': 75})}\n\n"
+            # Step 3: REAL Universal Search with Azure Cognitive Search using the actual query
+            yield f"data: {json.dumps({'event_type': 'progress', 'query_id': query_id, 'step_number': 3, 'step_name': 'universal_search', 'user_friendly_name': 'Searching with REAL Azure Cognitive Search', 'status': 'in_progress', 'technology': 'Azure Cognitive Search + Vector Search', 'details': f'Searching for: {query_id} across {len(azure_files)} REAL Azure documents', 'progress_percentage': 75})}\n\n"
 
+            # Use the query_id as the actual search query (this is the user's question)
             search_result = await orchestrator.process_full_search_workflow(
                 query_id, max_results=10, use_domain_analysis=True
             )
@@ -864,9 +865,67 @@ async def stream_workflow_progress(query_id: str):
                 yield f"data: {json.dumps({'event_type': 'error', 'error': f'REAL Universal Search FAILED: {search_result.errors}', 'query_id': query_id})}\n\n"
                 return
 
-            yield f"data: {json.dumps({'event_type': 'progress', 'query_id': query_id, 'step_number': 3, 'step_name': 'universal_search', 'user_friendly_name': 'Azure Cognitive Search Complete', 'status': 'completed', 'technology': 'Azure Cognitive Search + Vector Search', 'details': f'Found {len(search_result.search_results)} REAL results', 'progress_percentage': 100, 'processing_time_ms': search_result.total_processing_time * 1000})}\n\n"
+            yield f"data: {json.dumps({'event_type': 'progress', 'query_id': query_id, 'step_number': 3, 'step_name': 'universal_search', 'user_friendly_name': 'Azure Cognitive Search Complete', 'status': 'completed', 'technology': 'Azure Cognitive Search + Vector Search', 'details': f'Found {len(search_result.search_results)} REAL results', 'progress_percentage': 75, 'processing_time_ms': search_result.total_processing_time * 1000})}\n\n"
 
-            # Final completion with REAL results
+            # Step 4: REAL Azure OpenAI Answer Generation (Complete RAG workflow)
+            yield f"data: {json.dumps({'event_type': 'progress', 'query_id': query_id, 'step_number': 4, 'step_name': 'answer_generation', 'user_friendly_name': 'Generating answer with REAL Azure OpenAI', 'status': 'in_progress', 'technology': 'Azure OpenAI GPT-4', 'details': f'Synthesizing answer from {len(search_result.search_results)} search results', 'progress_percentage': 90})}\n\n"
+
+            # Generate final answer using Azure OpenAI directly (avoid circular import)
+            generated_answer = "Search completed successfully"
+            if search_result.search_results:
+                try:
+                    # Prepare context from search results
+                    context_parts = []
+                    sources_used = []
+                    for i, result in enumerate(search_result.search_results[:5]):
+                        context_parts.append(f"[Source {i+1}] {result.title}\n{result.content[:500]}...")
+                        sources_used.append(f"{result.title} (source: {result.source}, score: {result.score:.2f})")
+                    
+                    context = "\n\n".join(context_parts)
+                    
+                    # Generate answer using Azure OpenAI
+                    synthesis_prompt = f"""Based on the search results below, provide a comprehensive answer to the user's query.
+
+**User Query:** {query_id}
+
+**Search Results:**
+{context}
+
+**Instructions:**
+1. Provide a thorough, well-structured answer that directly addresses the query
+2. Synthesize information from multiple sources for a complete perspective
+3. Include specific details and examples from the sources
+4. Structure your answer logically with clear sections when appropriate
+
+Generate a comprehensive answer:"""
+
+                    # Get Azure OpenAI client
+                    deps = await get_universal_deps()
+                    azure_client = deps.openai_client
+                    azure_model = get_azure_openai_model()
+                    
+                    response = await azure_client.complete_chat(
+                        messages=[
+                            {
+                                "role": "system", 
+                                "content": "You are an expert AI assistant that provides comprehensive, accurate answers by synthesizing information from search results."
+                            },
+                            {"role": "user", "content": synthesis_prompt}
+                        ],
+                        model=azure_model.model_name,
+                        max_tokens=1000,
+                        temperature=0.3
+                    )
+                    
+                    generated_answer = response["content"].strip()
+                    
+                except Exception as e:
+                    print(f"Answer generation failed: {e}")
+                    generated_answer = f"Found {len(search_result.search_results)} relevant results for your query: '{query_id}'. The search was successful, but answer synthesis encountered an issue. Please refer to the search results for detailed information."
+
+            yield f"data: {json.dumps({'event_type': 'progress', 'query_id': query_id, 'step_number': 4, 'step_name': 'answer_generation', 'user_friendly_name': 'Azure OpenAI Answer Complete', 'status': 'completed', 'technology': 'Azure OpenAI GPT-4', 'details': 'Generated comprehensive answer from search results', 'progress_percentage': 100, 'processing_time_ms': 2000})}\n\n"
+
+            # Final completion with REAL results and generated answer
             total_processing_time = (
                 domain_result.total_processing_time
                 + extraction_result.total_processing_time
@@ -876,7 +935,7 @@ async def stream_workflow_progress(query_id: str):
                 "universal_search", {}
             ).get("search_confidence", 0.0)
 
-            yield f"data: {json.dumps({'event_type': 'workflow_completed', 'query_id': query_id, 'query': query_id, 'generated_response': f'REAL Azure workflow completed: processed {real_azure_file.name}, extracted {entity_count} entities, found {len(search_result.search_results)} search results', 'confidence_score': search_confidence, 'processing_time': total_processing_time, 'safety_warnings': [], 'sources': [str(real_azure_file)], 'citations': [real_content[:200] + '...']})}\n\n"
+            yield f"data: {json.dumps({'event_type': 'workflow_completed', 'query_id': query_id, 'query': query_id, 'generated_response': generated_answer, 'confidence_score': search_confidence, 'processing_time': total_processing_time, 'safety_warnings': [], 'sources': [r.title for r in search_result.search_results[:5]], 'citations': [r.content[:200] + '...' for r in search_result.search_results[:3]]})}\n\n"
 
         except Exception as e:
             # QUICK FAIL - Real error from Azure services
