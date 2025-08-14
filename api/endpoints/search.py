@@ -293,10 +293,9 @@ Please provide your comprehensive answer:"""
         
         # Get Azure OpenAI client through universal dependencies
         deps = await get_universal_deps()
-        azure_client = deps.azure_openai_client
+        azure_client = deps.openai_client
         
-        response = await azure_client.chat.completions.create(
-            model=azure_openai_model.model_name,
+        response = await azure_client.complete_chat(
             messages=[
                 {
                     "role": "system", 
@@ -304,12 +303,12 @@ Please provide your comprehensive answer:"""
                 },
                 {"role": "user", "content": synthesis_prompt}
             ],
+            model=azure_openai_model.model_name,
             max_tokens=request.max_tokens,
-            temperature=0.3,  # Lower temperature for more factual responses
-            top_p=0.9
+            temperature=0.3  # Lower temperature for more factual responses
         )
         
-        generated_answer = response.choices[0].message.content.strip()
+        generated_answer = response["content"].strip()
         
         # Calculate confidence based on search result scores and content relevance
         avg_search_score = sum(r.score for r in request.search_results) / len(request.search_results)
@@ -566,11 +565,10 @@ Generate a comprehensive answer that maximizes value for the user:"""
                 from agents.core.universal_deps import get_universal_deps
                 
                 deps = await get_universal_deps()
-                azure_client = deps.azure_openai_client
+                azure_client = deps.openai_client
                 azure_model = get_azure_openai_model()
                 
-                response = await azure_client.chat.completions.create(
-                    model=azure_model.model_name,
+                response = await azure_client.complete_chat(
                     messages=[
                         {
                             "role": "system", 
@@ -578,12 +576,12 @@ Generate a comprehensive answer that maximizes value for the user:"""
                         },
                         {"role": "user", "content": synthesis_prompt}
                     ],
+                    model=azure_model.model_name,
                     max_tokens=request.max_tokens,
-                    temperature=0.3,  # Balanced for accuracy and readability
-                    top_p=0.9
+                    temperature=0.3  # Balanced for accuracy and readability
                 )
                 
-                generated_answer = response.choices[0].message.content.strip()
+                generated_answer = response["content"].strip()
                 
                 # Calculate confidence based on search quality and coverage
                 avg_search_score = sum(r.score for r in search_results[:5]) / min(5, len(search_results))
