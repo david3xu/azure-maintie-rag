@@ -47,5 +47,5 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Simple health check"""
-    return {"status": "healthy"}
+    """Simple health check with Graph search fix timestamp"""
+    return {"status": "healthy", "graph_search_fix": "2025-08-14-04:45:00"}
