@@ -277,19 +277,54 @@ async def _execute_graph_search(
         graph_response = []
 
         # Search for entities related to query terms
-        for term in query_terms[:3]:  # Limit to first 3 terms
-            try:
-                related_entities = await cosmos_client.find_related_entities(
-                    entity_text=term,
-                    domain="universal",  # Use universal domain
-                    limit=max_results // len(query_terms[:3]),
-                )
-                graph_response.extend(related_entities)
-            except Exception as e:
-                # FAIL FAST - Don't continue with partial failures
-                raise RuntimeError(
-                    f"Failed to find entities for term '{term}': {e}. Check Azure Cosmos DB Gremlin query execution."
-                ) from e
+        # Dynamically determine the domain from domain analysis or use available domains
+        search_domain = "azure_ai"  # Use the actual domain that has data
+        if domain_analysis and hasattr(domain_analysis, 'domain_signature'):
+            # Extract domain from analysis if available
+            if "azure" in domain_analysis.domain_signature.lower():
+                search_domain = "azure_ai"
+        
+        # First try to find entities that contain query terms (fuzzy matching)
+        all_entities = await cosmos_client.get_all_entities(search_domain)
+        matching_entities = []
+        
+        for entity in all_entities:
+            entity_text = entity.get("text", "").lower()
+            for term in query_terms:
+                if term.lower() in entity_text:
+                    matching_entities.append(entity["text"])
+                    break
+        
+        # If we found matching entities, get their relationships
+        if matching_entities:
+            for entity_text in matching_entities[:3]:  # Limit to first 3 matching entities
+                try:
+                    related_entities = await cosmos_client.find_related_entities(
+                        entity_text=entity_text,
+                        domain=search_domain,
+                        limit=max_results // len(matching_entities[:3]),
+                    )
+                    graph_response.extend(related_entities)
+                except Exception as e:
+                    # FAIL FAST - Don't continue with partial failures
+                    raise RuntimeError(
+                        f"Failed to find entities for '{entity_text}': {e}. Check Azure Cosmos DB Gremlin query execution."
+                    ) from e
+        else:
+            # Fallback: if no fuzzy matches, try exact term matching
+            for term in query_terms[:3]:  # Limit to first 3 terms
+                try:
+                    related_entities = await cosmos_client.find_related_entities(
+                        entity_text=term,
+                        domain=search_domain,  # Use dynamically determined domain
+                        limit=max_results // len(query_terms[:3]),
+                    )
+                    graph_response.extend(related_entities)
+                except Exception as e:
+                    # FAIL FAST - Don't continue with partial failures
+                    raise RuntimeError(
+                        f"Failed to find entities for term '{term}': {e}. Check Azure Cosmos DB Gremlin query execution."
+                    ) from e
 
         # Convert to universal format
         results = []

@@ -21,7 +21,7 @@ const QueryForm: React.FC<QueryFormProps> = ({
       <textarea
         value={query}
         onChange={onChange}
-        placeholder="Ask any question about your domain... (e.g., 'What are common issues and how to prevent them?')"
+        placeholder="Ask any question about the content in the knowledge base..."
         className="query-input"
         rows={3}
         disabled={loading || isStreaming}
