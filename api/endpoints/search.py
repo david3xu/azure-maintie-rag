@@ -29,6 +29,16 @@ from agents.core.universal_deps import get_universal_deps
 from agents.knowledge_extraction.agent import run_knowledge_extraction
 from agents.orchestrator import UniversalOrchestrator
 
+# Global orchestrator instance to preserve domain analysis cache across requests
+_global_orchestrator: Optional[UniversalOrchestrator] = None
+
+def get_orchestrator() -> UniversalOrchestrator:
+    """Get or create global orchestrator instance with persistent domain analysis cache."""
+    global _global_orchestrator
+    if _global_orchestrator is None:
+        _global_orchestrator = UniversalOrchestrator()
+    return _global_orchestrator
+
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["search"])
 
@@ -101,8 +111,8 @@ async def search_content(request: SearchRequest) -> SearchResponse:
     start_time = time.time()
 
     try:
-        # Use orchestrator for proper agent coordination
-        orchestrator = UniversalOrchestrator()
+        # Use GLOBAL orchestrator for proper agent coordination and domain analysis caching
+        orchestrator = get_orchestrator()
         workflow_result = await orchestrator.process_full_search_workflow(
             request.query,
             max_results=request.max_results,
