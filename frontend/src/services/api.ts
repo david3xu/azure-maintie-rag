@@ -8,8 +8,10 @@ import type {
 import { API_CONFIG } from "../utils/api-config";
 
 export async function postUniversalQuery(
-  query: string
+  query: string,
   // Domain parameter removed - violates zero hardcoded domain bias rule
+  enableWorkflowStream?: boolean,
+  queryId?: string
 ): Promise<QueryResponse> {
   try {
     console.log(
@@ -24,6 +26,11 @@ export async function postUniversalQuery(
       use_domain_analysis: true,
       include_sources: true,
       include_search_results: true,
+      // Include workflow streaming info if enabled
+      ...(enableWorkflowStream && queryId && {
+        enable_workflow_stream: true,
+        query_id: queryId
+      })
     };
 
     console.log("Request payload:", ragRequest);
@@ -119,6 +126,50 @@ export async function getApiInfo(): Promise<Record<string, any>> {
   } catch (error) {
     console.error("API info request failed:", error);
     throw error;
+  }
+}
+
+// Trigger workflow with streaming by making a RAG query that enables streaming
+export async function triggerWorkflowWithStreaming(
+  query: string,
+  queryId: string
+): Promise<void> {
+  try {
+    console.log(
+      `Triggering REAL Azure workflow for query: "${query}" with streaming ID: ${queryId}`
+    );
+
+    // Start the workflow by making a RAG request with streaming enabled
+    // This will trigger the actual Azure agents while streaming shows progress
+    const ragRequest = {
+      query: query.trim(),
+      max_results: 10,
+      max_tokens: 1000,
+      use_domain_analysis: true,
+      include_sources: true,
+      include_search_results: true,
+      enable_workflow_stream: true,
+      query_id: queryId
+    };
+
+    // Fire and forget - the streaming endpoint will handle the response
+    axios.post(
+      `${API_CONFIG.BASE_URL}/api/v1/rag`,
+      ragRequest,
+      {
+        timeout: 120000, // Allow time for full workflow
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    ).catch(error => {
+      // Log error but don't throw - streaming will handle errors
+      console.error("Workflow RAG request failed:", error);
+    });
+
+  } catch (error) {
+    console.error("Failed to trigger workflow with streaming:", error);
+    throw new Error("Could not start REAL Azure workflow processing");
   }
 }
 

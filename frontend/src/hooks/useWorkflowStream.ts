@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { API_CONFIG } from '../utils/api-config';
+import { triggerWorkflowWithStreaming } from '../services/api';
 import type { QueryResponse, WorkflowEvent } from '../types/api';
 
 export const useWorkflowStream = (
@@ -16,8 +17,17 @@ export const useWorkflowStream = (
 
     setIsConnected(true);
 
-    console.log('Connecting to Azure workflow stream:', queryId);
+    console.log('Starting REAL Azure workflow with streaming for:', query);
     
+    // First, trigger the actual Azure workflow processing
+    triggerWorkflowWithStreaming(query, queryId).catch(error => {
+      console.error('Failed to trigger workflow:', error);
+      if (onError) onError(`Failed to start Azure workflow: ${error.message}`);
+      setIsConnected(false);
+      return;
+    });
+    
+    // Then connect to streaming endpoint to show progress
     const eventSource = new EventSource(
       `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.WORKFLOW_STREAM}/${queryId}`
     );
