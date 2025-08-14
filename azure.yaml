@@ -78,7 +78,21 @@ hooks:
       echo "🧹 Starting automated data pipeline preparation..."
       
       # Set environment variables for Python scripts
-      export PYTHONPATH=$PWD
+      # Ensure we're in the project directory
+      if [ -f "azure.yaml" ]; then
+        PROJECT_DIR=$PWD
+      elif [ -f "../azure.yaml" ]; then
+        cd ..
+        PROJECT_DIR=$PWD
+      else
+        echo "Finding project directory..."
+        PROJECT_DIR=$(find / -name "azure.yaml" -path "*/azure-maintie-rag/*" 2>/dev/null | head -1 | xargs dirname)
+        cd "$PROJECT_DIR"
+      fi
+      
+      echo "📁 Working from: $PROJECT_DIR"
+      
+      export PYTHONPATH=$PROJECT_DIR
       export USE_MANAGED_IDENTITY=false
       export OPENBLAS_NUM_THREADS=1
       
