@@ -65,7 +65,7 @@ define finalize_session_report
 	@echo "📋 Cumulative report: $(CUMULATIVE_REPORT)"
 endef
 
-.PHONY: help setup dev azure-deploy azure-status health clean session-report sync-env
+.PHONY: help setup dev azure-deploy azure-status health clean session-report sync-env deploy deploy-with-data deploy-infrastructure-only
 
 help: ## Azure Universal RAG Multi-Agent Commands (Production Ready)
 	@echo "🤖 Azure Universal RAG - Multi-Agent System with PydanticAI"
@@ -79,6 +79,8 @@ help: ## Azure Universal RAG Multi-Agent Commands (Production Ready)
 	@echo ""
 	@echo "☁️  Azure Service Integration:"
 	@echo "  make azure-deploy    - Deploy complete Azure infrastructure (9 services)"
+	@echo "  make deploy-with-data - Full deployment with automated data pipeline (recommended)"
+	@echo "  make deploy-infrastructure-only - Deploy infrastructure only, no data population"
 	@echo "  make azure-status    - Azure service container health check"
 	@echo "  make sync-env        - Sync with azd environment (development/staging/production)"
 	@echo ""
@@ -166,6 +168,32 @@ sync-env: ## Sync backend configuration with current azd environment
 	@echo "🔄 Syncing backend with azd environment..."
 	@./scripts/deployment/sync-env.sh
 	@echo "✅ Backend configuration synchronized"
+
+# New deployment commands with automated data pipeline integration
+deploy-with-data: sync-env ## Full deployment with automated data pipeline (recommended)
+	@$(call start_persistent_session)
+	@echo "🚀 Full Azure deployment with automated data pipeline - Session: $(SESSION_ID)"
+	@echo "Setting AUTO_POPULATE_DATA=true for automated pipeline..." >> $(SESSION_REPORT)
+	@azd env set AUTO_POPULATE_DATA true
+	@echo "Starting azd up deployment..." >> $(SESSION_REPORT)
+	@azd up --no-prompt 2>&1 | tee -a $(SESSION_REPORT) | tail -10
+	@$(call capture_azure_status)
+	@$(call finalize_session_report)
+	@echo "✅ Full deployment with data pipeline completed - Check: $(SESSION_REPORT)"
+
+deploy-infrastructure-only: sync-env ## Deploy infrastructure only, no data population  
+	@$(call start_persistent_session)
+	@echo "🏗️ Infrastructure-only deployment - Session: $(SESSION_ID)"
+	@echo "Setting AUTO_POPULATE_DATA=false to skip data pipeline..." >> $(SESSION_REPORT)
+	@azd env set AUTO_POPULATE_DATA false
+	@echo "Starting azd provision (infrastructure only)..." >> $(SESSION_REPORT)
+	@azd provision --no-prompt 2>&1 | tee -a $(SESSION_REPORT) | tail -10
+	@$(call capture_azure_status)
+	@$(call finalize_session_report)
+	@echo "✅ Infrastructure deployment completed - Check: $(SESSION_REPORT)"
+	@echo "💡 To populate data manually, run: make dataflow-full"
+
+deploy: deploy-with-data ## Alias for deploy-with-data (recommended default)
 
 health: ## Comprehensive service health with session management
 	@$(call start_clean_session)
