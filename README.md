@@ -9,17 +9,22 @@
 ### **⚡ Essential Commands (Production Ready)**
 
 ```bash
-# Deploy complete system to Azure
-azd up                                      # Deploy infrastructure (no Docker needed)
+# Deploy complete system with full data pipeline (RECOMMENDED)
+make deploy-with-data                       # Deploy infrastructure + populate data + train models
 ./scripts/show-deployment-urls.sh          # Get frontend and backend URLs
 
-# Build containers when needed
+# Alternative deployment options
+make deploy-infrastructure-only             # Deploy infrastructure only, populate data later
+azd up                                      # Traditional deployment (infrastructure only)
+
+# Build containers when needed (usually automatic via azd)
 az acr build --registry <acr-name> --image azure-maintie-rag/backend-prod:latest .
 az acr build --registry <acr-name> --image azure-maintie-rag/frontend-prod:latest ./frontend
 
-# Access your live system
+# Access your live system (after deploy-with-data completes)
 # Frontend Chat: https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
 # Backend API: https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/health
+# Status: Tri-modal search operational, Agent 1 data pre-analyzed, fast responses
 ```
 
 ### **💼 For Stakeholders: Access Live System**
@@ -69,34 +74,65 @@ print('📊 Universal RAG system ready for configuration')
 # 4. Next: Configure Azure services (see options below)
 ```
 
-### **Option 1: One-Command Production Deployment (Recommended)**
+### **Option 1: Complete Automated Deployment (Recommended)**
+
+🎯 **Deploy entire system with full data pipeline in one command**
 
 ```bash
-# Prerequisites: Azure CLI installed
+# Prerequisites: Azure CLI + Azure Developer CLI installed
 az login
 az account set --subscription "<your-subscription-id>"
 
-# 1. Deploy complete system with Azure Developer CLI
-azd up
+# Option A: Full deployment with automated data pipeline (RECOMMENDED)
+make deploy-with-data
+# OR equivalently: azd env set AUTO_POPULATE_DATA true && azd up
+
 # ✅ Creates: 9 Azure services with RBAC permissions
 # ✅ Services: OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, App Insights, Container Apps
-# ✅ Builds: Container images automatically via azd package
-# ✅ Deploys: Both backend and frontend containers
-# ✅ Result: Complete working tri-modal RAG system
+# ✅ Cleans: All existing Azure data for fresh start
+# ✅ Uploads: All documents from data/raw/ to Azure Storage
+# ✅ Builds: Vector embeddings + search indexes + knowledge graph
+# ✅ Runs: Agent 1 (Domain Intelligence) to analyze all documents once
+# ✅ Trains: GNN models and deploys to Azure ML endpoints  
+# ✅ Result: Complete tri-modal RAG (Vector + Graph + GNN) ready for fast queries
 
-# 2. Test your deployment
+# Option B: Infrastructure only (manual data population later)
+make deploy-infrastructure-only
+# OR equivalently: azd env set AUTO_POPULATE_DATA false && azd up
+# Then run: make dataflow-full  # to populate data manually
+
+# Option C: Traditional deployment (infrastructure only)
+azd up  # defaults to infrastructure only for backward compatibility
+```
+
+**What the automated pipeline does (when `AUTO_POPULATE_DATA=true`):**
+- 🏗️ **Infrastructure**: Deploy 9 Azure services with RBAC
+- 🧹 **Phase 0**: Clean all Azure services (Cosmos DB, Search, Storage) 
+- 🧪 **Phase 1**: Validate all 3 PydanticAI agents are working
+- 📥 **Phase 2**: Upload docs + create embeddings + build search indexes
+- 🧠 **Phase 3**: Run Agent 1 once to analyze all docs + build knowledge graph
+- 🚀 **Phase 6**: Train GNN models + deploy to Azure ML endpoints for inference
+- ✅ **Result**: Production-ready system with pre-analyzed data for fast user queries
+
+**After deployment completes:**
+
+```bash
+# 1. Get your deployment URLs
+./scripts/show-deployment-urls.sh
+
+# 2. Test system health
 curl "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/health"
-# Expected: {"status":"healthy","graph_search_fix":"2025-08-14-04:45:00"}
+# Expected: {"status":"healthy","agents_operational":true,"search_modes":["vector","graph","gnn"]}
 
-# 3. Test complete RAG workflow with real Azure AI data
+# 3. Test complete RAG workflow (uses pre-analyzed data for fast responses)
 curl -X POST "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag" \
   -H "Content-Type: application/json" \
-  -d '{"query": "Azure AI language services", "max_results": 5, "max_tokens": 800}'
+  -d '{"query": "Azure AI language services capabilities", "max_results": 5, "max_tokens": 800}'
 
-# 4. Access your live system
-# Frontend Chat Interface: https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
+# 4. Access your live system - ready for production use!
+# Frontend Chat: https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
 # Backend API: https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io
-# System Status: Tri-modal search (Vector + Graph + GNN) + Azure OpenAI answer generation
+# Status: All 3 search modalities operational, Agent 1 data pre-analyzed, fast query responses
 ```
 
 ### **Option 2: Local Development with REAL Azure Services**
