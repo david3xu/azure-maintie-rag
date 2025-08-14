@@ -277,12 +277,34 @@ async def _execute_graph_search(
         graph_response = []
 
         # Search for entities related to query terms
-        # Dynamically determine the domain from domain analysis or use available domains
-        search_domain = "azure_ai"  # Use the actual domain that has data
+        # FIXED: Dynamically determine the domain from domain analysis to match knowledge extraction storage
+        search_domain = None
+        available_domains = []
+        
+        # Step 1: Try to use the EXACT domain signature from domain analysis (matches knowledge extraction)
         if domain_analysis and hasattr(domain_analysis, 'domain_signature'):
-            # Extract domain from analysis if available
-            if "azure" in domain_analysis.domain_signature.lower():
-                search_domain = "azure_ai"
+            # Use the domain signature directly as storage domain (matches knowledge extraction logic)
+            potential_domain = domain_analysis.domain_signature.lower().replace(' ', '_').replace('-', '_')
+            search_domain = potential_domain
+            print(f"   🎯 Using domain from analysis: '{search_domain}'")
+        
+        # Step 2: If no domain analysis, discover available domains in Cosmos DB
+        if not search_domain:
+            print("   🔍 No domain analysis available, discovering existing domains...")
+            try:
+                # Get all available domains from Cosmos DB
+                available_domains = await cosmos_client.get_all_domains()
+                if available_domains:
+                    # Use the first available domain (entities exist there)
+                    search_domain = available_domains[0]
+                    print(f"   ✅ Using discovered domain: '{search_domain}' (from {len(available_domains)} available)")
+                else:
+                    # Fallback to default if no domains found
+                    search_domain = "general"
+                    print(f"   ⚠️  No domains found in Cosmos DB, using fallback: '{search_domain}'")
+            except Exception as e:
+                print(f"   ⚠️  Could not discover domains: {e}, using fallback")
+                search_domain = "general"
         
         # First try to find entities that contain query terms (fuzzy matching)
         all_entities = await cosmos_client.get_all_entities(search_domain)
