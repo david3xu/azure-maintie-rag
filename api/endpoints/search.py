@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from agents.core.universal_deps import get_universal_deps
 from agents.knowledge_extraction.agent import run_knowledge_extraction
 from agents.orchestrator import UniversalOrchestrator
+from agents.core.azure_pydantic_provider import get_azure_openai_model
 
 # Global orchestrator instance to preserve domain analysis cache across requests
 _global_orchestrator: Optional[UniversalOrchestrator] = None
@@ -73,6 +74,48 @@ class SearchResponse(BaseModel):
     execution_time: float
     timestamp: str
     agent_metrics: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class AnswerGenerationRequest(BaseModel):
+    query: str = Field(..., description="Original search query")
+    search_results: List[SearchResult] = Field(..., description="Search results to synthesize")
+    max_tokens: int = Field(1000, ge=100, le=2000, description="Maximum tokens for generated answer")
+    include_sources: bool = Field(True, description="Include source citations in the answer")
+
+
+class AnswerGenerationResponse(BaseModel):
+    success: bool
+    query: str
+    generated_answer: str
+    confidence_score: float
+    sources_used: List[str]
+    execution_time: float
+    timestamp: str
+    error: Optional[str] = None
+
+
+class UnifiedRAGRequest(BaseModel):
+    query: str = Field(..., description="Search query text")
+    max_results: int = Field(10, ge=1, le=50, description="Maximum search results to retrieve")
+    max_tokens: int = Field(1000, ge=100, le=2000, description="Maximum tokens for generated answer")
+    use_domain_analysis: bool = Field(True, description="Enable domain intelligence")
+    include_sources: bool = Field(True, description="Include source citations in answer")
+    include_search_results: bool = Field(True, description="Include raw search results in response")
+
+
+class UnifiedRAGResponse(BaseModel):
+    success: bool
+    query: str
+    generated_answer: str
+    confidence_score: float
+    sources_used: List[str]
+    search_results: Optional[List[SearchResult]] = None
+    total_results_found: int
+    search_confidence: float
+    strategy_used: str
+    execution_time: float
+    timestamp: str
     error: Optional[str] = None
 
 
@@ -183,6 +226,422 @@ async def search_content(request: SearchRequest) -> SearchResponse:
             timestamp=datetime.now().isoformat(),
             error=str(e),
         )
+
+
+@router.post("/answer", response_model=AnswerGenerationResponse)
+async def generate_answer(request: AnswerGenerationRequest) -> AnswerGenerationResponse:
+    """
+    Generate final answer from search results using Azure OpenAI
+    
+    This endpoint completes the Azure Universal RAG architecture by implementing 
+    the missing "Azure OpenAI Response" step shown in README.md data flow diagram.
+    """
+    start_time = time.time()
+    
+    try:
+        # Get Azure OpenAI model for answer synthesis
+        azure_openai_model = get_azure_openai_model()
+        
+        # Prepare context from search results
+        context_parts = []
+        sources_used = []
+        
+        for i, result in enumerate(request.search_results[:5]):  # Use top 5 results
+            context_parts.append(f"[Source {i+1}] {result.title}\n{result.content[:500]}...")
+            sources_used.append(f"{result.title} (source: {result.source}, score: {result.score:.2f})")
+        
+        if not context_parts:
+            return AnswerGenerationResponse(
+                success=False,
+                query=request.query,
+                generated_answer="No search results provided for answer generation.",
+                confidence_score=0.0,
+                sources_used=[],
+                execution_time=time.time() - start_time,
+                timestamp=datetime.now().isoformat(),
+                error="No search results to synthesize"
+            )
+        
+        context = "\n\n".join(context_parts)
+        
+        # Create synthesis prompt following Universal RAG principles (domain-agnostic)
+        synthesis_prompt = f"""You are a Universal RAG system assistant. Based on the search results below, provide a comprehensive and accurate answer to the user's query.
+
+**User Query:** {request.query}
+
+**Available Context from Search Results:**
+{context}
+
+**Instructions:**
+1. Synthesize information from the provided search results to answer the query comprehensively
+2. Focus on accuracy and relevance to the specific question asked
+3. Use information from multiple sources when possible to provide a well-rounded answer
+4. If the search results don't contain sufficient information to fully answer the query, clearly state what information is available
+5. Maintain objectivity and avoid making assumptions beyond what the sources support
+
+**Response Format:**
+- Provide a clear, direct answer to the query
+- Include specific details and examples from the sources when relevant
+{"- Include source citations [Source X] when referencing specific information" if request.include_sources else ""}
+- Structure your response logically with clear organization
+
+Please provide your comprehensive answer:"""
+
+        # Use Azure OpenAI to generate the final answer
+        from openai import AsyncAzureOpenAI
+        from agents.core.universal_deps import get_universal_deps
+        
+        # Get Azure OpenAI client through universal dependencies
+        deps = await get_universal_deps()
+        azure_client = deps.azure_openai_client
+        
+        response = await azure_client.chat.completions.create(
+            model=azure_openai_model.model_name,
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "You are a helpful AI assistant specialized in synthesizing information from search results into comprehensive answers. Maintain accuracy and cite sources appropriately."
+                },
+                {"role": "user", "content": synthesis_prompt}
+            ],
+            max_tokens=request.max_tokens,
+            temperature=0.3,  # Lower temperature for more factual responses
+            top_p=0.9
+        )
+        
+        generated_answer = response.choices[0].message.content.strip()
+        
+        # Calculate confidence based on search result scores and content relevance
+        avg_search_score = sum(r.score for r in request.search_results) / len(request.search_results)
+        confidence_score = min(0.95, avg_search_score * 0.9)  # Conservative confidence estimation
+        
+        execution_time = time.time() - start_time
+        
+        return AnswerGenerationResponse(
+            success=True,
+            query=request.query,
+            generated_answer=generated_answer,
+            confidence_score=confidence_score,
+            sources_used=sources_used,
+            execution_time=execution_time,
+            timestamp=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        execution_time = time.time() - start_time
+        return AnswerGenerationResponse(
+            success=False,
+            query=request.query,
+            generated_answer="I apologize, but I encountered an error while generating the answer. Please try again.",
+            confidence_score=0.0,
+            sources_used=[],
+            execution_time=execution_time,
+            timestamp=datetime.now().isoformat(),
+            error=str(e)
+        )
+
+
+@router.post("/rag", response_model=UnifiedRAGResponse)
+async def unified_rag(request: UnifiedRAGRequest) -> UnifiedRAGResponse:
+    """
+    Complete Universal RAG endpoint that implements the full README.md architecture:
+    User Query → Unified Search System → Azure OpenAI Response
+    
+    This endpoint provides the complete RAG pipeline in a single call:
+    1. Tri-modal search (Vector + Graph + GNN)  
+    2. Azure OpenAI answer synthesis
+    """
+    start_time = time.time()
+    
+    try:
+        # Step 1: Perform tri-modal search using the orchestrator
+        orchestrator = get_orchestrator()
+        search_workflow_result = await orchestrator.process_full_search_workflow(
+            request.query,
+            max_results=request.max_results,
+            use_domain_analysis=request.use_domain_analysis,
+        )
+        
+        if not search_workflow_result.success:
+            return UnifiedRAGResponse(
+                success=False,
+                query=request.query,
+                generated_answer="Search failed - unable to generate answer.",
+                confidence_score=0.0,
+                sources_used=[],
+                search_results=[],
+                total_results_found=0,
+                search_confidence=0.0,
+                strategy_used="failed",
+                execution_time=time.time() - start_time,
+                timestamp=datetime.now().isoformat(),
+                error=f"Search workflow failed: {'; '.join(search_workflow_result.errors)}"
+            )
+        
+        # Convert search results to the format expected by answer generation
+        search_results = []
+        if search_workflow_result.search_results:
+            for result in search_workflow_result.search_results:
+                search_results.append(
+                    SearchResult(
+                        title=result.title,
+                        content=result.content,
+                        score=result.score,
+                        source=result.source,
+                        metadata=getattr(result, "metadata", None),
+                    )
+                )
+        
+        search_confidence = search_workflow_result.agent_metrics.get("universal_search", {}).get("search_confidence", 0.8)
+        strategy_used = search_workflow_result.agent_metrics.get("universal_search", {}).get("strategy_used", "multi-modal")
+        
+        if not search_results:
+            return UnifiedRAGResponse(
+                success=True,
+                query=request.query,
+                generated_answer="I couldn't find relevant information to answer your query. Please try rephrasing your question or using different keywords.",
+                confidence_score=0.0,
+                sources_used=[],
+                search_results=[] if not request.include_search_results else search_results,
+                total_results_found=0,
+                search_confidence=search_confidence,
+                strategy_used=strategy_used,
+                execution_time=time.time() - start_time,
+                timestamp=datetime.now().isoformat()
+            )
+        
+        # Step 2: Generate answer using Azure OpenAI (completing the README.md architecture)
+        answer_request = AnswerGenerationRequest(
+            query=request.query,
+            search_results=search_results,
+            max_tokens=request.max_tokens,
+            include_sources=request.include_sources
+        )
+        
+        answer_response = await generate_answer(answer_request)
+        
+        if not answer_response.success:
+            return UnifiedRAGResponse(
+                success=False,
+                query=request.query,
+                generated_answer="Search completed successfully, but answer generation failed.",
+                confidence_score=search_confidence,
+                sources_used=[],
+                search_results=search_results if request.include_search_results else None,
+                total_results_found=len(search_results),
+                search_confidence=search_confidence,
+                strategy_used=strategy_used,
+                execution_time=time.time() - start_time,
+                timestamp=datetime.now().isoformat(),
+                error=f"Answer generation failed: {answer_response.error}"
+            )
+        
+        # Step 3: Return complete RAG response
+        execution_time = time.time() - start_time
+        
+        return UnifiedRAGResponse(
+            success=True,
+            query=request.query,
+            generated_answer=answer_response.generated_answer,
+            confidence_score=answer_response.confidence_score,
+            sources_used=answer_response.sources_used,
+            search_results=search_results if request.include_search_results else None,
+            total_results_found=len(search_results),
+            search_confidence=search_confidence,
+            strategy_used=strategy_used,
+            execution_time=execution_time,
+            timestamp=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        execution_time = time.time() - start_time
+        return UnifiedRAGResponse(
+            success=False,
+            query=request.query,
+            generated_answer="An error occurred during RAG processing. Please try again.",
+            confidence_score=0.0,
+            sources_used=[],
+            search_results=None,
+            total_results_found=0,
+            search_confidence=0.0,
+            strategy_used="failed",
+            execution_time=execution_time,
+            timestamp=datetime.now().isoformat(),
+            error=str(e)
+        )
+
+
+@router.post("/unified", response_model=UnifiedRAGResponse)
+async def unified_rag(request: UnifiedRAGRequest) -> UnifiedRAGResponse:
+    """
+    Complete Azure Universal RAG workflow - Search + Answer Generation
+    
+    This endpoint implements the full data flow shown in README.md:
+    I[User Query] --> J[Unified Search System] --> K[Azure OpenAI Response]
+    
+    Combines tri-modal search (Vector + Graph + GNN) with Azure OpenAI answer synthesis
+    to deliver the complete Universal RAG experience in a single API call.
+    """
+    start_time = time.time()
+    
+    try:
+        # Step 1: Perform universal tri-modal search
+        orchestrator = get_orchestrator()
+        workflow_result = await orchestrator.process_full_search_workflow(
+            request.query,
+            max_results=request.max_results,
+            use_domain_analysis=request.use_domain_analysis,
+        )
+        
+        if not workflow_result.success:
+            return UnifiedRAGResponse(
+                success=False,
+                query=request.query,
+                generated_answer="Search failed - unable to retrieve relevant information.",
+                confidence_score=0.0,
+                sources_used=[],
+                search_results=[] if request.include_search_results else None,
+                total_results_found=0,
+                search_confidence=0.0,
+                strategy_used="failed",
+                execution_time=time.time() - start_time,
+                timestamp=datetime.now().isoformat(),
+                error=f"Search workflow failed: {'; '.join(workflow_result.errors)}",
+            )
+        
+        # Convert search results to API format
+        search_results = []
+        sources_used = []
+        if workflow_result.search_results:
+            for result in workflow_result.search_results:
+                search_results.append(
+                    SearchResult(
+                        title=result.title,
+                        content=result.content,
+                        score=result.score,
+                        source=result.source,
+                        metadata=getattr(result, "metadata", None),
+                    )
+                )
+                sources_used.append(f"{result.title} (source: {result.source}, score: {result.score:.2f})")
+        
+        # Extract search metadata
+        search_confidence = workflow_result.agent_metrics.get("universal_search", {}).get("search_confidence", 0.8)
+        strategy_used = workflow_result.agent_metrics.get("universal_search", {}).get("strategy_used", "tri-modal")
+        
+        # Step 2: Generate comprehensive answer using Azure OpenAI
+        generated_answer = ""
+        confidence_score = 0.0
+        
+        if search_results:
+            try:
+                # Prepare context from search results
+                context_parts = []
+                for i, result in enumerate(search_results[:5]):  # Use top 5 results for context
+                    context_parts.append(f"[Source {i+1}] {result.title}\n{result.content[:500]}...")
+                
+                context = "\n\n".join(context_parts)
+                
+                # Create comprehensive synthesis prompt
+                synthesis_prompt = f"""You are an expert AI assistant specializing in Azure Universal RAG. Based on the search results provided, generate a comprehensive and accurate answer to the user's query.
+
+**User Query:** {request.query}
+
+**Available Search Results:**
+{context}
+
+**Instructions:**
+1. Provide a thorough, well-structured answer that directly addresses the user's query
+2. Synthesize information from multiple sources when possible for a complete perspective
+3. Include specific details, examples, and technical information from the sources
+4. If the search results don't fully cover the query, clearly explain what information is available
+5. Maintain technical accuracy and cite sources naturally in your response
+6. Structure your answer logically with clear sections when appropriate
+{"7. Include source references [Source X] when mentioning specific information" if request.include_sources else ""}
+
+Generate a comprehensive answer that maximizes value for the user:"""
+
+                # Get Azure OpenAI client and generate answer
+                from agents.core.azure_pydantic_provider import get_azure_openai_model
+                from agents.core.universal_deps import get_universal_deps
+                
+                deps = await get_universal_deps()
+                azure_client = deps.azure_openai_client
+                azure_model = get_azure_openai_model()
+                
+                response = await azure_client.chat.completions.create(
+                    model=azure_model.model_name,
+                    messages=[
+                        {
+                            "role": "system", 
+                            "content": "You are an expert AI assistant that provides comprehensive, accurate answers by synthesizing information from search results. Focus on being helpful, informative, and technically accurate."
+                        },
+                        {"role": "user", "content": synthesis_prompt}
+                    ],
+                    max_tokens=request.max_tokens,
+                    temperature=0.3,  # Balanced for accuracy and readability
+                    top_p=0.9
+                )
+                
+                generated_answer = response.choices[0].message.content.strip()
+                
+                # Calculate confidence based on search quality and coverage
+                avg_search_score = sum(r.score for r in search_results[:5]) / min(5, len(search_results))
+                content_coverage = min(1.0, len(search_results) / 3)  # Higher confidence with more results
+                confidence_score = min(0.95, avg_search_score * 0.8 + content_coverage * 0.15)
+                
+            except Exception as e:
+                print(f"Answer generation failed: {e}")
+                generated_answer = f"""Based on the search results, I found {len(search_results)} relevant sources for your query: "{request.query}"
+
+The search returned information from these sources: {', '.join([r.title for r in search_results[:3]])}
+
+However, I encountered an issue generating a synthesized answer. Please refer to the individual search results below for detailed information."""
+                confidence_score = 0.6
+        else:
+            generated_answer = f"""I wasn't able to find specific information for your query: "{request.query}"
+
+This could be because:
+1. The query terms don't match content in the knowledge base
+2. The information might be available but with different terminology
+3. The topic might not be covered in the current dataset
+
+Try rephrasing your query or using different keywords related to your topic."""
+            confidence_score = 0.1
+        
+        execution_time = time.time() - start_time
+        
+        return UnifiedRAGResponse(
+            success=True,
+            query=request.query,
+            generated_answer=generated_answer,
+            confidence_score=confidence_score,
+            sources_used=sources_used[:10],  # Limit sources list
+            search_results=search_results if request.include_search_results else None,
+            total_results_found=len(search_results),
+            search_confidence=search_confidence,
+            strategy_used=strategy_used,
+            execution_time=execution_time,
+            timestamp=datetime.now().isoformat(),
+        )
+        
+    except Exception as e:
+        execution_time = time.time() - start_time
+        return UnifiedRAGResponse(
+            success=False,
+            query=request.query,
+            generated_answer="I apologize, but I encountered an error while processing your request. Please try again or contact support if the issue persists.",
+            confidence_score=0.0,
+            sources_used=[],
+            search_results=[] if request.include_search_results else None,
+            total_results_found=0,
+            search_confidence=0.0,
+            strategy_used="failed",
+            execution_time=execution_time,
+            timestamp=datetime.now().isoformat(),
+            error=str(e),
+        )
+
 
 
 @router.post("/extract", response_model=KnowledgeExtractionResponse)
