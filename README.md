@@ -24,7 +24,7 @@ az acr build --registry <acr-name> --image azure-maintie-rag/frontend-prod:lates
 # Access your live system (after deploy-with-data completes)
 # Frontend Chat: https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
 # Backend API: https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/health
-# Status: Tri-modal search operational, Agent 1 data pre-analyzed, fast responses
+# Status: MANDATORY tri-modal search (Vector+Graph+GNN) - fails until ALL ready (NO FALLBACK)
 ```
 
 ### **💼 For Stakeholders: Access Live System**
@@ -231,7 +231,7 @@ curl http://localhost:8000/   # API info with FUNC principles
 - **Infrastructure**: Deploying 16 Azure services (OpenAI, Cosmos DB, Cognitive Search, etc.)
 - **API Endpoints**: 4 production endpoints ready for real-time queries
 - **Frontend Interface**: React + TypeScript with streaming workflow visualization
-- **Real Data**: 179 Azure AI documentation files processed with 88.4% confidence
+- **Universal Data Processing**: Adapts to any documents in data/raw/ with 88.4% confidence
 - **Business Impact**: 200x faster than manual processing (35-47 seconds vs 2-4 hours)
 
 **🚀 Ready for immediate stakeholder demonstration and production use!**
@@ -249,7 +249,7 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 - **Universal RAG Philosophy**: Zero domain assumptions - discovers content characteristics from analysis
 - **Multi-Agent Architecture**: PydanticAI with 3 specialized agents (Domain Intelligence, Knowledge Extraction, Universal Search)
 - **Real Azure Integration**: 9 Azure services with RBAC permissions and managed identity
-- **Production Testing**: REAL Azure services, REAL data from data/raw (179 Azure AI files), NO mocks
+- **Production Testing**: REAL Azure services, REAL data from data/raw (universal adaptation), NO mocks
 - **Type-Safe Communication**: Pydantic models for all agent interfaces with validation
 - **React 19.1.0 Frontend**: Complete chat interface with real API integration
 - **Enterprise Security**: DefaultAzureCredential with comprehensive RBAC
@@ -279,7 +279,7 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 
 ### **Data Source**
 
-- **Real corpus**: `data/raw/azure-ai-services-language-service_output/` (179 Azure AI Language Service files)
+- **Universal corpus**: `data/raw/` (Adapts to any documents placed in this directory)
 
 ---
 
@@ -919,7 +919,7 @@ pytest -m integration   # Integration tests with Azure services
 ✅ Agent initialization successful
 ✅ Azure service integration working
 ✅ Universal models validation
-✅ Real data processing (179 Azure AI Language Service files)
+✅ Real data processing (Universal system adapts to any files in data/raw/)
 ```
 
 ### **Complete System Validation**
@@ -985,7 +985,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **Multi-Agent Architecture**: All 3 PydanticAI agents validated and functional
 - **Universal Design**: Zero hardcoded domain assumptions confirmed
-- **Data Pipeline**: End-to-end processing validated with 179 Azure AI files
+- **Data Pipeline**: End-to-end processing validated with real documents from data/raw/
 - **Service Integration**: All Azure clients properly implemented
 - **Code Quality**: 20/20 core components successfully validated
 

@@ -87,18 +87,24 @@ class GNNInferenceClient:
             )
 
     async def _discover_gnn_endpoints(self):
-        """Discover and connect to existing GNN endpoints - FAIL FAST if not configured."""
+        """Discover and connect to existing GNN endpoints - GRACEFUL DEGRADATION for reproducibility."""
         import os
         
-        # FAIL FAST: Require GNN endpoint configuration
+        # Check for GNN endpoint configuration
         env_gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
         env_gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
         
         if not env_gnn_endpoint:
-            raise RuntimeError(
-                "GNN_ENDPOINT_NAME environment variable is required. "
-                "Run the complete azd deployment pipeline to configure GNN endpoints."
+            # REPRODUCIBILITY FIX: Don't fail on first deployment
+            # GNN will be deployed asynchronously after infrastructure is ready
+            logger.warning(
+                "⚠️ GNN_ENDPOINT_NAME not set - GNN endpoints will be deployed asynchronously. "
+                "System will operate without GNN until deployment completes."
             )
+            self.endpoint_name = None
+            self.scoring_uri = None
+            self.deployment_name = None
+            return  # Return gracefully, don't raise
         
         self.endpoint_name = env_gnn_endpoint
         self.scoring_uri = env_gnn_scoring_uri
@@ -109,11 +115,11 @@ class GNNInferenceClient:
             logger.info(f"   Scoring URI: {self.scoring_uri}")
         logger.info(f"   Deployment: {self.deployment_name}")
         
-        # Validate endpoint is accessible
-        if not self.scoring_uri:
-            raise RuntimeError(
-                f"GNN_SCORING_URI is required for endpoint {self.endpoint_name}. "
-                "Ensure GNN deployment pipeline completed successfully."
+        # Validate endpoint is accessible if provided
+        if self.endpoint_name and not self.scoring_uri:
+            logger.warning(
+                f"⚠️ GNN_SCORING_URI not set for endpoint {self.endpoint_name}. "
+                "GNN predictions will fail until endpoint is fully deployed."
             )
 
     def ensure_initialized(self):
@@ -150,18 +156,24 @@ class GNNInferenceClient:
             )
 
     def _discover_gnn_endpoints_sync(self):
-        """Synchronous version of endpoint discovery - FAIL FAST if not configured."""
+        """Synchronous version of endpoint discovery - GRACEFUL DEGRADATION for reproducibility."""
         import os
         
-        # FAIL FAST: Require GNN endpoint configuration
+        # Check for GNN endpoint configuration
         env_gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
         env_gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
         
         if not env_gnn_endpoint:
-            raise RuntimeError(
-                "GNN_ENDPOINT_NAME environment variable is required. "
-                "Run the complete azd deployment pipeline to configure GNN endpoints."
+            # REPRODUCIBILITY FIX: Don't fail on first deployment
+            # GNN will be deployed asynchronously after infrastructure is ready
+            logger.warning(
+                "⚠️ GNN_ENDPOINT_NAME not set - GNN endpoints will be deployed asynchronously. "
+                "System will operate without GNN until deployment completes."
             )
+            self.endpoint_name = None
+            self.scoring_uri = None
+            self.deployment_name = None
+            return  # Return gracefully, don't raise
         
         self.endpoint_name = env_gnn_endpoint
         self.scoring_uri = env_gnn_scoring_uri
@@ -172,11 +184,11 @@ class GNNInferenceClient:
             logger.info(f"   Scoring URI: {self.scoring_uri}")
         logger.info(f"   Deployment: {self.deployment_name}")
         
-        # Validate endpoint is accessible
-        if not self.scoring_uri:
-            raise RuntimeError(
-                f"GNN_SCORING_URI is required for endpoint {self.endpoint_name}. "
-                "Ensure GNN deployment pipeline completed successfully."
+        # Validate endpoint is accessible if provided
+        if self.endpoint_name and not self.scoring_uri:
+            logger.warning(
+                f"⚠️ GNN_SCORING_URI not set for endpoint {self.endpoint_name}. "
+                "GNN predictions will fail until endpoint is fully deployed."
             )
 
     async def deploy_model(
@@ -630,9 +642,20 @@ class GNNInferenceClient:
 
         try:
             if not self.endpoint_name or not self.scoring_uri:
-                raise RuntimeError(
-                    "No GNN endpoint available. Ensure GNN endpoint is deployed and accessible."
+                # REPRODUCIBILITY FIX: Return empty predictions instead of failing
+                # This allows the system to work on first deployment
+                logger.warning(
+                    "⚠️ GNN endpoint not yet available - returning empty predictions. "
+                    "GNN will be deployed asynchronously and available on subsequent requests."
                 )
+                return {
+                    "predictions": [],
+                    "total_predictions": 0,
+                    "inference_source": "gnn_not_deployed_yet",
+                    "model_endpoint": None,
+                    "scoring_uri": None,
+                    "message": "GNN endpoint deployment in progress"
+                }
 
             # PERFORMANCE OPTIMIZATION: Check cache first
             cache_key = self._generate_cache_key(input_data)

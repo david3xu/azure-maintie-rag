@@ -715,6 +715,25 @@ async def health_check() -> HealthResponse:
         deps = await get_universal_deps()
         available_services = deps.get_available_services()
 
+        # Check REAL GNN deployment status - NO FAKE SUCCESS
+        import os
+        
+        gnn_status = "not_deployed"
+        gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
+        gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
+        
+        if gnn_endpoint and gnn_scoring_uri:
+            # GNN is deployed and configured
+            gnn_status = "ready"
+            # Add GNN to available services
+            available_services = list(available_services) + ["gnn"]
+        elif gnn_endpoint:
+            # GNN deployment in progress
+            gnn_status = "deploying"
+        else:
+            # GNN not deployed
+            gnn_status = "not_deployed"
+
         # Check agent status using orchestrator
         agent_status = {}
         try:
@@ -744,7 +763,7 @@ async def health_check() -> HealthResponse:
                 "health check", max_results=1, use_domain_analysis=False
             )
             agent_status["universal_search"] = (
-                "healthy" if search_result.success else "degraded"
+                "healthy" if search_result.success else "failed"
             )
         except Exception as e:
             # Fallback status if orchestrator fails
@@ -755,10 +774,20 @@ async def health_check() -> HealthResponse:
                 "orchestrator_error": str(e),
             }
 
+        # Add GNN status to agent status
+        agent_status["gnn"] = gnn_status
+
+        # Overall health depends on agents AND GNN for tri-modal search
+        agents_healthy = all(
+            status == "healthy" 
+            for key, status in agent_status.items() 
+            if key != "gnn" and key != "orchestrator_error" and status != "unknown"
+        )
+        
         overall_status = (
-            "healthy"
-            if all(status == "healthy" for status in agent_status.values())
-            else "degraded"
+            "healthy" if agents_healthy and gnn_status == "ready"
+            else "degraded" if agents_healthy  # Agents OK but GNN not ready
+            else "unhealthy"  # Agents have issues
         )
 
         return HealthResponse(
