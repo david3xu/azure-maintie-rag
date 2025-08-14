@@ -363,6 +363,19 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
         else:
             return "RELATES_TO"
 
+    async def get_all_domains(self) -> List[str]:
+        """Get all unique domain values from vertices"""
+        try:
+            query = "g.V().has('domain').values('domain').dedup()"
+            result = await self._execute_query(query)
+            domains = [str(domain) for domain in result if domain]
+            return domains
+        except Exception as e:
+            logger.error(f"Get all domains failed: {e}")
+            raise RuntimeError(
+                f"Cosmos DB domain discovery failed: {e}. Check Azure Cosmos DB Gremlin connection."
+            ) from e
+
     async def count_vertices(self, domain: str) -> int:
         """Count vertices in domain"""
         try:

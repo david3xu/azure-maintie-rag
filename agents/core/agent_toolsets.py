@@ -479,42 +479,59 @@ async def search_knowledge_graph(
         # This replaces the expensive get_all_entities() + fuzzy matching approach
         matching_entities = []
         
-        # Execute parallel targeted queries for each search term
-        search_tasks = []
-        for term in query_terms[:3]:  # Limit to top 3 terms for performance
-            # Direct Gremlin query with text containment filter
-            targeted_query = f"""g.V().has('domain', 'azure_ai')
-                .where(values('text').is(containing('{term.lower()}')))
-                .limit({min(max_results, 10)})
-                .valueMap().with(WithOptions.tokens)"""
-            search_tasks.append(cosmos_client.execute_query(targeted_query))
+        # FIXED: Discover available domains instead of hardcoding 'azure_ai'
+        available_domains = []
+        try:
+            available_domains = await cosmos_client.get_all_domains()
+            if not available_domains:
+                # Fallback if no domains are discovered
+                available_domains = ["general", "azure_ai"]
+            print(f"   🔍 Searching in domains: {available_domains}")
+        except Exception as e:
+            print(f"   ⚠️  Could not discover domains: {e}, using fallback")
+            available_domains = ["general", "azure_ai"]
         
-        # Execute all search queries in parallel
-        if search_tasks:
-            parallel_results = await asyncio.gather(*search_tasks, return_exceptions=True)
-            
-            for i, result in enumerate(parallel_results):
-                if isinstance(result, Exception):
-                    # Skip failed queries but continue with others
-                    continue
-                    
-                # Process successful query results
-                for entity_data in (result or []):
+        # FIXED: Use case-insensitive search approach since Gremlin containing() is case-sensitive
+        # Instead of multiple parallel queries, get all entities and filter manually for better reliability
+        matching_entities = []
+        
+        for domain in available_domains:
+            try:
+                # Get all entities from this domain (should be small since we have selective domains)
+                domain_query = f"g.V().has('domain', '{domain}').valueMap()"
+                domain_entities = await cosmos_client.execute_query(domain_query)
+                
+                print(f"   📊 Found {len(domain_entities)} entities in domain '{domain}'")
+                
+                # Manual case-insensitive filtering (more reliable than Gremlin case sensitivity)
+                for entity_data in domain_entities:
                     if isinstance(entity_data, dict):
-                        # Extract values from Gremlin token format
+                        # Extract text from Gremlin result format
                         text_value = entity_data.get("text", [""])
                         text_value = text_value[0] if isinstance(text_value, list) else str(text_value)
                         
-                        entity_type_value = entity_data.get("entity_type", ["unknown"])
-                        entity_type_value = entity_type_value[0] if isinstance(entity_type_value, list) else str(entity_type_value)
-                        
-                        if text_value:  # Only add entities with actual text
-                            matching_entities.append({
-                                "text": text_value,
-                                "entity_type": entity_type_value,
-                                "domain": "azure_ai",
-                                "search_term": query_terms[i] if i < len(query_terms) else "unknown"
-                            })
+                        # Check if any search term matches (case-insensitive)
+                        text_lower = text_value.lower()
+                        for term in query_terms[:3]:
+                            if term.lower() in text_lower:
+                                # Found a match!
+                                entity_type_value = entity_data.get("entity_type", ["unknown"])
+                                entity_type_value = entity_type_value[0] if isinstance(entity_type_value, list) else str(entity_type_value)
+                                
+                                matching_entities.append({
+                                    "text": text_value,
+                                    "entity_type": entity_type_value,
+                                    "domain": domain,
+                                    "search_term": term,
+                                    "found_in_domain": domain
+                                })
+                                break  # Don't add the same entity multiple times
+                                
+            except Exception as e:
+                print(f"   ⚠️  Failed to search domain '{domain}': {e}")
+                continue
+        
+        print(f"   🎯 Case-insensitive search found {len(matching_entities)} total entity matches")
         
         # Add unique matching entities to results (deduplicate by text)
         seen_texts = set()
