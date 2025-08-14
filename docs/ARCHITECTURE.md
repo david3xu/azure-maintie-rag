@@ -102,7 +102,7 @@ graph TD
 ## 📊 System Capabilities
 
 ### Universal Content Processing
-- **179 Azure AI Language Service documents** in production data
+- **Universal document processing** from data/raw/ directory
 - **Any domain adaptation** through dynamic characteristic discovery
 - **Multi-language support** with automatic detection
 - **Real-time processing** with streaming API endpoints
@@ -118,7 +118,7 @@ graph TD
 
 **1. Vector Search** - Azure Cognitive Search
 - **1536D embeddings** with real Azure AI documentation
-- **Semantic search** across 179 Azure Language Service files
+- **Semantic search** across all documents in data/raw/
 - **Results**: `azure-ai-services-language-service_part_*` documents with scores 2.73-1.02
 
 **2. Graph Search** - Azure Cosmos DB Gremlin
@@ -142,7 +142,7 @@ graph TD
 - ✅ Frontend React 19.1.0 chat interface integrated
 - ✅ Zero domain bias enforced by pre-commit hooks
 - ✅ Complete CI/CD pipeline with GitHub Actions
-- ✅ Real data processing: 179 Azure AI Language Service files
+- ✅ Real data processing: Universal adaptation to any documents in data/raw/
 - ✅ All core issues resolved (TypeScript, API client, graph search)
 
 ### Deployment Ready

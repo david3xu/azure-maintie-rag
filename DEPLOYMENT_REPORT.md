@@ -47,7 +47,7 @@
 **Complete RAG Workflow Testing**:
 - ✅ **Tri-Modal Search**: Vector + Graph + GNN all working
 - ✅ **Azure OpenAI Answer Generation**: Complete workflow operational  
-- ✅ **Real Data Processing**: 179 Azure AI Language Service files
+- ✅ **Real Data Processing**: Universal adaptation to any documents in data/raw/
 - ✅ **Frontend Integration**: React 19.1.0 chat interface working
 - ✅ **API Endpoints**: `/api/v1/rag` returning generated answers
 

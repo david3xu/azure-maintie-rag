@@ -20,7 +20,7 @@ This pipeline operates on the principle of **zero hardcoded domain bias** - it a
 **Key Components:**
 - **3 PydanticAI Agents**: Domain Intelligence, Knowledge Extraction, Universal Search
 - **9 Azure Services**: OpenAI, Cognitive Search, Cosmos DB, Storage, ML, etc.
-- **Real Data**: 179 Azure AI Language Service documents in `data/raw/`
+- **Universal Data**: Processes any documents in `data/raw/` directory
 
 ## 🚨 **Critical Safety Information**
 
@@ -57,7 +57,7 @@ export PYTHONPATH=/workspace/azure-maintie-rag
 
 ### Required Data:
 - Real data must exist in `data/raw/azure-ai-services-language-service_output/`
-- 179 Azure AI Language Service markdown files should be present
+- Documents should be present in data/raw/ directory
 - NO sample data, NO fake values, NO placeholder content
 
 ### Azure Services:
@@ -174,15 +174,15 @@ PYTHONPATH=/workspace/azure-maintie-rag python scripts/dataflow/phase2_ingestion
 ```
 
 **What it does:**
-- Uploads 179 Azure AI docs to Storage containers
+- Uploads all documents from data/raw/ to Storage containers
 - Generates 1536-dimensional vector embeddings
 - Indexes documents in Cognitive Search with metadata
 
 **Expected Results:**
 ```
-✅ Storage: 179 documents uploaded to documents-prod
+✅ Storage: All documents uploaded to documents-prod
 ✅ Embeddings: 179 vectors created (1536 dimensions each)
-✅ Search Index: 179 documents indexed with metadata
+✅ Search Index: All documents indexed with metadata
 ```
 
 ### **Phase 3: Knowledge Extraction**
@@ -387,7 +387,7 @@ make dataflow-validate  # Start from Phase 1
 - Universal Search Agent: Results returned with confidence
 
 ### **Phase 2 (Ingestion): Data Quality**
-- Storage: All 179 documents uploaded successfully
+- Storage: All documents uploaded successfully
 - Embeddings: Vector count matches document count
 - Search: All documents indexed with proper metadata
 
@@ -415,7 +415,7 @@ make dataflow-validate  # Start from Phase 1
 
 - [ ] All 6 phases execute successfully
 - [ ] Real Azure services operational (no mocks)
-- [ ] Real data processed (179 Azure AI documents)
+- [ ] Real data processed (all documents from data/raw/)
 - [ ] Knowledge graph populated with quality relationships
 - [ ] Universal search returns relevant results
 - [ ] Multi-agent coordination working
