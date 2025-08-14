@@ -1156,6 +1156,7 @@ CONTENT TO ANALYZE:
         )
 
 
+
 async def _analyze_vocabulary_richness_via_llm(
     ctx: RunContext[UniversalDeps], content: str, vocab_complexity: float
 ) -> float:
