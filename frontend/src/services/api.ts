@@ -1,8 +1,6 @@
 import axios from "axios";
 import type {
   QueryResponse,
-  SearchRequest,
-  SearchResponse,
   KnowledgeExtractionRequest,
   KnowledgeExtractionResponse,
   HealthResponse,
@@ -15,24 +13,26 @@ export async function postUniversalQuery(
 ): Promise<QueryResponse> {
   try {
     console.log(
-      "Making API request to:",
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SEARCH}`
+      "Making API request to unified RAG endpoint:",
+      `${API_CONFIG.BASE_URL}/api/v1/rag`
     );
 
-    const searchRequest: SearchRequest = {
+    const ragRequest = {
       query: query.trim(),
       max_results: 10,
+      max_tokens: 1000,
       use_domain_analysis: true,
-      include_agent_metrics: false, // Set to false for better performance
+      include_sources: true,
+      include_search_results: true,
     };
 
-    console.log("Request payload:", searchRequest);
+    console.log("Request payload:", ragRequest);
 
-    const response = await axios.post<SearchResponse>(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SEARCH}`,
-      searchRequest,
+    const response = await axios.post(
+      `${API_CONFIG.BASE_URL}/api/v1/rag`,
+      ragRequest,
       {
-        timeout: 60000, // 60 second timeout for Azure operations
+        timeout: 90000, // Increased timeout for search + answer generation
         headers: {
           "Content-Type": "application/json",
         },
@@ -43,37 +43,27 @@ export async function postUniversalQuery(
     const backendData = response.data;
 
     if (!backendData.success) {
-      throw new Error(backendData.error || "Search request failed");
+      throw new Error(backendData.error || "RAG request failed");
     }
 
-    // Convert backend SearchResponse to frontend QueryResponse format
-    const topResults = backendData.results.slice(0, 5); // Show top 5 results
-    const resultSummary =
-      topResults.length > 0
-        ? `Found ${backendData.total_results_found} results using ${
-            backendData.strategy_used
-          } strategy. Top results include: ${topResults
-            .map((r) => r.title)
-            .join(", ")}`
-        : `Search completed using ${backendData.strategy_used} strategy but no results found.`;
-
+    // Now we have a real generated answer instead of just search results summary
     return {
       query: backendData.query,
-      generated_response: resultSummary,
-      confidence_score: backendData.search_confidence,
+      generated_response: backendData.generated_answer, // Real Azure OpenAI generated answer
+      confidence_score: backendData.confidence_score,
       processing_time: backendData.execution_time,
-      safety_warnings: [], // Not implemented in backend yet
-      sources: backendData.results.map((r) => r.source),
-      citations: backendData.results.map((r) => {
+      safety_warnings: [], // Can be added in future
+      sources: backendData.sources_used,
+      citations: backendData.search_results?.map((r: any) => {
         const content = r.content || "";
-        return content.substring(0, 150) + (content.length > 150 ? "..." : "");
-      }),
+        return content.substring(0, 200) + (content.length > 200 ? "..." : "");
+      }) || [],
     };
   } catch (error) {
-    console.error("Universal query failed:", error);
+    console.error("Universal RAG query failed:", error);
     if (axios.isAxiosError(error)) {
       const message = error.response?.data?.error || error.message;
-      throw new Error(`Search failed: ${message}`);
+      throw new Error(`RAG processing failed: ${message}`);
     }
     throw error;
   }

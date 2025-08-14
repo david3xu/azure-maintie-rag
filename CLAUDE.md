@@ -12,6 +12,8 @@ cd /workspace/azure-maintie-rag
 make setup                    # Install all dependencies (backend + frontend)  
 make dev                      # Start API (port 8000) + Frontend (port 5174)
 make health                   # System health check with Azure service status
+make session-report           # View current session performance metrics
+make clean                    # Clean current session with log replacement
 
 # Testing with Real Azure Services (no mocks)
 pytest                                                         # All tests with auto asyncio
@@ -102,6 +104,13 @@ agents/core/centralized_agent1_schema.py:Agent1TemplateMapping
 # Domain Intelligence output provides template variables for extraction
 ```
 
+**Universal Orchestrator Pattern (API Layer):**
+```python
+agents/orchestrator.py → UniversalOrchestrator class
+api/endpoints/search.py → Uses orchestrator for agent coordination
+# All API endpoints use orchestrator instead of calling agents directly
+```
+
 ## Critical Development Rules
 
 ### 🚨 Zero Domain Bias (ENFORCED)
@@ -159,8 +168,11 @@ export USE_MANAGED_IDENTITY=false  # Use DefaultAzureCredential locally
 # Numerical stability for GNN/PyTorch operations  
 export OPENBLAS_NUM_THREADS=1
 
-# Combined for dataflow scripts
+# Combined for dataflow scripts (includes PyTorch stability)
 OPENBLAS_NUM_THREADS=1 USE_MANAGED_IDENTITY=false PYTHONPATH=/workspace/azure-maintie-rag python <script>
+
+# For GNN/PyTorch operations (essential for numerical stability)
+OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag timeout 120 pytest -m performance
 ```
 
 ## Common Issues & Solutions
@@ -177,6 +189,9 @@ OPENBLAS_NUM_THREADS=1 USE_MANAGED_IDENTITY=false PYTHONPATH=/workspace/azure-ma
 | Frontend Docker Build Issues | Check frontend/.dockerignore and Dockerfile paths |
 | Service Image Name Template Issues | Container images now use hardcoded names for reliability |
 | Environment Sync Problems | Run `./scripts/deployment/sync-env.sh <env>` to resync configuration |
+| PyTorch/GNN Threading Issues | Always use `OPENBLAS_NUM_THREADS=1` for numerical stability |
+| Test Timeouts with Large Models | Use `timeout 120` or `timeout 180` for GNN operations |
+| Session Management Issues | Use `make session-report` to view current session, `make clean` to reset |
 
 ## 6-Phase Data Pipeline
 
@@ -261,13 +276,21 @@ Based on recent fixes to container image management:
 - **azd URLs Not Displayed**: Run `./scripts/show-deployment-urls.sh` to see frontend/backend URLs
 - **Docker Not Available**: azd may fail to package services if Docker isn't installed (containers already deployed via Bicep)
 
-## Session Management
+## Session Management & Current Status
 
+### Enterprise Session Management
 The Makefile implements sophisticated session tracking:
 - Each command creates unique session ID (`YYYYMMDD_HHMMSS`)
 - Session reports in `logs/dataflow_execution_*.md`
 - Performance metrics in `logs/performance_*.log`
 - Cumulative reports in `logs/cumulative_dataflow_report.md`
+- Clean log replacement (no accumulation) for enterprise environments
+
+### Current Development Status
+Based on git status, active development files:
+- `api/endpoints/search.py` - Universal Orchestrator API integration
+- `frontend/src/services/api.ts` - Frontend API client updates
+- `example_answer_generation.py` - Query generation examples
 
 ## Project Structure
 
@@ -323,7 +346,8 @@ Based on recent commits, active development areas include:
 - **Bicep Template Fixes**: SERVICE_*_IMAGE_NAME token resolution improvements
 - **Frontend Docker Optimization**: Better build paths and .dockerignore configuration
 - **Azure Container Registry Integration**: Cloud build scripts for consistent image creation
-- **Deployment Troubleshooting**: Enhanced error handling for azd service configuration
+- **Universal Orchestrator API**: Modern agent delegation patterns in FastAPI endpoints
+- **Session Management**: Enterprise session tracking with performance metrics
 
 ### Development Workflow
 ```bash
