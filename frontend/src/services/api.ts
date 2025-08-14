@@ -10,8 +10,8 @@ import type {
 import { API_CONFIG } from "../utils/api-config";
 
 export async function postUniversalQuery(
-  query: string,
-  _domain: string = "general" // Domain parameter kept for compatibility but not used by backend
+  query: string
+  // Domain parameter removed - violates zero hardcoded domain bias rule
 ): Promise<QueryResponse> {
   try {
     console.log(

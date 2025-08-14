@@ -4,6 +4,182 @@
 
 [![Azure](https://img.shields.io/badge/Azure-Universal%20RAG-blue)](https://azure.microsoft.com) [![Deployment](https://img.shields.io/badge/Status-Production%20Ready-green)](#deployment-ready) [![PydanticAI](https://img.shields.io/badge/Framework-PydanticAI-purple)](#multi-agent-system) [![Architecture](https://img.shields.io/badge/Architecture-Multi%20Agent-orange)](#architecture)
 
+## 🚀 Quick Start
+
+### **⚡ Essential Commands (Production Ready)**
+
+```bash
+# Deploy complete system to Azure
+azd up                                      # Deploy infrastructure (no Docker needed)
+./scripts/show-deployment-urls.sh          # Get frontend and backend URLs
+
+# Build containers when needed
+az acr build --registry <acr-name> --image azure-maintie-rag/backend-prod:latest .
+az acr build --registry <acr-name> --image azure-maintie-rag/frontend-prod:latest ./frontend
+
+# Access your live system
+# Frontend Chat: https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
+# Backend API: https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/health
+```
+
+### **💼 For Stakeholders: Access Live System**
+
+Once deployed, your system provides these endpoints:
+
+```bash
+# 🎯 Frontend Chat Interface (React UI with dark mode, workflow visualization)
+https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
+
+# 🔧 Backend API Endpoints
+https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/health      # Health check
+https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/docs        # API docs
+https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/search  # Search API
+
+# Example API usage:
+curl -X POST "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/search" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Azure AI capabilities", "max_results": 5}'
+```
+
+### **⚡ Fastest Start (Try It Now)**
+
+```bash
+# 1. Clone and setup
+git clone https://github.com/your-org/azure-maintie-rag.git
+cd azure-maintie-rag
+
+# 2. Install dependencies
+pip install -r requirements.txt
+cd frontend && npm install && cd ..
+
+# 3. Run health check (works without Azure services)
+python -c "
+from agents.core.universal_models import UniversalDomainAnalysis
+print('✅ Core models working')
+print('📊 Universal RAG system ready for configuration')
+"
+
+# 4. Next: Configure Azure services (see options below)
+```
+
+### **Option 1: One-Command Production Deployment (Recommended)**
+
+```bash
+# Prerequisites: Azure CLI installed
+az login
+az account set --subscription "<your-subscription-id>"
+
+# 1. Deploy Azure infrastructure (no Docker required)
+azd up
+# ✅ Creates: OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, App Insights, Container Apps
+# ✅ Infrastructure: 9 Azure services deployed with RBAC permissions
+# ✅ Container Apps: Created but containers need to be built separately
+
+# 2. Get your deployment URLs (runs automatically in postdeploy hook)
+./scripts/show-deployment-urls.sh
+
+# 3. Build and deploy containers via Azure Container Registry
+az acr build --registry <acr-name> --image azure-maintie-rag/backend-prod:latest .
+az acr build --registry <acr-name> --image azure-maintie-rag/frontend-prod:latest ./frontend
+
+# 4. Update Container Apps with new images (if needed)
+az containerapp update --name "ca-backend-maintie-rag-prod" --resource-group "rg-maintie-rag-prod" --image "<acr-name>.azurecr.io/azure-maintie-rag/backend-prod:latest"
+az containerapp update --name "ca-frontend-maintie-rag-prod" --resource-group "rg-maintie-rag-prod" --image "<acr-name>.azurecr.io/azure-maintie-rag/frontend-prod:latest"
+
+# 5. Access your live system
+# Frontend Chat Interface: https://ca-frontend-maintie-rag-prod.<region>.azurecontainerapps.io
+# Backend API: https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io
+```
+
+### **Option 2: Local Development with REAL Azure Services**
+
+```bash
+# 1. Setup dependencies
+pip install -r requirements.txt
+cd frontend && npm install && cd ..
+
+# 2. Configure Azure services (one-time setup required)
+./scripts/deployment/sync-env.sh prod    # Sync with Azure environment
+export AZURE_CLIENT_ID="<your-client-id>"
+export AZURE_TENANT_ID="<your-tenant-id>"
+
+# 3. Start development servers
+# Backend
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload &
+
+# Frontend
+cd frontend && npm run dev &
+cd ..
+
+# 4. Test REAL Azure integration
+curl http://localhost:8000/api/v1/health
+# Expected: {"status": "healthy|degraded", "services_available": ["openai", "cosmos", "search", "storage", "gnn", "monitoring"]}
+```
+
+### **Option 3: Docker Deployment (Complete Stack)**
+
+```bash
+# 1. Build and run complete system
+docker-compose up --build
+# ✅ Backend: http://localhost:8000
+# ✅ Frontend: http://localhost:80
+# ✅ Real Azure service integration
+# ✅ Nginx reverse proxy with API routing
+
+# 2. Test deployment
+curl http://localhost:8000/api/v1/health
+curl http://localhost/         # Frontend served by Nginx
+```
+
+### **Quick Validation (FUNC Compliance)**
+
+```bash
+# Verify REAL Azure services (no fake data)
+PYTHONPATH=/workspace/azure-maintie-rag python -c "
+import asyncio
+from agents.core.universal_deps import get_universal_deps
+
+async def validate():
+    deps = await get_universal_deps()
+    services = list(deps.get_available_services())
+    print(f'✅ REAL Azure services: {services}')
+    print(f'📊 Total: {len(services)}/6 services operational')
+
+asyncio.run(validate())
+"
+
+# Test REAL data processing
+ls -la data/raw/azure-ai-services-language-service_output/
+# Expected: 5 Azure AI Language Service files (179 total documents)
+
+# Test streaming endpoint with REAL Azure agents
+curl -N http://localhost:8000/api/v1/stream/workflow/test-query
+# Expected: Server-Sent Events stream with real Azure OpenAI, Cosmos DB, Cognitive Search
+```
+
+### **Production Health Check**
+
+```bash
+# Complete system validation
+make health                   # Check all services + performance
+curl http://localhost:8000/api/v1/health | jq .
+curl http://localhost:8000/   # API info with FUNC principles
+
+# Expected Response:
+{
+  "status": "healthy|degraded",
+  "services_available": ["openai", "cosmos", "search", "storage", "gnn", "monitoring"],
+  "total_services": 6,
+  "agent_status": {
+    "domain_intelligence": "healthy",
+    "knowledge_extraction": "healthy",
+    "universal_search": "healthy"
+  }
+}
+```
+
+---
+
 ## 🎯 **Current Deployment Status**
 
 **✅ LIVE SYSTEM DEPLOYMENT IN PROGRESS** | **16 Azure Services** | **CI/CD Operational**
@@ -120,155 +296,6 @@ Azure Universal RAG is a **production-ready multi-agent system** combining Pydan
 ├─ Azure Application Insights (monitoring)
 ├─ Azure Key Vault (secrets management)
 └─ Hybrid RBAC + API key authentication
-```
-
----
-
-## 🚀 Quick Start
-
-### **💼 For Stakeholders: Access Live System**
-
-The system is **currently deploying live Azure infrastructure**. Once complete:
-
-```bash
-# Access the live system endpoints:
-# 🌐 API Documentation: http://localhost:8000/docs
-# 🔍 Search API: POST http://localhost:8000/api/v1/search
-# 🧠 Extract API: POST http://localhost:8000/api/v1/extract  
-# 📊 Health Check: GET http://localhost:8000/api/v1/health
-# 🎯 Frontend UI: http://localhost:5174
-
-# Example API usage:
-curl -X POST "http://localhost:8000/api/v1/search" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "Azure AI capabilities", "max_results": 5}'
-```
-
-### **⚡ Fastest Start (Try It Now)**
-
-```bash
-# 1. Clone and setup
-git clone https://github.com/your-org/azure-maintie-rag.git
-cd azure-maintie-rag
-
-# 2. Install dependencies
-pip install -r requirements.txt
-cd frontend && npm install && cd ..
-
-# 3. Run health check (works without Azure services)
-python -c "
-from agents.core.universal_models import UniversalDomainAnalysis
-print('✅ Core models working')
-print('📊 Universal RAG system ready for configuration')
-"
-
-# 4. Next: Configure Azure services (see options below)
-```
-
-### **Option 1: One-Command Production Deployment (Recommended)**
-
-```bash
-# Prerequisites: Azure CLI installed
-docker exec -it claude-session bash
-az login
-az account set --subscription "<your-subscription-id>"
-
-# Deploy complete Azure infrastructure (9 services)
-azd up
-# ✅ Creates: OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, App Insights, Log Analytics, Container Apps
-# ✅ Deploys: Backend API + Frontend UI + Real Azure integration
-# ✅ Configures: RBAC permissions, Managed Identity, Environment sync
-
-# Access your deployment
-# Frontend: https://<your-app>.azurecontainerapps.io
-# Backend API: https://<your-api>.azurecontainerapps.io/api/v1/health
-```
-
-### **Option 2: Local Development with REAL Azure Services**
-
-```bash
-# 1. Setup dependencies
-pip install -r requirements.txt
-cd frontend && npm install && cd ..
-
-# 2. Configure Azure services (one-time setup required)
-./scripts/deployment/sync-env.sh prod    # Sync with Azure environment
-export AZURE_CLIENT_ID="<your-client-id>"
-export AZURE_TENANT_ID="<your-tenant-id>"
-
-# 3. Start development servers
-# Backend
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload &
-
-# Frontend
-cd frontend && npm run dev &
-cd ..
-
-# 4. Test REAL Azure integration
-curl http://localhost:8000/api/v1/health
-# Expected: {"status": "healthy|degraded", "services_available": ["openai", "cosmos", "search", "storage", "gnn", "monitoring"]}
-```
-
-### **Option 3: Docker Deployment (Complete Stack)**
-
-```bash
-# 1. Build and run complete system
-docker-compose up --build
-# ✅ Backend: http://localhost:8000
-# ✅ Frontend: http://localhost:80
-# ✅ Real Azure service integration
-# ✅ Nginx reverse proxy with API routing
-
-# 2. Test deployment
-curl http://localhost:8000/api/v1/health
-curl http://localhost/         # Frontend served by Nginx
-```
-
-### **Quick Validation (FUNC Compliance)**
-
-```bash
-# Verify REAL Azure services (no fake data)
-PYTHONPATH=/workspace/azure-maintie-rag python -c "
-import asyncio
-from agents.core.universal_deps import get_universal_deps
-
-async def validate():
-    deps = await get_universal_deps()
-    services = list(deps.get_available_services())
-    print(f'✅ REAL Azure services: {services}')
-    print(f'📊 Total: {len(services)}/6 services operational')
-
-asyncio.run(validate())
-"
-
-# Test REAL data processing
-ls -la data/raw/azure-ai-services-language-service_output/
-# Expected: 5 Azure AI Language Service files (179 total documents)
-
-# Test streaming endpoint with REAL Azure agents
-curl -N http://localhost:8000/api/v1/stream/workflow/test-query
-# Expected: Server-Sent Events stream with real Azure OpenAI, Cosmos DB, Cognitive Search
-```
-
-### **Production Health Check**
-
-```bash
-# Complete system validation
-make health                   # Check all services + performance
-curl http://localhost:8000/api/v1/health | jq .
-curl http://localhost:8000/   # API info with FUNC principles
-
-# Expected Response:
-{
-  "status": "healthy|degraded",
-  "services_available": ["openai", "cosmos", "search", "storage", "gnn", "monitoring"],
-  "total_services": 6,
-  "agent_status": {
-    "domain_intelligence": "healthy",
-    "knowledge_extraction": "healthy",
-    "universal_search": "healthy"
-  }
-}
 ```
 
 ---

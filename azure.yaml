@@ -4,15 +4,15 @@ metadata:
   template: azure-search-openai-demo@main
   description: "Azure Universal RAG system with knowledge graphs, vector search, and GNN training"
 
-# Services to deploy - Universal RAG Backend + Frontend
+# Services configuration for azd deployment
 services:
   backend:
     project: .
-    language: py
+    language: python
     host: containerapp
   frontend:
     project: ./frontend
-    language: js  
+    language: js
     host: containerapp
 
 # Infrastructure configuration
@@ -34,75 +34,50 @@ env:
   COSMOS_GRAPH_NAME: knowledge-graph
   
   # Container Configuration
-  BACKEND_IMAGE_NAME: azure-maintie-rag-backend
   BACKEND_PORT: 8000
-  
-  # Container image names (will be set by preprovision hook)
-  backendImageName: azure-maintie-rag/backend-prod:latest
-  frontendImageName: azure-maintie-rag/frontend-prod:latest
 
 # Deployment hooks
 hooks:
-  prepackage:
-    shell: sh
-    run: |
-      echo "📦 Building Azure Universal RAG container..."
-      # Ensure requirements are up to date for the API service
-      if [ -f "requirements.txt" ]; then
-        echo "Building Python Azure Universal RAG API for container deployment..."
-      fi
-      
   preprovision:
     shell: sh
     run: |
-      echo "🏗️ Preparing Azure Universal RAG infrastructure..."
+      echo "🏗️ Preparing Azure Universal RAG deployment..."
       echo "Environment: ${AZURE_ENV_NAME}"
       echo "Location: ${AZURE_LOCATION}"
-      
-      # Debug: Show what azd provides
-      echo "Available environment variables:"
-      env | grep -E "(SERVICE_|AZURE_)" | sort
-      
-      # Set container image names from packaged services (try different variable names)
-      if [ ! -z "${SERVICE_BACKEND_IMAGE_NAME:-}" ]; then
-        echo "Setting backend image from SERVICE_BACKEND_IMAGE_NAME: ${SERVICE_BACKEND_IMAGE_NAME}"
-        azd env set backendImageName "${SERVICE_BACKEND_IMAGE_NAME}"
-      elif [ ! -z "${BACKEND_IMAGE_NAME:-}" ]; then
-        echo "Setting backend image from BACKEND_IMAGE_NAME: ${BACKEND_IMAGE_NAME}"
-        azd env set backendImageName "${BACKEND_IMAGE_NAME}"
-      else
-        echo "⚠️  No backend image name found in environment variables"
-      fi
-      
-      if [ ! -z "${SERVICE_FRONTEND_IMAGE_NAME:-}" ]; then
-        echo "Setting frontend image from SERVICE_FRONTEND_IMAGE_NAME: ${SERVICE_FRONTEND_IMAGE_NAME}"
-        azd env set frontendImageName "${SERVICE_FRONTEND_IMAGE_NAME}"
-      elif [ ! -z "${FRONTEND_IMAGE_NAME:-}" ]; then
-        echo "Setting frontend image from FRONTEND_IMAGE_NAME: ${FRONTEND_IMAGE_NAME}"
-        azd env set frontendImageName "${FRONTEND_IMAGE_NAME}"
-      else
-        echo "⚠️  No frontend image name found in environment variables"
-      fi
       
   postprovision:
     shell: sh
     run: |
-      echo "🔧 Configuring deployed services..."
-      # Update backend configuration with deployed endpoints
-      if [ -f "./scripts/update-env-from-deployment.sh" ]; then
-        ./scripts/update-env-from-deployment.sh
-      fi
+      echo "✅ Infrastructure provisioned successfully!"
+      echo ""
+      echo "🔍 Checking deployed resources..."
+      
+      # Get resource group info
+      RESOURCE_GROUP="rg-maintie-rag-${AZURE_ENV_NAME}"
+      echo "Resource Group: $RESOURCE_GROUP"
+      
+      # List key resources
+      echo ""
+      echo "📦 Key Resources:"
+      az resource list --resource-group "$RESOURCE_GROUP" --query "[].{Name:name, Type:type}" -o table 2>/dev/null || echo "Unable to list resources"
+      
+      echo ""
+      echo "✅ Infrastructure ready for service deployment"
       
   postdeploy:
     shell: sh
     run: |
       echo "✅ Deployment complete!"
-      echo "Backend URL: ${SERVICE_BACKEND_URI}"
-      echo "Frontend URL: ${SERVICE_FRONTEND_URI}"
       echo ""
-      echo "🔗 Quick verification commands:"
-      echo "  Health check: curl \${SERVICE_BACKEND_URI}/health"
-      echo "  Admin panel: open \${SERVICE_FRONTEND_URI}"
+      echo "🔗 Getting deployment URLs..."
+      
+      # Run our working URL script
+      if [ -f "./scripts/show-deployment-urls.sh" ]; then
+        ./scripts/show-deployment-urls.sh
+      else
+        echo "📍 Use this command to get URLs: ./scripts/show-deployment-urls.sh"
+      fi
+      
       echo ""
-      echo "📊 Resource group: ${AZURE_RESOURCE_GROUP}"
-      echo "🌍 Environment: ${AZURE_ENV_NAME}"
+      echo "📊 Environment: ${AZURE_ENV_NAME}"
+      echo "💡 Chat interface is ready for testing!"

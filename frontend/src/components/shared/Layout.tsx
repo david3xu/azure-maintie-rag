@@ -5,12 +5,10 @@ interface LayoutProps {
   isDarkMode?: boolean;
   onThemeToggle?: () => void;
   // Add new props for header controls
-  domain?: string;
-  onDomainChange?: (domain: string) => void;
+  // Domain props removed - violates zero hardcoded domain bias rule
   showWorkflow?: boolean;
   onWorkflowToggle?: (checked: boolean) => void;
-  viewLayer?: 1 | 2 | 3;
-  onViewLayerChange?: (layer: 1 | 2 | 3) => void;
+  // View layer props removed - fake feature not in backend
   loading?: boolean;
   isStreaming?: boolean;
 }
@@ -19,12 +17,10 @@ const Layout: React.FC<LayoutProps> = ({
   children,
   isDarkMode,
   onThemeToggle,
-  domain,
-  onDomainChange,
+  // Domain parameters removed - zero hardcoded domain bias
   showWorkflow,
   onWorkflowToggle,
-  viewLayer,
-  onViewLayerChange,
+  // View layer parameters removed - fake feature not in backend
   loading,
   isStreaming
 }) => (
@@ -32,27 +28,12 @@ const Layout: React.FC<LayoutProps> = ({
     <header className="App-header">
       <div className="header-content">
         <div className="header-main">
-          <h1>🤖 Universal Enhanced RAG</h1>
-          <p>Intelligent Knowledge Assistant with Real-Time Processing</p>
+          <h1>🤖 Azure Universal RAG</h1>
+          <p>Knowledge Search with Real Azure AI Services</p>
         </div>
         <div className="header-controls">
           {/* Domain Selector */}
-          {onDomainChange && (
-            <div className="header-control-group">
-              <label htmlFor="header-domain-select" className="header-label">Domain:</label>
-              <select
-                id="header-domain-select"
-                value={domain}
-                onChange={e => onDomainChange(e.target.value)}
-                className="header-select"
-                disabled={loading || isStreaming}
-              >
-                <option value="general">General</option>
-                <option value="general">General</option>
-                <option value="engineering">Engineering</option>
-              </select>
-            </div>
-          )}
+          {/* Domain selection removed - violates zero hardcoded domain bias rule */}
 
           {/* Workflow Toggle */}
           {onWorkflowToggle && (
@@ -70,23 +51,7 @@ const Layout: React.FC<LayoutProps> = ({
             </div>
           )}
 
-          {/* View Layer Selector - only show when workflow is enabled */}
-          {showWorkflow && onViewLayerChange && (
-            <div className="header-control-group">
-              <label htmlFor="header-view-layer" className="header-label">Detail:</label>
-              <select
-                id="header-view-layer"
-                value={viewLayer}
-                onChange={e => onViewLayerChange(Number(e.target.value) as 1 | 2 | 3)}
-                disabled={loading || isStreaming}
-                className="header-select header-select-compact"
-              >
-                <option value={1}>🔍 User-Friendly</option>
-                <option value={2}>🔧 Technical</option>
-                <option value={3}>🔬 Diagnostics</option>
-              </select>
-            </div>
-          )}
+          {/* View Layer Selector removed - fake feature not in backend */}
 
           {/* Theme Toggle */}
           {onThemeToggle && (
@@ -106,8 +71,8 @@ const Layout: React.FC<LayoutProps> = ({
     </main>
     <footer className="app-footer">
       <p>
-        🤖 Powered by Universal Smart RAG with Phase 1, 2, 3 optimizations |
-        🔒 Enterprise-grade universal intelligence
+        🤖 Powered by Azure Universal RAG System |
+        🔒 Real Azure services with PydanticAI agents
       </p>
     </footer>
   </div>

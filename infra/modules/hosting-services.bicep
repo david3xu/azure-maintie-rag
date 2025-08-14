@@ -1,7 +1,6 @@
-// Hosting Services Module: Container Apps, Container Registry
+// Hosting Services Module: Container Apps, Container Registry (FIXED)
 param environmentName string
 param location string
-param principalId string
 param resourcePrefix string
 
 // Service endpoints from other modules
@@ -12,30 +11,33 @@ param storageAccountName string
 param keyVaultName string
 param appInsightsConnectionString string
 
-// Container image names (temporarily hardcoded for debugging)
-param backendImageName string = 'azure-maintie-rag/backend-prod:azd-deploy-1755081578'
-param frontendImageName string = 'azure-maintie-rag/frontend-prod:azd-deploy-1755081580'
+// Container image names - provided by azd container building
+@description('Backend container image name with tag (e.g., azure-maintie-rag/backend-prod:azd-deploy-123456)')
+param backendImageName string = ''
+
+@description('Frontend container image name with tag (e.g., azure-maintie-rag/frontend-prod:azd-deploy-123456)')
+param frontendImageName string = ''
 
 // Environment-specific configuration
 var environmentConfig = {
   development: {
     containerCpu: '0.5'
     containerMemory: '1Gi'
-    minReplicas: 1
+    minReplicas: 0  // Allow scale to zero for development
     maxReplicas: 3
     registrySku: 'Basic'
   }
   staging: {
     containerCpu: '1.0'
     containerMemory: '2Gi'
-    minReplicas: 1
+    minReplicas: 0
     maxReplicas: 5
     registrySku: 'Standard'
   }
   prod: {
     containerCpu: '2.0'
     containerMemory: '4Gi'
-    minReplicas: 2
+    minReplicas: 0  // Start with 0 until images are ready
     maxReplicas: 10
     registrySku: 'Premium'
   }
@@ -60,7 +62,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
     name: config.registrySku
   }
   properties: {
-    adminUserEnabled: false
+    adminUserEnabled: true  // Enable admin for initial setup
     publicNetworkAccess: 'Enabled'
     zoneRedundancy: environmentName == 'production' ? 'Enabled' : 'Disabled'
   }
@@ -100,6 +102,11 @@ resource containerEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
 resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: 'ca-backend-${resourcePrefix}-${environmentName}'
   location: location
+  tags: {
+    Environment: environmentName
+    Purpose: 'Backend API service for Universal RAG'
+    'azd-service-name': 'backend'
+  }
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -114,7 +121,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         external: true
         targetPort: 8000
         transport: 'http'
-        allowInsecure: environmentName == 'development'
+        allowInsecure: true  // Allow for initial setup
         traffic: [
           {
             weight: 100
@@ -138,10 +145,9 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: '${containerRegistry.properties.loginServer}/${backendImageName}'
+          image: !empty(backendImageName) ? backendImageName : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           name: 'backend'
           env: [
-            // Azure Service Endpoints
             {
               name: 'AZURE_OPENAI_ENDPOINT'
               value: openaiEndpoint
@@ -162,113 +168,34 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'AZURE_KEY_VAULT_NAME'
               value: keyVaultName
             }
-            // Application Configuration
-            {
-              name: 'ENVIRONMENT'
-              value: environmentName
-            }
             {
               name: 'AZURE_CLIENT_ID'
               value: managedIdentity.properties.clientId
             }
             {
+              name: 'AZURE_TENANT_ID'
+              value: subscription().tenantId
+            }
+            {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
               secretRef: 'app-insights-connection-string'
             }
-            // Model Deployments
-            {
-              name: 'OPENAI_MODEL_DEPLOYMENT'
-              value: 'gpt-4o'
-            }
-            {
-              name: 'EMBEDDING_MODEL_DEPLOYMENT'
-              value: 'text-embedding-ada-002'
-            }
-            // Database Configuration
-            {
-              name: 'COSMOS_DATABASE_NAME'
-              value: 'maintie-rag-${environmentName}'
-            }
-            {
-              name: 'COSMOS_GRAPH_NAME'
-              value: 'knowledge-graph-${environmentName}'
-            }
-            {
-              name: 'SEARCH_INDEX_NAME'
-              value: 'maintie-${environmentName}-index'
-            }
-            // Container Configuration
             {
               name: 'PORT'
               value: '8000'
-            }
-            {
-              name: 'WORKERS'
-              value: environmentName == 'production' ? '4' : '2'
             }
           ]
           resources: {
             cpu: json(config.containerCpu)
             memory: config.containerMemory
           }
-          probes: [
-            {
-              type: 'Liveness'
-              httpGet: {
-                path: '/health'
-                port: 8000
-                scheme: 'HTTP'
-              }
-              initialDelaySeconds: 30
-              periodSeconds: 30
-              timeoutSeconds: 10
-              failureThreshold: 3
-            }
-            {
-              type: 'Readiness'
-              httpGet: {
-                path: '/health'
-                port: 8000
-                scheme: 'HTTP'
-              }
-              initialDelaySeconds: 10
-              periodSeconds: 10
-              timeoutSeconds: 5
-              failureThreshold: 3
-            }
-          ]
         }
       ]
       scale: {
         minReplicas: config.minReplicas
         maxReplicas: config.maxReplicas
-        rules: [
-          {
-            name: 'http-scaling'
-            http: {
-              metadata: {
-                concurrentRequests: environmentName == 'production' ? '100' : '50'
-              }
-            }
-          }
-          {
-            name: 'cpu-scaling'
-            custom: {
-              type: 'cpu'
-              metadata: {
-                type: 'Utilization'
-                value: '70'
-              }
-            }
-          }
-        ]
       }
     }
-  }
-  tags: {
-    Environment: environmentName
-    Purpose: 'Universal RAG FastAPI backend application'
-    'azd-service-name': 'backend'
   }
 }
 
@@ -276,6 +203,11 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
 resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: 'ca-frontend-${resourcePrefix}-${environmentName}'
   location: location
+  tags: {
+    Environment: environmentName
+    Purpose: 'Frontend UI service for Universal RAG'
+    'azd-service-name': 'frontend'
+  }
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -290,7 +222,7 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
         external: true
         targetPort: 3000
         transport: 'http'
-        allowInsecure: environmentName == 'development'
+        allowInsecure: true
         traffic: [
           {
             weight: 100
@@ -308,7 +240,7 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: '${containerRegistry.properties.loginServer}/${frontendImageName}'
+          image: !empty(frontendImageName) ? frontendImageName : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           name: 'frontend'
           env: [
             {
@@ -316,92 +248,27 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: 'https://${backendApp.properties.configuration.ingress.fqdn}'
             }
             {
-              name: 'NODE_ENV'
-              value: environmentName == 'development' ? 'development' : 'production'
+              name: 'PORT'
+              value: '3000'
             }
           ]
           resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
+            cpu: json(config.containerCpu)
+            memory: config.containerMemory
           }
         }
       ]
       scale: {
-        minReplicas: 1
-        maxReplicas: 5
-        rules: [
-          {
-            name: 'http-scaling'
-            http: {
-              metadata: {
-                concurrentRequests: '30'
-              }
-            }
-          }
-        ]
+        minReplicas: config.minReplicas
+        maxReplicas: config.maxReplicas
       }
     }
-  }
-  tags: {
-    Environment: environmentName
-    Purpose: 'Universal RAG React frontend application'
-    'azd-service-name': 'frontend'
-  }
-}
-
-// RBAC for Container Registry
-resource registryPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: containerRegistry
-  name: guid(containerRegistry.id, managedIdentity.id, 'AcrPull')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource registryPushRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
-  scope: containerRegistry
-  name: guid(containerRegistry.id, principalId, 'AcrPush')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8311e382-0749-4cb8-b61a-304f252e45ec')
-    principalId: principalId
-    principalType: 'User'
-  }
-}
-
-// Container Apps Environment Diagnostics
-resource environmentDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: containerEnvironment
-  name: 'environment-diagnostics'
-  properties: {
-    workspaceId: logAnalytics.id
-    logs: [
-      {
-        categoryGroup: 'allLogs'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-    ]
   }
 }
 
 // Outputs
-output registryName string = containerRegistry.name
-output registryLoginServer string = containerRegistry.properties.loginServer
-output registryId string = containerRegistry.id
-
-output containerEnvironmentName string = containerEnvironment.name
+output containerRegistryName string = containerRegistry.name
+output containerRegistryLoginServer string = containerRegistry.properties.loginServer
+output backendAppUrl string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
+output frontendAppUrl string = 'https://${frontendApp.properties.configuration.ingress.fqdn}'
 output containerEnvironmentId string = containerEnvironment.id
-output containerEnvironmentDefaultDomain string = containerEnvironment.properties.defaultDomain
-
-output backendAppName string = backendApp.name
-output backendUri string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
-output backendFqdn string = backendApp.properties.configuration.ingress.fqdn
-
-output frontendAppName string = frontendApp.name
-output frontendUri string = 'https://${frontendApp.properties.configuration.ingress.fqdn}'
-output frontendFqdn string = frontendApp.properties.configuration.ingress.fqdn

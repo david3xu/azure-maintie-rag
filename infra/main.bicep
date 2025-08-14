@@ -14,11 +14,11 @@ param location string
 @description('Principal ID for the current user (from azd auth)')
 param principalId string = ''
 
-@description('Backend container image name')
-param backendImageName string = 'azure-maintie-rag/backend-prod:azd-deploy-1755081578'
+@description('Backend container image - provided by azd')
+param backendImageName string = ''
 
-@description('Frontend container image name') 
-param frontendImageName string = 'azure-maintie-rag/frontend-prod:azd-deploy-1755081580'
+@description('Frontend container image - provided by azd')
+param frontendImageName string = ''
 
 // Resource naming configuration
 var resourcePrefix = 'maintie-rag'
@@ -79,7 +79,6 @@ module hosting 'modules/hosting-services.bicep' = {
   params: {
     environmentName: environmentName
     location: location
-    principalId: principalId
     resourcePrefix: resourcePrefix
     openaiEndpoint: ai.outputs.openaiEndpoint
     searchEndpoint: coreServices.outputs.searchEndpoint
@@ -122,10 +121,10 @@ output AZURE_APP_INSIGHTS_CONNECTION_STRING string = coreServices.outputs.appIns
 output AZURE_LOG_ANALYTICS_WORKSPACE_ID string = coreServices.outputs.logAnalyticsWorkspaceId
 
 // Hosting
-output SERVICE_BACKEND_URI string = hosting.outputs.backendUri
-output SERVICE_FRONTEND_URI string = hosting.outputs.frontendUri
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = hosting.outputs.registryLoginServer
-output AZURE_CONTAINER_ENVIRONMENT_NAME string = hosting.outputs.containerEnvironmentName
+output SERVICE_BACKEND_URI string = hosting.outputs.backendAppUrl
+output SERVICE_FRONTEND_URI string = hosting.outputs.frontendAppUrl
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = hosting.outputs.containerRegistryLoginServer
+output AZURE_CONTAINER_ENVIRONMENT_NAME string = hosting.outputs.containerEnvironmentId
 
 // Identity
 output AZURE_CLIENT_ID string = coreServices.outputs.managedIdentityClientId

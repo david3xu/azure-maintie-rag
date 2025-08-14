@@ -5,7 +5,7 @@ import type { QueryResponse } from '../../types/api';
 interface WorkflowPanelProps {
   showWorkflow: boolean;
   queryId: string | null;
-  viewLayer: 1 | 2 | 3;
+  // viewLayer removed - fake feature not in backend
   onComplete: (response: QueryResponse) => void;
   onError: (error: string) => void;
 }
@@ -13,7 +13,7 @@ interface WorkflowPanelProps {
 const WorkflowPanel: React.FC<WorkflowPanelProps> = ({
   showWorkflow,
   queryId,
-  viewLayer,
+  // viewLayer removed - fake feature not in backend
   onComplete,
   onError,
 }) => (
@@ -23,7 +23,7 @@ const WorkflowPanel: React.FC<WorkflowPanelProps> = ({
         queryId={queryId}
         onComplete={onComplete}
         onError={onError}
-        viewLayer={viewLayer}
+        // viewLayer removed - fake feature not in backend
       />
     ) : (
       <div style={{ padding: '2rem', textAlign: 'center', color: '#6c757d' }}>

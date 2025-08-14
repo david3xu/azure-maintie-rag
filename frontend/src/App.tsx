@@ -16,9 +16,9 @@ function App() {
   const { chatHistory, setChatHistory, currentChatId, setCurrentChatId } = useChat();
   const { queryId, setQueryId } = useWorkflow();
   const [query, setQuery] = useState("");
-  const [domain, setDomain] = useState("general");
+  // Domain removed - violates zero hardcoded domain bias rule
   const [showWorkflow, setShowWorkflow] = useState(false);
-  const [viewLayer, setViewLayer] = useState<1 | 2 | 3>(1);
+  // View layers removed - fake feature not in backend
 
   // Dark mode state management
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -44,8 +44,8 @@ function App() {
     showWorkflow ? queryId : null,
     handleWorkflowComplete,
     handleWorkflowError,
-    query,
-    domain
+    query
+    // Domain removed - violates zero hardcoded domain bias rule
   );
 
   // Handle workflow completion
@@ -103,7 +103,7 @@ function App() {
       setQueryId(chatId); // Use chatId as queryId for streaming
     } else {
       try {
-        const queryResponse = await runUniversalRAG({ query: query.trim(), domain });
+        const queryResponse = await runUniversalRAG({ query: query.trim() });
         setChatHistory(prev =>
           prev.map(msg =>
             msg.id === chatId
@@ -129,12 +129,10 @@ function App() {
     <Layout
       isDarkMode={isDarkMode}
       onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-      domain={domain}
-      onDomainChange={setDomain}
+      // Domain selection removed - violates zero hardcoded domain bias rule  
       showWorkflow={showWorkflow}
       onWorkflowToggle={setShowWorkflow}
-      viewLayer={viewLayer}
-      onViewLayerChange={setViewLayer}
+      // View layers removed - fake feature not in backend
       loading={loading || isStreaming}
       isStreaming={isStreaming}
     >
@@ -155,7 +153,7 @@ function App() {
         <WorkflowPanel
           showWorkflow={showWorkflow}
           queryId={queryId}
-          viewLayer={viewLayer}
+          // viewLayer removed - fake feature not in backend
           onComplete={handleWorkflowComplete}
           onError={handleWorkflowError}
         />
