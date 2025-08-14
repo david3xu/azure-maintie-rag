@@ -398,12 +398,23 @@ dependencies:
                 logger.info(
                     f"✅ Validation successful: {len(result['predictions'])} predictions"
                 )
-                return {
+                
+                # Save GNN endpoint configuration for azd automation
+                endpoint_config = {
                     "status": "validated",
-                    "endpoint": self.gnn_client.endpoint_name,
+                    "endpoint_name": self.gnn_client.endpoint_name,
                     "scoring_uri": self.gnn_client.scoring_uri,
                     "predictions_count": len(result["predictions"]),
                 }
+                
+                # Write to file for azd automation pickup
+                import json
+                with open("gnn_deployment_result.json", "w") as f:
+                    json.dump(endpoint_config, f, indent=2)
+                    
+                logger.info("✅ GNN endpoint configuration saved to gnn_deployment_result.json")
+                
+                return endpoint_config
             else:
                 return {"status": "failed", "error": "No predictions returned"}
 

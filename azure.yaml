@@ -129,9 +129,30 @@ hooks:
          python scripts/dataflow/phase6_advanced/06_10_gnn_deployment_pipeline.py; then
         echo "✅ Phase 6: GNN training and deployment completed"
         echo "🧠 GNN models trained and endpoints configured for tri-modal search!"
+        
+        # Configure GNN environment variables for the deployed system
+        echo "📋 Configuring GNN endpoint environment variables..."
+        
+        # Extract GNN endpoint details from deployment pipeline output
+        if [ -f "gnn_deployment_result.json" ]; then
+          GNN_ENDPOINT=$(cat gnn_deployment_result.json | python -c "import sys, json; print(json.load(sys.stdin).get('endpoint_name', 'gnn-endpoint'))")
+          GNN_SCORING_URI=$(cat gnn_deployment_result.json | python -c "import sys, json; print(json.load(sys.stdin).get('scoring_uri', ''))")
+          
+          # Set in azd environment for container apps
+          azd env set GNN_ENDPOINT_NAME "$GNN_ENDPOINT"
+          azd env set GNN_SCORING_URI "$GNN_SCORING_URI" 
+          azd env set GNN_MODEL_VERSION "latest"
+          
+          echo "✅ GNN environment variables configured:"
+          echo "   GNN_ENDPOINT_NAME=$GNN_ENDPOINT"
+          echo "   GNN_SCORING_URI=$GNN_SCORING_URI"
+        else
+          echo "❌ GNN deployment result not found - pipeline failed"
+          exit 1
+        fi
       else
-        echo "⚠️  Phase 6: GNN training failed - continuing with Vector + Graph search only"
-        echo "💡 GNN search will use fallback mode until models are trained"
+        echo "❌ Phase 6: GNN training failed - manual intervention required"
+        exit 1
       fi
       
       echo ""

@@ -87,72 +87,34 @@ class GNNInferenceClient:
             )
 
     async def _discover_gnn_endpoints(self):
-        """Discover and connect to existing GNN endpoints using environment configuration."""
-        try:
-            # FIXED: Use environment configuration instead of failing API call
-            from config.settings import azure_settings
-            
-            # Check if GNN endpoint is configured in environment
-            if hasattr(azure_settings, 'gnn_endpoint_name') and azure_settings.gnn_endpoint_name:
-                self.endpoint_name = azure_settings.gnn_endpoint_name
-                logger.info(f"✅ Using configured GNN endpoint: {self.endpoint_name}")
-                
-            # Try to get GNN_ENDPOINT_NAME from environment directly
-            import os
-            env_gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
-            env_gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
-            
-            if env_gnn_endpoint:
-                self.endpoint_name = env_gnn_endpoint
-                self.scoring_uri = env_gnn_scoring_uri if env_gnn_scoring_uri else None
-                self.deployment_name = f"{env_gnn_endpoint}-deployment"
-                
-                logger.info(f"✅ Connected to GNN endpoint from environment: {self.endpoint_name}")
-                if self.scoring_uri:
-                    logger.info(f"   Scoring URI: {self.scoring_uri}")
-                logger.info(f"   Deployment: {self.deployment_name}")
-                return
-            
-            # If no environment config, try the API call as fallback
-            try:
-                endpoints = self.ml_client.online_endpoints.list()
-                gnn_endpoints = []
-
-                for endpoint in endpoints:
-                    if (
-                        "gnn" in endpoint.name.lower()
-                        and endpoint.provisioning_state == "Succeeded"
-                    ):
-                        gnn_endpoints.append(endpoint)
-
-                if gnn_endpoints:
-                    # Use the first available GNN endpoint
-                    selected_endpoint = gnn_endpoints[0]
-                    self.endpoint_name = selected_endpoint.name
-                    self.scoring_uri = selected_endpoint.scoring_uri
-
-                    # Get the first deployment for this endpoint
-                    deployments = self.ml_client.online_deployments.list(
-                        endpoint_name=self.endpoint_name
-                    )
-                    deployments_list = list(deployments)
-                    if deployments_list:
-                        self.deployment_name = deployments_list[0].name
-
-                    logger.info(f"✅ Connected to GNN endpoint via API: {self.endpoint_name}")
-                    logger.info(f"   Scoring URI: {self.scoring_uri}")
-                    logger.info(f"   Deployment: {self.deployment_name}")
-                else:
-                    logger.warning(
-                        "⚠️ No ready GNN endpoints found via API - checking environment config"
-                    )
-            except Exception as api_error:
-                logger.warning(f"API endpoint discovery failed, using environment config: {api_error}")
-                # This is expected - use environment configuration as primary source
-
-        except Exception as e:
-            logger.error(f"Failed to discover GNN endpoints: {e}")
-            # Don't raise here - allow initialization to continue without GNN endpoints
+        """Discover and connect to existing GNN endpoints - FAIL FAST if not configured."""
+        import os
+        
+        # FAIL FAST: Require GNN endpoint configuration
+        env_gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
+        env_gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
+        
+        if not env_gnn_endpoint:
+            raise RuntimeError(
+                "GNN_ENDPOINT_NAME environment variable is required. "
+                "Run the complete azd deployment pipeline to configure GNN endpoints."
+            )
+        
+        self.endpoint_name = env_gnn_endpoint
+        self.scoring_uri = env_gnn_scoring_uri
+        self.deployment_name = f"{env_gnn_endpoint}-deployment"
+        
+        logger.info(f"✅ Connected to GNN endpoint from environment: {self.endpoint_name}")
+        if self.scoring_uri:
+            logger.info(f"   Scoring URI: {self.scoring_uri}")
+        logger.info(f"   Deployment: {self.deployment_name}")
+        
+        # Validate endpoint is accessible
+        if not self.scoring_uri:
+            raise RuntimeError(
+                f"GNN_SCORING_URI is required for endpoint {self.endpoint_name}. "
+                "Ensure GNN deployment pipeline completed successfully."
+            )
 
     def ensure_initialized(self):
         """Synchronous initialization for compatibility with UniversalDeps pattern."""
@@ -188,72 +150,34 @@ class GNNInferenceClient:
             )
 
     def _discover_gnn_endpoints_sync(self):
-        """Synchronous version of endpoint discovery using environment configuration."""
-        try:
-            # FIXED: Use environment configuration instead of failing API call
-            from config.settings import azure_settings
-            
-            # Check if GNN endpoint is configured in environment
-            if hasattr(azure_settings, 'gnn_endpoint_name') and azure_settings.gnn_endpoint_name:
-                self.endpoint_name = azure_settings.gnn_endpoint_name
-                logger.info(f"✅ Using configured GNN endpoint: {self.endpoint_name}")
-                
-            # Try to get GNN_ENDPOINT_NAME from environment directly
-            import os
-            env_gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
-            env_gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
-            
-            if env_gnn_endpoint:
-                self.endpoint_name = env_gnn_endpoint
-                self.scoring_uri = env_gnn_scoring_uri if env_gnn_scoring_uri else None
-                self.deployment_name = f"{env_gnn_endpoint}-deployment"
-                
-                logger.info(f"✅ Connected to GNN endpoint from environment: {self.endpoint_name}")
-                if self.scoring_uri:
-                    logger.info(f"   Scoring URI: {self.scoring_uri}")
-                logger.info(f"   Deployment: {self.deployment_name}")
-                return
-            
-            # If no environment config, try the API call as fallback
-            try:
-                endpoints = self.ml_client.online_endpoints.list()
-                gnn_endpoints = []
-
-                for endpoint in endpoints:
-                    if (
-                        "gnn" in endpoint.name.lower()
-                        and endpoint.provisioning_state == "Succeeded"
-                    ):
-                        gnn_endpoints.append(endpoint)
-
-                if gnn_endpoints:
-                    # Use the first available GNN endpoint
-                    selected_endpoint = gnn_endpoints[0]
-                    self.endpoint_name = selected_endpoint.name
-                    self.scoring_uri = selected_endpoint.scoring_uri
-
-                    # Get the first deployment for this endpoint
-                    deployments = self.ml_client.online_deployments.list(
-                        endpoint_name=self.endpoint_name
-                    )
-                    deployments_list = list(deployments)
-                    if deployments_list:
-                        self.deployment_name = deployments_list[0].name
-
-                    logger.info(f"✅ Connected to GNN endpoint via API: {self.endpoint_name}")
-                    logger.info(f"   Scoring URI: {self.scoring_uri}")
-                    logger.info(f"   Deployment: {self.deployment_name}")
-                else:
-                    logger.warning(
-                        "⚠️ No ready GNN endpoints found via API - checking environment config"
-                    )
-            except Exception as api_error:
-                logger.warning(f"Sync API endpoint discovery failed, using environment config: {api_error}")
-                # This is expected - use environment configuration as primary source
-
-        except Exception as e:
-            logger.error(f"Failed to discover GNN endpoints: {e}")
-            # Don't raise here - allow initialization to continue without GNN endpoints
+        """Synchronous version of endpoint discovery - FAIL FAST if not configured."""
+        import os
+        
+        # FAIL FAST: Require GNN endpoint configuration
+        env_gnn_endpoint = os.getenv('GNN_ENDPOINT_NAME')
+        env_gnn_scoring_uri = os.getenv('GNN_SCORING_URI')
+        
+        if not env_gnn_endpoint:
+            raise RuntimeError(
+                "GNN_ENDPOINT_NAME environment variable is required. "
+                "Run the complete azd deployment pipeline to configure GNN endpoints."
+            )
+        
+        self.endpoint_name = env_gnn_endpoint
+        self.scoring_uri = env_gnn_scoring_uri
+        self.deployment_name = f"{env_gnn_endpoint}-deployment"
+        
+        logger.info(f"✅ Connected to GNN endpoint from environment: {self.endpoint_name}")
+        if self.scoring_uri:
+            logger.info(f"   Scoring URI: {self.scoring_uri}")
+        logger.info(f"   Deployment: {self.deployment_name}")
+        
+        # Validate endpoint is accessible
+        if not self.scoring_uri:
+            raise RuntimeError(
+                f"GNN_SCORING_URI is required for endpoint {self.endpoint_name}. "
+                "Ensure GNN deployment pipeline completed successfully."
+            )
 
     async def deploy_model(
         self, model_name: str, deployment_config: Dict[str, Any]
@@ -761,12 +685,8 @@ class GNNInferenceClient:
 
         except Exception as e:
             logger.error(f"REAL GNN prediction failed: {e}")
-            return {
-                "predictions": [],
-                "total_predictions": 0,
-                "error": str(e),
-                "inference_source": "real_azure_ml_gnn_endpoint_error",
-            }
+            # FAIL FAST - No fallback results allowed
+            raise RuntimeError(f"GNN prediction failed: {e}") from e
 
     def _generate_cache_key(self, input_data: Dict[str, Any]) -> str:
         """Generate cache key for inference results."""
@@ -810,16 +730,8 @@ class GNNInferenceClient:
             )
             return response
         except asyncio.TimeoutError:
-            logger.warning("GNN inference timeout - returning cached or minimal results")
-            # Return minimal valid response to prevent total failure
-            return {
-                "predictions": [{
-                    "entity": "timeout_prediction",
-                    "confidence": 0.3,
-                    "reasoning": "Inference timeout - returning placeholder"
-                }],
-                "inference_source": "timeout_fallback"
-            }
+            logger.error("GNN inference timeout - failing fast")
+            raise RuntimeError("GNN inference timeout - no fallback allowed") from None
 
     async def validate_deployment(
         self, validation_config: Dict[str, Any]
@@ -918,79 +830,34 @@ dependencies:
             # Use the discovered endpoint
             logger.info(f"📞 Calling real Azure ML GNN endpoint: {self.scoring_uri}")
 
-            # For production, we'll simulate the response since we need the actual endpoint to be fully configured
-            # In a real deployment, this would use requests.post(self.scoring_uri, json=inference_request)
-            request_type = inference_request.get("request_type", "unknown")
-
-            if request_type == "node_embeddings":
-                node_ids = inference_request.get("node_ids", [])
-                embeddings = {}
-                for node_id in node_ids:
-                    # Generate realistic embedding (in production, this comes from the model)
-                    embeddings[node_id] = [
-                        0.1 * i for i in range(128)
-                    ]  # 128-dim embedding
-
-                return {
-                    "embeddings": embeddings,
-                    "endpoint_source": f"real_azure_ml_endpoint_{self.endpoint_name}",
-                }
-
-            elif request_type == "relationship_prediction":
-                node_pairs = inference_request.get("node_pairs", [])
-                predictions = []
-                for i, (source, target) in enumerate(node_pairs):
-                    predictions.append(
-                        {
-                            "source": source,
-                            "target": target,
-                            "relationship_type": "related_to",
-                            "confidence": 0.75 + (i % 3) * 0.1,  # Vary confidence
-                            "source": f"real_azure_ml_gnn_{self.endpoint_name}",
-                        }
-                    )
-
-                return {
-                    "predictions": predictions,
-                    "endpoint_source": f"real_azure_ml_endpoint_{self.endpoint_name}",
-                }
-
-            elif request_type == "universal_prediction":
-                input_data = inference_request.get("input_data", {})
-
-                # Extract entities and create GNN-style predictions
-                entities = input_data.get("entities", [])
-                if entities:
-                    predictions = []
-                    for i, entity in enumerate(entities[:5]):  # Top 5 entities
-                        predictions.append(
-                            {
-                                "entity": entity.get("text", f"entity_{i}"),
-                                "relevance_score": 0.8 - (i * 0.1),
-                                "prediction_type": "gnn_relevance",
-                                "confidence": 0.85,
-                                "source": f"real_azure_ml_gnn_{self.endpoint_name}",
-                            }
-                        )
-                else:
-                    predictions = [
-                        {
-                            "entity": "azure_ai_service",
-                            "relevance_score": 0.9,
-                            "prediction_type": "gnn_relevance",
-                            "confidence": 0.85,
-                            "source": f"real_azure_ml_gnn_{self.endpoint_name}",
-                        }
-                    ]
-
-                return {
-                    "predictions": predictions,
-                    "endpoint_source": f"real_azure_ml_endpoint_{self.endpoint_name}",
-                }
-
-            else:
-                raise RuntimeError(f"Unknown request type: {request_type}")
+            # FAIL FAST - Call actual Azure ML endpoint with no simulation
+            import requests
+            
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {await self._get_endpoint_token()}"
+            }
+            
+            response = requests.post(
+                self.scoring_uri,
+                json=inference_request,
+                headers=headers,
+                timeout=30
+            )
+            
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f"Azure ML endpoint returned {response.status_code}: {response.text}"
+                )
+                
+            return response.json()
 
         except Exception as e:
             logger.error(f"Azure ML endpoint call failed: {e}")
             raise RuntimeError(f"REAL Azure ML endpoint call failed: {e}") from e
+    
+    async def _get_endpoint_token(self) -> str:
+        """Get authentication token for Azure ML endpoint."""
+        # Use Azure credential to get token
+        token_credential = self.credential.get_token("https://ml.azure.com/.default")
+        return token_credential.token
