@@ -35,9 +35,6 @@ env:
   
   # Container Configuration
   BACKEND_PORT: 8000
-  
-  # Data Pipeline Configuration
-  AUTO_POPULATE_DATA: true  # Set to false to skip automated data pipeline
 
 # Deployment hooks
 hooks:
@@ -65,128 +62,7 @@ hooks:
       az resource list --resource-group "$RESOURCE_GROUP" --query "[].{Name:name, Type:type}" -o table 2>/dev/null || echo "Unable to list resources"
       
       echo ""
-      
-      # Check if automated data pipeline is enabled
-      if [ "${AUTO_POPULATE_DATA:-true}" != "true" ]; then
-        echo "⏭️  Automated data pipeline disabled (AUTO_POPULATE_DATA=false)"
-        echo "💡 Run 'make dataflow-full' manually to populate data"
-        echo ""
-        echo "✅ Infrastructure ready for manual data population"
-        exit 0
-      fi
-      
-      echo "🧹 Starting automated data pipeline preparation..."
-      
-      # Set environment variables for Python scripts
-      # Ensure we're in the project directory
-      if [ -f "azure.yaml" ]; then
-        PROJECT_DIR=$PWD
-      elif [ -f "../azure.yaml" ]; then
-        cd ..
-        PROJECT_DIR=$PWD
-      else
-        echo "Finding project directory..."
-        PROJECT_DIR=$(find / -name "azure.yaml" -path "*/azure-maintie-rag/*" 2>/dev/null | head -1 | xargs dirname)
-        cd "$PROJECT_DIR"
-      fi
-      
-      echo "📁 Working from: $PROJECT_DIR"
-      
-      export PYTHONPATH=$PROJECT_DIR
-      export USE_MANAGED_IDENTITY=false
-      export OPENBLAS_NUM_THREADS=1
-      
-      # Phase 0: Cleanup existing data in Azure services
-      echo "📋 Phase 0: Cleaning up existing Azure data..."
-      if python scripts/dataflow/phase0_cleanup/00_01_cleanup_all_services.py; then
-        echo "✅ Phase 0: Data cleanup completed"
-      else
-        echo "⚠️  Phase 0: Cleanup failed, continuing anyway"
-      fi
-      
-      # Phase 1: Validate all agents are working
-      echo "📋 Phase 1: Validating PydanticAI agents..."
-      if python scripts/dataflow/phase1_validation/01_01_validate_domain_intelligence.py && \
-         python scripts/dataflow/phase1_validation/01_02_validate_knowledge_extraction.py && \
-         python scripts/dataflow/phase1_validation/01_03_validate_universal_search.py; then
-        echo "✅ Phase 1: All 3 agents validated successfully"
-      else
-        echo "❌ Phase 1: Agent validation failed - manual intervention required"
-        exit 1
-      fi
-      
-      # Phase 2: Upload documents and create embeddings
-      echo "📋 Phase 2: Uploading Azure AI documents and creating embeddings..."
-      if python scripts/dataflow/phase2_ingestion/02_02_storage_upload_primary.py && \
-         python scripts/dataflow/phase2_ingestion/02_03_vector_embeddings.py && \
-         python scripts/dataflow/phase2_ingestion/02_04_search_indexing.py; then
-        echo "✅ Phase 2: Document ingestion completed"
-      else
-        echo "❌ Phase 2: Document ingestion failed - manual intervention required"
-        exit 1
-      fi
-      
-      # Phase 3: Run Agent 1 (Domain Intelligence) to prepare for tri-modal search
-      echo "📋 Phase 3: Running Agent 1 (Domain Intelligence) to build database..."
-      if python scripts/dataflow/phase3_knowledge/03_01_basic_entity_extraction.py && \
-         python scripts/dataflow/phase3_knowledge/03_02_graph_storage.py; then
-        echo "✅ Phase 3: Knowledge extraction and graph storage completed"
-        echo "🎯 Agent 1 has prepared the database - tri-modal search is ready!"
-      else
-        echo "❌ Phase 3: Knowledge extraction failed - manual intervention required"
-        exit 1
-      fi
-      
-      # Phase 6: GNN async bootstrap for reproducibility
-      echo "📋 Phase 6: Creating GNN bootstrap endpoint for reproducible deployment..."
-      if python scripts/dataflow/phase6_advanced/06_11_gnn_async_bootstrap.py; then
-        echo "✅ Phase 6: GNN bootstrap completed"
-        echo "🧠 GNN endpoint created - model will be deployed asynchronously!"
-        
-        # Configure GNN environment variables from bootstrap
-        echo "📋 Configuring GNN endpoint environment variables from bootstrap..."
-        
-        # Extract GNN endpoint details from bootstrap result
-        if [ -f "gnn_bootstrap_result.json" ]; then
-          GNN_ENDPOINT=$(cat gnn_bootstrap_result.json | python -c "import sys, json; print(json.load(sys.stdin).get('endpoint_name', ''))")
-          GNN_SCORING_URI=$(cat gnn_bootstrap_result.json | python -c "import sys, json; print(json.load(sys.stdin).get('scoring_uri', ''))")
-          
-          # Set in azd environment for container apps
-          if [ -n "$GNN_ENDPOINT" ]; then
-            azd env set GNN_ENDPOINT_NAME "$GNN_ENDPOINT"
-            azd env set GNN_SCORING_URI "$GNN_SCORING_URI"
-            azd env set GNN_MODEL_VERSION "bootstrap"
-            
-            echo "✅ GNN environment variables configured:"
-            echo "   GNN_ENDPOINT_NAME=$GNN_ENDPOINT"
-            echo "   GNN_SCORING_URI=$GNN_SCORING_URI"
-            echo "⚠️ NOTE: Endpoint will fail requests until model deployment completes asynchronously"
-          else
-            echo "⚠️ GNN bootstrap created but endpoint name not found - GNN will not be available initially"
-          fi
-        else
-          echo "⚠️ GNN bootstrap result not found - system will operate without GNN until manual deployment"
-        fi
-      else
-        echo "❌ Phase 6: GNN bootstrap FAILED - FAIL FAST per strict requirements"
-        echo "🚨 MANDATORY tri-modal search requires ALL THREE modalities: Vector + Graph + GNN"
-        echo "❌ System will NOT operate with partial modalities (NO FALLBACK allowed)"
-        exit 1
-      fi
-      
-      echo ""
-      echo "🎉 AUTOMATED PIPELINE COMPLETED SUCCESSFULLY!"
-      echo "✅ Infrastructure deployed and configured"
-      echo "✅ All Azure services cleaned and populated with fresh data"  
-      echo "✅ Agent 1 has analyzed all documents and built knowledge database"
-      echo "✅ Knowledge graph stored in Cosmos DB with entity relationships"
-      echo "✅ GNN bootstrap endpoint created - model deployment running asynchronously"
-      echo "⚠️  IMPORTANT: System requires ALL THREE modalities (Vector + Graph + GNN)"
-      echo ""
-      echo "💡 The GNN endpoint will initially FAIL (real failure, not fake)"
-      echo "💡 Searches will return errors until GNN deployment completes"
-      echo "💡 This is CORRECT behavior - NO FALLBACK to partial modalities"
-      echo "💡 Monitor deployment: python scripts/dataflow/phase6_advanced/06_12_check_async_status.py"
+      echo "✅ Infrastructure ready for service deployment"
       
   postdeploy:
     shell: sh
