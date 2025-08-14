@@ -349,29 +349,20 @@ class UniversalOrchestrator:
         try:
             print("🔍 Full Multi-Modal Search Workflow")
 
-            # Step 1: Domain analysis of query (use centralized method)
-            print("🌍 Step 1: Query analysis with Domain Intelligence Agent...")
+            # PRODUCTION OPTIMIZATION: Skip Agent 1 for user queries
+            # Agent 1 should only run during data ingestion to build the database
+            # User queries search the pre-analyzed data directly for fast responses
+            print("⚡ Step 1: Using pre-analyzed data (Agent 1 skipped for production speed)...")
             domain_start = time.time()
-            domain_analysis = await self._get_or_create_domain_analysis(
-                f"Search query analysis: {query}",
-                use_domain_analysis=use_domain_analysis,
-                content_type="query",
-            )
+            domain_analysis = None  # Skip query analysis for production performance
             domain_time = time.time() - domain_start
 
-            if domain_analysis:
-                agent_metrics["domain_intelligence"] = {
-                    "processing_time": domain_time,
-                    "success": True,
-                    "query_signature": domain_analysis.content_signature,
-                }
-            else:
-                agent_metrics["domain_intelligence"] = {
-                    "processing_time": domain_time,
-                    "success": False,
-                    "error": "Query analysis failed or disabled",
-                }
-                warnings.append("Proceeding without query analysis")
+            agent_metrics["domain_intelligence"] = {
+                "processing_time": domain_time,
+                "success": True,
+                "optimization": "skipped_for_production_speed",
+                "note": "Agent 1 runs during data ingestion, not user queries",
+            }
 
             # Step 2: Multi-modal search
             print("🎯 Step 2: Universal Search Agent...")

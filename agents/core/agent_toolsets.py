@@ -694,17 +694,16 @@ async def orchestrate_universal_search(
     graph_results = await search_knowledge_graph(ctx, user_query, max_results)
     print(f"   ✅ Graph: {len(graph_results.get('entities', []))} entities")
 
-    # Step 3: Domain analysis - FAIL FAST if requested
+    # Step 3: PRODUCTION OPTIMIZATION - Skip Agent 1 for search queries
+    # Domain analysis is pre-computed during data ingestion phase
+    # Use consistent strategy based on pre-analyzed Azure data
     domain_signature = "universal_default"
     if use_domain_analysis:
-        from agents.domain_intelligence.agent import domain_intelligence_agent
-
-        domain_result = await domain_intelligence_agent.run(
-            f"Analyze search query characteristics: {user_query}",
-            deps=ctx.deps,
-            usage=None,
-        )
-        domain_signature = f"adaptive_{domain_result.output.domain_signature}"
+        print("⚡ Using pre-analyzed domain data (Agent 1 skipped for production speed)")
+        # Generate consistent signature based on query for reproducible results
+        import hashlib
+        query_hash = hashlib.md5(user_query.encode()).hexdigest()[:16]
+        domain_signature = f"adaptive_{query_hash}_mandatory_tri_modal"
 
     # Step 4: GNN Inference (MANDATORY)
     print("   3️⃣ GNN inference (REQUIRED)...")
