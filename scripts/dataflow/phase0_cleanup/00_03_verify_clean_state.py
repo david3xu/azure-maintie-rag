@@ -222,7 +222,7 @@ async def main():
 
         # Save verification report
         results_dir = Path("scripts/dataflow/results")
-        results_dir.mkdir(exist_ok=True)
+        results_dir.mkdir(parents=True, exist_ok=True)  # Create parent directories if needed
 
         verification_report = {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),

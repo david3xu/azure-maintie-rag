@@ -709,11 +709,11 @@ async def store_knowledge_in_graph(
             )  # Fixed field name
 
             # Use the same domain transformation as universal search agent
-            # Extract from first key concept (discovered from content analysis)
+            # Extract from first extracted concept (discovered from content analysis)
             domain = "content"  # Fallback
-            if extraction_result.key_concepts:
+            if extraction_result.extracted_concepts:
                 # Transform the primary concept like universal search does with domain_signature
-                primary_concept = extraction_result.key_concepts[0]
+                primary_concept = extraction_result.extracted_concepts[0]
                 domain = primary_concept.lower().replace(' ', '_').replace('-', '_')
             
             entity_query = f"""

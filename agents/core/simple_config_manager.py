@@ -427,6 +427,74 @@ class SimpleDynamicConfigManager:
             processing_complexity="medium",
         )
 
+    async def get_workflow_config(self, domain_name: str) -> Dict[str, Any]:
+        """
+        Get workflow configuration for query orchestration and multi-step processes.
+        
+        Returns configuration for workflow orchestration, timeouts, and coordination.
+        """
+        cache_key = f"workflow_{domain_name}"
+        if cache_key in self._config_cache:
+            return self._config_cache[cache_key]
+        
+        # Get domain analysis for adaptive configuration
+        domain_analysis = None
+        try:
+            # Try to get existing domain analysis from cache
+            for key, analysis in self._domain_analyses.items():
+                if domain_name in analysis.domain_signature:
+                    domain_analysis = analysis
+                    break
+        except Exception as e:
+            logger.warning(f"Could not get domain analysis for workflow config: {e}")
+        
+        # Base workflow configuration
+        config = {
+            "max_workflow_steps": 5,
+            "workflow_timeout": 300,  # 5 minutes default
+            "step_timeout": 60,       # 1 minute per step
+            "retry_attempts": 3,
+            "enable_parallel_execution": True,
+            "enable_step_caching": True,
+            "error_handling_strategy": "fail_fast",
+            "progress_tracking": True,
+            "result_validation": True,
+            "domain_name": domain_name,
+        }
+        
+        # Adapt based on domain complexity if available
+        if domain_analysis:
+            complexity_factor = domain_analysis.vocabulary_complexity
+            doc_count = domain_analysis.document_count
+            
+            # Adjust timeouts based on complexity
+            if complexity_factor > 0.7:
+                # High complexity content needs more time
+                config["workflow_timeout"] = 600  # 10 minutes
+                config["step_timeout"] = 120     # 2 minutes per step
+                config["max_workflow_steps"] = 7  # More steps for complex analysis
+            elif complexity_factor < 0.3:
+                # Simple content can be processed faster
+                config["workflow_timeout"] = 180  # 3 minutes
+                config["step_timeout"] = 30      # 30 seconds per step
+                config["max_workflow_steps"] = 3  # Fewer steps needed
+                
+            # Adjust parallel execution based on document count
+            if doc_count > 20:
+                config["enable_parallel_execution"] = True
+                config["parallel_batch_size"] = min(5, doc_count // 4)
+            else:
+                config["enable_parallel_execution"] = False
+                
+            # Adjust retry strategy based on content confidence
+            if domain_analysis.content_type_confidence > 0.9:
+                config["retry_attempts"] = 2  # High confidence = fewer retries needed
+            else:
+                config["retry_attempts"] = 4  # Lower confidence = more retries
+                
+        self._config_cache[cache_key] = config
+        return config
+
     def clear_cache(self):
         """Clear all caches"""
         self._domain_analyses.clear()
@@ -484,6 +552,14 @@ def get_dynamic_config_manager() -> SimpleDynamicConfigManager:
 simple_dynamic_config_manager = get_simple_config_manager
 dynamic_config_manager = get_simple_config_manager
 
+async def get_workflow_config_dynamic(
+    domain_name: str
+) -> Dict[str, Any]:
+    """Get dynamic workflow configuration"""
+    config_manager = get_simple_config_manager()
+    return await config_manager.get_workflow_config(domain_name)
+
+
 __all__ = [
     "SimpleDynamicConfigManager",
     "DomainIntelligenceResult",
@@ -491,5 +567,6 @@ __all__ = [
     "dynamic_config_manager",
     "get_extraction_config_dynamic",
     "get_search_config_dynamic",
+    "get_workflow_config_dynamic",
     "analyze_domain_directory",
 ]

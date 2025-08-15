@@ -25,6 +25,7 @@ class BaseAzureClient(ABC):
         self.config = config or {}
         self.endpoint = None
         self.key = None
+        self.credential = None  # Will be set by UniversalDeps
         self.use_managed_identity = azure_settings.use_managed_identity
         self._client = None
 

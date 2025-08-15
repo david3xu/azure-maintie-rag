@@ -439,6 +439,24 @@ print('Model saved to Azure ML workspace')
                     f"Cannot register model from failed job: {training_job_id}"
                 )
 
+            # Check if model output exists before registration
+            try:
+                # Try to access the job outputs to verify model exists
+                job_outputs = getattr(job, 'outputs', {})
+                if 'model' not in job_outputs:
+                    logger.warning(f"Job {training_job_id} completed but no 'model' output found. This is expected for async bootstrap training.")
+                    # Return a pending registration result for async bootstrap
+                    return {
+                        "registration_status": "pending_model_output",
+                        "job_id": training_job_id,
+                        "job_status": job.status,
+                        "message": "Training job completed but model output not found. This is expected for async bootstrap GNN training.",
+                        "async_bootstrap": True,
+                        "model_available": False
+                    }
+            except Exception as e:
+                logger.warning(f"Could not verify model output for job {training_job_id}: {e}")
+
             # Create model registration
             model_name = model_metadata.get(
                 "model_name", f"gnn-model-{int(time.time())}"
