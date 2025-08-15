@@ -79,7 +79,7 @@ hooks:
       
       # Set environment variables for Python scripts
       export PYTHONPATH="$(pwd)"
-      export USE_MANAGED_IDENTITY=false
+      export USE_MANAGED_IDENTITY=true
       export OPENBLAS_NUM_THREADS=1
       
       echo "📁 Working from: $(pwd)"
