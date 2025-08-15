@@ -136,7 +136,8 @@ wandb/
 *.temp.md
 
 # Dataflow execution results (development artifacts)
-scripts/dataflow/results/
+scripts/dataflow/results/*.json
+scripts/dataflow/results/*.log
 data/processed/
 data/indices/
 
