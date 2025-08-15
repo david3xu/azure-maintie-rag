@@ -17,6 +17,8 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+# Import path utilities for consistent directory handling
+from scripts.dataflow.utilities.path_utils import get_results_dir
 from agents.core.universal_deps import get_universal_deps
 from infrastructure.azure_ml.gnn_model import UniversalGNNConfig
 
@@ -67,7 +69,7 @@ async def clean_local_data():
                 full_path.unlink()
 
     # Clean specific result files (keep only essential ones)
-    results_dir = Path("scripts/dataflow/results/")
+    results_dir = get_results_dir()  # Use path utilities for reliable directory access
     if results_dir.exists():
         print(f"   📁 Cleaning results directory...")
         # Keep only essential files

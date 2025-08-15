@@ -16,6 +16,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+# Import path utilities for consistent directory handling
+from scripts.dataflow.utilities.path_utils import get_results_dir
+
 from agents.core.universal_deps import get_universal_deps
 
 
@@ -221,8 +224,7 @@ async def main():
         print(f"\n⏱️  Verification time: {duration:.2f}s")
 
         # Save verification report
-        results_dir = Path("scripts/dataflow/results")
-        results_dir.mkdir(parents=True, exist_ok=True)  # Create parent directories if needed
+        results_dir = get_results_dir()  # Use path utilities for reliable directory access
 
         verification_report = {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),

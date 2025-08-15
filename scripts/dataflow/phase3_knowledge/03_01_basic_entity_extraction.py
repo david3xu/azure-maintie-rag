@@ -110,8 +110,9 @@ async def basic_entity_extraction():
             print(f"   ❌ ERROR: {data_file.name}: {e}")
             continue
 
-    # Save results to JSON for next step
-    results_dir = Path("scripts/dataflow/results")
+    # Save results to JSON for next step - use absolute path from script location
+    script_dir = Path(__file__).parent.parent.parent  # Go up to project root
+    results_dir = script_dir / "scripts" / "dataflow" / "results"
     results_dir.mkdir(parents=True, exist_ok=True)  # Create parent directories if needed
 
     # Prepare serializable results (without the full extraction_result object)
