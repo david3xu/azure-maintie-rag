@@ -708,6 +708,14 @@ async def store_knowledge_in_graph(
                 "'", "\\'"
             )  # Fixed field name
 
+            # Use the same domain transformation as universal search agent
+            # Extract from first key concept (discovered from content analysis)
+            domain = "content"  # Fallback
+            if extraction_result.key_concepts:
+                # Transform the primary concept like universal search does with domain_signature
+                primary_concept = extraction_result.key_concepts[0]
+                domain = primary_concept.lower().replace(' ', '_').replace('-', '_')
+            
             entity_query = f"""
             g.V().has('text', '{safe_text}').fold().coalesce(
                 unfold(),
@@ -716,6 +724,7 @@ async def store_knowledge_in_graph(
                     .property('entity_type', '{safe_entity_type}')
                     .property('confidence', {entity.confidence})
                     .property('context', '{safe_context}')
+                    .property('domain', '{domain}')
                     .property('partitionKey', '{safe_entity_type}')
             )
             """
@@ -741,6 +750,7 @@ async def store_knowledge_in_graph(
              .from('source').to('target')
              .property('confidence', {relationship.confidence})
              .property('context', '{safe_context}')
+             .property('domain', '{domain}')
             """
 
             result = await cosmos_client.execute_query(edge_query)
