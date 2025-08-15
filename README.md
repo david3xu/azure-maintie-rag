@@ -9,7 +9,16 @@
 ### **⚡ Essential Commands (Production Ready)**
 
 ```bash
-# Deploy complete system with full data pipeline (RECOMMENDED)
+# Option 1: Deploy with container rebuild (RECOMMENDED for Docker environments)
+azd deploy                                  # Rebuild containers with latest code + admin API
+make deploy-with-data                       # Deploy with updated containers + automated pipeline
+
+# Option 2: GitHub Actions CI/CD (For environments without Docker)
+azd pipeline config                         # Setup automated container builds  
+git push                                    # Trigger rebuild with admin API
+make deploy-with-data                       # Deploy with updated containers
+
+# Option 3: Deploy complete system with full data pipeline
 make deploy-with-data                       # Deploy infrastructure + populate data + train models
 ./scripts/show-deployment-urls.sh          # Get frontend and backend URLs
 
