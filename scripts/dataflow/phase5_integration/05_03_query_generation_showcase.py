@@ -91,51 +91,6 @@ async def query_generation_showcase(
             "Query generation showcase using placeholder queries. No fake Gremlin queries allowed - implement real query generation agents first."
         )
 
-        gremlin_duration = time.time() - gremlin_start
-
-        gremlin_showcase = {
-            "showcase": "gremlin_query_generation",
-            "duration": gremlin_duration,
-            "status": "completed",
-            "queries_generated": {
-                "entity_insertion": {
-                    "query": (
-                        entity_insertion_query[:100] + "..."
-                        if len(entity_insertion_query) > 100
-                        else entity_insertion_query
-                    ),
-                    "complexity": "low",
-                    "explanation": "placeholder entity insertion query",
-                },
-                "relationship_insertion": {
-                    "query": (
-                        relationship_insertion_query[:100] + "..."
-                        if len(relationship_insertion_query) > 100
-                        else relationship_insertion_query
-                    ),
-                    "complexity": "low",
-                    "explanation": "placeholder relationship insertion query",
-                },
-                "graph_traversal": {
-                    "query": (
-                        graph_traversal_query[:100] + "..."
-                        if len(graph_traversal_query) > 100
-                        else graph_traversal_query
-                    ),
-                    "complexity": "low",
-                    "explanation": "placeholder graph traversal query",
-                },
-            },
-            "ai_generated": True,
-        }
-
-        results["showcases"].append(gremlin_showcase)
-
-        print(f"   ✅ Entity insertion query: low complexity")
-        print(f"   ✅ Relationship insertion query: low complexity")
-        print(f"   ✅ Graph traversal query: low complexity")
-        print(f"   ⏱️  Gremlin generation: {gremlin_duration:.2f}s\n")
-
         # Showcase 2: Azure Cognitive Search Query Generation
         print("🔍 Showcase 2: Azure Cognitive Search Query Generation")
         print("=" * 60)

@@ -297,12 +297,17 @@ async def _execute_graph_search(
                     search_domain = available_domains[0]
                     print(f"   ✅ Using discovered domain: '{search_domain}' (from {len(available_domains)} available)")
                 else:
-                    # Fallback to default if no domains found
-                    search_domain = "general"
-                    print(f"   ⚠️  No domains found in Cosmos DB, using fallback: '{search_domain}'")
+                    # FAIL FAST: No fallback for empty graph database
+                    raise RuntimeError(
+                        "No domains found in Cosmos DB graph database. Graph search requires existing knowledge graph data. "
+                        "Run knowledge extraction phase first to populate the graph database with entities and relationships."
+                    )
             except Exception as e:
-                print(f"   ⚠️  Could not discover domains: {e}, using fallback")
-                search_domain = "general"
+                # FAIL FAST: No fallback for Cosmos DB failures
+                raise RuntimeError(
+                    f"Could not discover domains from Cosmos DB: {e}. Graph search requires functional Cosmos DB Gremlin API. "
+                    "Verify Azure Cosmos DB service is properly configured and accessible."
+                ) from e
         
         # First try to find entities that contain query terms (fuzzy matching)
         all_entities = await cosmos_client.get_all_entities(search_domain)
@@ -331,7 +336,7 @@ async def _execute_graph_search(
                         f"Failed to find entities for '{entity_text}': {e}. Check Azure Cosmos DB Gremlin query execution."
                     ) from e
         else:
-            # Fallback: if no fuzzy matches, try exact term matching
+            # Alternative strategy: if no fuzzy matches, try exact term matching
             for term in query_terms[:3]:  # Limit to first 3 terms
                 try:
                     related_entities = await cosmos_client.find_related_entities(

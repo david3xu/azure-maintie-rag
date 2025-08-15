@@ -484,12 +484,18 @@ async def search_knowledge_graph(
         try:
             available_domains = await cosmos_client.get_all_domains()
             if not available_domains:
-                # Fallback if no domains are discovered
-                available_domains = ["general", "azure_ai"]
+                # FAIL FAST: No fallback for empty graph database
+                raise RuntimeError(
+                    "No domains found in Cosmos DB graph database. Graph search requires existing knowledge graph data. "
+                    "Run knowledge extraction phase first to populate the graph database with entities and relationships."
+                )
             print(f"   🔍 Searching in domains: {available_domains}")
         except Exception as e:
-            print(f"   ⚠️  Could not discover domains: {e}, using fallback")
-            available_domains = ["general", "azure_ai"]
+            # FAIL FAST: No fallback for Cosmos DB failures
+            raise RuntimeError(
+                f"Could not discover domains from Cosmos DB: {e}. Graph search requires functional Cosmos DB Gremlin API. "
+                "Verify Azure Cosmos DB service is properly configured and accessible."
+            ) from e
         
         # FIXED: Use case-insensitive search approach since Gremlin containing() is case-sensitive
         # Instead of multiple parallel queries, get all entities and filter manually for better reliability
@@ -562,56 +568,11 @@ async def search_knowledge_graph(
                 })
                 
     except Exception as e:
-        # Fallback to term-by-term search if fuzzy matching fails
-        for term in query_terms[:3]:
-            try:
-                # Simplified query without unsupported functions
-                entity_query = f"g.V().has('domain', 'azure_ai').limit({max_results}).valueMap()"
-                entities = await cosmos_client.execute_query(entity_query)
-
-                for entity_data in (entities or [])[:max_results]:
-                    # Extract actual property values from Gremlin vertex structure
-                    if isinstance(entity_data, dict) and "properties" in entity_data:
-                        props = entity_data["properties"]
-
-                        # Extract values from Gremlin property format
-                        text_value = (
-                            props.get("text", [{}])[0].get("value", "")
-                            if "text" in props
-                            else ""
-                        )
-                        entity_type_value = (
-                            props.get("entity_type", [{}])[0].get("value", "unknown")
-                            if "entity_type" in props
-                            else "unknown"
-                        )
-                        confidence_value = (
-                            props.get("confidence", [{}])[0].get("value", 0.0)
-                            if "confidence" in props
-                            else 0.0
-                        )
-                        context_value = (
-                            props.get("context", [{}])[0].get("value", "")
-                            if "context" in props
-                            else ""
-                        )
-
-                        if text_value:  # Only add entities with actual text
-                            results["entities"].append(
-                                {
-                                    "text": text_value,
-                                    "entity_type": entity_type_value,
-                                    "confidence": confidence_value,
-                                    "context": context_value,
-                                    "search_term": term,
-                                }
-                            )
-
-            except Exception as e:
-                # FAIL FAST - Don't mask graph search failures
-                raise RuntimeError(
-                    f"Graph search failed for term '{term}': {e}. Check Azure Cosmos DB Gremlin connection."
-                ) from e
+        # FAIL FAST: No fallback for graph search failures
+        raise RuntimeError(
+            f"Graph search failed: {e}. All graph search strategies must work with real Cosmos DB data. "
+            "Verify Cosmos DB Gremlin API is functional and contains properly structured knowledge graph data."
+        ) from e
 
     results["total_found"] = len(results["entities"])
     return results

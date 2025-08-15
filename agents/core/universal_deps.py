@@ -26,17 +26,43 @@ def get_azure_credential():
     """
     Get appropriate Azure credential based on environment.
     
-    Uses ManagedIdentityCredential in Container Apps to avoid Azure CLI authentication issues.
-    Falls back to DefaultAzureCredential for local development.
+    Automatically detects environment and uses appropriate authentication:
+    - Container Apps: ManagedIdentityCredential 
+    - Local/azd deployment: DefaultAzureCredential (Azure CLI)
+    - Explicit control via USE_MANAGED_IDENTITY environment variable
     """
-    # Check if running in Azure Container Apps (has AZURE_CLIENT_ID)
-    client_id = os.getenv('AZURE_CLIENT_ID')
-    if client_id:
-        # Running in Container App - use managed identity directly
-        return ManagedIdentityCredential(client_id=client_id)
+    # Check for explicit control via environment variable
+    use_managed_identity_env = os.getenv("USE_MANAGED_IDENTITY")
+    
+    # Auto-detect environment if not explicitly set
+    if use_managed_identity_env is None:
+        # Check if running in Azure Container Apps (has AZURE_CLIENT_ID)
+        client_id = os.getenv('AZURE_CLIENT_ID')
+        if client_id:
+            # Running in Container App - use managed identity
+            use_managed_identity = True
+        else:
+            # Local development or azd deployment - use Azure CLI
+            use_managed_identity = False
     else:
-        # Local development - use default credential chain
-        return DefaultAzureCredential()
+        # Explicit setting provided
+        use_managed_identity = use_managed_identity_env.lower() == "true"
+    
+    if use_managed_identity:
+        # Use managed identity (Container Apps)
+        client_id = os.getenv('AZURE_CLIENT_ID')
+        if client_id:
+            return ManagedIdentityCredential(client_id=client_id)
+        else:
+            return ManagedIdentityCredential()
+    else:
+        # Use DefaultAzureCredential for local/azd deployment (includes Azure CLI)
+        return DefaultAzureCredential(
+            # Exclude problematic credential types for deployment scenarios
+            exclude_cli_credential=False,  # Keep CLI credential for azd deployments
+            exclude_managed_identity_credential=True,  # Exclude MI for local development
+            exclude_visual_studio_code_credential=True  # Exclude VS Code for deployment
+        )
 from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosGremlinClient
 
 
