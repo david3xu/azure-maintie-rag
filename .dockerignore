@@ -22,6 +22,5 @@ logs/
 tests/
 scripts/deployment/
 
-# Data directories
-data/raw/
+# Data directories (keep data/raw/ for REAL data processing)
 data/processed/
