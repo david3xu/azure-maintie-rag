@@ -175,6 +175,9 @@ deploy-with-data: sync-env ## Full deployment with automated data pipeline (reco
 	@echo "🚀 Full Azure deployment with automated data pipeline - Session: $(SESSION_ID)"
 	@echo "Setting AUTO_POPULATE_DATA=true for automated pipeline..." >> $(SESSION_REPORT)
 	@azd env set AUTO_POPULATE_DATA true
+	@echo "Setting local development authentication..." >> $(SESSION_REPORT)
+	@export USE_MANAGED_IDENTITY=false
+	@export OPENBLAS_NUM_THREADS=1
 	@echo "Starting azd up deployment..." >> $(SESSION_REPORT)
 	@azd up --no-prompt 2>&1 | tee -a $(SESSION_REPORT) | tail -10
 	@$(call capture_azure_status)

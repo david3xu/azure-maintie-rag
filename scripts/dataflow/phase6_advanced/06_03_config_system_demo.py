@@ -31,16 +31,12 @@ try:
         get_search_config_dynamic,
         simple_dynamic_config_manager,
     )
-except ImportError:
-    # Fallback implementations for demo
-    async def analyze_domain_directory(data_dir):
-        return type("DomainAnalysis", (), {"domain_signature": "azure_ai_services"})()
-
-    async def get_extraction_config_dynamic(domain, data_dir):
-        return {"entity_confidence_threshold": 0.7, "chunk_size": 1000}
-
-    async def get_search_config_dynamic(domain, query, data_directory):
-        return {"vector_top_k": 10, "vector_similarity_threshold": 0.8}
+except ImportError as e:
+    # FAIL FAST: No fake implementations allowed
+    raise RuntimeError(
+        f"Configuration system demo requires real simple_config_manager implementation: {e}. "
+        "No fake success patterns allowed - implement real Azure service-based configuration management first."
+    ) from e
 
 
 # Import query generation orchestrator

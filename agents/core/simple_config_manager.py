@@ -103,10 +103,10 @@ class SimpleDynamicConfigManager:
                     f"Discovered domain mapping: {data_directory} -> {domain_name}"
                 )
             else:
-                # Fallback when no subdirectories exist yet
-                domain_name = data_path.name if data_path.exists() else "unknown_domain"
-                logger.warning(
-                    f"No subdirectories found in data/raw/, using fallback: {domain_name}"
+                # FAIL FAST: No fallback for empty data directory
+                raise RuntimeError(
+                    f"No data subdirectories found in data/raw/. Domain discovery requires actual data structure. "
+                    f"Place your documents in organized subdirectories under data/raw/ before running domain analysis."
                 )
 
             # Analyze actual content files if they exist
@@ -228,101 +228,6 @@ class SimpleDynamicConfigManager:
                 f"Domain discovery required for production Universal RAG: {e}"
             )
 
-    def _create_fallback_analysis(
-        self, data_directory: str
-    ) -> DomainIntelligenceResult:
-        """Create fallback analysis using subdirectory-based discovery (Universal RAG compliant)"""
-
-        data_path = Path(data_directory)
-
-        # Universal RAG: discover domains from subdirectory structure, not content classification
-        raw_data_path = Path("/workspace/azure-maintie-rag/data/raw")
-        discovered_domains = []
-
-        if raw_data_path.exists():
-            for subdir in raw_data_path.iterdir():
-                if subdir.is_dir():
-                    discovered_domains.append(subdir.name)
-
-        # Map each subdirectory in data/raw/ to its own domain (same logic as main method)
-        if discovered_domains:
-            domain_name = None
-
-            # Match the requested data_directory to the correct subdirectory path
-            for content_path in discovered_domains:
-                content_dir_path = raw_data_path / content_path
-                if str(content_dir_path) in str(data_directory) or data_path.name == content_path:
-                    domain_name = content_path
-                    break
-
-            # If no specific match found, handle root analysis or use first domain
-            if domain_name is None:
-                if str(data_directory).endswith("data/raw") or data_path.name == "raw":
-                    domain_name = data_path.name  # Use actual directory name
-                else:
-                    domain_name = discovered_domains[0]  # Default to first domain
-        else:
-            domain_name = data_path.name if data_path.exists() else "unknown_domain"
-
-        # Basic file analysis from the actual domain directory
-        file_count = 0
-        total_size = 0
-        complexity_indicators = 0
-        if data_path.name == "raw" and len(discovered_domains) > 1:
-            # For root analysis with multiple domains, analyze all subdirectories
-            domain_path = raw_data_path
-        else:
-            # For specific domain, analyze that subdirectory
-            domain_path = (
-                raw_data_path / domain_name
-                if (raw_data_path / domain_name).exists()
-                else data_path
-            )
-
-        if domain_path.exists():
-            for file_path in domain_path.rglob("*"):
-                if file_path.is_file() and file_path.suffix in [
-                    ".md",
-                    ".txt",
-                    ".py",
-                    ".json",
-                ]:
-                    file_count += 1
-                    try:
-                        content = file_path.read_text(encoding="utf-8", errors="ignore")
-                        total_size += len(content)
-
-                        # QUICK FAIL MODE - Remove fallback analysis from production
-                        # This fallback method should not be used in production Universal RAG system
-                        raise RuntimeError(
-                            "Fallback analysis not allowed in production - use main analyze_domain_if_needed method with LLM analysis"
-                        )
-                    except:
-                        pass
-
-        # Calculate universal metrics
-        vocabulary_complexity_ratio = complexity_indicators / max(file_count, 1)
-        avg_length = total_size / max(file_count, 1)
-
-        return DomainIntelligenceResult(
-            domain_signature=f"{domain_name}",  # Use actual subdirectory name without fake suffixes
-            content_type_confidence=0.6,  # Lower confidence for fallback
-            vocabulary_complexity=vocabulary_complexity_ratio,  # Universal characteristic
-            document_count=file_count,
-            avg_document_length=avg_length,
-            key_concepts=[domain_name, "content", "analysis"],
-            recommended_chunk_size=1000 if avg_length > 2000 else 800,
-            recommended_confidence_thresholds={
-                "entity": 0.8 if vocabulary_complexity_ratio > 0.5 else 0.85,
-                "relationship": 0.7 if vocabulary_complexity_ratio > 0.5 else 0.75,
-            },
-            processing_recommendations={
-                "discovered_from": "fallback_subdirectory_analysis",
-                "domain_path": str(domain_path),
-                "available_domains": discovered_domains,
-                "fallback_used": True,
-            },
-        )
 
     async def get_extraction_config(
         self, domain_name: str, data_directory: str = None

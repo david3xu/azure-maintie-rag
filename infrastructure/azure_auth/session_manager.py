@@ -30,20 +30,35 @@ class AzureSessionManager:
         return self.credential
 
     def _refresh_credential(self):
-        """Refresh Azure credential with fallback patterns"""
+        """Refresh Azure credential with environment-based selection"""
+        import os
+        
+        use_managed_identity = os.getenv("USE_MANAGED_IDENTITY", "true").lower() == "true"
+        
         try:
-            # Try managed identity first (for Azure environments)
-            self.credential = ManagedIdentityCredential()
-            logger.info("Azure session refreshed with Managed Identity")
-        except Exception:
-            try:
-                # Fallback to default credential chain
+            if use_managed_identity:
+                # Use managed identity for Azure environments
+                self.credential = ManagedIdentityCredential()
+                logger.info("Azure session refreshed with Managed Identity")
+            else:
+                # Use default credential chain for local development
                 self.credential = DefaultAzureCredential()
-                logger.info("Azure session refreshed with Default Credential")
-            except Exception as e:
-                logger.error(f"Credential refresh failed: {e}")
+                logger.info("Azure session refreshed with Default Credential (CLI/Local)")
+        except Exception as e:
+            if use_managed_identity:
+                # If managed identity fails, try default credential as fallback
+                try:
+                    self.credential = DefaultAzureCredential()
+                    logger.info("Azure session fallback to Default Credential")
+                except Exception as fallback_error:
+                    logger.error(f"Both managed identity and default credential failed: {e}, {fallback_error}")
+                    raise ClientAuthenticationError(
+                        f"Failed to refresh Azure credentials: managed identity failed ({e}), default credential failed ({fallback_error})"
+                    )
+            else:
+                logger.error(f"Default credential failed: {e}")
                 raise ClientAuthenticationError(
-                    f"Failed to refresh Azure credentials: {e}"
+                    f"Failed to refresh Azure credentials with default credential: {e}"
                 )
 
         self.last_refresh_time = time.time()

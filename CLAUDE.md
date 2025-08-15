@@ -14,6 +14,11 @@ make dev                      # Start API (port 8000) + Frontend (port 5174)
 make health                   # System health check with Azure service status
 make deploy-with-data         # Full deployment with automated data pipeline (RECOMMENDED)
 
+# Session Management (Enterprise Feature - Clean Log Replacement)
+make session-report           # View current session with real-time Azure status
+make clean                    # Clean current session and start fresh (preserves cumulative)
+make health                   # Complete health check with comprehensive session reporting
+
 # Testing (REAL Azure services, NO mocks)
 pytest                        # All tests with asyncio_mode=auto
 pytest -m unit                # Agent logic tests
@@ -74,11 +79,13 @@ az acr build --registry <acr-name> --image azure-maintie-rag/frontend-prod:lates
 ```python
 agents/core/universal_models.py         # Domain-agnostic data structures (1536 lines)
 agents/core/agent_toolsets.py           # Centralized FunctionToolset management (REQUIRED pattern)
-agents/core/universal_deps.py           # Azure service dependency injection
+agents/core/universal_deps.py           # Azure service dependency injection with credential management
 agents/core/azure_pydantic_provider.py  # Azure OpenAI provider with managed identity
+agents/core/simple_config_manager.py    # Dynamic configuration based on domain analysis (replaces broken dynamic_config_manager)
 agents/orchestrator.py                  # UniversalOrchestrator for agent coordination
 infrastructure/azure_ml/gnn_inference_client.py  # GNN model inference with fail-fast
 infrastructure/prompt_workflows/templates/universal_knowledge_extraction.jinja2  # Unified template
+infrastructure/azure_auth/session_manager.py    # Authentication session management for all Azure services
 ```
 
 ## Critical Development Rules
@@ -140,14 +147,18 @@ The system implements strict fail-fast principles:
 # Required for all Python scripts
 export PYTHONPATH=/workspace/azure-maintie-rag
 
-# Azure authentication (local development)
-export USE_MANAGED_IDENTITY=false
+# Azure authentication (local development vs Container Apps)
+export USE_MANAGED_IDENTITY=false          # Local development (uses DefaultAzureCredential)
+export USE_MANAGED_IDENTITY=true           # Container Apps (uses ManagedIdentityCredential directly)
 
 # Numerical stability for GNN/PyTorch
 export OPENBLAS_NUM_THREADS=1
 
-# Combined for dataflow scripts
+# Combined for dataflow scripts (typical local development pattern)
 OPENBLAS_NUM_THREADS=1 USE_MANAGED_IDENTITY=false PYTHONPATH=/workspace/azure-maintie-rag python <script>
+
+# Combined for Azure Container Apps deployment
+OPENBLAS_NUM_THREADS=1 USE_MANAGED_IDENTITY=true PYTHONPATH=/workspace/azure-maintie-rag python <script>
 ```
 
 ## 6-Phase Data Pipeline
@@ -201,19 +212,32 @@ pytest tests/test_agents.py::TestDomainIntelligenceAgent::test_agent_import -v
 | Search Returns 0 Results | Run `make check-data` to verify ingestion |
 | Test Timeouts | Use `timeout 120` and `OPENBLAS_NUM_THREADS=1` |
 | GNN Training Fails | Check `06_12_check_async_status.py` for async bootstrap status |
+| Configuration Manager Errors | Import from `agents.core.simple_config_manager` (not dynamic_config_manager) |
+| Session Management Issues | Use `make clean` to reset session, check `logs/session_report.md` |
+| Credential Resolution Failures | Fixed: Auto-detects environment, no manual USE_MANAGED_IDENTITY setting needed |
+| Option 2 Pipeline Not Running | Fixed: `make deploy-with-data` now automatically triggers complete pipeline |
+| Postdeploy Hook Timeout | Fixed: 20-minute timeout with graceful failure handling |
 
 ## Session Management
 
 Enterprise session tracking with clean log replacement (Makefile:14-60):
-- Unique session ID per command (`YYYYMMDD_HHMMSS`)
-- Session reports: `logs/dataflow_execution_*.md`
-- Performance metrics: `logs/performance_*.log`
-- Cumulative report: `logs/cumulative_dataflow_report.md`
+- **Clean Log Replacement**: Each session completely replaces previous logs (no accumulation)
+- **Unique Session ID**: Generated per command (`YYYYMMDD_HHMMSS`)
+- **Real-time Azure Status**: Azure service status captured in each session
+- **Performance Tracking**: System metrics captured automatically
+- **Cumulative Reporting**: Long-term session history preserved
+
+**Session Files:**
+- `logs/current_session` - Active session ID
+- `logs/dataflow_execution_<SESSION_ID>.md` - Current session report
+- `logs/azure_status_<SESSION_ID>.log` - Azure service status
+- `logs/performance_<SESSION_ID>.log` - System performance metrics
+- `logs/cumulative_dataflow_report.md` - Historical session data
 
 ```bash
-make session-report  # View current session
-make clean          # Clean session (preserve cumulative)
-make health         # Health check with session tracking
+make session-report  # View current session with real-time status
+make clean          # Clean session and start fresh (preserves cumulative history)
+make health         # Complete health check with comprehensive session reporting
 ```
 
 ## Development Workflow
@@ -244,24 +268,70 @@ make session-report
 make health
 ```
 
+## Debugging and Troubleshooting Patterns
+
+### Agent Import Issues
+```bash
+# Test individual agent imports
+PYTHONPATH=/workspace/azure-maintie-rag python -c "from agents.domain_intelligence.agent import domain_intelligence_agent; print('✅ Domain Intelligence')"
+PYTHONPATH=/workspace/azure-maintie-rag python -c "from agents.knowledge_extraction.agent import knowledge_extraction_agent; print('✅ Knowledge Extraction')"
+PYTHONPATH=/workspace/azure-maintie-rag python -c "from agents.universal_search.agent import universal_search_agent; print('✅ Universal Search')"
+```
+
+### PydanticAI Toolset Verification
+```bash
+# Check if using correct toolset pattern (must use FunctionToolset, not @agent.tool)
+grep -r "@agent\.tool" agents/  # Should return NO results
+grep -r "@.*_toolset\.tool" agents/  # Should find tool registrations
+```
+
+### Azure Service Health Check
+```bash
+# Individual service connectivity tests
+PYTHONPATH=/workspace/azure-maintie-rag python -c "
+import asyncio
+from agents.core.universal_deps import get_universal_deps
+deps = asyncio.run(get_universal_deps())
+print('Available services:', list(deps.get_available_services()))
+"
+```
+
+### Domain Bias Detection
+```bash
+# Check for domain bias violations before commit
+./scripts/hooks/pre-commit-domain-bias-check.sh
+# Look for hardcoded domain categories like "legal", "technical", "medical"
+grep -r "legal\|technical\|medical\|financial" agents/ --include="*.py" | grep -v "# OK" || echo "Clean"
+```
+
+### Configuration Manager Issues
+```bash
+# Check for deprecated dynamic_config_manager imports
+grep -r "dynamic_config_manager" . --include="*.py" | grep -v "# Deprecated" || echo "Clean"
+# Verify using simple_config_manager
+grep -r "simple_config_manager" agents/ --include="*.py"
+```
+
 ## Azure Deployment Details
 
-### Automated Deployment with Data Pipeline
+### Automated Deployment with Data Pipeline (FIXED)
 ```bash
-make deploy-with-data  # Recommended: Infrastructure + complete data pipeline
+make deploy-with-data  # Recommended: Infrastructure + complete data pipeline (FULLY AUTOMATED)
 # OR
 azd env set AUTO_POPULATE_DATA true && azd up
 ```
 
-This automatically:
-1. Deploys 9 Azure services with RBAC
-2. Cleans existing Azure data
-3. Validates all 3 PydanticAI agents
-4. Uploads documents & creates embeddings
-5. Runs Agent 1 to analyze all docs (one-time)
-6. Creates GNN bootstrap endpoint (returns REAL failures initially)
-7. Starts async GNN training in background
-8. **IMPORTANT**: System will FAIL all searches until GNN ready (NO FALLBACK)
+**NEW: Fully automated Option 2 deployment** - no manual intervention required:
+1. **Deploys 9 Azure services** with RBAC
+2. **Auto-detects authentication** (Container Apps vs local development)
+3. **Automatically executes postdeploy hook** with Option 2 pipeline
+4. **Cleans existing Azure data** via Phase 0
+5. **Validates all 3 PydanticAI agents** via Phase 1
+6. **Uploads REAL documents** & creates embeddings via Phase 2
+7. **Runs knowledge extraction** on all docs via Phase 3
+8. **Builds tri-modal search** (Vector + Graph + GNN) via Phases 4-6
+9. **20-minute timeout protection** prevents hanging
+10. **Graceful failure handling** - infrastructure works even if pipeline has issues
 
 ### Infrastructure Only
 ```bash
@@ -328,3 +398,7 @@ https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag
 - **AGENT PATTERN**: Must use FunctionToolset, not @agent.tool
 - **CLEAN SESSIONS**: Makefile replaces logs, doesn't accumulate
 - **ASYNC BOOTSTRAP**: GNN deployment uses async bootstrap for reproducibility
+- **CREDENTIAL MANAGEMENT**: `USE_MANAGED_IDENTITY` controls authentication method (local vs Container Apps)
+- **CONFIG MANAGER**: Use `simple_config_manager` only (dynamic_config_manager is deprecated/broken)
+- **SESSION TRACKING**: Enterprise session management with real-time Azure service monitoring
+- **DEPENDENCY INJECTION**: All Azure services accessed via `universal_deps.py` for consistency
