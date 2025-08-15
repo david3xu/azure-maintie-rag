@@ -54,9 +54,8 @@ docs/
 logs/
 cache/
 tests/
-# Include scripts/dataflow/ for admin API endpoints in Option 2: Async Model Deployment
+# Exclude only specific script directories, keep dataflow for admin API
 scripts/deployment/
-!scripts/dataflow/
 
 # Large data directories (keep only essential runtime data)
 data/raw/
