@@ -215,7 +215,7 @@ def get_azure_config() -> Dict[str, Any]:
 
 
 async def configuration_system_demo(
-    data_directory: str = "/workspace/azure-maintie-rag/data/raw",
+    data_directory: str = "data/raw",
     session_id: str = None,
 ) -> Dict[str, Any]:
     """
@@ -623,7 +623,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Configuration System Demo")
     parser.add_argument(
         "--data-dir",
-        default="/workspace/azure-maintie-rag/data/raw",
+        default="data/raw",
         help="Data directory for domain analysis",
     )
     parser.add_argument("--json", action="store_true", help="Output results as JSON")

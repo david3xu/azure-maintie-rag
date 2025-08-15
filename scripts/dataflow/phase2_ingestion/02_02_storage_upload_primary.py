@@ -92,7 +92,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Azure Universal RAG - Data Ingestion")
     parser.add_argument(
         "--source",
-        default="/workspace/azure-maintie-rag/data/raw",
+        default="data/raw",
         help="Source directory path",
     )
     parser.add_argument(

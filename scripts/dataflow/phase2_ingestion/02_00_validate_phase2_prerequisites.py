@@ -169,7 +169,9 @@ def validate_source_data():
     print("\n📂 VALIDATING SOURCE DATA")
     print("=" * 40)
 
-    data_dir = Path("/workspace/azure-maintie-rag/data/raw")
+    # Use relative path from project root
+    project_root = Path(__file__).parent.parent.parent.parent
+    data_dir = project_root / "data" / "raw"
     if not data_dir.exists():
         raise RuntimeError(f"Source data directory not found: {data_dir}")
 
