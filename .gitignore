@@ -32,15 +32,13 @@ venv/
 backend/=*
 
 # Data and indices (keep raw, ignore processed/indices)
-backend/data/processed/
-backend/data/indices/
-backend/data/metrics/
-backend/data/models/
+data/processed/
+data/indices/
+data/metrics/
+data/models/
 logs/
-backend/logs/
 
 # MLflow artifacts
-backend/scripts/azure_ml/mlruns/
 mlruns/
 
 # Jupyter Notebook checkpoints
@@ -63,8 +61,7 @@ Thumbs.db
 *.tmp
 
 # Output directories
-backend/data/outputs/
-backend/scripts/dataflow/data/outputs/
+outputs/
 
 # Enterprise Architecture temporary files
 *.deployment_*.id
@@ -115,12 +112,9 @@ node_modules/
 extracted_knowledge.json
 
 # Ignore FAISS index and embedding files
-/backend/data/indices/faiss_index.bin
-/backend/data/indices/doc_mappings.pkl
-/backend/data/indices/document_embeddings.pkl
-
-# Virtual environment that should not be tracked
-backend/mining_analytics/
+data/indices/faiss_index.bin
+data/indices/doc_mappings.pkl
+data/indices/document_embeddings.pkl
 
 # GNN trainer outputs
 comprehensive_training_results.json
@@ -145,10 +139,10 @@ data/indices/
 .claude/settings.local.json
 
 # Build artifacts
-backend/build/
+build/
 *.npz
-backend/data/gnn_models/*.json
-backend/data/gnn_training/*.json
+data/gnn_models/*.json
+data/gnn_training/*.json
 
 # Session logs (enterprise feature)
 logs/session_report.md

@@ -47,7 +47,7 @@ from agents.universal_search.agent import (
 
 async def universal_search_demo_pipeline(
     search_query: str = "Azure RAG system knowledge extraction",
-    data_directory: str = "/workspace/azure-maintie-rag/data/raw",
+    data_directory: str = "data/raw",
     session_id: str = None,
 ) -> Dict[str, Any]:
     """
@@ -358,7 +358,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--data-dir",
-        default="/workspace/azure-maintie-rag/data/raw",
+        default="data/raw",
         help="Data directory for domain analysis",
     )
     parser.add_argument("--json", action="store_true", help="Output results as JSON")

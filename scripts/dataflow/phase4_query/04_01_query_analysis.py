@@ -17,7 +17,7 @@ from agents.universal_search.agent import run_universal_search
 
 
 async def universal_query_analysis(
-    query: str, data_directory: str = "/workspace/azure-maintie-rag/data/raw"
+    query: str, data_directory: str = "data/raw"
 ):
     """Universal query analysis that adapts to domain context automatically"""
     print(f"🌍 Universal Query Analysis - Zero Domain Bias")
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     parser.add_argument("query", help="Query to analyze")
     parser.add_argument(
         "--data-dir",
-        default="/workspace/azure-maintie-rag/data/raw",
+        default="data/raw",
         help="Reference data directory",
     )
     args = parser.parse_args()

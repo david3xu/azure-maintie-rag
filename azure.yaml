@@ -250,6 +250,58 @@ hooks:
           echo "🔑 Using azd deployment context with local credentials..."
           # Sync with current azd environment
           ./scripts/deployment/sync-env.sh $(azd env get-values | grep "AZURE_ENV_NAME=" | cut -d'=' -f2 | tr -d '"') 2>/dev/null || echo "Using existing environment"
+          
+          # Enhanced authentication validation for enterprise environments
+          echo "🔐 ENTERPRISE AUTHENTICATION VALIDATION FOR AUTOMATED PIPELINE"
+          echo "=============================================================="
+          
+          # Run comprehensive authentication diagnosis
+          if [ -f "./scripts/deployment/sync-auth.sh" ]; then
+            echo "🔍 Running authentication synchronization check..."
+            ./scripts/deployment/sync-auth.sh
+          fi
+          
+          # Check if Azure CLI is authenticated
+          if ! az account show >/dev/null 2>&1; then
+            echo ""
+            echo "❌ CRITICAL: Azure CLI authentication expired during deployment"
+            echo "🏫 University/Enterprise environments enforce short token lifetimes"
+            echo "💡 Token likely expired during infrastructure deployment (2-5 minutes)"
+            echo ""
+            echo "🔧 SOLUTION for automated Option 2 pipeline:"
+            echo "   1. Infrastructure deployment: ✅ COMPLETED"
+            echo "   2. Data pipeline: ❌ REQUIRES FRESH AUTHENTICATION"
+            echo ""
+            echo "📋 Manual completion steps:"
+            echo "   az login"
+            echo "   make dataflow-full"
+            echo ""
+            echo "⚠️  EXPECTED BEHAVIOR: No fake success, honest error reporting"
+            
+            # Try to get subscription info for user guidance
+            AZD_SUBSCRIPTION=$(azd env get-values | grep "AZURE_SUBSCRIPTION_ID=" | cut -d'=' -f2 | tr -d '"' 2>/dev/null)
+            if [ -n "$AZD_SUBSCRIPTION" ]; then
+              echo "🔗 Target subscription: $AZD_SUBSCRIPTION"
+              echo "💡 Use this subscription ID when re-authenticating"
+            fi
+            
+            # Skip automated pipeline - fail honestly
+            echo ""
+            echo "🚨 SKIPPING AUTOMATED PIPELINE DUE TO AUTHENTICATION EXPIRATION"
+            echo "   This is CORRECT behavior - no fallback, no fake success"
+            exit 0
+          else
+            echo "✅ Azure CLI authentication working"
+            
+            # Verify subscription matches
+            CLI_SUB=$(az account show --query id -o tsv 2>/dev/null)
+            AZD_SUB=$(azd env get-values | grep "AZURE_SUBSCRIPTION_ID=" | cut -d'=' -f2 | tr -d '"' 2>/dev/null)
+            if [ "$CLI_SUB" = "$AZD_SUB" ]; then
+              echo "✅ Authentication contexts synchronized - proceeding with automated pipeline"
+            else
+              echo "⚠️  Authentication contexts may be mismatched"
+            fi
+          fi
         fi
         
         # Execute the complete pipeline with timeout to prevent hanging

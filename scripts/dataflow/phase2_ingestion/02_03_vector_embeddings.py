@@ -32,9 +32,9 @@ async def generate_embeddings(domain: str = "universal"):
             )
 
         # Load actual uploaded files for embedding generation
-        data_dir = Path(
-            "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output"
-        )
+        # Use relative path from project root
+        project_root = Path(__file__).parent.parent.parent.parent
+        data_dir = project_root / "data" / "raw" / "azure-ai-services-language-service_output"
         data_files = list(data_dir.glob("*.md"))
 
         if not data_files:

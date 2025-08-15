@@ -26,7 +26,7 @@ from agents.orchestrator import UniversalOrchestrator
 
 
 async def run_universal_full_pipeline(
-    data_dir: str = "/workspace/azure-maintie-rag/data/raw",
+    data_dir: str = "data/raw",
     skip_prerequisites: bool = False,
     verbose: bool = False,
 ) -> Dict[str, Any]:
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--data-dir",
-        default="/workspace/azure-maintie-rag/data/raw",
+        default="data/raw",
         help="Data directory",
     )
     parser.add_argument(

@@ -52,7 +52,7 @@ async def validate_agent1_readiness() -> Tuple[bool, Dict[str, Any]]:
 
     # Step 1: Validate data availability
     print("📄 Step 1: Validating input data availability...")
-    data_dir = Path("/workspace/azure-maintie-rag/data/raw")
+    data_dir = Path("data/raw")
 
     if not data_dir.exists():
         print(f"❌ Critical: Data directory not found: {data_dir}")

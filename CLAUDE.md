@@ -14,6 +14,11 @@ make dev                      # Start API (port 8000) + Frontend (port 5174)
 make health                   # System health check with Azure service status
 make deploy-with-data         # Full deployment with automated data pipeline (RECOMMENDED)
 
+# Enterprise Authentication (University/Corporate Environments)
+./scripts/deployment/sync-auth.sh                    # Diagnose authentication issues
+./scripts/deployment/sync-auth.sh validate           # Validate auth before long operations
+az login && azd auth login                           # Refresh tokens for enterprise AD
+
 # Session Management (Enterprise Feature - Clean Log Replacement)
 make session-report           # View current session with real-time Azure status
 make clean                    # Clean current session and start fresh (preserves cumulative)
@@ -321,17 +326,19 @@ make deploy-with-data  # Recommended: Infrastructure + complete data pipeline (F
 azd env set AUTO_POPULATE_DATA true && azd up
 ```
 
-**NEW: Fully automated Option 2 deployment** - no manual intervention required:
+**NEW: Fully automated Option 2 deployment** with smart authentication handling:
 1. **Deploys 9 Azure services** with RBAC
-2. **Auto-detects authentication** (Container Apps vs local development)
-3. **Automatically executes postdeploy hook** with Option 2 pipeline
-4. **Cleans existing Azure data** via Phase 0
-5. **Validates all 3 PydanticAI agents** via Phase 1
-6. **Uploads REAL documents** & creates embeddings via Phase 2
-7. **Runs knowledge extraction** on all docs via Phase 3
-8. **Builds tri-modal search** (Vector + Graph + GNN) via Phases 4-6
-9. **20-minute timeout protection** prevents hanging
-10. **Graceful failure handling** - infrastructure works even if pipeline has issues
+2. **Auto-detects authentication** (Container Apps vs local development)  
+3. **Checks authentication status** before pipeline execution
+4. **Automatically executes postdeploy hook** with Option 2 pipeline
+5. **Falls back to post-deployment completion** if auth expires during deployment
+6. **Cleans existing Azure data** via Phase 0
+7. **Validates all 3 PydanticAI agents** via Phase 1
+8. **Uploads REAL documents** & creates embeddings via Phase 2
+9. **Runs knowledge extraction** on all docs via Phase 3
+10. **Builds tri-modal search** (Vector + Graph + GNN) via Phases 4-6
+11. **20-minute timeout protection** prevents hanging
+12. **Honest failure reporting** - no fake success when auth issues occur
 
 ### Infrastructure Only
 ```bash

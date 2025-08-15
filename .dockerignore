@@ -18,7 +18,8 @@ frontend/dist/
 # Development
 .azure/
 .claude/
-logs/
+logs/*.log
+logs/*.md
 tests/
 scripts/deployment/
 

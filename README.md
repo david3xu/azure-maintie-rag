@@ -9,6 +9,11 @@
 ### **⚡ Essential Commands (Production Ready)**
 
 ```bash
+# 🔐 ENTERPRISE AUTHENTICATION (University/Corporate Environments)
+az login && azd auth login                  # Refresh tokens for enterprise AD (required first)
+./scripts/deployment/sync-auth.sh          # Diagnose authentication issues
+./scripts/deployment/sync-auth.sh validate # Validate auth before long operations
+
 # Option 1: Deploy with container rebuild (RECOMMENDED for Docker environments)
 azd deploy                                  # Rebuild containers with latest code + admin API
 make deploy-with-data                       # Deploy with updated containers + automated pipeline
@@ -18,7 +23,8 @@ azd pipeline config                         # Setup automated container builds
 git push                                    # Trigger rebuild with admin API
 make deploy-with-data                       # Deploy with updated containers
 
-# Option 3: Deploy complete system with full data pipeline
+# Option 3: Deploy complete system with full data pipeline (RECOMMENDED)
+az login && azd auth login                  # ⚠️ REQUIRED: Fresh authentication first
 make deploy-with-data                       # Deploy infrastructure + populate data + train models
 ./scripts/show-deployment-urls.sh          # Get frontend and backend URLs
 
@@ -35,6 +41,40 @@ az acr build --registry <acr-name> --image azure-maintie-rag/frontend-prod:lates
 # Backend API: https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/health
 # Status: MANDATORY tri-modal search (Vector+Graph+GNN) - fails until ALL ready (NO FALLBACK)
 ```
+
+## 🔐 Enterprise Authentication (University/Corporate Environments)
+
+**Critical for environments with short token lifetimes (1-24 hours):**
+
+```bash
+# Step 1: Always authenticate BOTH contexts before deployment
+az login                                    # Authenticate Azure CLI
+azd auth login                             # Authenticate Azure Developer CLI
+
+# Step 2: Validate authentication before long operations
+./scripts/deployment/sync-auth.sh          # Diagnose any authentication issues
+./scripts/deployment/sync-auth.sh validate # Validate readiness for 20-minute pipeline
+
+# Step 3: Deploy with validated authentication
+make deploy-with-data                       # Now includes pre-flight auth validation
+
+# Troubleshooting: If deployment fails due to authentication
+./scripts/deployment/sync-auth.sh          # Check what expired
+az login && azd auth login                  # Refresh tokens
+make dataflow-full                          # Complete any remaining pipeline phases
+```
+
+**Why authentication validation is critical:**
+- **University/Enterprise Azure AD** enforces 1-24 hour token lifetimes
+- **Pipeline duration**: 7-20 minutes (can outlast tokens)
+- **Deployment includes**: Infrastructure (2-5 min) + Data pipeline (7-20 min)
+- **Fail-fast design**: System aborts rather than using fallback logic
+
+**Enhanced deployment commands automatically:**
+- ✅ Validate authentication before starting long operations
+- ✅ Provide specific guidance for token expiration
+- ✅ Abort with clear instructions rather than partial failures
+- ✅ Support enterprise environments with honest error reporting
 
 ### **💼 For Stakeholders: Access Live System**
 
@@ -122,6 +162,30 @@ azd up  # defaults to infrastructure only for backward compatibility
 - 🧠 **Phase 3**: Run Agent 1 once to analyze all docs + build knowledge graph
 - 🚀 **Phase 6**: Train GNN models + deploy to Azure ML endpoints for inference
 - ✅ **Result**: Production-ready system with pre-analyzed data for fast user queries
+
+### **Expected Flow Summary**
+
+When you run `make deploy-with-data`, here's what happens step-by-step:
+
+1. ✅ **Authentication validation** - Will pass (user has fresh tokens)
+2. ✅ **Phase 0: Cleanup** - Will use Azure CLI credentials correctly  
+3. ✅ **Phase 1: Agent validation** - Will connect to agents properly
+4. ✅ **Phase 2: Data ingestion** - Will find data files in correct location
+5. ✅ **Phase 3: Knowledge extraction** - Will create results in proper directory
+6. ✅ **Phase 4-6: Complete pipeline** - Will process with real Azure services
+
+**Total Expected Duration**: 15-25 minutes (Infrastructure: 5-10 min, Pipeline: 10-15 min)
+
+**Success Indicators:**
+- All phases show "✅ Phase X completed" messages
+- No "❌" authentication errors during execution
+- Final message: "🎉 COMPLETE 6-PHASE PIPELINE EXECUTED"
+- Session reports created in `logs/dataflow_execution_*.md`
+
+**If Issues Occur:**
+- Authentication expired: `az login && azd auth login`, then retry
+- Pipeline incomplete: Run `make dataflow-full` to complete remaining phases
+- Check logs: `make session-report` for detailed execution reports
 
 **After deployment completes:**
 
@@ -970,6 +1034,46 @@ curl localhost:8000/api/v1/query -X POST -H "Content-Type: application/json" -d 
 
 ---
 
+## 🔧 Troubleshooting
+
+### **Common Enterprise/University Environment Issues**
+
+**Authentication Token Expiration:**
+```bash
+# Symptoms: Pipeline fails mid-execution, "authentication expired" errors
+# Cause: University/Enterprise Azure AD short token lifetimes (1-24 hours)
+# Solution:
+./scripts/deployment/sync-auth.sh          # Diagnose authentication status
+az login && azd auth login                  # Refresh both token contexts
+make deploy-with-data                       # Retry with fresh tokens
+```
+
+**Pipeline Phases Not Completing:**
+```bash
+# Symptoms: Infrastructure deployed but no data populated
+# Cause: Authentication expired during postdeploy hook
+# Solution:
+az login                                    # Refresh authentication
+make dataflow-full                          # Complete remaining phases manually
+```
+
+**Azure Service Connection Failures:**
+```bash
+# Symptoms: "DefaultAzureCredential failed" errors
+# Cause: Mismatched authentication contexts
+# Solution:
+./scripts/deployment/sync-auth.sh validate # Check authentication readiness
+az account set --subscription <id>         # Ensure consistent subscription
+```
+
+**GNN Search Returns Empty Results:**
+```bash
+# Symptoms: Vector and Graph work, but GNN returns no results
+# Cause: GNN models still training asynchronously (expected initially)
+# Solution: Wait for async model training to complete (10-30 minutes)
+curl "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/admin/gnn-status"
+```
+
 ## 📞 Getting Help
 
 - **Development Guide**: [CLAUDE.md](CLAUDE.md) - Complete development workflows and commands
@@ -977,6 +1081,7 @@ curl localhost:8000/api/v1/query -X POST -H "Content-Type: application/json" -d 
 - **Frontend**: [docs/FRONTEND.md](docs/FRONTEND.md) - React + TypeScript frontend development
 - **Multi-Agent System**: [agents/README.md](agents/README.md) - Universal RAG agent architecture
 - **Data Pipeline**: [scripts/dataflow/README.md](scripts/dataflow/README.md) - 6-phase pipeline execution
+- **Authentication Issues**: `./scripts/deployment/sync-auth.sh` - Enterprise authentication diagnosis
 
 ---
 
