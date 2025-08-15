@@ -26,8 +26,9 @@ fi
 echo "📁 Syncing backend configuration..."
 
 # Create environment file from current azd values
-azd env get-values > "config/environments/${TARGET_ENV}.env"
-chmod 666 "config/environments/${TARGET_ENV}.env"
+azd env get-values > "config/environments/${TARGET_ENV}.env.tmp"
+rm -f "config/environments/${TARGET_ENV}.env"
+mv "config/environments/${TARGET_ENV}.env.tmp" "config/environments/${TARGET_ENV}.env"
 echo "✅ Created: config/environments/${TARGET_ENV}.env"
 
 # Update .env symlink in root
