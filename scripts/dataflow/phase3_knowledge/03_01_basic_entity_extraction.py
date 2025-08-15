@@ -112,7 +112,7 @@ async def basic_entity_extraction():
 
     # Save results to JSON for next step
     results_dir = Path("scripts/dataflow/results")
-    results_dir.mkdir(exist_ok=True)
+    results_dir.mkdir(parents=True, exist_ok=True)  # Create parent directories if needed
 
     # Prepare serializable results (without the full extraction_result object)
     serializable_results = []
@@ -146,7 +146,7 @@ async def basic_entity_extraction():
     print(f"📊 Total relationships extracted: {total_relationships}")
     print(f"💾 Results saved to: {results_file}")
 
-    if len(extraction_results) > 0:
+    if len(extraction_results) > 0 and total_entities > 0:
         avg_entities = total_entities / len(extraction_results)
         avg_relationships = total_relationships / len(extraction_results)
         print(f"📈 Average entities per file: {avg_entities:.1f}")
@@ -154,6 +154,10 @@ async def basic_entity_extraction():
         print(f"\n🎉 STEP 1 COMPLETED SUCCESSFULLY")
         print(f"🔄 Ready for Step 2: Storage in graph database")
         return True
+    elif len(extraction_results) > 0 and total_entities == 0:
+        print(f"\n❌ FAIL FAST: Files processed but NO ENTITIES EXTRACTED")
+        print(f"💡 Check extraction prompts and Azure OpenAI responses")
+        return False
     else:
         print(f"\n❌ FAIL FAST: No files were processed successfully")
         return False
