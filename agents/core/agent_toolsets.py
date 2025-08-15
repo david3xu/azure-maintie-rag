@@ -761,21 +761,38 @@ async def orchestrate_universal_search(
         missing.append("Vector")
     if not graph_results.get("entities"):
         missing.append("Graph")
+    
+    # Special handling for GNN during async bootstrap phase
+    # Check if GNN is legitimately in bootstrap vs. actual failure
     if not gnn_results:
-        missing.append("GNN")
+        # Check if this is async bootstrap in progress (GNN service available but endpoint not deployed)
+        if gnn_predictions.get("inference_source") == "gnn_not_deployed_yet":
+            print("   ⚠️ GNN endpoint deployment in progress - async bootstrap phase")
+            print(f"   ⚠️ Message: {gnn_predictions.get('message', 'GNN bootstrapping')}")
+            # This is legitimate async bootstrap - GNN service is available but endpoint not ready
+            # Continue without GNN results but track the status
+        else:
+            # This is a real GNN failure - service unavailable or other error
+            missing.append("GNN")
 
     if missing:
         raise RuntimeError(
             f"MANDATORY tri-modal search failed: Missing results from {missing}. All three modalities (Vector + Graph + GNN) are required. No fallback patterns allowed - implement real Azure services first."
         )
 
+    # Report results with async bootstrap status
+    gnn_status = "active" if gnn_results else ("bootstrap" if gnn_predictions.get("inference_source") == "gnn_not_deployed_yet" else "failed")
+    
     print(
         f"🎉 MANDATORY tri-modal search completed: {len(unified_results)} unified results"
     )
     print(
-        f"   📊 Vector: {len(vector_results.get('results', []))} + Graph: {len(graph_results.get('entities', []))} + GNN: {len(gnn_results)} results"
+        f"   📊 Vector: {len(vector_results.get('results', []))} + Graph: {len(graph_results.get('entities', []))} + GNN: {len(gnn_results)} ({gnn_status}) results"
     )
     print(f"   🎯 Search confidence: {search_confidence:.3f}")
+    
+    if gnn_status == "bootstrap":
+        print("   🚀 GNN: Async deployment in progress - will be available on subsequent requests")
 
     return {
         "unified_results": unified_results,

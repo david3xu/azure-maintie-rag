@@ -89,12 +89,26 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
 
             # QUICK FAIL: Must use credential from Universal Dependencies - NO FALLBACK
             if not hasattr(self, 'credential') or not self.credential:
+                # Debug info to help troubleshoot
+                logger.error(f"Main credential check failed: hasattr={hasattr(self, 'credential')}, credential={getattr(self, 'credential', 'MISSING')}")
+                logger.error(f"UniversalDeps should have set credential during initialization")
                 raise RuntimeError(
                     "Cosmos DB client MUST receive credential from Universal Dependencies. "
-                    "No fallback authentication allowed. Ensure UniversalDeps passes credential."
+                    "No fallback authentication allowed. Ensure UniversalDeps passes credential. "
+                    f"Debug: hasattr(credential)={hasattr(self, 'credential')}, credential_value={getattr(self, 'credential', 'MISSING')}"
                 )
             credential = self.credential
-            token = credential.get_token("https://cosmos.azure.com/.default")
+            # REAL Azure token handling - refresh if needed
+            try:
+                token = credential.get_token("https://cosmos.azure.com/.default")
+                logger.debug(f"Successfully obtained Cosmos DB token, expires: {token.expires_on}")
+            except Exception as token_error:
+                logger.error(f"Failed to get Cosmos DB token: {token_error}")
+                raise RuntimeError(
+                    f"Failed to get valid Azure token for Cosmos DB. "
+                    f"Token error: {token_error}. "
+                    f"This may indicate authentication expiration - run 'az login' to refresh credentials."
+                ) from token_error
 
             # Create simple Gremlin client
             self.gremlin_client = client.Client(
@@ -127,12 +141,26 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
 
                 # QUICK FAIL: Must use credential from Universal Dependencies - NO FALLBACK
                 if not hasattr(self, 'credential') or not self.credential:
+                    # Debug info to help troubleshoot
+                    logger.error(f"Credential check failed: hasattr={hasattr(self, 'credential')}, credential={getattr(self, 'credential', 'MISSING')}")
+                    logger.error(f"UniversalDeps should have set credential during initialization")
                     raise RuntimeError(
                         "Cosmos DB thread-local client MUST receive credential from Universal Dependencies. "
-                        "No fallback authentication allowed. Ensure UniversalDeps passes credential."
+                        "No fallback authentication allowed. Ensure UniversalDeps passes credential. "
+                        f"Debug: hasattr(credential)={hasattr(self, 'credential')}, credential_value={getattr(self, 'credential', 'MISSING')}"
                     )
                 credential = self.credential
-                token = credential.get_token("https://cosmos.azure.com/.default")
+                # REAL Azure token handling - refresh if needed
+                try:
+                    token = credential.get_token("https://cosmos.azure.com/.default")
+                    logger.debug(f"Successfully obtained Cosmos DB token, expires: {token.expires_on}")
+                except Exception as token_error:
+                    logger.error(f"Failed to get Cosmos DB token: {token_error}")
+                    raise RuntimeError(
+                        f"Failed to get valid Azure token for Cosmos DB. "
+                        f"Token error: {token_error}. "
+                        f"This may indicate authentication expiration - run 'az login' to refresh credentials."
+                    ) from token_error
 
                 # Create thread-local Gremlin client
                 self._thread_local.client = client.Client(

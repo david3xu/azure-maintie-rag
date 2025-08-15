@@ -305,15 +305,31 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
             # Register the model using the existing infrastructure
             registration_result = await gnn_client.register_trained_model(job_id, model_metadata)
             
-            # Reformat the result to match expected format
-            return {
-                "success": registration_result["success"],
-                "model_name": registration_result["model_name"],
-                "model_version": registration_result["model_version"],
-                "model_id": registration_result["model_id"],
-                "training_job": registration_result["training_job_id"],
-                "domain": domain
-            }
+            # Handle different response formats (async bootstrap vs. completed registration)
+            if registration_result.get("registration_status") == "pending_model_output":
+                # This is async bootstrap - model not yet available
+                logger.warning(f"Model registration pending for job {job_id}: {registration_result.get('message', 'Async bootstrap in progress')}")
+                return {
+                    "success": False,
+                    "model_name": None,
+                    "model_version": None,
+                    "model_id": None,
+                    "training_job": job_id,
+                    "domain": domain,
+                    "status": "async_bootstrap_pending",
+                    "message": registration_result.get("message", "Model output not yet available during async bootstrap"),
+                    "async_bootstrap": True
+                }
+            else:
+                # Standard registration result with success field
+                return {
+                    "success": registration_result.get("success", False),
+                    "model_name": registration_result.get("model_name"),
+                    "model_version": registration_result.get("model_version"),
+                    "model_id": registration_result.get("model_id"),
+                    "training_job": registration_result.get("training_job_id", job_id),
+                    "domain": domain
+                }
             
         except Exception as e:
             logger.error(f"❌ REAL model registration failed: {e}")
