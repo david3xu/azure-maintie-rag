@@ -55,7 +55,6 @@ logs/
 cache/
 tests/
 # Include scripts/dataflow/ for admin API endpoints in Option 2: Async Model Deployment
-!scripts/
 scripts/deployment/
 !scripts/dataflow/
 
