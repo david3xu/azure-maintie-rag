@@ -362,10 +362,12 @@ dataflow-integrate: ## Phase 5 - Full pipeline integration testing
 	@$(call finalize_session_report)
 	@echo "✅ Phase 5 completed - End-to-end integration validated"
 
-dataflow-advanced: ## Phase 6 - Advanced features (GNN training + deployment + monitoring)
+dataflow-advanced: ## Phase 6 - Advanced features (GNN async bootstrap + training + deployment + monitoring)
 	@$(call start_clean_session)
 	@echo "🚀 PHASE 6: Advanced Features - Session: $(SESSION_ID)"
 	@echo "Phase 6 advanced features initiated at $(shell date)" >> $(SESSION_REPORT)
+	@echo "## GNN Async Bootstrap (Sets GNN_ENDPOINT_NAME)" >> $(SESSION_REPORT)
+	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_11_gnn_async_bootstrap.py 2>&1 | tail -8 >> $(SESSION_REPORT)
 	@echo "## Reproducible GNN Deployment Pipeline" >> $(SESSION_REPORT)
 	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_10_gnn_deployment_pipeline.py 2>&1 | tail -8 >> $(SESSION_REPORT)
 	@echo "## GNN Training (Legacy)" >> $(SESSION_REPORT)
@@ -434,11 +436,17 @@ dataflow-full: ## Execute all 6 phases sequentially: 0→1→2→3→4→5→6 w
 	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase5_integration/05_01_full_pipeline_execution.py --verbose 2>&1 | tee -a $(SESSION_REPORT) | tail -5
 	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase5_integration/05_03_query_generation_showcase.py 2>&1 | tee -a $(SESSION_REPORT) | tail -3
 	@echo "" >> $(SESSION_REPORT)
-	@echo "🚀 Phase 6: Advanced features (reproducible GNN deployment + monitoring)..."
+	@echo "🚀 Phase 6: Advanced features (GNN async bootstrap + reproducible deployment + monitoring)..."
 	@echo "## Phase 6: Advanced Features" >> $(SESSION_REPORT)
+	@echo "### GNN Async Bootstrap (Sets GNN_ENDPOINT_NAME)" >> $(SESSION_REPORT)
+	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_11_gnn_async_bootstrap.py 2>&1 | tee -a $(SESSION_REPORT) | tail -5
+	@echo "### Reproducible GNN Deployment Pipeline" >> $(SESSION_REPORT)
 	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_10_gnn_deployment_pipeline.py 2>&1 | tee -a $(SESSION_REPORT) | tail -5
+	@echo "### GNN Training (Legacy)" >> $(SESSION_REPORT)
 	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_01_gnn_training.py 2>&1 | tee -a $(SESSION_REPORT) | tail -3
+	@echo "### Real-time Monitoring" >> $(SESSION_REPORT)
 	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_02_streaming_monitor.py 2>&1 | tee -a $(SESSION_REPORT) | tail -2
+	@echo "### Configuration System Demo" >> $(SESSION_REPORT)
 	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_03_config_system_demo.py 2>&1 | tee -a $(SESSION_REPORT) | tail -3
 	@$(call capture_performance_metrics)
 	@$(call finalize_session_report)
