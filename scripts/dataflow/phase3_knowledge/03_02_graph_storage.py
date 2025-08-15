@@ -16,6 +16,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+# Import path utilities for consistent directory handling
+from scripts.dataflow.utilities.path_utils import get_results_dir
+
 
 async def graph_storage():
     """Store extracted knowledge in Azure Cosmos DB graph database - Step 2 of knowledge extraction"""
@@ -125,7 +128,7 @@ async def graph_storage():
         "files_processed": len(extraction_results),
     }
 
-    results_dir = Path("scripts/dataflow/results")
+    results_dir = get_results_dir()  # Use path utilities for reliable directory access
     storage_file = results_dir / "step2_graph_storage_results.json"
     with open(storage_file, "w") as f:
         json.dump(storage_results, f, indent=2)

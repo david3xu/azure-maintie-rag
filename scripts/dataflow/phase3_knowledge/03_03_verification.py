@@ -16,6 +16,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+# Import path utilities for consistent directory handling
+from scripts.dataflow.utilities.path_utils import get_results_dir
+
 
 async def knowledge_graph_verification():
     """Verify stored knowledge in graph database - Step 3 of knowledge extraction"""
@@ -210,7 +213,7 @@ async def knowledge_graph_verification():
         verification_results["total_tests"] = total_tests
 
         # Save verification results
-        results_dir = Path("scripts/dataflow/results")
+        results_dir = get_results_dir()  # Use path utilities for reliable directory access
         verification_file = results_dir / "step3_verification_results.json"
         with open(verification_file, "w") as f:
             json.dump(verification_results, f, indent=2)
