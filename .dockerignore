@@ -55,7 +55,7 @@ logs/
 cache/
 tests/
 scripts/deployment/
-scripts/dataflow/
+# scripts/dataflow/ - NEEDED for admin API endpoints in Option 2: Async Model Deployment
 
 # Large data directories (keep only essential runtime data)
 data/raw/
