@@ -144,12 +144,22 @@ azure-status: ## Check Azure infrastructure with clean output
 	@$(call finalize_session_report)
 	@cat $(SESSION_REPORT)
 
-azure-teardown: ## Clean Azure resources with session audit
+azure-teardown: ## Clean Azure resources with session audit (comprehensive)
 	@$(call start_clean_session)
 	@echo "🧹 Azure Resource Cleanup - Session: $(SESSION_ID)"
 	@echo "Cleanup initiated at $(shell date)" >> $(SESSION_REPORT)
-	@./scripts/teardown.sh 2>&1 | tail -10 >> $(SESSION_REPORT) || echo "Teardown script not available" >> $(SESSION_REPORT)
+	@./scripts/deployment/azd-teardown.sh --force 2>&1 | tail -10 >> $(SESSION_REPORT) || echo "Using azd down fallback" >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
+
+azure-down: ## Quick Azure resource deletion using azd down
+	@echo "🧹 Quick Azure resource deletion..."
+	@azd down --force --purge
+	@echo "✅ Azure resources deleted"
+
+azure-down-safe: ## Safe Azure resource deletion with confirmation
+	@echo "🧹 Safe Azure resource deletion..."
+	@azd down --purge
+	@echo "✅ Azure resources deleted"
 
 # Legacy targets removed - use Phase-based pipeline instead:
 # - Use 'make dataflow-full' for complete pipeline

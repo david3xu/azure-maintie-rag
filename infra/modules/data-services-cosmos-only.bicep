@@ -1,4 +1,4 @@
-// Data Services Module: Cosmos DB (Gremlin) and Azure ML Workspace
+// Data Services Module: Cosmos DB (Gremlin) Only - ML Workspace excluded temporarily
 param environmentName string
 param location string
 param principalId string
@@ -9,10 +9,6 @@ param managedIdentityPrincipalId string
 var config = {
   cosmosCapacityMode: 'Serverless'   // FREE: First 1M RU/s and 25GB storage/month
   cosmosRU: 0
-  mlComputeInstanceSize: 'Standard_DS2_v2'   // CPU-ONLY: 2 vCPU, 7GB RAM - $0.168/hour
-  mlComputeClusterSize: 'Standard_DS3_v2'    // CPU-ONLY: 4 vCPU, 14GB RAM - $0.336/hour (for batch jobs)
-  mlMinNodes: 0                              // AUTO-SCALE: Scale to zero when not in use
-  mlMaxNodes: 1                              // MINIMAL: Single node for maximum cost control
 }
 
 // Azure Cosmos DB Account with Gremlin API for Knowledge Graphs
@@ -121,77 +117,6 @@ resource knowledgeGraphContainer 'Microsoft.DocumentDB/databaseAccounts/gremlinD
   }
 }
 
-// Azure ML Workspace - USAGE-HOUR BILLING (Only pay when actively using)
-resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' = {
-  name: 'ml-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
-  location: location
-  identity: {
-    type: 'SystemAssigned'
-  }
-  properties: {
-    friendlyName: 'Azure Universal RAG ML Workspace'
-    storageAccount: resourceId('Microsoft.Storage/storageAccounts', 'st${take(replace(replace('${resourcePrefix}${environmentName}', '-', ''), '_', ''), 8)}${take(uniqueString(resourceGroup().id), 10)}')
-    keyVault: resourceId('Microsoft.KeyVault/vaults', 'kv-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}')
-    applicationInsights: resourceId('Microsoft.Insights/components', 'appi-${resourcePrefix}-${environmentName}')
-    // containerRegistry removed - not supported in Azure for Students subscription
-    publicNetworkAccess: 'Enabled'
-    v1LegacyMode: false
-  }
-  tags: {
-    Environment: environmentName
-    Purpose: 'CPU-only GNN model training - $0.168/hour usage billing'
-  }
-}
-
-// ML Compute Instance - CPU-ONLY (Auto-shutdown: 4hrs idle, $0.168/hour when running)
-resource mlComputeInstance 'Microsoft.MachineLearningServices/workspaces/computes@2023-04-01' = {
-  parent: mlWorkspace
-  name: 'gnn-training-instance'
-  location: location
-  properties: {
-    computeType: 'ComputeInstance'
-    properties: {
-      vmSize: config.mlComputeInstanceSize  // Standard_DS2_v2: 2 vCPU, 7GB RAM - CPU-only
-      subnet: null
-      applicationSharingPolicy: 'Personal'
-      sshSettings: {
-        sshPublicAccess: 'Disabled'
-      }
-      computeInstanceAuthorizationType: 'personal'
-      personalComputeInstanceSettings: {
-        assignedUser: {
-          objectId: principalId
-          tenantId: subscription().tenantId
-        }
-      }
-      idleTimeBeforeShutdown: 'PT240M'      // AUTO-SHUTDOWN: 4 hours idle = cost savings
-      enableNodePublicIp: false
-    }
-  }
-}
-
-// ML Compute Cluster - CPU-ONLY (Auto-scale to zero, $0.336/hour when running batch jobs)
-resource mlComputeCluster 'Microsoft.MachineLearningServices/workspaces/computes@2023-04-01' = {
-  parent: mlWorkspace
-  name: 'gnn-cluster'
-  location: location
-  properties: {
-    computeType: 'AmlCompute'
-    properties: {
-      vmSize: config.mlComputeClusterSize   // Standard_DS3_v2: 4 vCPU, 14GB RAM - CPU-only
-      vmPriority: 'Dedicated'               // Use 'LowPriority' for 60-90% savings with interruption risk
-      scaleSettings: {
-        minNodeCount: config.mlMinNodes     // 0 = Auto-scale to zero when not in use
-        maxNodeCount: config.mlMaxNodes     // 1 = Minimal scale for cost control
-        nodeIdleTimeBeforeScaleDown: 'PT120S'  // Scale down after 2 minutes idle
-      }
-      enableNodePublicIp: false
-      isolatedNetwork: false
-      osType: 'Linux'
-    }
-  }
-}
-
 // RBAC assignments for managed identity
 resource managedIdentityCosmosContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: cosmosAccount
@@ -203,34 +128,12 @@ resource managedIdentityCosmosContributor 'Microsoft.Authorization/roleAssignmen
   }
 }
 
-// Azure ML RBAC assignments for managed identity
-resource managedIdentityMLContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: mlWorkspace
-  name: guid(mlWorkspace.id, managedIdentityPrincipalId, 'AzureML Data Scientist')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')
-    principalId: managedIdentityPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
 // RBAC assignments for current user (development)
 resource cosmosContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
   scope: cosmosAccount
   name: guid(cosmosAccount.id, principalId, 'Cosmos DB Built-in Data Contributor')
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
-    principalId: principalId
-    principalType: 'User'
-  }
-}
-
-// Azure ML RBAC assignments for current user (development)
-resource userMLContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
-  scope: mlWorkspace
-  name: guid(mlWorkspace.id, principalId, 'AzureML Data Scientist')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')
     principalId: principalId
     principalType: 'User'
   }
@@ -275,9 +178,9 @@ output cosmosGremlinEndpoint string = 'wss://${cosmosAccount.name}.gremlin.cosmo
 output gremlinDatabaseName string = gremlinDatabase.name
 output knowledgeGraphName string = knowledgeGraphContainer.name
 
-// Azure ML Outputs - Usage-hour billing enabled
-output mlWorkspaceName string = mlWorkspace.name
-output mlWorkspaceId string = mlWorkspace.id
-output mlWorkspaceEndpoint string = mlWorkspace.properties.discoveryUrl
-output mlComputeClusterName string = mlComputeCluster.name
-output mlComputeInstanceName string = mlComputeInstance.name
+// Temporary placeholders for ML outputs (will be added later)
+output mlWorkspaceName string = ''
+output mlWorkspaceId string = ''
+output mlWorkspaceEndpoint string = ''
+output mlComputeClusterName string = ''
+output mlComputeInstanceName string = ''

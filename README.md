@@ -163,18 +163,19 @@ azd up  # defaults to infrastructure only for backward compatibility
 - 🚀 **Phase 6**: Train GNN models + deploy to Azure ML endpoints for inference
 - ✅ **Result**: Production-ready system with pre-analyzed data for fast user queries
 
-### **Expected Flow Summary**
+### **Expected Flow Summary (Cost-Optimized Configuration)**
 
 When you run `make deploy-with-data`, here's what happens step-by-step:
 
 1. ✅ **Authentication validation** - Will pass (user has fresh tokens)
 2. ✅ **Phase 0: Cleanup** - Will use Azure CLI credentials correctly  
 3. ✅ **Phase 1: Agent validation** - Will connect to agents properly
-4. ✅ **Phase 2: Data ingestion** - Will find data files in correct location
-5. ✅ **Phase 3: Knowledge extraction** - Will create results in proper directory
-6. ✅ **Phase 4-6: Complete pipeline** - Will process with real Azure services
+4. ✅ **Phase 2: Data ingestion** - Will find data files in correct location (LIMITED by free tier)
+5. ✅ **Phase 3: Knowledge extraction** - Will create results in proper directory (GPT-4o-mini)
+6. ✅ **Phase 4-6: Complete pipeline** - Will process with free-tier Azure services
 
-**Total Expected Duration**: 15-25 minutes (Infrastructure: 5-10 min, Pipeline: 10-15 min)
+**Total Expected Duration**: 10-15 minutes (Infrastructure: 3-5 min, Pipeline: 7-10 min)
+**Cost Optimization**: Using free tiers and minimal configurations to save costs
 
 **Success Indicators:**
 - All phases show "✅ Phase X completed" messages
@@ -905,18 +906,27 @@ azd env new production && azd up   # Premium SKUs, 90-day retention, auto-scalin
 
 ## 💰 Cost Optimization
 
-### **Estimated Monthly Costs**
+### **Estimated Monthly Costs (Cost-Optimized Configuration)**
 
-- **Development**: ~$200-300 (Basic SKUs, low usage)
-- **Staging**: ~$500-700 (Standard SKUs, moderate testing)
-- **Production**: ~$800-1200 (Premium SKUs, auto-scaling)
+- **Single Environment**: ~$20-50 (FREE tiers + minimal resources)
+  - Azure OpenAI GPT-4o-mini: ~$15-30 (much cheaper than GPT-4o)
+  - Cognitive Search FREE tier: $0 (up to 50MB, 3 indexes)
+  - Cosmos DB Serverless: $0-10 (first 1M RU/s free, then minimal usage)
+  - Blob Storage Cool LRS: ~$2-5 (very minimal data storage costs)
+  - Container Apps: ~$2-5 (scale-to-zero, minimal resources)
+  - Key Vault: $0 (up to 10,000 operations/month free)
+  - Application Insights: $0-2 (free tier with basic monitoring)
 
-### **Cost Controls**
+### **Cost Optimization Features**
 
-- ✅ Budget alerts at 80% threshold
-- ✅ Auto-shutdown for development resources
-- ✅ Environment-appropriate SKU sizing
-- ✅ Serverless options where applicable
+- ✅ **FREE tier services** wherever possible
+- ✅ **GPT-4o-mini** instead of expensive GPT-4o (60-80% cost reduction)
+- ✅ **Scale-to-zero** container apps when not in use
+- ✅ **Serverless Cosmos DB** with free tier (1M RU/s + 25GB/month)
+- ✅ **Single environment** instead of dev/staging/prod
+- ✅ **Minimal resource allocation** (0.25 CPU, 0.5Gi memory)
+- ✅ **Cool storage tier** for lower data storage costs
+- ✅ **Removed Azure ML** (most expensive service) - using local training
 
 ---
 
@@ -1031,6 +1041,58 @@ curl localhost:8000/api/v1/query -X POST -H "Content-Type: application/json" -d 
 - Use Azure Key Vault for secrets management
 - Follow RBAC patterns for service authentication
 - Validate all user inputs and sanitize outputs
+
+---
+
+## 🧹 Easy Resource Cleanup (Cost Management)
+
+The system provides multiple easy ways to delete all Azure resources to stop costs immediately:
+
+### **Quick Cleanup Commands (Choose One)**
+
+```bash
+# Method 1: Fastest - Direct azd command
+azd down --force --purge
+
+# Method 2: With confirmation prompts
+azd down --purge
+
+# Method 3: Using Makefile shortcuts
+make azure-down          # Quick deletion
+make azure-down-safe     # With confirmation
+
+# Method 4: Comprehensive cleanup with session tracking
+make azure-teardown      # Includes backup options and session audit
+
+# Method 5: Full cleanup script with backup options
+./scripts/deployment/azd-teardown.sh --force --backup
+```
+
+### **What Gets Deleted**
+
+✅ **ALL Azure resources** in the resource group
+✅ **Resource group itself** (complete cleanup)
+✅ **Local azd environment** configuration
+✅ **Temporary files** and cache
+
+### **Deletion Time & Cost Savings**
+
+- **Deletion time**: 2-5 minutes (much faster than creation)
+- **Cost after deletion**: $0 (all resources removed)
+- **Verification**: Script verifies complete deletion
+- **Safety**: Production environments require explicit confirmation
+
+### **Emergency Cost Stop**
+
+If you need to stop costs immediately:
+
+```bash
+# FASTEST way to stop all costs
+azd down --force --purge
+
+# Verify everything is deleted
+az resource list --resource-group "rg-maintie-rag-*" --output table
+```
 
 ---
 

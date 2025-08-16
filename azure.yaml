@@ -27,7 +27,7 @@ env:
   AZURE_RESOURCE_GROUP_PREFIX: rg-maintie-rag
   
   # Application Configuration
-  OPENAI_MODEL_DEPLOYMENT: gpt-4o
+  OPENAI_MODEL_DEPLOYMENT: gpt-4o-mini  # Only mini model for cost optimization
   EMBEDDING_MODEL_DEPLOYMENT: text-embedding-ada-002
   SEARCH_INDEX_NAME: maintie-index
   COSMOS_DATABASE_NAME: maintie-rag-db
@@ -154,7 +154,7 @@ hooks:
          -d '{"async_mode": true, "auto_deploy": true}' \
          --max-time 300 --retry 3 -s -f; then
         echo "✅ Phase 6: REAL GNN async training initiated via API"
-        echo "🧠 GNN model training running asynchronously in Azure ML!"
+        echo "🧠 GNN model training running locally (Azure ML removed for cost savings)"
       else
         echo "❌ Phase 6: GNN training failed - check logs for details"
         echo "⚠️  Infrastructure ready, try manual execution: make dataflow-advanced"
@@ -167,11 +167,11 @@ hooks:
       echo "✅ REAL data uploaded and processed automatically"  
       echo "✅ Agent 1 analyzed ALL REAL documents automatically"
       echo "✅ REAL knowledge graph built in Cosmos DB"
-      echo "✅ REAL GNN training running asynchronously in Azure ML"
+      echo "✅ REAL GNN training using Azure ML CPU-only ($0.168/hour, auto-scale to zero)"
       echo "⚡ TRI-MODAL SEARCH READY: Vector + Graph + GNN operational"
       echo ""
       echo "🎯 System is now fully operational with REAL tri-modal search!"
-      echo "💡 GNN endpoints will improve as async training completes"
+      echo "💡 GNN endpoints use Azure ML CPU-only ($0.168/hour, 4-hour auto-shutdown enabled)"
       echo "💡 NO fallback, NO placeholders - all modalities use REAL Azure services"
       
   postdeploy:

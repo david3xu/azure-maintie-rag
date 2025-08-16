@@ -1,0 +1,5 @@
+{
+  "status": "failed",
+  "error": "(ResourceNotFound) The Resource 'Microsoft.MachineLearningServices/workspaces/ml-maintie-rag-prod' under resource group 'rg-maintie-rag-prod' was not found. For more details please go to https://aka.ms/ARMResourceNotFoundFix\nCode: ResourceNotFound\nMessage: The Resource 'Microsoft.MachineLearningServices/workspaces/ml-maintie-rag-prod' under resource group 'rg-maintie-rag-prod' was not found. For more details please go to https://aka.ms/ARMResourceNotFoundFix",
+  "message": "Could not create bootstrap endpoint - GNN will not be available"
+}

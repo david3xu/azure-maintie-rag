@@ -35,7 +35,7 @@ def get_azure_openai_model(model_deployment: Optional[str] = None) -> OpenAIMode
     # Get Azure configuration from environment (set by azd)
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
     api_version = os.getenv("OPENAI_API_VERSION", "2024-06-01")
-    deployment_name = model_deployment or os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o")
+    deployment_name = model_deployment or os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o-mini")
 
     if not azure_endpoint:
         raise ValueError(

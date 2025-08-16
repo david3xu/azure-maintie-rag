@@ -18,32 +18,14 @@ param backendImageName string = ''
 @description('Frontend container image name with tag (e.g., azure-maintie-rag/frontend-prod:azd-deploy-123456)')
 param frontendImageName string = ''
 
-// Environment-specific configuration
-var environmentConfig = {
-  development: {
-    containerCpu: '0.5'
-    containerMemory: '1Gi'
-    minReplicas: 0  // Allow scale to zero for development
-    maxReplicas: 3
-    registrySku: 'Basic'
-  }
-  staging: {
-    containerCpu: '1.0'
-    containerMemory: '2Gi'
-    minReplicas: 0
-    maxReplicas: 5
-    registrySku: 'Standard'
-  }
-  prod: {
-    containerCpu: '2.0'
-    containerMemory: '4Gi'
-    minReplicas: 0  // Start with 0 until images are ready
-    maxReplicas: 10
-    registrySku: 'Premium'
-  }
+// Single configuration - FREE TIER OPTIMIZED (Cost Savings)
+var config = {
+  containerCpu: '0.25'             // MINIMUM: Reduce CPU allocation
+  containerMemory: '0.5Gi'         // MINIMUM: Reduce memory allocation
+  minReplicas: 0                   // FREE: Scale to zero when not used
+  maxReplicas: 1                   // MINIMAL: Single replica to save costs
+  registrySku: 'Basic'             // CHEAPEST: Basic tier
 }
-
-var config = environmentConfig[environmentName]
 
 // Get references to existing resources
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
@@ -54,29 +36,8 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
   name: 'log-${resourcePrefix}-${environmentName}'
 }
 
-// Azure Container Registry
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: 'cr${take(replace(replace('${resourcePrefix}${environmentName}', '-', ''), '_', ''), 10)}${take(uniqueString(resourceGroup().id), 10)}'
-  location: location
-  sku: {
-    name: config.registrySku
-  }
-  properties: {
-    adminUserEnabled: true  // Enable admin for initial setup
-    publicNetworkAccess: 'Enabled'
-    zoneRedundancy: environmentName == 'production' ? 'Enabled' : 'Disabled'
-  }
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${managedIdentity.id}': {}
-    }
-  }
-  tags: {
-    Environment: environmentName
-    Purpose: 'Container image storage for Universal RAG backend'
-  }
-}
+// Container Registry removed - not supported in Azure for Students subscription
+// Container Apps will use Docker Hub or external registry for images
 
 // Container Apps Environment
 resource containerEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
@@ -129,12 +90,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           }
         ]
       }
-      registries: [
-        {
-          server: containerRegistry.properties.loginServer
-          identity: managedIdentity.id
-        }
-      ]
+      // registries: removed - Container Registry not supported in Azure for Students
       secrets: [
         {
           name: 'app-insights-connection-string'
@@ -230,12 +186,7 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
           }
         ]
       }
-      registries: [
-        {
-          server: containerRegistry.properties.loginServer
-          identity: managedIdentity.id
-        }
-      ]
+      // registries: removed - Container Registry not supported in Azure for Students
     }
     template: {
       containers: [
@@ -267,8 +218,9 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
 }
 
 // Outputs
-output containerRegistryName string = containerRegistry.name
-output containerRegistryLoginServer string = containerRegistry.properties.loginServer
+// Container Registry outputs removed - not supported in Azure for Students
+output containerRegistryName string = 'not-available-in-student-subscription'
+output containerRegistryLoginServer string = 'not-available-in-student-subscription'
 output backendAppUrl string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
 output frontendAppUrl string = 'https://${frontendApp.properties.configuration.ingress.fqdn}'
 output containerEnvironmentId string = containerEnvironment.id

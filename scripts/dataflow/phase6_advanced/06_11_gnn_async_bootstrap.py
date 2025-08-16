@@ -127,7 +127,14 @@ class GNNAsyncBootstrap:
         
         try:
             # Import the existing deployment pipeline
-            from scripts.dataflow.phase6_advanced.06_10_gnn_deployment_pipeline import ReproducibleGNNPipeline
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(
+                "gnn_deployment", 
+                "/workspace/azure-maintie-rag/scripts/dataflow/phase6_advanced/06_10_gnn_deployment_pipeline.py"
+            )
+            gnn_deployment = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(gnn_deployment)
+            ReproducibleGNNPipeline = gnn_deployment.ReproducibleGNNPipeline
             
             # Create deployment task
             pipeline = ReproducibleGNNPipeline()

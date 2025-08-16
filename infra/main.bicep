@@ -14,6 +14,9 @@ param location string
 @description('Principal ID for the current user (from azd auth)')
 param principalId string = ''
 
+@description('Deploy Azure AI Foundry services (requires approval for Azure for Students)')
+param deployAzureOpenAI bool = false
+
 @description('Backend container image - provided by azd')
 param backendImageName string = ''
 
@@ -49,7 +52,7 @@ module coreServices 'modules/core-services.bicep' = {
   }
 }
 
-module ai 'modules/ai-services.bicep' = {
+module ai 'modules/ai-services.bicep' = if (deployAzureOpenAI) {
   name: 'aiServices'
   scope: resourceGroup
   params: {
@@ -61,7 +64,19 @@ module ai 'modules/ai-services.bicep' = {
   }
 }
 
-module data 'modules/data-services.bicep' = {
+module cognitive 'modules/cognitive-services.bicep' = {
+  name: 'cognitiveServices'
+  scope: resourceGroup
+  params: {
+    environmentName: environmentName
+    location: location
+    principalId: principalId
+    resourcePrefix: resourcePrefix
+    managedIdentityPrincipalId: coreServices.outputs.managedIdentityPrincipalId
+  }
+}
+
+module data 'modules/data-services-cosmos-only.bicep' = {
   name: 'dataServices'
   scope: resourceGroup
   params: {
@@ -80,7 +95,7 @@ module hosting 'modules/hosting-services.bicep' = {
     environmentName: environmentName
     location: location
     resourcePrefix: resourcePrefix
-    openaiEndpoint: ai.outputs.openaiEndpoint
+    openaiEndpoint: deployAzureOpenAI ? ai.outputs.openaiEndpoint : cognitive.outputs.cognitiveServicesEndpoint
     searchEndpoint: coreServices.outputs.searchEndpoint
     cosmosEndpoint: data.outputs.cosmosEndpoint
     storageAccountName: coreServices.outputs.storageAccountName
@@ -95,10 +110,14 @@ module hosting 'modules/hosting-services.bicep' = {
 output AZURE_LOCATION string = location
 output AZURE_RESOURCE_GROUP string = resourceGroup.name
 
-// AI Services
-output AZURE_OPENAI_ENDPOINT string = ai.outputs.openaiEndpoint
-output AZURE_OPENAI_DEPLOYMENT_NAME string = ai.outputs.deploymentName
-output AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME string = ai.outputs.embeddingDeploymentName
+// AI Services (conditional - use CognitiveServices if available)
+output AZURE_OPENAI_ENDPOINT string = deployAzureOpenAI ? ai.outputs.openaiEndpoint : ''
+output AZURE_OPENAI_DEPLOYMENT_NAME string = deployAzureOpenAI ? ai.outputs.deploymentName : 'gpt-4o-mini'
+output AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME string = deployAzureOpenAI ? ai.outputs.embeddingDeploymentName : 'text-embedding-ada-002'
+
+// Alternative Cognitive Services (no approval required)
+output AZURE_COGNITIVE_SERVICES_ENDPOINT string = cognitive.outputs.cognitiveServicesEndpoint
+output AZURE_TEXT_ANALYTICS_ENDPOINT string = cognitive.outputs.textAnalyticsEndpoint
 
 // Data Services
 output AZURE_SEARCH_ENDPOINT string = coreServices.outputs.searchEndpoint
@@ -112,8 +131,12 @@ output AZURE_STORAGE_ACCOUNT string = coreServices.outputs.storageAccountName
 output AZURE_STORAGE_CONTAINER string = 'maintie-${environmentName}-data'
 output AZURE_KEY_VAULT_NAME string = coreServices.outputs.keyVaultName
 
-// ML Services
+// ML Services - Usage-hour billing enabled
 output AZURE_ML_WORKSPACE_NAME string = data.outputs.mlWorkspaceName
+output AZURE_ML_WORKSPACE_ID string = data.outputs.mlWorkspaceId
+output AZURE_ML_WORKSPACE_ENDPOINT string = data.outputs.mlWorkspaceEndpoint
+output AZURE_ML_COMPUTE_CLUSTER_NAME string = data.outputs.mlComputeClusterName
+output AZURE_ML_COMPUTE_INSTANCE_NAME string = data.outputs.mlComputeInstanceName
 output AZURE_ML_RESOURCE_GROUP string = resourceGroup.name
 
 // Monitoring

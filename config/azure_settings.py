@@ -129,7 +129,7 @@ class Settings(BaseSettings):
     )  # azd output
     openai_api_version: str = Field(default="2024-06-01", env="OPENAI_API_VERSION")
     openai_deployment_name: str = Field(
-        default="gpt-4o", env="AZURE_OPENAI_DEPLOYMENT_NAME"
+        default="gpt-4.1-mini", env="AZURE_OPENAI_DEPLOYMENT_NAME"
     )  # azd output
     openai_model: str = Field(default="gpt-4", env="OPENAI_MODEL")
 

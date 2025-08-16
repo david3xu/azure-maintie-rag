@@ -4,38 +4,17 @@ param location string
 param principalId string
 param resourcePrefix string
 
-// Environment-specific configuration
-var environmentConfig = {
-  development: {
-    searchSku: 'basic'
-    searchReplicas: 1
-    searchPartitions: 1
-    storageSku: 'Standard_LRS'
-    storageAccessTier: 'Cool'
-    keyVaultSku: 'standard'
-    logRetentionDays: 7
-  }
-  staging: {
-    searchSku: 'standard'
-    searchReplicas: 1
-    searchPartitions: 1
-    storageSku: 'Standard_ZRS'
-    storageAccessTier: 'Hot'
-    keyVaultSku: 'standard'
-    logRetentionDays: 30
-  }
-  prod: {
-    searchSku: 'standard'
-    searchReplicas: 2
-    searchPartitions: 2
-    storageSku: 'Standard_ZRS'
-    storageAccessTier: 'Hot'
-    keyVaultSku: 'premium'
-    logRetentionDays: 90
-  }
+// Single configuration - FREE TIER OPTIMIZED (Cost Savings)
+var config = {
+  searchSku: 'free'              // FREE: 50MB storage, 3 indexes, 10,000 docs
+  searchReplicas: 1
+  searchPartitions: 1
+  storageSku: 'Standard_LRS'     // CHEAPEST: Locally redundant storage
+  storageAccessTier: 'Cool'      // CHEAPER: Lower storage costs
+  keyVaultSku: 'standard'        // FREE: 10,000 operations/month
+  logRetentionDays: 30           // AZURE FOR STUDENTS: Minimum allowed retention
+  // Container Registry removed - not supported in Azure for Students
 }
-
-var config = environmentConfig[environmentName]
 
 // Managed Identity for all services
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -55,7 +34,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 30
+    retentionInDays: config.logRetentionDays  // AZURE FOR STUDENTS: Use allowed retention
     features: {
       enableLogAccessUsingOnlyResourcePermissions: true
     }
@@ -96,7 +75,7 @@ resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
     partitionCount: config.searchPartitions
     hostingMode: 'default'
     publicNetworkAccess: 'enabled'
-    semanticSearch: 'standard'
+    semanticSearch: 'disabled'  // DISABLE: Free tier doesn't support semantic search
     authOptions: {
       aadOrApiKey: {
         aadAuthFailureMode: 'http401WithBearerChallenge'
@@ -154,7 +133,7 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01'
     deleteRetentionPolicy: {
       allowPermanentDelete: false
       enabled: true
-      days: environmentName == 'production' ? 30 : 7
+      days: 7  // MINIMUM: Always use 7 days to save costs
     }
   }
 }
@@ -210,6 +189,9 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
+// Container Registry removed - not supported in Azure for Students subscription
+// Azure ML will use local training without container registry dependency
+
 // RBAC assignments for managed identity
 resource searchIndexDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: searchService
@@ -251,12 +233,46 @@ resource keyVaultSecretsOfficer 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
+// ACR RBAC removed - Container Registry not supported in Azure for Students
+
 // RBAC for current user (for development)
 resource userKeyVaultSecretsOfficer 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
   scope: keyVault
   name: guid(keyVault.id, principalId, 'Key Vault Secrets Officer')
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
+    principalId: principalId
+    principalType: 'User'
+  }
+}
+
+// User search permissions for local development
+resource userSearchIndexDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
+  scope: searchService
+  name: guid(searchService.id, principalId, 'Search Index Data Contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')
+    principalId: principalId
+    principalType: 'User'
+  }
+}
+
+resource userSearchServiceContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
+  scope: searchService
+  name: guid(searchService.id, principalId, 'Search Service Contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')
+    principalId: principalId
+    principalType: 'User'
+  }
+}
+
+// User storage permissions for local development
+resource userStorageDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
+  scope: storageAccount
+  name: guid(storageAccount.id, principalId, 'Storage Blob Data Contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
     principalId: principalId
     principalType: 'User'
   }
@@ -282,3 +298,7 @@ output appInsightsInstrumentationKey string = appInsights.properties.Instrumenta
 
 output logAnalyticsWorkspaceId string = logAnalytics.properties.customerId
 output logAnalyticsWorkspaceName string = logAnalytics.name
+
+// Container Registry outputs removed - not supported in Azure for Students
+output containerRegistryName string = 'not-available-in-student-subscription'
+output containerRegistryEndpoint string = 'not-available-in-student-subscription'

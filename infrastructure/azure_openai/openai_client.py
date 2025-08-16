@@ -515,7 +515,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                     # Get model name from Azure settings or use dynamic configuration
                     from config.settings import azure_settings
 
-                    self.model_name = azure_settings.openai_deployment_name or "gpt-4o"
+                    self.model_name = azure_settings.openai_deployment_name or "gpt-4o-mini"
                     # Use centralized constants
                     from agents.core.constants import (
                         DEFAULT_CHUNK_SIZE,
@@ -543,7 +543,7 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                 # Get model name from Azure settings
                 from config.settings import azure_settings
 
-                model_name = azure_settings.openai_deployment_name or "gpt-4o"
+                model_name = azure_settings.openai_deployment_name or "gpt-4o-mini"
                 # Use centralized constants
                 from agents.core.constants import (
                     DEFAULT_CHUNK_SIZE,
