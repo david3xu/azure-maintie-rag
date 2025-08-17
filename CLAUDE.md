@@ -2,9 +2,48 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Essential Commands
+## 🚀 Critical Path (START HERE)
 
 ⚠️ **Always work from project root: `cd /workspace/azure-maintie-rag`**
+
+### **30-Second Health Check (First Thing to Run)**
+```bash
+# Verify system is operational before making changes
+export PYTHONPATH=/workspace/azure-maintie-rag
+make health                               # Complete system + Azure status
+python -c "from agents.core.universal_models import UniversalDomainAnalysis; print('✅ Core imports working')"
+```
+
+### **Most Common Development Workflow (90% of tasks)**
+```bash
+# 1. Quick validation (ALWAYS run first)
+make dataflow-validate                    # Test all 3 PydanticAI agents (30 seconds)
+
+# 2. Make code changes, then validate
+black . && isort .                        # Format code
+./scripts/hooks/pre-commit-domain-bias-check.sh  # Check for domain bias
+pytest -m unit -x                        # Run unit tests, stop on first failure
+
+# 3. Test with real data (when needed)
+make dataflow-extract                     # Test knowledge extraction (2-3 minutes)
+make dataflow-query                       # Test search functionality (1-2 minutes)
+```
+
+### **Emergency Commands (When Things Break)**
+```bash
+# Authentication issues (most common)
+az login && azd auth login
+./scripts/deployment/sync-auth.sh validate
+
+# Import errors (second most common) 
+export PYTHONPATH=/workspace/azure-maintie-rag
+export OPENBLAS_NUM_THREADS=1
+
+# Full system reset
+make clean && make health
+```
+
+## Essential Commands
 
 ### Quick Start & Development
 ```bash
@@ -27,10 +66,9 @@ make clean                    # Clean current session and start fresh (preserves
 make health                   # Complete health check with comprehensive session reporting
 
 # Easy Resource Cleanup (Cost Management)
-make azure-down               # Quick Azure resource deletion (fastest)
-make azure-down-safe          # Safe deletion with confirmation prompts
-make azure-teardown           # Comprehensive cleanup with session audit
-azd down --force --purge      # Direct command for immediate cost stop
+./scripts/azd-down-fixed.sh --force --purge   # FIXED azd down - works with REAL deployment patterns
+./scripts/azd-down-fixed.sh                   # Fixed azd down with confirmation prompts
+# NOTE: azd down is fundamentally broken - generates NEW deployment names instead of finding existing ones
 
 # Testing (REAL Azure services, NO mocks)
 pytest                        # All tests with asyncio_mode=auto
@@ -86,14 +124,19 @@ az acr build --registry <acr-name> --image azure-maintie-rag/frontend-prod:lates
    - No fallback - all three modalities required (fail-fast design)
    - Entry: `run_universal_search()`, `universal_search_agent`
 
-### Critical Architecture Files
+### Critical Architecture Files & Design Decisions
 
 **Core Agent Framework:**
 - `agents/core/universal_models.py:1-1536` - Domain-agnostic data structures (all Pydantic models)
+  - **WHY**: Zero domain bias enforcement - models discover rather than classify
 - `agents/core/agent_toolsets.py:1-200` - Centralized FunctionToolset management (REQUIRED pattern)  
+  - **WHY**: Avoids Union type errors in PydanticAI 0.6.2, enables proper tool registration
 - `agents/core/universal_deps.py:1-150` - Azure service dependency injection
+  - **WHY**: Singleton pattern for Azure clients, handles authentication contexts automatically
 - `agents/core/azure_pydantic_provider.py:1-80` - Azure OpenAI provider with managed identity
+  - **WHY**: Seamless local dev vs Container Apps authentication switching
 - `agents/orchestrator.py:1-300` - UniversalOrchestrator for agent coordination
+  - **WHY**: Type-safe inter-agent communication with comprehensive error handling
 
 **Agent Implementations:**
 - `agents/domain_intelligence/agent.py:72-95` - Domain analysis agent definition
@@ -256,6 +299,7 @@ PYTHONPATH=/workspace/azure-maintie-rag python -m pytest tests/ -v
 | Issue | Solution | Diagnostic Command |
 |-------|----------|-------------------|
 | Azure Authentication Failed | `az login && ./scripts/deployment/sync-env.sh prod` | `make health` |
+| azd down fails with "no resources found" | Use fixed azd down: `./scripts/azd-down-fixed.sh --force --purge` | Deployment name mismatch |
 | Agent Validation Failures | Test individual agent imports | See "Agent Import Issues" below |
 | Search Returns 0 Results | Verify data ingestion completed | `make dataflow-validate` |
 | GNN Training Fails | Check async bootstrap status | `scripts/dataflow/phase6_advanced/06_12_check_async_status.py` |
@@ -388,6 +432,28 @@ grep -r "dynamic_config_manager" . --include="*.py" | grep -v "# Deprecated" || 
 grep -r "simple_config_manager" agents/ --include="*.py"
 ```
 
+### Azure Deployment Cleanup Issues (FUNDAMENTAL azd BUG)
+```bash
+# azd down ALWAYS fails with "no resources found for deployment 'prod-{timestamp}'"
+# ROOT CAUSE: azd down is fundamentally broken by design
+# 
+# What azd down does WRONG:
+# 1. Generates NEW deployment name "prod-{current-timestamp}" 
+# 2. Searches for that newly generated name (which never existed)
+# 3. Fails because it's looking for the wrong deployment
+#
+# What azd down SHOULD do:
+# 1. Find existing deployments in the resource group
+# 2. Delete those actual deployments
+#
+# SOLUTION: Use fixed implementation that works with REAL Azure resources
+
+./scripts/azd-down-fixed.sh --force --purge
+
+# This is NOT a workaround - it's the only way to make resource deletion work
+# azd down cannot delete deployments it didn't create in the current session
+```
+
 ## Azure Deployment Details
 
 ### Automated Deployment with Data Pipeline (FIXED)
@@ -467,6 +533,31 @@ https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag
 - **Success rate**: 100% (all files processed successfully)
 - **Production score**: 95/100
 
+## Domain-Specific Context
+
+### **What Makes This System "Universal"**
+- **No hardcoded domains**: System discovers content characteristics instead of categorizing
+- **Real-time adaptation**: Each document processed with custom parameters based on analysis
+- **Universal data intake**: Place ANY documents in `data/raw/` - system adapts automatically
+- **Zero-bias enforcement**: Pre-commit hooks prevent domain assumptions from being coded
+
+### **Common Misconceptions to Avoid**
+- ❌ **"This is just another RAG system"** - It's a multi-agent system with mandatory tri-modal search
+- ❌ **"We can add domain-specific code"** - Violates core philosophy, blocked by pre-commit hooks
+- ❌ **"Vector search is enough"** - ALL three modalities (Vector+Graph+GNN) are mandatory
+- ❌ **"We can skip agent validation"** - Agent validation is critical path, required before any development
+
+### **Key Design Philosophy Enforcement**
+```bash
+# This will FAIL pre-commit (correctly):
+if domain == "legal":
+    complexity = 0.8
+
+# This will PASS (correct approach):
+complexity = measure_vocabulary_complexity(content)
+parameters = adapt_based_on_measured_properties(complexity)
+```
+
 ## Critical System Notes
 
 ### Architecture Principles
@@ -486,6 +577,53 @@ https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag
 - **OpenAI**: Must be 1.98.0 (PydanticAI 0.6.2 compatibility requirement)
 - **PydanticAI**: 0.4.10+ with Azure support (`requirements.txt:12`) - Note: Version mismatch requires clarification
 - **Pytest**: 7.4.0+ with `asyncio_mode=auto` (`pytest.ini:20`)
+
+### Quick Reference: Critical Code Patterns
+
+**✅ CORRECT Agent Tool Registration:**
+```python
+# 1. Create toolset FIRST
+toolset = FunctionToolset()
+
+# 2. Register tools on TOOLSET
+@toolset.tool
+async def my_tool(ctx: RunContext[UniversalDeps], input: str):
+    return await ctx.deps.azure_openai_client.process(input)
+
+# 3. Create agent WITH toolset
+agent = Agent[UniversalDeps, OutputModel](
+    model=azure_openai_model,
+    toolsets=[toolset],  # Pass toolset here
+    deps_type=UniversalDeps
+)
+```
+
+**❌ WRONG Agent Tool Registration (causes Union type errors):**
+```python
+# DON'T DO THIS - causes PydanticAI 0.6.2 Union type errors
+@agent.tool  # ❌ This pattern breaks
+async def my_tool(ctx: RunContext[UniversalDeps], input: str):
+    return result
+```
+
+**✅ CORRECT Async Function Execution:**
+```python
+# Always use proper async patterns with Azure services
+async def process_with_azure():
+    deps = await get_universal_deps()
+    result = await some_azure_operation(deps)
+    return result
+
+# For scripts: always use asyncio.run()
+if __name__ == "__main__":
+    result = asyncio.run(process_with_azure())
+```
+
+**✅ CORRECT Environment Variable Pattern:**
+```bash
+# Always set these for ANY Python script execution
+OPENBLAS_NUM_THREADS=1 PYTHONPATH=/workspace/azure-maintie-rag python script.py
+```
 
 ### Cost Optimization Features
 - **SCALE-TO-ZERO**: Container apps scale to zero when not in use

@@ -13,7 +13,7 @@ var config = {
   storageAccessTier: 'Cool'      // CHEAPER: Lower storage costs
   keyVaultSku: 'standard'        // FREE: 10,000 operations/month
   logRetentionDays: 30           // AZURE FOR STUDENTS: Minimum allowed retention
-  // Container Registry removed - not supported in Azure for Students
+  // Container Registry: managed by hosting-services module
 }
 
 // Managed Identity for all services

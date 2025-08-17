@@ -37,7 +37,7 @@ env:
   BACKEND_PORT: 8000
   
   # Data Pipeline Configuration
-  AUTO_POPULATE_DATA: false  # Set to true for full automated pipeline (adds 5-10 minutes to deployment)
+  AUTO_POPULATE_DATA: true  # REAL data pipeline with REAL Azure services
 
 # Deployment hooks
 hooks:
@@ -67,7 +67,7 @@ hooks:
       echo ""
       
       # Check if automated data pipeline is enabled
-      if [ "${AUTO_POPULATE_DATA:-false}" != "true" ]; then
+      if [ "${AUTO_POPULATE_DATA:-true}" != "true" ]; then
         echo "⏭️  Automated data pipeline disabled (AUTO_POPULATE_DATA=false)"
         echo "💡 Run 'make dataflow-full' manually to populate data"
         echo ""
@@ -193,7 +193,7 @@ hooks:
       echo "📊 Environment: ${AZURE_ENV_NAME}"
       
       # Check if automated data pipeline should run (Option 2: Async Model Deployment)
-      if [ "${AUTO_POPULATE_DATA:-false}" != "true" ]; then
+      if [ "${AUTO_POPULATE_DATA:-true}" != "true" ]; then
         echo "⏭️  Automated data pipeline disabled (AUTO_POPULATE_DATA=false)"
         echo "💡 Run 'make dataflow-full' manually to populate data"
         echo "💡 Chat interface is ready for testing (infrastructure only)!"

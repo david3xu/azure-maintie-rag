@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "")
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", None)
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
-OPENAI_MODEL_DEPLOYMENT = os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o-mini")
+OPENAI_MODEL_DEPLOYMENT = os.getenv("OPENAI_MODEL_DEPLOYMENT", os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"))
 
 
 @dataclass
@@ -67,7 +67,7 @@ class ModelConfig:
     """Azure OpenAI model configuration - infrastructure only"""
 
     # Model deployments (infrastructure)
-    primary_model: str = "gpt-4o-mini"
+    primary_model: str = field(default_factory=lambda: os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"))
     # NO FALLBACK MODELS - Production uses primary model only
     embedding_model: str = "text-embedding-ada-002"
 

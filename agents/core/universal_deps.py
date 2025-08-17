@@ -9,11 +9,17 @@ All agents share the same dependencies to avoid duplication and ensure consisten
 import asyncio
 from dataclasses import dataclass, field
 from typing import Any, Optional
+from pathlib import Path
 
 from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 from azure.core.credentials import TokenCredential
 import os
 from openai import AsyncAzureOpenAI
+
+# Load environment variables early with explicit path
+from dotenv import load_dotenv
+project_root = Path(__file__).parent.parent.parent
+load_dotenv(project_root / ".env", override=True)
 
 from agents.core.simple_config_manager import SimpleDynamicConfigManager
 from agents.core.universal_models import (

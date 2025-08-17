@@ -36,8 +36,43 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
   name: 'log-${resourcePrefix}-${environmentName}'
 }
 
-// Container Registry removed - not supported in Azure for Students subscription
-// Container Apps will use Docker Hub or external registry for images
+// Container Registry for hosting container images
+// Supported in all Azure subscription types including Azure for Students
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
+  name: 'cr${replace(resourcePrefix, '-', '')}${environmentName}${substring(uniqueString(resourceGroup().id), 0, 6)}'
+  location: location
+  sku: {
+    name: config.registrySku
+  }
+  properties: {
+    adminUserEnabled: true
+    anonymousPullEnabled: false
+    dataEndpointEnabled: false
+    encryption: {
+      status: 'disabled'
+    }
+    networkRuleBypassOptions: 'AzureServices'
+    policies: {
+      exportPolicy: {
+        status: 'enabled'
+      }
+      retentionPolicy: {
+        status: 'disabled'
+        days: 7
+      }
+      trustPolicy: {
+        status: 'disabled'
+        type: 'Notary'
+      }
+    }
+    publicNetworkAccess: 'Enabled'
+    zoneRedundancy: 'Disabled'
+  }
+  tags: {
+    Environment: environmentName
+    Purpose: 'Container registry for Universal RAG images'
+  }
+}
 
 // Container Apps Environment
 resource containerEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
@@ -90,11 +125,21 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           }
         ]
       }
-      // registries: removed - Container Registry not supported in Azure for Students
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          username: containerRegistry.name
+          passwordSecretRef: 'container-registry-password'
+        }
+      ]
       secrets: [
         {
           name: 'app-insights-connection-string'
           value: appInsightsConnectionString
+        }
+        {
+          name: 'container-registry-password'
+          value: containerRegistry.listCredentials().passwords[0].value
         }
       ]
     }
@@ -186,7 +231,19 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
           }
         ]
       }
-      // registries: removed - Container Registry not supported in Azure for Students
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          username: containerRegistry.name
+          passwordSecretRef: 'container-registry-password'
+        }
+      ]
+      secrets: [
+        {
+          name: 'container-registry-password'
+          value: containerRegistry.listCredentials().passwords[0].value
+        }
+      ]
     }
     template: {
       containers: [
@@ -218,9 +275,8 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
 }
 
 // Outputs
-// Container Registry outputs removed - not supported in Azure for Students
-output containerRegistryName string = 'not-available-in-student-subscription'
-output containerRegistryLoginServer string = 'not-available-in-student-subscription'
+output containerRegistryName string = containerRegistry.name
+output containerRegistryLoginServer string = containerRegistry.properties.loginServer
 output backendAppUrl string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
 output frontendAppUrl string = 'https://${frontendApp.properties.configuration.ingress.fqdn}'
 output containerEnvironmentId string = containerEnvironment.id

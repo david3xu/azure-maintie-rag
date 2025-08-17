@@ -259,7 +259,7 @@ deploy-infrastructure-only: sync-env ## Deploy infrastructure only, no data popu
 	@echo "✅ Infrastructure deployment completed - Check: $(SESSION_REPORT)"
 	@echo "💡 To populate data manually, run: make dataflow-full"
 
-deploy: deploy-fast ## Alias for deploy-fast (fast infrastructure deployment)
+deploy: deploy-with-data ## Alias for deploy-with-data (full REAL data pipeline)
 
 health: ## Comprehensive service health with session management
 	@$(call start_clean_session)

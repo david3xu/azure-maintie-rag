@@ -76,7 +76,7 @@ module cognitive 'modules/cognitive-services.bicep' = {
   }
 }
 
-module data 'modules/data-services-cosmos-only.bicep' = {
+module data 'modules/data-services.bicep' = {
   name: 'dataServices'
   scope: resourceGroup
   params: {

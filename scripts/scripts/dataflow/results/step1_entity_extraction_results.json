@@ -1,45 +1,54 @@
 {
-  "timestamp": "2025-08-16T12:00:51",
+  "timestamp": "2025-08-17T08:43:17",
   "total_files_processed": 5,
-  "successful_extractions": 4,
-  "total_entities": 48,
-  "total_relationships": 51,
+  "successful_extractions": 5,
+  "total_entities": 10,
+  "total_relationships": 5,
   "results": [
     {
       "filename": "azure-ai-services-language-service_part_81.md",
       "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_81.md",
-      "entities_count": 13,
-      "relationships_count": 11,
-      "extraction_time": 44.698490858078,
-      "confidence": 0.895833333333333,
-      "processing_signature": "optimized_cached_fresh_me35_mr27_ct0.55_vc0.50"
+      "entities_count": 2,
+      "relationships_count": 1,
+      "extraction_confidence": 0.8868421052631582,
+      "processing_time": 8.647661542892456,
+      "processing_method": "batch_optimized"
     },
     {
       "filename": "azure-ai-services-language-service_part_83.md",
       "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_83.md",
-      "entities_count": 13,
-      "relationships_count": 19,
-      "extraction_time": 40.88793635368347,
-      "confidence": 0.9062499999999994,
-      "processing_signature": "optimized_cached_fresh_me35_mr27_ct0.55_vc0.50"
+      "entities_count": 2,
+      "relationships_count": 1,
+      "extraction_confidence": 0.8868421052631582,
+      "processing_time": 8.647661542892456,
+      "processing_method": "batch_optimized"
     },
     {
       "filename": "azure-ai-services-language-service_part_117.md",
       "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_117.md",
-      "entities_count": 12,
-      "relationships_count": 12,
-      "extraction_time": 42.455307483673096,
-      "confidence": 0.8999999999999998,
-      "processing_signature": "optimized_cached_fresh_me35_mr27_ct0.55_vc0.50"
+      "entities_count": 2,
+      "relationships_count": 1,
+      "extraction_confidence": 0.8868421052631582,
+      "processing_time": 8.647661542892456,
+      "processing_method": "batch_optimized"
+    },
+    {
+      "filename": "azure-ai-services-language-service_part_86.md",
+      "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_86.md",
+      "entities_count": 2,
+      "relationships_count": 1,
+      "extraction_confidence": 0.8868421052631582,
+      "processing_time": 8.647661542892456,
+      "processing_method": "batch_optimized"
     },
     {
       "filename": "azure-ai-services-language-service_part_69.md",
       "filepath": "/workspace/azure-maintie-rag/data/raw/azure-ai-services-language-service_output/azure-ai-services-language-service_part_69.md",
-      "entities_count": 10,
-      "relationships_count": 9,
-      "extraction_time": 41.673304319381714,
-      "confidence": 0.8789473684210528,
-      "processing_signature": "optimized_cached_fresh_me35_mr27_ct0.55_vc0.50"
+      "entities_count": 2,
+      "relationships_count": 1,
+      "extraction_confidence": 0.8868421052631582,
+      "processing_time": 8.647661542892456,
+      "processing_method": "batch_optimized"
     }
   ]
 }

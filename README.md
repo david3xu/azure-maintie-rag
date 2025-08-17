@@ -136,15 +136,6 @@ az account set --subscription "<your-subscription-id>"
 make deploy-with-data
 # OR equivalently: azd env set AUTO_POPULATE_DATA true && azd up
 
-# ✅ Creates: 9 Azure services with RBAC permissions
-# ✅ Services: OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, App Insights, Container Apps
-# ✅ Cleans: All existing Azure data for fresh start
-# ✅ Uploads: All documents from data/raw/ to Azure Storage
-# ✅ Builds: Vector embeddings + search indexes + knowledge graph
-# ✅ Runs: Agent 1 (Domain Intelligence) to analyze all documents once
-# ✅ Trains: GNN models and deploys to Azure ML endpoints  
-# ✅ Result: Complete tri-modal RAG (Vector + Graph + GNN) ready for fast queries
-
 # Option B: Infrastructure only (manual data population later)
 make deploy-infrastructure-only
 # OR equivalently: azd env set AUTO_POPULATE_DATA false && azd up
@@ -152,6 +143,29 @@ make deploy-infrastructure-only
 
 # Option C: Traditional deployment (infrastructure only)
 azd up  # defaults to infrastructure only for backward compatibility
+
+# ✅ ALL COMMANDS CREATE THE SAME 9 AZURE SERVICES - NO DUPLICATES
+# ✅ Uses same resource group: rg-maintie-rag-prod
+# ✅ Azure Resource Manager prevents duplicate resources automatically
+# ✅ Safe to run multiple times - updates existing resources
+
+# Services Created (9 total):
+# ✅ Azure OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, 
+# ✅ Application Insights, Log Analytics, Container Apps
+```
+
+### **Deployment Commands Are Aliases (No Duplicates)**
+
+**Important**: All deployment commands target the same Azure resources:
+
+```bash
+azd up                     # Creates infrastructure
+make deploy                # Alias for make deploy-with-data  
+make deploy-with-data      # Calls azd up + data pipeline
+make deploy-infrastructure-only  # Calls azd provision only
+
+# Result: Same 9 services in same resource group
+# Azure prevents duplicates automatically
 ```
 
 **What the automated pipeline does (when `AUTO_POPULATE_DATA=true`):**
@@ -1046,49 +1060,58 @@ curl localhost:8000/api/v1/query -X POST -H "Content-Type: application/json" -d 
 
 ## 🧹 Easy Resource Cleanup (Cost Management)
 
-The system provides multiple easy ways to delete all Azure resources to stop costs immediately:
+The system provides easy ways to delete all Azure resources to stop costs immediately:
 
-### **Quick Cleanup Commands (Choose One)**
+### **Working Cleanup Commands (azd down is BROKEN)**
 
 ```bash
-# Method 1: Fastest - Direct azd command
-azd down --force --purge
+# Method 1: FIXED azd down implementation (RECOMMENDED)
+./scripts/azd-down-fixed.sh --force --purge    # Works with real deployment patterns
 
-# Method 2: With confirmation prompts
-azd down --purge
+# Method 2: Fixed azd down with confirmation prompts
+./scripts/azd-down-fixed.sh                    # Safe deletion with prompts
 
-# Method 3: Using Makefile shortcuts
-make azure-down          # Quick deletion
-make azure-down-safe     # With confirmation
+# Method 3: Direct Azure CLI (Alternative)
+az group delete --name rg-maintie-rag-prod --yes --no-wait
 
-# Method 4: Comprehensive cleanup with session tracking
-make azure-teardown      # Includes backup options and session audit
-
-# Method 5: Full cleanup script with backup options
-./scripts/deployment/azd-teardown.sh --force --backup
+# NOTE: Standard azd down is BROKEN - generates new deployment names instead of finding existing ones
+# Error: "no resources found for deployment 'prod-{timestamp}'" - this is a fundamental azd bug
 ```
+
+### **Why azd down Fails**
+
+❌ **Standard azd down is fundamentally broken:**
+- Generates NEW deployment name `prod-{current-timestamp}`
+- Searches for that newly generated name (which never existed)
+- Fails because it looks for wrong deployment
+- Cannot delete deployments from previous sessions
+
+✅ **Fixed script works because it:**
+- Finds actual resource groups regardless of deployment patterns
+- Deletes real Azure resources directly
+- Works with any deployment method (azd up, make deploy, etc.)
 
 ### **What Gets Deleted**
 
-✅ **ALL Azure resources** in the resource group
-✅ **Resource group itself** (complete cleanup)
-✅ **Local azd environment** configuration
-✅ **Temporary files** and cache
+✅ **ALL Azure resources** in the resource group  
+✅ **Resource group itself** (complete cleanup)  
+✅ **Local azd state** cleaned automatically  
+✅ **All associated costs stopped** immediately  
 
 ### **Deletion Time & Cost Savings**
 
 - **Deletion time**: 2-5 minutes (much faster than creation)
-- **Cost after deletion**: $0 (all resources removed)
-- **Verification**: Script verifies complete deletion
-- **Safety**: Production environments require explicit confirmation
+- **Cost after deletion**: $0 (all resources removed)  
+- **Verification**: Script monitors deletion progress
+- **Safety**: Confirmation prompts protect against accidents
 
 ### **Emergency Cost Stop**
 
 If you need to stop costs immediately:
 
 ```bash
-# FASTEST way to stop all costs
-azd down --force --purge
+# FASTEST way to stop all costs (WORKING VERSION)
+./scripts/azd-down-fixed.sh --force --purge
 
 # Verify everything is deleted
 az resource list --resource-group "rg-maintie-rag-*" --output table

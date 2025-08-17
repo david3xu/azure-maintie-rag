@@ -11,13 +11,16 @@ from typing import Optional
 
 from azure.identity import AzureCliCredential, DefaultAzureCredential
 
-# Load environment variables early
+# Load environment variables early with explicit path
 from dotenv import load_dotenv
 from openai import AsyncAzureOpenAI
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
+from pathlib import Path
 
-load_dotenv()
+# Load .env from project root to ensure environment variables are available
+project_root = Path(__file__).parent.parent.parent
+load_dotenv(project_root / ".env", override=True)
 
 
 def get_azure_openai_model(model_deployment: Optional[str] = None) -> OpenAIModel:
@@ -35,7 +38,7 @@ def get_azure_openai_model(model_deployment: Optional[str] = None) -> OpenAIMode
     # Get Azure configuration from environment (set by azd)
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
     api_version = os.getenv("OPENAI_API_VERSION", "2024-06-01")
-    deployment_name = model_deployment or os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4o-mini")
+    deployment_name = model_deployment or os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", os.getenv("OPENAI_MODEL_DEPLOYMENT", "gpt-4.1-mini"))
 
     if not azure_endpoint:
         raise ValueError(
