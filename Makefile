@@ -78,13 +78,14 @@ help: ## Azure Universal RAG Multi-Agent Commands (Production Ready)
 	@echo "  make test            - Run tests against real Azure services (no mocks)"
 	@echo ""
 	@echo "☁️  Azure Service Integration:"
-	@echo "  make azure-deploy    - Deploy complete Azure infrastructure (9 services)"
-	@echo "  make deploy-with-data - Full deployment with automated data pipeline (recommended)"
+	@echo "  make deploy-fast     - FAST deployment - infrastructure only (2-3 minutes) ⚡"
+	@echo "  make deploy-with-data - Full deployment with automated data pipeline (10-15 minutes)"
 	@echo "  make deploy-infrastructure-only - Deploy infrastructure only, no data population"
 	@echo "  make azure-status    - Azure service container health check"
 	@echo "  make sync-env        - Sync with azd environment (development/staging/production)"
 	@echo ""
 	@echo "🧠 Data Processing Pipeline (6-Phase Architecture):"
+	@echo "  make dataflow-full-progress - Execute all phases with PERCENTAGE PROGRESS tracking (RECOMMENDED)"
 	@echo "  make dataflow-cleanup  - Phase 0: Clean all Azure services + verify clean state"
 	@echo "  make dataflow-validate - Phase 1: Basic agent connectivity (post-cleanup)"
 	@echo "  make dataflow-ingest   - Phase 2: Data ingestion with real Azure AI documentation"
@@ -180,7 +181,21 @@ sync-env: ## Sync backend configuration with current azd environment
 	@echo "✅ Backend configuration synchronized"
 
 # New deployment commands with automated data pipeline integration
-deploy-with-data: sync-env ## Full deployment with automated data pipeline (recommended)
+deploy-fast: sync-env ## FAST deployment - infrastructure only (2-3 minutes)
+	@$(call start_persistent_session)
+	@echo "🚀 FAST Azure deployment (infrastructure only) - Session: $(SESSION_ID)"
+	@echo "Setting AUTO_POPULATE_DATA=false for fast deployment..." >> $(SESSION_REPORT)
+	@azd env set AUTO_POPULATE_DATA false
+	@echo ""
+	@echo "🔧 Starting infrastructure-only deployment (no data pipeline)..."
+	@azd up --no-prompt 2>&1 | tee -a $(SESSION_REPORT) | tail -10
+	@$(call capture_azure_status)
+	@$(call finalize_session_report)
+	@echo "✅ Fast deployment completed - Check: $(SESSION_REPORT)"
+	@echo ""
+	@echo "💡 To populate data: make dataflow-full"
+
+deploy-with-data: sync-env ## Full deployment with automated data pipeline (slower, 10-15 minutes)
 	@$(call start_persistent_session)
 	@echo "🚀 Full Azure deployment with automated data pipeline - Session: $(SESSION_ID)"
 	@echo "Setting AUTO_POPULATE_DATA=true for automated pipeline..." >> $(SESSION_REPORT)
@@ -244,7 +259,7 @@ deploy-infrastructure-only: sync-env ## Deploy infrastructure only, no data popu
 	@echo "✅ Infrastructure deployment completed - Check: $(SESSION_REPORT)"
 	@echo "💡 To populate data manually, run: make dataflow-full"
 
-deploy: deploy-with-data ## Alias for deploy-with-data (recommended default)
+deploy: deploy-fast ## Alias for deploy-fast (fast infrastructure deployment)
 
 health: ## Comprehensive service health with session management
 	@$(call start_clean_session)
@@ -388,6 +403,20 @@ dataflow-advanced: ## Phase 6 - Advanced features (GNN async bootstrap + trainin
 	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/phase6_advanced/06_03_config_system_demo.py 2>&1 | tail -5 >> $(SESSION_REPORT)
 	@$(call finalize_session_report)
 	@echo "✅ Phase 6 completed - Advanced features with reproducible GNN deployment operational"
+
+dataflow-full-progress: ## Execute all 6 phases with percentage progress tracking (RECOMMENDED)
+	@$(call start_persistent_session)
+	@echo "🌊 EXECUTING 6-PHASE PIPELINE WITH PROGRESS TRACKING"
+	@echo "==================================================="
+	@echo "Session: $(SESSION_ID) | Enhanced progress monitoring"
+	@echo ""
+	@USE_MANAGED_IDENTITY=false PYTHONPATH=$(PWD) python scripts/dataflow/enhanced_dataflow_with_progress.py 2>&1 | tee -a $(SESSION_REPORT)
+	@$(call capture_performance_metrics)
+	@$(call finalize_session_report)
+	@echo ""
+	@echo "🎉 ENHANCED PIPELINE COMPLETED - Session: $(SESSION_ID)"
+	@echo "📋 Session report: $(SESSION_REPORT)"
+	@echo "📊 Progress tracking included in execution"
 
 dataflow-full: ## Execute all 6 phases sequentially: 0→1→2→3→4→5→6 with comprehensive logs
 	@$(call start_persistent_session)
