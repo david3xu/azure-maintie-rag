@@ -27,7 +27,7 @@ env:
   AZURE_RESOURCE_GROUP_PREFIX: rg-maintie-rag
   
   # Application Configuration
-  OPENAI_MODEL_DEPLOYMENT: gpt-4o-mini  # Only mini model for cost optimization
+  OPENAI_MODEL_DEPLOYMENT: gpt-4.1-mini  # Only mini model for cost optimization
   EMBEDDING_MODEL_DEPLOYMENT: text-embedding-ada-002
   SEARCH_INDEX_NAME: maintie-index
   COSMOS_DATABASE_NAME: maintie-rag-db
@@ -88,13 +88,13 @@ hooks:
       echo "📍 Backend endpoint: $BACKEND_URI"
       echo "⏳ Waiting for backend container app to be fully ready..."
       
-      # Wait for backend to be ready (max 5 minutes)
-      for i in {1..30}; do
+      # Wait for backend to be ready (max 8 minutes for first deployment)
+      for i in {1..48}; do
         if curl -s "$BACKEND_URI/api/v1/admin/status" > /dev/null 2>&1; then
           echo "✅ Backend is ready after ${i}0 seconds"
           break
         fi
-        echo "   Waiting... attempt $i/30"
+        echo "   Waiting... attempt $i/48"
         sleep 10
       done
       
@@ -223,13 +223,13 @@ hooks:
       echo "📍 Backend endpoint: $BACKEND_URI"
       echo "⏳ Waiting for backend container to be ready..."
       
-      # Wait for backend (reduced time - it should be ready quickly after deploy)
-      for i in {1..20}; do
+      # Wait for backend (increased time for Container App initialization)
+      for i in {1..36}; do
         if curl -s "$BACKEND_URI/api/v1/health" > /dev/null 2>&1; then
           echo "✅ Backend ready after ${i}0 seconds"
           break
         fi
-        echo "   Waiting... attempt $i/20"
+        echo "   Waiting... attempt $i/36"
         sleep 10
       done
       
