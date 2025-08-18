@@ -176,7 +176,7 @@ resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' =
     friendlyName: 'Azure Universal RAG ML Workspace'
     description: 'Machine Learning workspace for GNN training and inference'
     storageAccount: resourceId('Microsoft.Storage/storageAccounts', 'stmaintiersfkrhqguiq')
-    keyVault: keyVaultId
+    keyVault: resourceId('Microsoft.KeyVault/vaults', 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 8)}')
     applicationInsights: resourceId('Microsoft.Insights/components', 'appi-${resourcePrefix}-${environmentName}')
     publicNetworkAccess: 'Enabled'
     imageBuildCompute: 'ml-cluster-${environmentName}'
