@@ -64,17 +64,19 @@ module ai 'modules/ai-services.bicep' = if (deployAzureOpenAI) {
   }
 }
 
-module cognitive 'modules/cognitive-services.bicep' = {
-  name: 'cognitiveServices'
-  scope: resourceGroup
-  params: {
-    environmentName: environmentName
-    location: location
-    principalId: principalId
-    resourcePrefix: resourcePrefix
-    managedIdentityPrincipalId: coreServices.outputs.managedIdentityPrincipalId
-  }
-}
+// Cognitive services module disabled to prevent overlap with ai-services module
+// Azure OpenAI in ai-services.bicep provides all needed cognitive capabilities
+// module cognitive 'modules/cognitive-services.bicep' = {
+//   name: 'cognitiveServices'
+//   scope: resourceGroup
+//   params: {
+//     environmentName: environmentName
+//     location: location
+//     principalId: principalId
+//     resourcePrefix: resourcePrefix
+//     managedIdentityPrincipalId: coreServices.outputs.managedIdentityPrincipalId
+//   }
+// }
 
 module data 'modules/data-services.bicep' = {
   name: 'dataServices'

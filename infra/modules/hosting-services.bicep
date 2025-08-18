@@ -39,7 +39,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 // Container Registry for hosting container images
 // Supported in all Azure subscription types including Azure for Students
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
-  name: 'cr${replace(resourcePrefix, '-', '')}${environmentName}${substring(uniqueString(resourceGroup().id), 0, 6)}'
+  name: 'cr${replace(resourcePrefix, '-', '')}${environmentName}${substring(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 0, 6)}'
   location: location
   sku: {
     name: config.registrySku

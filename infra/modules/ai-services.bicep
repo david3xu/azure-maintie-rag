@@ -16,14 +16,14 @@ var deploymentLocation = location
 
 // Azure AI Foundry Service - Available in Azure for Students
 resource openaiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: 'aif-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
+  name: 'aif-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
   location: deploymentLocation
   kind: 'AIServices'  // Azure AI Foundry - multi-service
   sku: {
     name: 'S0'  // Standard tier for AI Services
   }
   properties: {
-    customSubDomainName: 'aif-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
+    customSubDomainName: 'aif-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
     publicNetworkAccess: 'Enabled'
   }
   tags: {

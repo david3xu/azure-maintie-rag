@@ -13,7 +13,7 @@ var config = {
 
 // Azure Cosmos DB Account with Gremlin API for Knowledge Graphs
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
-  name: 'cosmos-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
+  name: 'cosmos-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
   location: location
   kind: 'GlobalDocumentDB'
   properties: {
@@ -170,7 +170,7 @@ resource cosmosDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
 
 // Azure ML Workspace for GNN Training and Inference
 resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' = {
-  name: 'ml-${resourcePrefix}-${environmentName}-${substring(uniqueString(resourceGroup().id), 0, 6)}'
+  name: 'ml-${resourcePrefix}-${environmentName}-${substring(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 0, 6)}'
   location: location
   properties: {
     friendlyName: 'Azure Universal RAG ML Workspace'

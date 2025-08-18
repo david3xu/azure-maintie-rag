@@ -32,7 +32,7 @@ resource textAnalytics 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     name: 'S'  // Standard tier
   }
   properties: {
-    customSubDomainName: 'ta-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
+    customSubDomainName: 'ta-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
     publicNetworkAccess: 'Enabled'
   }
   tags: {
