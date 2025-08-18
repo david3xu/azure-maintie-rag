@@ -7,14 +7,14 @@ param managedIdentityPrincipalId string
 
 // CognitiveServices multi-service (works without approval)
 resource cognitiveServices 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: 'cs-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
+  name: 'cs-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
   location: location
   kind: 'CognitiveServices'  // Multi-service without approval needed
   sku: {
     name: 'S0'  // Standard tier
   }
   properties: {
-    customSubDomainName: 'cs-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
+    customSubDomainName: 'cs-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
     publicNetworkAccess: 'Enabled'
   }
   tags: {
@@ -25,7 +25,7 @@ resource cognitiveServices 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
 
 // Text Analytics service (works without approval)
 resource textAnalytics 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: 'ta-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
+  name: 'ta-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
   location: location
   kind: 'TextAnalytics'
   sku: {
