@@ -165,7 +165,7 @@ resource modelsContainer 'Microsoft.Storage/storageAccounts/blobServices/contain
 
 // Key Vault for secrets management
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id, deployment().name), 8)}'
+  name: 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 8)}'
   location: location
   properties: {
     tenantId: subscription().tenantId
