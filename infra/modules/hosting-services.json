@@ -1,0 +1,333 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.37.4.10188",
+      "templateHash": "2249818271957249604"
+    }
+  },
+  "parameters": {
+    "environmentName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "resourcePrefix": {
+      "type": "string"
+    },
+    "openaiEndpoint": {
+      "type": "string"
+    },
+    "searchEndpoint": {
+      "type": "string"
+    },
+    "cosmosEndpoint": {
+      "type": "string"
+    },
+    "storageAccountName": {
+      "type": "string"
+    },
+    "keyVaultName": {
+      "type": "string"
+    },
+    "appInsightsConnectionString": {
+      "type": "securestring"
+    },
+    "backendImageName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Backend container image name with tag (e.g., azure-maintie-rag/backend-prod:azd-deploy-123456)"
+      }
+    },
+    "frontendImageName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Frontend container image name with tag (e.g., azure-maintie-rag/frontend-prod:azd-deploy-123456)"
+      }
+    }
+  },
+  "variables": {
+    "config": {
+      "containerCpu": "0.25",
+      "containerMemory": "0.5Gi",
+      "minReplicas": 0,
+      "maxReplicas": 1,
+      "registrySku": "Basic"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ContainerRegistry/registries",
+      "apiVersion": "2023-01-01-preview",
+      "name": "[format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[variables('config').registrySku]"
+      },
+      "properties": {
+        "adminUserEnabled": true,
+        "anonymousPullEnabled": false,
+        "dataEndpointEnabled": false,
+        "encryption": {
+          "status": "disabled"
+        },
+        "networkRuleBypassOptions": "AzureServices",
+        "policies": {
+          "exportPolicy": {
+            "status": "enabled"
+          },
+          "retentionPolicy": {
+            "status": "disabled",
+            "days": 7
+          },
+          "trustPolicy": {
+            "status": "disabled",
+            "type": "Notary"
+          }
+        },
+        "publicNetworkAccess": "Enabled",
+        "zoneRedundancy": "Disabled"
+      },
+      "tags": {
+        "Environment": "[parameters('environmentName')]",
+        "Purpose": "Container registry for Universal RAG images"
+      }
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2023-05-01",
+      "name": "[format('cae-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "appLogsConfiguration": {
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-09-01').customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-09-01').primarySharedKey]"
+          }
+        },
+        "zoneRedundant": "[equals(parameters('environmentName'), 'production')]"
+      },
+      "tags": {
+        "Environment": "[parameters('environmentName')]",
+        "Purpose": "Container Apps hosting environment for Universal RAG"
+      }
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2023-05-01",
+      "name": "[format('ca-backend-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Environment": "[parameters('environmentName')]",
+        "Purpose": "Backend API service for Universal RAG",
+        "azd-service-name": "backend"
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))))]": {}
+        }
+      },
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', format('cae-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
+        "configuration": {
+          "activeRevisionsMode": "Single",
+          "ingress": {
+            "external": true,
+            "targetPort": 8000,
+            "transport": "http",
+            "allowInsecure": true,
+            "traffic": [
+              {
+                "weight": 100,
+                "latestRevision": true
+              }
+            ]
+          },
+          "registries": [
+            {
+              "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').loginServer]",
+              "username": "[format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]",
+              "passwordSecretRef": "container-registry-password"
+            }
+          ],
+          "secrets": [
+            {
+              "name": "app-insights-connection-string",
+              "value": "[parameters('appInsightsConnectionString')]"
+            },
+            {
+              "name": "container-registry-password",
+              "value": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').passwords[0].value]"
+            }
+          ]
+        },
+        "template": {
+          "containers": [
+            {
+              "image": "[if(not(empty(parameters('backendImageName'))), parameters('backendImageName'), 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest')]",
+              "name": "backend",
+              "env": [
+                {
+                  "name": "AZURE_OPENAI_ENDPOINT",
+                  "value": "[parameters('openaiEndpoint')]"
+                },
+                {
+                  "name": "AZURE_SEARCH_ENDPOINT",
+                  "value": "[parameters('searchEndpoint')]"
+                },
+                {
+                  "name": "AZURE_COSMOS_ENDPOINT",
+                  "value": "[parameters('cosmosEndpoint')]"
+                },
+                {
+                  "name": "AZURE_STORAGE_ACCOUNT",
+                  "value": "[parameters('storageAccountName')]"
+                },
+                {
+                  "name": "AZURE_KEY_VAULT_NAME",
+                  "value": "[parameters('keyVaultName')]"
+                },
+                {
+                  "name": "AZURE_CLIENT_ID",
+                  "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-01-31').clientId]"
+                },
+                {
+                  "name": "AZURE_TENANT_ID",
+                  "value": "[subscription().tenantId]"
+                },
+                {
+                  "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                  "secretRef": "app-insights-connection-string"
+                },
+                {
+                  "name": "PORT",
+                  "value": "8000"
+                }
+              ],
+              "resources": {
+                "cpu": "[json(variables('config').containerCpu)]",
+                "memory": "[variables('config').containerMemory]"
+              }
+            }
+          ],
+          "scale": {
+            "minReplicas": "[variables('config').minReplicas]",
+            "maxReplicas": "[variables('config').maxReplicas]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', format('cae-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
+        "[resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
+      ]
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2023-05-01",
+      "name": "[format('ca-frontend-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Environment": "[parameters('environmentName')]",
+        "Purpose": "Frontend UI service for Universal RAG",
+        "azd-service-name": "frontend"
+      },
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))))]": {}
+        }
+      },
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', format('cae-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
+        "configuration": {
+          "activeRevisionsMode": "Single",
+          "ingress": {
+            "external": true,
+            "targetPort": 3000,
+            "transport": "http",
+            "allowInsecure": true,
+            "traffic": [
+              {
+                "weight": 100,
+                "latestRevision": true
+              }
+            ]
+          },
+          "registries": [
+            {
+              "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').loginServer]",
+              "username": "[format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]",
+              "passwordSecretRef": "container-registry-password"
+            }
+          ],
+          "secrets": [
+            {
+              "name": "container-registry-password",
+              "value": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').passwords[0].value]"
+            }
+          ]
+        },
+        "template": {
+          "containers": [
+            {
+              "image": "[if(not(empty(parameters('frontendImageName'))), parameters('frontendImageName'), 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest')]",
+              "name": "frontend",
+              "env": [
+                {
+                  "name": "VITE_API_URL",
+                  "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', format('ca-backend-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-05-01').configuration.ingress.fqdn)]"
+                },
+                {
+                  "name": "PORT",
+                  "value": "3000"
+                }
+              ],
+              "resources": {
+                "cpu": "[json(variables('config').containerCpu)]",
+                "memory": "[variables('config').containerMemory]"
+              }
+            }
+          ],
+          "scale": {
+            "minReplicas": "[variables('config').minReplicas]",
+            "maxReplicas": "[variables('config').maxReplicas]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/containerApps', format('ca-backend-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
+        "[resourceId('Microsoft.App/managedEnvironments', format('cae-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
+        "[resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "containerRegistryName": {
+      "type": "string",
+      "value": "[format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]"
+    },
+    "containerRegistryLoginServer": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').loginServer]"
+    },
+    "backendAppUrl": {
+      "type": "string",
+      "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', format('ca-backend-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-05-01').configuration.ingress.fqdn)]"
+    },
+    "frontendAppUrl": {
+      "type": "string",
+      "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', format('ca-frontend-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-05-01').configuration.ingress.fqdn)]"
+    },
+    "containerEnvironmentId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.App/managedEnvironments', format('cae-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]"
+    }
+  }
+}

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.37.4.10188",
-      "templateHash": "1091483095117042087"
+      "templateHash": "6654254557190206704"
     }
   },
   "parameters": {
@@ -33,16 +33,16 @@
     },
     "backendImageName": {
       "type": "string",
-      "defaultValue": "azure-maintie-rag/backend-prod:latest",
+      "defaultValue": "",
       "metadata": {
-        "description": "Backend container image name"
+        "description": "Backend container image - provided by azd"
       }
     },
     "frontendImageName": {
       "type": "string",
-      "defaultValue": "azure-maintie-rag/frontend-prod:latest",
+      "defaultValue": "",
       "metadata": {
-        "description": "Frontend container image name"
+        "description": "Frontend container image - provided by azd"
       }
     }
   },
@@ -95,7 +95,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.37.4.10188",
-              "templateHash": "14352936886756705478"
+              "templateHash": "195035026527071851"
             }
           },
           "parameters": {
@@ -113,36 +113,15 @@
             }
           },
           "variables": {
-            "environmentConfig": {
-              "development": {
-                "searchSku": "basic",
-                "searchReplicas": 1,
-                "searchPartitions": 1,
-                "storageSku": "Standard_LRS",
-                "storageAccessTier": "Cool",
-                "keyVaultSku": "standard",
-                "logRetentionDays": 7
-              },
-              "staging": {
-                "searchSku": "standard",
-                "searchReplicas": 1,
-                "searchPartitions": 1,
-                "storageSku": "Standard_ZRS",
-                "storageAccessTier": "Hot",
-                "keyVaultSku": "standard",
-                "logRetentionDays": 30
-              },
-              "prod": {
-                "searchSku": "standard",
-                "searchReplicas": 2,
-                "searchPartitions": 2,
-                "storageSku": "Standard_ZRS",
-                "storageAccessTier": "Hot",
-                "keyVaultSku": "premium",
-                "logRetentionDays": 90
-              }
-            },
-            "config": "[variables('environmentConfig')[parameters('environmentName')]]"
+            "config": {
+              "searchSku": "basic",
+              "searchReplicas": 1,
+              "searchPartitions": 1,
+              "storageSku": "Standard_LRS",
+              "storageAccessTier": "Cool",
+              "keyVaultSku": "standard",
+              "logRetentionDays": 30
+            }
           },
           "resources": [
             {
@@ -164,7 +143,7 @@
                 "sku": {
                   "name": "PerGB2018"
                 },
-                "retentionInDays": 30,
+                "retentionInDays": "[variables('config').logRetentionDays]",
                 "features": {
                   "enableLogAccessUsingOnlyResourcePermissions": true
                 }
@@ -198,7 +177,7 @@
             {
               "type": "Microsoft.Search/searchServices",
               "apiVersion": "2023-11-01",
-              "name": "[format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))]",
+              "name": "[format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]",
               "location": "[parameters('location')]",
               "sku": {
                 "name": "[variables('config').searchSku]"
@@ -208,7 +187,7 @@
                 "partitionCount": "[variables('config').searchPartitions]",
                 "hostingMode": "default",
                 "publicNetworkAccess": "enabled",
-                "semanticSearch": "standard",
+                "semanticSearch": "disabled",
                 "authOptions": {
                   "aadOrApiKey": {
                     "aadAuthFailureMode": "http401WithBearerChallenge"
@@ -226,7 +205,7 @@
             {
               "type": "Microsoft.Storage/storageAccounts",
               "apiVersion": "2023-01-01",
-              "name": "[format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10))]",
+              "name": "[format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10))]",
               "location": "[parameters('location')]",
               "sku": {
                 "name": "[variables('config').storageSku]"
@@ -257,7 +236,7 @@
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices",
               "apiVersion": "2023-01-01",
-              "name": "[format('{0}/{1}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)), 'default')]",
+              "name": "[format('{0}/{1}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)), 'default')]",
               "properties": {
                 "cors": {
                   "corsRules": []
@@ -265,50 +244,50 @@
                 "deleteRetentionPolicy": {
                   "allowPermanentDelete": false,
                   "enabled": true,
-                  "days": "[if(equals(parameters('environmentName'), 'production'), 30, 7)]"
+                  "days": 7
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)))]"
               ]
             },
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
               "apiVersion": "2023-01-01",
-              "name": "[format('{0}/{1}/{2}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)), 'default', format('maintie-{0}-rawdata', parameters('environmentName')))]",
+              "name": "[format('{0}/{1}/{2}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)), 'default', format('maintie-{0}-rawdata', parameters('environmentName')))]",
               "properties": {
                 "publicAccess": "None"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)), 'default')]"
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)), 'default')]"
               ]
             },
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
               "apiVersion": "2023-01-01",
-              "name": "[format('{0}/{1}/{2}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)), 'default', format('maintie-{0}-processed', parameters('environmentName')))]",
+              "name": "[format('{0}/{1}/{2}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)), 'default', format('maintie-{0}-processed', parameters('environmentName')))]",
               "properties": {
                 "publicAccess": "None"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)), 'default')]"
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)), 'default')]"
               ]
             },
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
               "apiVersion": "2023-01-01",
-              "name": "[format('{0}/{1}/{2}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)), 'default', format('maintie-{0}-models', parameters('environmentName')))]",
+              "name": "[format('{0}/{1}/{2}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)), 'default', format('maintie-{0}-models', parameters('environmentName')))]",
               "properties": {
                 "publicAccess": "None"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)), 'default')]"
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)), 'default')]"
               ]
             },
             {
               "type": "Microsoft.KeyVault/vaults",
               "apiVersion": "2023-07-01",
-              "name": "[format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8))]",
+              "name": "[format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8))]",
               "location": "[parameters('location')]",
               "properties": {
                 "tenantId": "[subscription().tenantId]",
@@ -334,8 +313,8 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.Search/searchServices/{0}', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]",
-              "name": "[guid(resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), 'Search Index Data Contributor')]",
+              "scope": "[format('Microsoft.Search/searchServices/{0}', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), 'Search Index Data Contributor')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')]",
                 "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-01-31').principalId]",
@@ -343,14 +322,14 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
-                "[resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
+                "[resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
               ]
             },
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.Search/searchServices/{0}', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]",
-              "name": "[guid(resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), 'Search Service Contributor')]",
+              "scope": "[format('Microsoft.Search/searchServices/{0}', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), 'Search Service Contributor')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')]",
                 "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-01-31').principalId]",
@@ -358,14 +337,14 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
-                "[resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
+                "[resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
               ]
             },
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)))]",
-              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), 'Storage Blob Data Contributor')]",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)))]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), 'Storage Blob Data Contributor')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
                 "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-01-31').principalId]",
@@ -373,21 +352,21 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
-                "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10)))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)))]"
               ]
             },
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.KeyVault/vaults/{0}', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8)))]",
-              "name": "[guid(resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), 'Key Vault Secrets Officer')]",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8)))]",
+              "name": "[guid(resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8))), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), 'Key Vault Secrets Officer')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
                 "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-01-31').principalId]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8)))]",
+                "[resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8)))]",
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]"
               ]
             },
@@ -395,15 +374,60 @@
               "condition": "[not(empty(parameters('principalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.KeyVault/vaults/{0}', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8)))]",
-              "name": "[guid(resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8))), parameters('principalId'), 'Key Vault Secrets Officer')]",
+              "scope": "[format('Microsoft.KeyVault/vaults/{0}', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8)))]",
+              "name": "[guid(resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8))), parameters('principalId'), 'Key Vault Secrets Officer')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
                 "principalId": "[parameters('principalId')]",
                 "principalType": "User"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8)))]"
+                "[resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8)))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('principalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.Search/searchServices/{0}', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), parameters('principalId'), 'Search Index Data Contributor')]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "User"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('principalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.Search/searchServices/{0}', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), parameters('principalId'), 'Search Service Contributor')]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "User"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Search/searchServices', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('principalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)))]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10))), parameters('principalId'), 'Storage Blob Data Contributor')]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "User"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10)))]"
               ]
             }
           ],
@@ -422,27 +446,27 @@
             },
             "searchServiceName": {
               "type": "string",
-              "value": "[format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))]"
+              "value": "[format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]"
             },
             "searchEndpoint": {
               "type": "string",
-              "value": "[format('https://{0}.search.windows.net/', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
+              "value": "[format('https://{0}.search.windows.net/', format('srch-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
             },
             "storageAccountName": {
               "type": "string",
-              "value": "[format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10))]"
+              "value": "[format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10))]"
             },
             "storageAccountEndpoint": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id), 10))), '2023-01-01').primaryEndpoints.blob]"
+              "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', format('st{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 8), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 10))), '2023-01-01').primaryEndpoints.blob]"
             },
             "keyVaultName": {
               "type": "string",
-              "value": "[format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8))]"
+              "value": "[format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8))]"
             },
             "keyVaultEndpoint": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, deployment().name), 8))), '2023-07-01').vaultUri]"
+              "value": "[reference(resourceId('Microsoft.KeyVault/vaults', format('kv-{0}-{1}', take(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), 12), take(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 8))), '2023-07-01').vaultUri]"
             },
             "appInsightsName": {
               "type": "string",
@@ -463,6 +487,14 @@
             "logAnalyticsWorkspaceName": {
               "type": "string",
               "value": "[format('log-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))]"
+            },
+            "containerRegistryName": {
+              "type": "string",
+              "value": "not-available-in-student-subscription"
+            },
+            "containerRegistryEndpoint": {
+              "type": "string",
+              "value": "not-available-in-student-subscription"
             }
           }
         }
@@ -505,7 +537,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.37.4.10188",
-              "templateHash": "8285342444634666704"
+              "templateHash": "812224989664419756"
             }
           },
           "parameters": {
@@ -526,54 +558,106 @@
             }
           },
           "variables": {
-            "environmentConfig": {
-              "development": {
-                "gpt4Capacity": 10,
-                "embeddingCapacity": 15,
-                "location": "westus"
-              },
-              "staging": {
-                "gpt4Capacity": 20,
-                "embeddingCapacity": 30,
-                "location": "westus"
-              },
-              "prod": {
-                "gpt4Capacity": 50,
-                "embeddingCapacity": 60,
-                "location": "westus"
-              }
+            "config": {
+              "miniCapacity": 1,
+              "embeddingCapacity": 1,
+              "location": "eastus"
             },
-            "config": "[variables('environmentConfig')[parameters('environmentName')]]",
             "deploymentLocation": "[parameters('location')]"
           },
           "resources": [
             {
+              "type": "Microsoft.CognitiveServices/accounts",
+              "apiVersion": "2023-05-01",
+              "name": "[format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]",
+              "location": "[variables('deploymentLocation')]",
+              "kind": "AIServices",
+              "sku": {
+                "name": "S0"
+              },
+              "properties": {
+                "customSubDomainName": "[format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]",
+                "publicNetworkAccess": "Enabled"
+              },
+              "tags": {
+                "Environment": "[parameters('environmentName')]",
+                "Purpose": "Azure AI Foundry multi-service - Azure for Students"
+              }
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2024-04-01-preview",
+              "name": "[format('{0}/{1}', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), 'gpt-4o-mini')]",
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "gpt-4o-mini",
+                  "version": "2024-07-18"
+                },
+                "raiPolicyName": "Microsoft.Default"
+              },
+              "sku": {
+                "name": "Standard",
+                "capacity": "[variables('config').miniCapacity]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2024-04-01-preview",
+              "name": "[format('{0}/{1}', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), 'text-embedding-ada-002')]",
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "text-embedding-ada-002",
+                  "version": "2"
+                },
+                "raiPolicyName": "Microsoft.Default"
+              },
+              "sku": {
+                "name": "Standard",
+                "capacity": "[variables('config').embeddingCapacity]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), 'gpt-4o-mini')]",
+                "[resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+              ]
+            },
+            {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', 'oai-maintie-rag-prod-fymhwfec3ra2w')]",
-              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', 'oai-maintie-rag-prod-fymhwfec3ra2w'), parameters('managedIdentityPrincipalId'), 'Cognitive Services OpenAI User')]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), parameters('managedIdentityPrincipalId'), 'Cognitive Services OpenAI User')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
                 "principalId": "[parameters('managedIdentityPrincipalId')]",
                 "principalType": "ServicePrincipal"
-              }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+              ]
             },
             {
               "condition": "[not(empty(parameters('principalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', 'oai-maintie-rag-prod-fymhwfec3ra2w')]",
-              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', 'oai-maintie-rag-prod-fymhwfec3ra2w'), parameters('principalId'), 'Cognitive Services OpenAI User')]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), parameters('principalId'), 'Cognitive Services OpenAI User')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
                 "principalId": "[parameters('principalId')]",
                 "principalType": "User"
-              }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+              ]
             },
             {
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
-              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', 'oai-maintie-rag-prod-fymhwfec3ra2w')]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
               "name": "openai-diagnostics",
               "properties": {
                 "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
@@ -597,37 +681,32 @@
                     }
                   }
                 ]
-              }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+              ]
             }
           ],
           "outputs": {
             "openaiAccountName": {
               "type": "string",
-              "value": "oai-maintie-rag-prod-fymhwfec3ra2w"
+              "value": "[format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]"
             },
             "openaiEndpoint": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', 'oai-maintie-rag-prod-fymhwfec3ra2w'), '2023-05-01').endpoint]"
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), '2023-05-01').endpoint]"
             },
             "openaiResourceId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.CognitiveServices/accounts', 'oai-maintie-rag-prod-fymhwfec3ra2w')]"
+              "value": "[resourceId('Microsoft.CognitiveServices/accounts', format('aif-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
             },
             "deploymentName": {
               "type": "string",
-              "value": "gpt-4o"
+              "value": "gpt-4o-mini"
             },
             "embeddingDeploymentName": {
               "type": "string",
               "value": "text-embedding-ada-002"
-            },
-            "gpt4TurboDeploymentName": {
-              "type": "string",
-              "value": ""
-            },
-            "embedding3LargeDeploymentName": {
-              "type": "string",
-              "value": ""
             },
             "openaiLocation": {
               "type": "string",
@@ -670,6 +749,15 @@
           },
           "managedIdentityPrincipalId": {
             "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'coreServices'), '2022-09-01').outputs.managedIdentityPrincipalId.value]"
+          },
+          "storageAccountName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'coreServices'), '2022-09-01').outputs.storageAccountName.value]"
+          },
+          "keyVaultName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'coreServices'), '2022-09-01').outputs.keyVaultName.value]"
+          },
+          "appInsightsName": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'coreServices'), '2022-09-01').outputs.appInsightsName.value]"
           }
         },
         "template": {
@@ -679,7 +767,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.37.4.10188",
-              "templateHash": "17510202412762256657"
+              "templateHash": "14310889854069879074"
             }
           },
           "parameters": {
@@ -697,39 +785,28 @@
             },
             "managedIdentityPrincipalId": {
               "type": "string"
+            },
+            "storageAccountName": {
+              "type": "string"
+            },
+            "keyVaultName": {
+              "type": "string"
+            },
+            "appInsightsName": {
+              "type": "string"
             }
           },
           "variables": {
-            "environmentConfig": {
-              "development": {
-                "cosmosCapacityMode": "Serverless",
-                "cosmosRU": 0,
-                "mlComputeSize": "Standard_DS1_v2",
-                "mlMinNodes": 0,
-                "mlMaxNodes": 1
-              },
-              "staging": {
-                "cosmosCapacityMode": "Provisioned",
-                "cosmosRU": 1000,
-                "mlComputeSize": "Standard_DS1_v2",
-                "mlMinNodes": 0,
-                "mlMaxNodes": 2
-              },
-              "prod": {
-                "cosmosCapacityMode": "Provisioned",
-                "cosmosRU": 4000,
-                "mlComputeSize": "Standard_DS1_v2",
-                "mlMinNodes": 0,
-                "mlMaxNodes": 3
-              }
-            },
-            "config": "[variables('environmentConfig')[parameters('environmentName')]]"
+            "config": {
+              "cosmosCapacityMode": "Serverless",
+              "cosmosRU": 0
+            }
           },
           "resources": [
             {
               "type": "Microsoft.DocumentDB/databaseAccounts",
               "apiVersion": "2023-04-15",
-              "name": "[format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))]",
+              "name": "[format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]",
               "location": "[parameters('location')]",
               "kind": "GlobalDocumentDB",
               "properties": {
@@ -764,124 +841,58 @@
             {
               "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases",
               "apiVersion": "2023-04-15",
-              "name": "[format('{0}/{1}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)), format('maintie-rag-{0}', parameters('environmentName')))]",
+              "name": "[format('{0}/{1}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), format('maintie-rag-{0}', parameters('environmentName')))]",
               "properties": {
                 "resource": {
                   "id": "[format('maintie-rag-{0}', parameters('environmentName'))]"
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
               ]
             },
             {
               "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs",
               "apiVersion": "2023-04-15",
-              "name": "[format('{0}/{1}/{2}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)), format('maintie-rag-{0}', parameters('environmentName')), format('knowledge-graph-{0}', parameters('environmentName')))]",
+              "name": "[format('{0}/{1}/{2}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), format('maintie-rag-{0}', parameters('environmentName')), format('knowledge-graph-{0}', parameters('environmentName')))]",
               "properties": "[if(equals(variables('config').cosmosCapacityMode, 'Serverless'), createObject('resource', createObject('id', format('knowledge-graph-{0}', parameters('environmentName')), 'partitionKey', createObject('paths', createArray('/partitionKey'), 'kind', 'Hash'), 'indexingPolicy', createObject('indexingMode', 'consistent', 'includedPaths', createArray(createObject('path', '/*')), 'excludedPaths', createArray(createObject('path', '/\"_etag\"/?'))))), createObject('resource', createObject('id', format('knowledge-graph-{0}', parameters('environmentName')), 'partitionKey', createObject('paths', createArray('/partitionKey'), 'kind', 'Hash'), 'indexingPolicy', createObject('indexingMode', 'consistent', 'includedPaths', createArray(createObject('path', '/*')), 'excludedPaths', createArray(createObject('path', '/\"_etag\"/?')))), 'options', createObject('throughput', variables('config').cosmosRU)))]",
               "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts/gremlinDatabases', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)), format('maintie-rag-{0}', parameters('environmentName')))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/gremlinDatabases', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), format('maintie-rag-{0}', parameters('environmentName')))]"
               ]
-            },
-            {
-              "condition": "[and(not(equals(parameters('environmentName'), 'production')), not(empty(parameters('principalId'))))]",
-              "type": "Microsoft.MachineLearningServices/workspaces/computes",
-              "apiVersion": "2023-04-01",
-              "name": "[format('{0}/{1}', 'ml-maintierag-prod', format('compute-{0}', parameters('environmentName')))]",
-              "location": "[parameters('location')]",
-              "properties": {
-                "computeType": "ComputeInstance",
-                "properties": {
-                  "vmSize": "[variables('config').mlComputeSize]",
-                  "applicationSharingPolicy": "Personal",
-                  "computeInstanceAuthorizationType": "personal",
-                  "enableNodePublicIp": true,
-                  "personalComputeInstanceSettings": {
-                    "assignedUser": {
-                      "objectId": "[parameters('principalId')]",
-                      "tenantId": "[subscription().tenantId]"
-                    }
-                  }
-                }
-              }
-            },
-            {
-              "type": "Microsoft.MachineLearningServices/workspaces/computes",
-              "apiVersion": "2023-04-01",
-              "name": "[format('{0}/{1}', 'ml-maintierag-prod', format('cluster-{0}', parameters('environmentName')))]",
-              "location": "[parameters('location')]",
-              "properties": {
-                "computeType": "AmlCompute",
-                "properties": {
-                  "vmSize": "[variables('config').mlComputeSize]",
-                  "vmPriority": "Dedicated",
-                  "scaleSettings": {
-                    "minNodeCount": "[variables('config').mlMinNodes]",
-                    "maxNodeCount": "[variables('config').mlMaxNodes]",
-                    "nodeIdleTimeBeforeScaleDown": "PT120S"
-                  },
-                  "enableNodePublicIp": true,
-                  "isolatedNetwork": false,
-                  "osType": "Linux"
-                }
-              }
             },
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]",
-              "name": "[guid(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))), parameters('managedIdentityPrincipalId'), 'Cosmos DB Built-in Data Contributor')]",
+              "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+              "name": "[guid(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), parameters('managedIdentityPrincipalId'), 'Cosmos DB Built-in Data Contributor')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
                 "principalId": "[parameters('managedIdentityPrincipalId')]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
               ]
-            },
-            {
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.MachineLearningServices/workspaces/{0}', 'ml-maintierag-prod')]",
-              "name": "[guid(resourceId('Microsoft.MachineLearningServices/workspaces', 'ml-maintierag-prod'), parameters('managedIdentityPrincipalId'), 'AzureML Data Scientist')]",
-              "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')]",
-                "principalId": "[parameters('managedIdentityPrincipalId')]",
-                "principalType": "ServicePrincipal"
-              }
             },
             {
               "condition": "[not(empty(parameters('principalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]",
-              "name": "[guid(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))), parameters('principalId'), 'Cosmos DB Built-in Data Contributor')]",
+              "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+              "name": "[guid(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), parameters('principalId'), 'Cosmos DB Built-in Data Contributor')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
                 "principalId": "[parameters('principalId')]",
                 "principalType": "User"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
               ]
-            },
-            {
-              "condition": "[not(empty(parameters('principalId')))]",
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.MachineLearningServices/workspaces/{0}', 'ml-maintierag-prod')]",
-              "name": "[guid(resourceId('Microsoft.MachineLearningServices/workspaces', 'ml-maintierag-prod'), parameters('principalId'), 'AzureML Data Scientist')]",
-              "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')]",
-                "principalId": "[parameters('principalId')]",
-                "principalType": "User"
-              }
             },
             {
               "type": "Microsoft.Insights/diagnosticSettings",
               "apiVersion": "2021-05-01-preview",
-              "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]",
+              "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
               "name": "cosmos-diagnostics",
               "properties": {
                 "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
@@ -907,30 +918,77 @@
                 ]
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+              ]
+            },
+            {
+              "type": "Microsoft.MachineLearningServices/workspaces",
+              "apiVersion": "2023-04-01",
+              "name": "[format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "friendlyName": "Azure Universal RAG ML Workspace",
+                "description": "Machine Learning workspace for GNN training and inference",
+                "storageAccount": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+                "keyVault": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+                "applicationInsights": "[resourceId('Microsoft.Insights/components', parameters('appInsightsName'))]",
+                "publicNetworkAccess": "Enabled",
+                "imageBuildCompute": "[format('ml-cluster-{0}', parameters('environmentName'))]"
+              },
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "tags": {
+                "Environment": "[parameters('environmentName')]",
+                "Purpose": "GNN training and inference for Universal RAG"
+              }
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.MachineLearningServices/workspaces/{0}', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]",
+              "name": "[guid(resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), parameters('managedIdentityPrincipalId'), 'AzureML Data Scientist')]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')]",
+                "principalId": "[parameters('managedIdentityPrincipalId')]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('principalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[format('Microsoft.MachineLearningServices/workspaces/{0}', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]",
+              "name": "[guid(resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), parameters('principalId'), 'AzureML Data Scientist')]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')]",
+                "principalId": "[parameters('principalId')]",
+                "principalType": "User"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
               ]
             }
           ],
           "outputs": {
             "cosmosAccountName": {
               "type": "string",
-              "value": "[format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))]"
+              "value": "[format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]"
             },
             "cosmosEndpoint": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))), '2023-04-15').documentEndpoint]"
+              "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), '2023-04-15').documentEndpoint]"
             },
             "cosmosResourceId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
-            },
-            "cosmosPrimaryKey": {
-              "type": "string",
-              "value": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id))), '2023-04-15').primaryMasterKey]"
+              "value": "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
             },
             "cosmosGremlinEndpoint": {
               "type": "string",
-              "value": "[format('wss://{0}.gremlin.cosmos.azure.com:443/', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id)))]"
+              "value": "[format('wss://{0}.gremlin.cosmos.azure.com:443/', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
             },
             "gremlinDatabaseName": {
               "type": "string",
@@ -942,23 +1000,23 @@
             },
             "mlWorkspaceName": {
               "type": "string",
-              "value": "ml-maintierag-prod"
+              "value": "[format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]"
             },
             "mlWorkspaceId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.MachineLearningServices/workspaces', 'ml-maintierag-prod')]"
+              "value": "[resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
             },
             "mlWorkspaceEndpoint": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.MachineLearningServices/workspaces', 'ml-maintierag-prod'), '2023-04-01').workspaceId]"
+              "value": "[format('https://{0}.api.azureml.ms', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
             },
             "mlComputeClusterName": {
               "type": "string",
-              "value": "[format('cluster-{0}', parameters('environmentName'))]"
+              "value": "[format('ml-cluster-{0}', parameters('environmentName'))]"
             },
             "mlComputeInstanceName": {
               "type": "string",
-              "value": "[if(not(equals(parameters('environmentName'), 'production')), format('compute-{0}', parameters('environmentName')), '')]"
+              "value": "[format('ml-instance-{0}', parameters('environmentName'))]"
             }
           }
         }
@@ -1020,7 +1078,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.37.4.10188",
-              "templateHash": "9606714194956718319"
+              "templateHash": "2249818271957249604"
             }
           },
           "parameters": {
@@ -1049,70 +1107,68 @@
               "type": "string"
             },
             "appInsightsConnectionString": {
-              "type": "string"
+              "type": "securestring"
             },
             "backendImageName": {
               "type": "string",
-              "defaultValue": "azure-maintie-rag/backend-prod:latest"
+              "defaultValue": "",
+              "metadata": {
+                "description": "Backend container image name with tag (e.g., azure-maintie-rag/backend-prod:azd-deploy-123456)"
+              }
             },
             "frontendImageName": {
               "type": "string",
-              "defaultValue": "azure-maintie-rag/frontend-prod:latest"
-            },
-            "useCustomImages": {
-              "type": "bool",
-              "defaultValue": true
+              "defaultValue": "",
+              "metadata": {
+                "description": "Frontend container image name with tag (e.g., azure-maintie-rag/frontend-prod:azd-deploy-123456)"
+              }
             }
           },
           "variables": {
-            "environmentConfig": {
-              "development": {
-                "containerCpu": "0.5",
-                "containerMemory": "1Gi",
-                "minReplicas": 0,
-                "maxReplicas": 3,
-                "registrySku": "Basic"
-              },
-              "staging": {
-                "containerCpu": "1.0",
-                "containerMemory": "2Gi",
-                "minReplicas": 0,
-                "maxReplicas": 5,
-                "registrySku": "Standard"
-              },
-              "prod": {
-                "containerCpu": "2.0",
-                "containerMemory": "4Gi",
-                "minReplicas": 0,
-                "maxReplicas": 10,
-                "registrySku": "Premium"
-              }
-            },
-            "config": "[variables('environmentConfig')[parameters('environmentName')]]"
+            "config": {
+              "containerCpu": "0.25",
+              "containerMemory": "0.5Gi",
+              "minReplicas": 0,
+              "maxReplicas": 1,
+              "registrySku": "Basic"
+            }
           },
           "resources": [
             {
               "type": "Microsoft.ContainerRegistry/registries",
-              "apiVersion": "2023-07-01",
-              "name": "[format('cr{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 10), take(uniqueString(resourceGroup().id), 10))]",
+              "apiVersion": "2023-01-01-preview",
+              "name": "[format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]",
               "location": "[parameters('location')]",
               "sku": {
                 "name": "[variables('config').registrySku]"
               },
               "properties": {
                 "adminUserEnabled": true,
+                "anonymousPullEnabled": false,
+                "dataEndpointEnabled": false,
+                "encryption": {
+                  "status": "disabled"
+                },
+                "networkRuleBypassOptions": "AzureServices",
+                "policies": {
+                  "exportPolicy": {
+                    "status": "enabled"
+                  },
+                  "retentionPolicy": {
+                    "status": "disabled",
+                    "days": 7
+                  },
+                  "trustPolicy": {
+                    "status": "disabled",
+                    "type": "Notary"
+                  }
+                },
                 "publicNetworkAccess": "Enabled",
-                "zoneRedundancy": "[if(equals(parameters('environmentName'), 'production'), 'Enabled', 'Disabled')]"
-              },
-              "identity": {
-                "type": "UserAssigned",
-                "userAssignedIdentities": {
-                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))))]": {}
-                }
+                "zoneRedundancy": "Disabled"
               },
               "tags": {
                 "Environment": "[parameters('environmentName')]",
-                "Purpose": "Container image storage for Universal RAG backend"
+                "Purpose": "Container registry for Universal RAG images"
               }
             },
             {
@@ -1167,18 +1223,28 @@
                       }
                     ]
                   },
-                  "registries": "[if(parameters('useCustomImages'), createArray(createObject('server', reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 10), take(uniqueString(resourceGroup().id), 10))), '2023-07-01').loginServer, 'identity', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))))), createArray())]",
+                  "registries": [
+                    {
+                      "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').loginServer]",
+                      "username": "[format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]",
+                      "passwordSecretRef": "container-registry-password"
+                    }
+                  ],
                   "secrets": [
                     {
                       "name": "app-insights-connection-string",
                       "value": "[parameters('appInsightsConnectionString')]"
+                    },
+                    {
+                      "name": "container-registry-password",
+                      "value": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').passwords[0].value]"
                     }
                   ]
                 },
                 "template": {
                   "containers": [
                     {
-                      "image": "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest",
+                      "image": "[if(not(empty(parameters('backendImageName'))), parameters('backendImageName'), 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest')]",
                       "name": "backend",
                       "env": [
                         {
@@ -1232,7 +1298,7 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.App/managedEnvironments', format('cae-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
-                "[resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 10), take(uniqueString(resourceGroup().id), 10)))]"
+                "[resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
               ]
             },
             {
@@ -1257,7 +1323,7 @@
                   "activeRevisionsMode": "Single",
                   "ingress": {
                     "external": true,
-                    "targetPort": 80,
+                    "targetPort": 3000,
                     "transport": "http",
                     "allowInsecure": true,
                     "traffic": [
@@ -1267,21 +1333,33 @@
                       }
                     ]
                   },
-                  "registries": "[if(parameters('useCustomImages'), createArray(createObject('server', reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 10), take(uniqueString(resourceGroup().id), 10))), '2023-07-01').loginServer, 'identity', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('id-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))))), createArray())]"
+                  "registries": [
+                    {
+                      "server": "[reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').loginServer]",
+                      "username": "[format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]",
+                      "passwordSecretRef": "container-registry-password"
+                    }
+                  ],
+                  "secrets": [
+                    {
+                      "name": "container-registry-password",
+                      "value": "[listCredentials(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').passwords[0].value]"
+                    }
+                  ]
                 },
                 "template": {
                   "containers": [
                     {
-                      "image": "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest",
+                      "image": "[if(not(empty(parameters('frontendImageName'))), parameters('frontendImageName'), 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest')]",
                       "name": "frontend",
                       "env": [
                         {
-                          "name": "REACT_APP_API_URL",
+                          "name": "VITE_API_URL",
                           "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', format('ca-backend-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName'))), '2023-05-01').configuration.ingress.fqdn)]"
                         },
                         {
                           "name": "PORT",
-                          "value": "80"
+                          "value": "3000"
                         }
                       ],
                       "resources": {
@@ -1299,18 +1377,18 @@
               "dependsOn": [
                 "[resourceId('Microsoft.App/containerApps', format('ca-backend-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
                 "[resourceId('Microsoft.App/managedEnvironments', format('cae-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
-                "[resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 10), take(uniqueString(resourceGroup().id), 10)))]"
+                "[resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
               ]
             }
           ],
           "outputs": {
             "containerRegistryName": {
               "type": "string",
-              "value": "[format('cr{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 10), take(uniqueString(resourceGroup().id), 10))]"
+              "value": "[format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]"
             },
             "containerRegistryLoginServer": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}', take(replace(replace(format('{0}{1}', parameters('resourcePrefix'), parameters('environmentName')), '-', ''), '_', ''), 10), take(uniqueString(resourceGroup().id), 10))), '2023-07-01').loginServer]"
+              "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}{1}{2}', replace(parameters('resourcePrefix'), '-', ''), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), '2023-01-01-preview').loginServer]"
             },
             "backendAppUrl": {
               "type": "string",
@@ -1391,6 +1469,22 @@
     "AZURE_ML_WORKSPACE_NAME": {
       "type": "string",
       "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'dataServices'), '2022-09-01').outputs.mlWorkspaceName.value]"
+    },
+    "AZURE_ML_WORKSPACE_ID": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'dataServices'), '2022-09-01').outputs.mlWorkspaceId.value]"
+    },
+    "AZURE_ML_WORKSPACE_ENDPOINT": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'dataServices'), '2022-09-01').outputs.mlWorkspaceEndpoint.value]"
+    },
+    "AZURE_ML_COMPUTE_CLUSTER_NAME": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'dataServices'), '2022-09-01').outputs.mlComputeClusterName.value]"
+    },
+    "AZURE_ML_COMPUTE_INSTANCE_NAME": {
+      "type": "string",
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('resourceGroupName')), 'Microsoft.Resources/deployments', 'dataServices'), '2022-09-01').outputs.mlComputeInstanceName.value]"
     },
     "AZURE_ML_RESOURCE_GROUP": {
       "type": "string",

@@ -6,7 +6,7 @@ param resourcePrefix string
 
 // Single configuration - FREE TIER OPTIMIZED (Cost Savings)
 var config = {
-  searchSku: 'free'              // FREE: 50MB storage, 3 indexes, 10,000 docs
+  searchSku: 'basic'             // BASIC: Avoid free tier quota conflicts (existing free service)
   searchReplicas: 1
   searchPartitions: 1
   storageSku: 'Standard_LRS'     // CHEAPEST: Locally redundant storage
@@ -63,12 +63,12 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-// Azure Cognitive Search
+// Azure Cognitive Search - Use Basic tier to avoid quota conflicts
 resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
   name: 'srch-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
   location: location
   sku: {
-    name: config.searchSku
+    name: config.searchSku  // Use config setting (basic tier to avoid free quota conflicts)
   }
   properties: {
     replicaCount: config.searchReplicas
@@ -163,9 +163,9 @@ resource modelsContainer 'Microsoft.Storage/storageAccounts/blobServices/contain
   }
 }
 
-// Key Vault for secrets management
+// Key Vault for secrets management - Use timestamp to avoid soft-delete conflicts
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 8)}'
+  name: 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 10)}-${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName, '2025'), 10)}'
   location: location
   properties: {
     tenantId: subscription().tenantId

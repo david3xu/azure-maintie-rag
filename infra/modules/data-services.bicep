@@ -4,6 +4,9 @@ param location string
 param principalId string
 param resourcePrefix string
 param managedIdentityPrincipalId string
+param storageAccountName string
+param keyVaultName string
+param appInsightsName string
 
 // Single configuration - CPU-ONLY OPTIMIZED (Azure for Students)
 var config = {
@@ -42,7 +45,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
     isVirtualNetworkFilterEnabled: false
     virtualNetworkRules: []
     ipRules: []
-    enableFreeTier: true  // ENABLE: Use free tier when available
+    enableFreeTier: false  // DISABLE: Free tier already used in subscription
     publicNetworkAccess: 'Enabled'
   }
   identity: {
@@ -175,9 +178,9 @@ resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' =
   properties: {
     friendlyName: 'Azure Universal RAG ML Workspace'
     description: 'Machine Learning workspace for GNN training and inference'
-    storageAccount: resourceId('Microsoft.Storage/storageAccounts', 'st${take(replace(replace('${resourcePrefix}${environmentName}', '-', ''), '_', ''), 8)}${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 10)}')
-    keyVault: resourceId('Microsoft.KeyVault/vaults', 'kv-${take(replace('${resourcePrefix}${environmentName}', '-', ''), 12)}-${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 8)}')
-    applicationInsights: resourceId('Microsoft.Insights/components', 'appi-${resourcePrefix}-${environmentName}')
+    storageAccount: resourceId('Microsoft.Storage/storageAccounts', storageAccountName)
+    keyVault: resourceId('Microsoft.KeyVault/vaults', keyVaultName)
+    applicationInsights: resourceId('Microsoft.Insights/components', appInsightsName)
     publicNetworkAccess: 'Enabled'
     imageBuildCompute: 'ml-cluster-${environmentName}'
   }
@@ -219,7 +222,6 @@ resource mlDataScientist 'Microsoft.Authorization/roleAssignments@2022-04-01' = 
 output cosmosAccountName string = cosmosAccount.name
 output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
 output cosmosResourceId string = cosmosAccount.id
-output cosmosPrimaryKey string = cosmosAccount.listKeys().primaryMasterKey
 output cosmosGremlinEndpoint string = 'wss://${cosmosAccount.name}.gremlin.cosmos.azure.com:443/'
 
 output gremlinDatabaseName string = gremlinDatabase.name

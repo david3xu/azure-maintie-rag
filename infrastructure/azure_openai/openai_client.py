@@ -384,13 +384,22 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
 
         except Exception as e:
             logger.error(f"Chat completion failed: {e}")
-            return {
-                "content": "",
-                "error": str(e),
-                "model": model or "unknown",
-                "usage": {},
-                "finish_reason": "error",
-            }
+            # FAIL FAST - Don't return empty content that causes hanging
+            # Check for deployment not found error
+            if "DeploymentNotFound" in str(e) or "404" in str(e):
+                raise RuntimeError(
+                    f"Azure OpenAI deployment not found: {model or prompts.model_name}. "
+                    f"Available deployments should match Azure resource. Error: {e}"
+                )
+            # Check for rate limit
+            elif "429" in str(e):
+                raise RuntimeError(f"Azure OpenAI rate limit exceeded. Wait and retry. Error: {e}")
+            # Check for authentication
+            elif "401" in str(e) or "403" in str(e):
+                raise RuntimeError(f"Azure OpenAI authentication failed. Check API key. Error: {e}")
+            else:
+                # For other errors, also fail fast
+                raise RuntimeError(f"Azure OpenAI chat completion failed: {e}")
 
     # === TEXT PROCESSING ===
 

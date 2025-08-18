@@ -9,6 +9,7 @@ param searchEndpoint string
 param cosmosEndpoint string
 param storageAccountName string
 param keyVaultName string
+@secure()
 param appInsightsConnectionString string
 
 // Container image names - provided by azd container building

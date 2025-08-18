@@ -1,0 +1,260 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.37.4.10188",
+      "templateHash": "17844244434112484366"
+    }
+  },
+  "parameters": {
+    "environmentName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "principalId": {
+      "type": "string"
+    },
+    "resourcePrefix": {
+      "type": "string"
+    },
+    "managedIdentityPrincipalId": {
+      "type": "string"
+    },
+    "storageAccountName": {
+      "type": "string"
+    },
+    "keyVaultName": {
+      "type": "string"
+    },
+    "appInsightsName": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "config": {
+      "cosmosCapacityMode": "Serverless",
+      "cosmosRU": 0
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "apiVersion": "2023-04-15",
+      "name": "[format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]",
+      "location": "[parameters('location')]",
+      "kind": "GlobalDocumentDB",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session"
+        },
+        "locations": [
+          {
+            "locationName": "[parameters('location')]",
+            "failoverPriority": 0,
+            "isZoneRedundant": "[equals(parameters('environmentName'), 'production')]"
+          }
+        ],
+        "capabilities": "[concat(createArray(createObject('name', 'EnableGremlin')), if(equals(variables('config').cosmosCapacityMode, 'Serverless'), createArray(createObject('name', 'EnableServerless')), createArray()))]",
+        "enableAutomaticFailover": "[equals(parameters('environmentName'), 'production')]",
+        "enableMultipleWriteLocations": false,
+        "isVirtualNetworkFilterEnabled": false,
+        "virtualNetworkRules": [],
+        "ipRules": [],
+        "enableFreeTier": true,
+        "publicNetworkAccess": "Enabled"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "tags": {
+        "Environment": "[parameters('environmentName')]",
+        "Purpose": "Knowledge graph storage using Gremlin API for maintenance relationships"
+      }
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases",
+      "apiVersion": "2023-04-15",
+      "name": "[format('{0}/{1}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), format('maintie-rag-{0}', parameters('environmentName')))]",
+      "properties": {
+        "resource": {
+          "id": "[format('maintie-rag-{0}', parameters('environmentName'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs",
+      "apiVersion": "2023-04-15",
+      "name": "[format('{0}/{1}/{2}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), format('maintie-rag-{0}', parameters('environmentName')), format('knowledge-graph-{0}', parameters('environmentName')))]",
+      "properties": "[if(equals(variables('config').cosmosCapacityMode, 'Serverless'), createObject('resource', createObject('id', format('knowledge-graph-{0}', parameters('environmentName')), 'partitionKey', createObject('paths', createArray('/partitionKey'), 'kind', 'Hash'), 'indexingPolicy', createObject('indexingMode', 'consistent', 'includedPaths', createArray(createObject('path', '/*')), 'excludedPaths', createArray(createObject('path', '/\"_etag\"/?'))))), createObject('resource', createObject('id', format('knowledge-graph-{0}', parameters('environmentName')), 'partitionKey', createObject('paths', createArray('/partitionKey'), 'kind', 'Hash'), 'indexingPolicy', createObject('indexingMode', 'consistent', 'includedPaths', createArray(createObject('path', '/*')), 'excludedPaths', createArray(createObject('path', '/\"_etag\"/?')))), 'options', createObject('throughput', variables('config').cosmosRU)))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/gremlinDatabases', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))), format('maintie-rag-{0}', parameters('environmentName')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+      "name": "[guid(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), parameters('managedIdentityPrincipalId'), 'Cosmos DB Built-in Data Contributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
+        "principalId": "[parameters('managedIdentityPrincipalId')]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+      ]
+    },
+    {
+      "condition": "[not(empty(parameters('principalId')))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+      "name": "[guid(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), parameters('principalId'), 'Cosmos DB Built-in Data Contributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')]",
+        "principalId": "[parameters('principalId')]",
+        "principalType": "User"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[format('Microsoft.DocumentDB/databaseAccounts/{0}', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]",
+      "name": "cosmos-diagnostics",
+      "properties": {
+        "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}-{1}', parameters('resourcePrefix'), parameters('environmentName')))]",
+        "logs": [
+          {
+            "categoryGroup": "allLogs",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          }
+        ],
+        "metrics": [
+          {
+            "category": "AllMetrics",
+            "enabled": true,
+            "retentionPolicy": {
+              "enabled": false,
+              "days": 0
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+      ]
+    },
+    {
+      "type": "Microsoft.MachineLearningServices/workspaces",
+      "apiVersion": "2023-04-01",
+      "name": "[format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "friendlyName": "Azure Universal RAG ML Workspace",
+        "description": "Machine Learning workspace for GNN training and inference",
+        "storageAccount": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+        "keyVault": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+        "applicationInsights": "[resourceId('Microsoft.Insights/components', parameters('appInsightsName'))]",
+        "publicNetworkAccess": "Enabled",
+        "imageBuildCompute": "[format('ml-cluster-{0}', parameters('environmentName'))]"
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "tags": {
+        "Environment": "[parameters('environmentName')]",
+        "Purpose": "GNN training and inference for Universal RAG"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.MachineLearningServices/workspaces/{0}', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]",
+      "name": "[guid(resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), parameters('managedIdentityPrincipalId'), 'AzureML Data Scientist')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')]",
+        "principalId": "[parameters('managedIdentityPrincipalId')]",
+        "principalType": "ServicePrincipal"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
+      ]
+    },
+    {
+      "condition": "[not(empty(parameters('principalId')))]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "scope": "[format('Microsoft.MachineLearningServices/workspaces/{0}', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]",
+      "name": "[guid(resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))), parameters('principalId'), 'AzureML Data Scientist')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')]",
+        "principalId": "[parameters('principalId')]",
+        "principalType": "User"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "cosmosAccountName": {
+      "type": "string",
+      "value": "[format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))]"
+    },
+    "cosmosEndpoint": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')))), '2023-04-15').documentEndpoint]"
+    },
+    "cosmosResourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DocumentDB/databaseAccounts', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+    },
+    "cosmosGremlinEndpoint": {
+      "type": "string",
+      "value": "[format('wss://{0}.gremlin.cosmos.azure.com:443/', format('cosmos-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName'))))]"
+    },
+    "gremlinDatabaseName": {
+      "type": "string",
+      "value": "[format('maintie-rag-{0}', parameters('environmentName'))]"
+    },
+    "knowledgeGraphName": {
+      "type": "string",
+      "value": "[format('knowledge-graph-{0}', parameters('environmentName'))]"
+    },
+    "mlWorkspaceName": {
+      "type": "string",
+      "value": "[format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6))]"
+    },
+    "mlWorkspaceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.MachineLearningServices/workspaces', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
+    },
+    "mlWorkspaceEndpoint": {
+      "type": "string",
+      "value": "[format('https://{0}.api.azureml.ms', format('ml-{0}-{1}-{2}', parameters('resourcePrefix'), parameters('environmentName'), substring(uniqueString(resourceGroup().id, parameters('resourcePrefix'), parameters('environmentName')), 0, 6)))]"
+    },
+    "mlComputeClusterName": {
+      "type": "string",
+      "value": "[format('ml-cluster-{0}', parameters('environmentName'))]"
+    },
+    "mlComputeInstanceName": {
+      "type": "string",
+      "value": "[format('ml-instance-{0}', parameters('environmentName'))]"
+    }
+  }
+}

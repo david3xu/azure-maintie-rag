@@ -1,59 +1,56 @@
-// AI Services Module: Azure OpenAI with model deployments
+// AI Services Module: Azure OpenAI with gpt-4.1-mini deployment
 param environmentName string
 param location string
 param principalId string
 param resourcePrefix string
 param managedIdentityPrincipalId string
 
-// Single configuration - COST OPTIMIZED (MINI MODEL ONLY)
+// Single configuration - COST OPTIMIZED (MINIMAL CAPACITY per README)
 var config = {
-  miniCapacity: 1         // MINIMAL: Single capacity unit for mini model
-  embeddingCapacity: 1    // MINIMAL: Single capacity unit for embeddings
-  location: 'eastus'      // AZURE FOR STUDENTS: Try East US for better availability
+  miniCapacity: 1         // MINIMAL: Single capacity unit (per README line 36)
+  embeddingCapacity: 1    // MINIMAL: Single capacity unit (per README)
+  location: 'East US 2'   // Force East US 2 for better OpenAI quota availability in Azure for Students
 }
 
-var deploymentLocation = location
-
-// Azure AI Foundry Service - Available in Azure for Students
-resource openaiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: 'aif-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
-  location: deploymentLocation
-  kind: 'AIServices'  // Azure AI Foundry - multi-service
+// Azure OpenAI - Compatible with Azure for Students (S0 SKU requires special quota)
+resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
+  name: 'oai-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
+  location: config.location
+  kind: 'OpenAI'
   sku: {
-    name: 'S0'  // Standard tier for AI Services
+    name: 'S0'  // Standard tier - use location with better quota availability
   }
   properties: {
-    customSubDomainName: 'aif-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
+    customSubDomainName: 'ais-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
     publicNetworkAccess: 'Enabled'
   }
   tags: {
     Environment: environmentName
-    Purpose: 'Azure AI Foundry multi-service - Azure for Students'
+    Purpose: 'Azure OpenAI with gpt-4.1-mini'
   }
 }
 
-// GPT-4o-Mini Model Deployment - Most cost-effective chat model
-resource gpt4oMiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
-  parent: openaiAccount
-  name: 'gpt-4o-mini'
+// GPT-4.1-mini Model Deployment (as specifically requested)
+resource gpt41MiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-04-01-preview' = {
+  parent: aiServicesAccount
+  name: 'gpt-4.1-mini'
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'gpt-4o-mini'
-      version: '2024-07-18'
+      name: 'gpt-4.1-mini'
+      version: '2025-04-14'
     }
     raiPolicyName: 'Microsoft.Default'
-    scaleSettings: {
-      scaleType: 'Standard'
-      capacity: config.miniCapacity  // Use minimal capacity
-    }
+  }
+  sku: {
+    name: 'GlobalStandard'
+    capacity: config.miniCapacity  // MINIMAL capacity per README
   }
 }
 
-
-// Text Embedding Model - Keep ada-002 as it's cost-effective
-resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
-  parent: openaiAccount
+// Text Embedding Model
+resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-04-01-preview' = {
+  parent: aiServicesAccount
   name: 'text-embedding-ada-002'
   properties: {
     model: {
@@ -62,77 +59,23 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
       version: '2'
     }
     raiPolicyName: 'Microsoft.Default'
-    scaleSettings: {
-      scaleType: 'Standard'
-      capacity: config.embeddingCapacity  // Use minimal capacity
-    }
+  }
+  sku: {
+    name: 'Standard'
+    capacity: config.embeddingCapacity
   }
   dependsOn: [
-    gpt4oMiniDeployment  // Deploy sequentially to avoid conflicts
+    gpt41MiniDeployment
   ]
 }
 
-
-// RBAC for managed identity access
-resource managedIdentityOpenaiUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: openaiAccount
-  name: guid(openaiAccount.id, managedIdentityPrincipalId, 'Cognitive Services OpenAI User')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
-    principalId: managedIdentityPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// RBAC for user access (development)
-resource openaiUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
-  scope: openaiAccount
-  name: guid(openaiAccount.id, principalId, 'Cognitive Services OpenAI User')
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
-    principalId: principalId
-    principalType: 'User'
-  }
-}
-
-// Monitor deployment status and quotas
-resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: openaiAccount
-  name: 'openai-diagnostics'
-  properties: {
-    workspaceId: resourceId('Microsoft.OperationalInsights/workspaces', 'log-${resourcePrefix}-${environmentName}')
-    logs: [
-      {
-        categoryGroup: 'allLogs'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-    ]
-  }
-}
-
 // Outputs
-output openaiAccountName string = openaiAccount.name
-output openaiEndpoint string = openaiAccount.properties.endpoint
-output openaiResourceId string = openaiAccount.id
+output openaiAccountName string = aiServicesAccount.name
+output openaiEndpoint string = aiServicesAccount.properties.endpoint
+output openaiResourceId string = aiServicesAccount.id
 
-output deploymentName string = 'gpt-4o-mini'  // Changed to mini model for cost optimization
-output embeddingDeploymentName string = 'text-embedding-ada-002'
-output gpt4TurboDeploymentName string = ''  // Not deployed for cost savings
-output embedding3LargeDeploymentName string = ''  // Not deployed for cost savings
+output deploymentName string = gpt41MiniDeployment.name
+output embeddingDeploymentName string = embeddingDeployment.name
 
 output openaiLocation string = config.location
 output openaiResourceGroup string = resourceGroup().name
