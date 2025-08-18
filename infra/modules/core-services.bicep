@@ -65,7 +65,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 
 // Azure Cognitive Search
 resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
-  name: 'srch-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id)}'
+  name: 'srch-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
   location: location
   sku: {
     name: config.searchSku
@@ -93,7 +93,7 @@ resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
 
 // Storage Account - Multi-container setup for different data types
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: 'st${take(replace(replace('${resourcePrefix}${environmentName}', '-', ''), '_', ''), 8)}${take(uniqueString(resourceGroup().id), 10)}'
+  name: 'st${take(replace(replace('${resourcePrefix}${environmentName}', '-', ''), '_', ''), 8)}${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 10)}'
   location: location
   sku: {
     name: config.storageSku
