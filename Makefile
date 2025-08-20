@@ -20,9 +20,13 @@ health: ## Check system health
 	@echo "🔍 System Health Check"
 	@PYTHONPATH=$(PYTHONPATH) python -c "import asyncio; from agents.core.universal_deps import get_universal_deps; asyncio.run(get_universal_deps())"
 
-deploy: ## Deploy to Azure (simple)
-	@echo "🚀 Deploying to Azure..."
+deploy: ## Deploy to Azure (containers only - fast)
+	@echo "🚀 Deploying containers to Azure..."
 	@azd up
+	@echo "📥 Next: Run 'make populate-data' to enable tri-modal search"
+
+deploy-with-data: deploy populate-data extract-knowledge ## Deploy and populate data
+	@echo "✅ Full deployment with data completed"
 
 populate-data: ## Populate data in Azure services
 	@echo "📥 Populating data..."
@@ -86,10 +90,4 @@ dev-frontend: ## Start frontend development server
 	@echo "🎨 Starting frontend..."
 	@cd frontend && npm run dev
 
-# Legacy support (redirect to simple commands)
-dataflow-full: full-setup ## Legacy: Use full-setup instead
-dataflow-incremental: populate-data extract-knowledge ## Legacy: Use populate-data + extract-knowledge
-dataflow-ingest: populate-data ## Legacy: Use populate-data
-dataflow-extract: extract-knowledge ## Legacy: Use extract-knowledge
-
-.PHONY: help health deploy populate-data extract-knowledge test-search test-backend test-frontend full-setup clean dev-backend dev-frontend dataflow-full dataflow-incremental dataflow-ingest dataflow-extract
+.PHONY: help health deploy deploy-with-data populate-data extract-knowledge test-search test-backend test-frontend full-setup clean dev-backend dev-frontend
