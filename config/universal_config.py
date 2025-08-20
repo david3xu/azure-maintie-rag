@@ -67,7 +67,7 @@ class ModelConfig:
     """Azure OpenAI model configuration - infrastructure only"""
 
     # Model deployments (infrastructure)
-    primary_model: str = field(default_factory=lambda: os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o-mini"))
+    primary_model: str = field(default_factory=lambda: os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4.1-mini"))
     # NO FALLBACK MODELS - Production uses primary model only
     embedding_model: str = "text-embedding-ada-002"
 

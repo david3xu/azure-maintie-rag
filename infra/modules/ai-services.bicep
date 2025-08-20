@@ -7,9 +7,9 @@ param managedIdentityPrincipalId string
 
 // Single configuration - COST OPTIMIZED (MINIMAL CAPACITY per README)
 var config = {
-  miniCapacity: 1         // MINIMAL: Single capacity unit (per README line 36)
-  embeddingCapacity: 1    // MINIMAL: Single capacity unit (per README)
-  location: 'East US 2'   // Force East US 2 for better OpenAI quota availability in Azure for Students
+  miniCapacity: 10 // INCREASED: 10K TPM for dataflow pipeline (was 1 = 1K TPM)
+  embeddingCapacity: 10 // INCREASED: 10K TPM for vector embeddings (was 1 = 1K TPM)
+  location: 'East US 2' // Force East US 2 for better OpenAI quota availability in Azure for Students
 }
 
 // Azure OpenAI - Compatible with Azure for Students (S0 SKU requires special quota)
@@ -18,7 +18,7 @@ resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2024-04-01-prev
   location: config.location
   kind: 'OpenAI'
   sku: {
-    name: 'S0'  // Standard tier - use location with better quota availability
+    name: 'S0' // Standard tier - use location with better quota availability
   }
   properties: {
     customSubDomainName: 'ais-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
@@ -44,7 +44,7 @@ resource gpt41MiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   }
   sku: {
     name: 'GlobalStandard'
-    capacity: config.miniCapacity  // MINIMAL capacity per README
+    capacity: config.miniCapacity // MINIMAL capacity per README
   }
 }
 

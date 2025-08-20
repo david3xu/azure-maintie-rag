@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
+from azure.search.documents.indexes.models import SearchIndex, SearchField, SearchFieldDataType
 
 from config.settings import azure_settings
 from infrastructure.constants import SearchConstants
@@ -315,6 +316,114 @@ class SimpleSearchClient(BaseAzureClient):
 
         except Exception as e:
             return self.handle_azure_error("get_index_stats", e)
+
+    async def ensure_index_exists(self) -> Dict[str, Any]:
+        """Ensure the search index exists, create if missing - Reusable infrastructure method"""
+        try:
+            self.ensure_initialized()
+
+            # Check if index exists
+            try:
+                existing_index = self._index_client.get_index(self.index_name)
+                logger.info(f"Search index already exists: {self.index_name}")
+                return self.create_success_response(
+                    "ensure_index_exists",
+                    {
+                        "index_name": self.index_name,
+                        "status": "exists",
+                        "message": "Index already exists"
+                    }
+                )
+            except Exception:
+                # Index doesn't exist, create it
+                logger.info(f"Creating search index: {self.index_name}")
+                return await self._create_index()
+
+        except Exception as e:
+            return self.handle_azure_error("ensure_index_exists", e)
+
+    async def _create_index(self) -> Dict[str, Any]:
+        """Create the search index with proper schema for Universal RAG"""
+        try:
+            # Define universal document schema that works with any content type
+            fields = [
+                SearchField(
+                    name='id',
+                    type=SearchFieldDataType.String,
+                    key=True,
+                    sortable=True,
+                    filterable=True
+                ),
+                SearchField(
+                    name='content',
+                    type=SearchFieldDataType.String,
+                    searchable=True,
+                    filterable=False
+                ),
+                SearchField(
+                    name='title',
+                    type=SearchFieldDataType.String,
+                    searchable=True,
+                    filterable=True,
+                    sortable=True
+                ),
+                SearchField(
+                    name='filename',
+                    type=SearchFieldDataType.String,
+                    searchable=True,
+                    filterable=True,
+                    sortable=True
+                ),
+                # Universal metadata field for any additional data
+                SearchField(
+                    name='metadata',
+                    type=SearchFieldDataType.String,
+                    searchable=False,
+                    filterable=False
+                ),
+            ]
+
+            # Create the search index
+            index = SearchIndex(name=self.index_name, fields=fields)
+
+            result = self._index_client.create_index(index)
+            logger.info(f"Search index created successfully: {result.name}")
+
+            return self.create_success_response(
+                "_create_index",
+                {
+                    "index_name": result.name,
+                    "status": "created",
+                    "message": "Index created successfully"
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to create search index: {e}")
+            raise
+
+    async def list_indexes(self) -> Dict[str, Any]:
+        """List all indexes in the search service - Reusable infrastructure method"""
+        try:
+            self.ensure_initialized()
+
+            indexes = []
+            for index in self._index_client.list_indexes():
+                indexes.append({
+                    "name": index.name,
+                    "field_count": len(index.fields) if index.fields else 0
+                })
+
+            return self.create_success_response(
+                "list_indexes",
+                {
+                    "indexes": indexes,
+                    "count": len(indexes)
+                }
+            )
+
+        except Exception as e:
+            return self.handle_azure_error("list_indexes", e)
 
 
 # Backward compatibility aliases

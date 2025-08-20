@@ -391,15 +391,36 @@ class UnifiedAzureOpenAIClient(BaseAzureClient):
                     f"Azure OpenAI deployment not found: {model or prompts.model_name}. "
                     f"Available deployments should match Azure resource. Error: {e}"
                 )
-            # Check for rate limit
+            # Check for rate limit - implement retry logic
             elif "429" in str(e):
-                raise RuntimeError(f"Azure OpenAI rate limit exceeded. Wait and retry. Error: {e}")
+                logger.warning(f"Rate limit hit, implementing retry logic: {e}")
+                return await self._retry_with_backoff(
+                    self.complete_chat, messages, temperature, model, max_tokens, **kwargs
+                )
             # Check for authentication
             elif "401" in str(e) or "403" in str(e):
                 raise RuntimeError(f"Azure OpenAI authentication failed. Check API key. Error: {e}")
             else:
                 # For other errors, also fail fast
                 raise RuntimeError(f"Azure OpenAI chat completion failed: {e}")
+
+    async def _retry_with_backoff(self, func, *args, max_retries=3, base_delay=60, **kwargs):
+        """Retry function with exponential backoff for rate limits"""
+        for attempt in range(max_retries):
+            try:
+                if attempt > 0:
+                    delay = base_delay * (2 ** (attempt - 1))
+                    logger.info(f"Retrying after {delay}s (attempt {attempt + 1}/{max_retries})")
+                    await asyncio.sleep(delay)
+                
+                return await func(*args, **kwargs)
+                
+            except Exception as e:
+                if "429" in str(e) and attempt < max_retries - 1:
+                    continue
+                else:
+                    # Final attempt failed or non-rate-limit error
+                    raise RuntimeError(f"Azure OpenAI operation failed after {attempt + 1} attempts: {e}")
 
     # === TEXT PROCESSING ===
 

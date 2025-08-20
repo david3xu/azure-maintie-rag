@@ -129,7 +129,7 @@ class Settings(BaseSettings):
     )  # azd output
     openai_api_version: str = Field(default="2024-06-01", env="OPENAI_API_VERSION")
     openai_deployment_name: str = Field(
-        default="gpt-4o-mini", env="AZURE_OPENAI_DEPLOYMENT_NAME"
+        default="gpt-4.1-mini", env="AZURE_OPENAI_DEPLOYMENT_NAME"
     )  # azd output
     openai_model: str = Field(default="gpt-4", env="OPENAI_MODEL")
 
@@ -378,7 +378,7 @@ class Settings(BaseSettings):
 
     # GNN Training Pipeline Configuration
     azure_ml_compute_cluster: str = Field(
-        default="gnn-cluster", env="AZURE_ML_COMPUTE_CLUSTER"
+        default="compute-prod", env="AZURE_ML_COMPUTE_CLUSTER"
     )
     gnn_training_trigger_threshold: int = Field(
         default=100, env="GNN_TRAINING_TRIGGER_THRESHOLD"
@@ -418,7 +418,7 @@ class Settings(BaseSettings):
 
     # Azure ML GNN Training Configuration
     azure_ml_compute_cluster_name: str = Field(
-        default="gnn-cluster", env="AZURE_ML_COMPUTE_CLUSTER_NAME"
+        default="compute-prod", env="AZURE_ML_COMPUTE_CLUSTER_NAME"
     )
     azure_ml_training_environment: str = Field(
         default="gnn-training-env", env="AZURE_ML_TRAINING_ENVIRONMENT"
@@ -460,7 +460,7 @@ class Settings(BaseSettings):
             "storage_sku": "Standard_LRS",
             "cosmos_throughput": 400,
             "ml_compute_instances": 1,
-            "openai_tokens_per_minute": 10000,
+            "openai_tokens_per_minute": 100000,  # Increased for dataflow pipeline
             "telemetry_sampling_rate": 10.0,
             "retention_days": 30,
             "app_insights_sampling": 10.0,

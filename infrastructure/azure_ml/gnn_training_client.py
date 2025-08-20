@@ -112,7 +112,7 @@ class GNNTrainingClient(AzureMLClient):
             job_name = f"gnn-training-{int(time.time())}"
 
             # Use the simplest possible approach - create a minimal custom environment
-            compute_target = training_config.get("compute_target", "cluster-prod")
+            compute_target = training_config.get("compute_target", "compute-prod")
             logger.info(f"Target compute: {compute_target}")
 
             # Use Azure ML official curated environment (no custom conda)
@@ -142,7 +142,7 @@ print('Model saved to Azure ML workspace')
                 code=None,  # Use inline script only
                 command=training_command,
                 environment=environment_ref,  # Required field - use curated environment
-                compute=training_config.get("compute_target", "cluster-prod"),
+                compute=training_config.get("compute_target", "compute-prod"),
                 display_name=job_name,
                 description="Real GNN training job - Official Curated Environment",
                 tags={
@@ -164,7 +164,7 @@ print('Model saved to Azure ML workspace')
                 "studio_url": submitted_job.studio_url,
                 "workspace_name": workspace.name,
                 "environment_used": environment_ref,
-                "compute_target": training_config.get("compute_target", "cluster-prod"),
+                "compute_target": training_config.get("compute_target", "compute-prod"),
                 "training_type": "real_azure_ml_gnn_training",
             }
 

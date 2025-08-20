@@ -10,7 +10,7 @@ param appInsightsName string
 
 // Single configuration - CPU-ONLY OPTIMIZED (Azure for Students)
 var config = {
-  cosmosCapacityMode: 'Serverless'   // FREE: First 1M RU/s and 25GB storage/month
+  cosmosCapacityMode: 'Serverless' // FREE: First 1M RU/s and 25GB storage/month
   cosmosRU: 0
 }
 
@@ -31,21 +31,26 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
         isZoneRedundant: environmentName == 'production'
       }
     ]
-    capabilities: concat([
-      {
-        name: 'EnableGremlin'
-      }
-    ], config.cosmosCapacityMode == 'Serverless' ? [
-      {
-        name: 'EnableServerless'
-      }
-    ] : [])
+    capabilities: concat(
+      [
+        {
+          name: 'EnableGremlin'
+        }
+      ],
+      config.cosmosCapacityMode == 'Serverless'
+        ? [
+            {
+              name: 'EnableServerless'
+            }
+          ]
+        : []
+    )
     enableAutomaticFailover: environmentName == 'production'
     enableMultipleWriteLocations: false
     isVirtualNetworkFilterEnabled: false
     virtualNetworkRules: []
     ipRules: []
-    enableFreeTier: false  // DISABLE: Free tier already used in subscription
+    enableFreeTier: false // DISABLE: Free tier already used in subscription
     publicNetworkAccess: 'Enabled'
   }
   identity: {
@@ -72,52 +77,54 @@ resource gremlinDatabase 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases
 resource knowledgeGraphContainer 'Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs@2023-04-15' = {
   parent: gremlinDatabase
   name: 'knowledge-graph-${environmentName}'
-  properties: config.cosmosCapacityMode == 'Serverless' ? {
-    resource: {
-      id: 'knowledge-graph-${environmentName}'
-      partitionKey: {
-        paths: ['/partitionKey']
-        kind: 'Hash'
-      }
-      indexingPolicy: {
-        indexingMode: 'consistent'
-        includedPaths: [
-          {
-            path: '/*'
+  properties: config.cosmosCapacityMode == 'Serverless'
+    ? {
+        resource: {
+          id: 'knowledge-graph-${environmentName}'
+          partitionKey: {
+            paths: ['/partitionKey']
+            kind: 'Hash'
           }
-        ]
-        excludedPaths: [
-          {
-            path: '/"_etag"/?'
+          indexingPolicy: {
+            indexingMode: 'consistent'
+            includedPaths: [
+              {
+                path: '/*'
+              }
+            ]
+            excludedPaths: [
+              {
+                path: '/"_etag"/?'
+              }
+            ]
           }
-        ]
+        }
       }
-    }
-  } : {
-    resource: {
-      id: 'knowledge-graph-${environmentName}'
-      partitionKey: {
-        paths: ['/partitionKey']
-        kind: 'Hash'
-      }
-      indexingPolicy: {
-        indexingMode: 'consistent'
-        includedPaths: [
-          {
-            path: '/*'
+    : {
+        resource: {
+          id: 'knowledge-graph-${environmentName}'
+          partitionKey: {
+            paths: ['/partitionKey']
+            kind: 'Hash'
           }
-        ]
-        excludedPaths: [
-          {
-            path: '/"_etag"/?'
+          indexingPolicy: {
+            indexingMode: 'consistent'
+            includedPaths: [
+              {
+                path: '/*'
+              }
+            ]
+            excludedPaths: [
+              {
+                path: '/"_etag"/?'
+              }
+            ]
           }
-        ]
+        }
+        options: {
+          throughput: config.cosmosRU
+        }
       }
-    }
-    options: {
-      throughput: config.cosmosRU
-    }
-  }
 }
 
 // RBAC assignments for managed identity
@@ -125,7 +132,10 @@ resource managedIdentityCosmosContributor 'Microsoft.Authorization/roleAssignmen
   scope: cosmosAccount
   name: guid(cosmosAccount.id, managedIdentityPrincipalId, 'Cosmos DB Built-in Data Contributor')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '00482a5a-887f-4fb3-b363-3b7fe8e74483'
+    )
     principalId: managedIdentityPrincipalId
     principalType: 'ServicePrincipal'
   }
@@ -136,7 +146,10 @@ resource cosmosContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' 
   scope: cosmosAccount
   name: guid(cosmosAccount.id, principalId, 'Cosmos DB Built-in Data Contributor')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '00482a5a-887f-4fb3-b363-3b7fe8e74483'
+    )
     principalId: principalId
     principalType: 'User'
   }
@@ -182,7 +195,7 @@ resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' =
     keyVault: resourceId('Microsoft.KeyVault/vaults', keyVaultName)
     applicationInsights: resourceId('Microsoft.Insights/components', appInsightsName)
     publicNetworkAccess: 'Enabled'
-    imageBuildCompute: 'ml-cluster-${environmentName}'
+    imageBuildCompute: 'compute-${environmentName}'
   }
   identity: {
     type: 'SystemAssigned'
@@ -201,7 +214,10 @@ resource managedIdentityMLContributor 'Microsoft.Authorization/roleAssignments@2
   scope: mlWorkspace
   name: guid(mlWorkspace.id, managedIdentityPrincipalId, 'AzureML Data Scientist')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')  // AzureML Data Scientist
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'f6c7c914-8db3-469d-8ca1-694a8f32e121'
+    ) // AzureML Data Scientist
     principalId: managedIdentityPrincipalId
     principalType: 'ServicePrincipal'
   }
@@ -212,7 +228,10 @@ resource mlDataScientist 'Microsoft.Authorization/roleAssignments@2022-04-01' = 
   scope: mlWorkspace
   name: guid(mlWorkspace.id, principalId, 'AzureML Data Scientist')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'f6c7c914-8db3-469d-8ca1-694a8f32e121')  // AzureML Data Scientist
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'f6c7c914-8db3-469d-8ca1-694a8f32e121'
+    ) // AzureML Data Scientist
     principalId: principalId
     principalType: 'User'
   }
@@ -223,6 +242,8 @@ output cosmosAccountName string = cosmosAccount.name
 output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
 output cosmosResourceId string = cosmosAccount.id
 output cosmosGremlinEndpoint string = 'wss://${cosmosAccount.name}.gremlin.cosmos.azure.com:443/'
+@secure()
+output cosmosKey string = cosmosAccount.listKeys().primaryMasterKey
 
 output gremlinDatabaseName string = gremlinDatabase.name
 output knowledgeGraphName string = knowledgeGraphContainer.name
@@ -231,5 +252,5 @@ output knowledgeGraphName string = knowledgeGraphContainer.name
 output mlWorkspaceName string = mlWorkspace.name
 output mlWorkspaceId string = mlWorkspace.id
 output mlWorkspaceEndpoint string = 'https://${mlWorkspace.name}.api.azureml.ms'
-output mlComputeClusterName string = 'ml-cluster-${environmentName}'  // Placeholder - compute not deployed due to quota
-output mlComputeInstanceName string = 'ml-instance-${environmentName}'  // Placeholder - compute not deployed due to quota
+output mlComputeClusterName string = 'compute-${environmentName}' // Placeholder - compute not deployed due to quota
+output mlComputeInstanceName string = 'ml-instance-${environmentName}' // Placeholder - compute not deployed due to quota

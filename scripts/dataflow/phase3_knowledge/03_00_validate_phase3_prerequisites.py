@@ -368,10 +368,11 @@ async def validate_agent1_readiness() -> Tuple[bool, Dict[str, Any]]:
 async def save_validation_results(results: Dict[str, Any]) -> None:
     """Save validation results for Phase 3 consumption"""
 
-    output_file = Path(
-        "/workspace/azure-maintie-rag/scripts/dataflow/results/phase3_prerequisites_validation.json"
-    )
-    output_file.parent.mkdir(exist_ok=True)
+    # Use path_utils for consistent path resolution across environments
+    from scripts.dataflow.utilities.path_utils import get_results_dir
+
+    results_dir = get_results_dir()
+    output_file = results_dir / "phase3_prerequisites_validation.json"
 
     try:
         with open(output_file, "w", encoding="utf-8") as f:

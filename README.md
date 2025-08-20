@@ -1,10 +1,68 @@
 # Azure Universal RAG
 
-**Production-Grade Multi-Agent Azure Universal RAG System**
+**Production-Grade Multi-Agent Azure Universal RAG System with Zero Domain Bias**
 
-[![Azure](https://img.shields.io/badge/Azure-Universal%20RAG-blue)](https://azure.microsoft.com) [![Deployment](https://img.shields.io/badge/Status-Production%20Ready-green)](#deployment-ready) [![PydanticAI](https://img.shields.io/badge/Framework-PydanticAI-purple)](#multi-agent-system) [![Architecture](https://img.shields.io/badge/Architecture-Multi%20Agent-orange)](#architecture)
+[![Azure](https://img.shields.io/badge/Azure-Universal%20RAG-blue)](https://azure.microsoft.com) [![Deployment](https://img.shields.io/badge/Status-Production%20Ready-green)](#deployment-ready) [![PydanticAI](https://img.shields.io/badge/Framework-PydanticAI-purple)](#multi-agent-system) [![Architecture](https://img.shields.io/badge/Architecture-Multi%20Agent-orange)](#architecture) [![Testing](https://img.shields.io/badge/Testing-6%20Phase%20Pipeline-green)](#testing)
+
+> **🎯 Core Philosophy**: Zero hardcoded domain assumptions - adapts to ANY content type through data-driven discovery using 3 specialized PydanticAI agents and mandatory tri-modal search.
+
+## 🏗️ **System Architecture**
+
+### **🤖 Three PydanticAI Agents**
+
+1. **🌍 Domain Intelligence Agent** - Discovers content characteristics without domain assumptions
+2. **📚 Knowledge Extraction Agent** - Extracts entities/relationships using Agent 1's analysis
+3. **🔍 Universal Search Agent** - Orchestrates mandatory tri-modal search (Vector + Graph + GNN)
+
+### **🔄 Agent Communication Flow**
+
+```
+User Content → Domain Intelligence → Content Analysis
+                        ↓                    ↓
+               Knowledge Extraction ←─────────┘
+                        ↓
+               Universal Search (Vector + Graph + GNN)
+                        ↓
+               Unified Results
+```
+
+### **☁️ Azure Services Integration**
+
+- **Azure OpenAI** - LLM analysis and completion
+- **Azure Cognitive Search** - Vector similarity search
+- **Azure Cosmos DB Gremlin** - Graph database storage
+- **Azure Machine Learning** - GNN inference
+- **Azure Storage, Key Vault, Monitoring** - Supporting services
 
 ## 🚀 Quick Start
+
+## 📝 **Documentation Structure**
+
+- **[`README.md`](README.md)** - Main project overview and quick start
+- **[`CLAUDE.md`](CLAUDE.md)** - Comprehensive development guide for Claude Code
+- **[`agents/README.md`](agents/README.md)** - Deep agent architecture and interaction patterns
+- **[`scripts/dataflow/README.md`](scripts/dataflow/README.md)** - 6-phase testing pipeline documentation
+- **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** - Detailed system architecture
+- **[`infra/README.md`](infra/README.md)** - Azure infrastructure and deployment
+
+## 🧪 **Testing Infrastructure**
+
+### **6-Phase Testing Pipeline**
+
+```bash
+# Complete testing pipeline
+make dataflow-full-progress     # All phases with progress tracking
+
+# Individual phase testing
+make dataflow-validate          # Phase 1: Agent validation
+make dataflow-ingest            # Phase 2: Data ingestion
+make dataflow-extract           # Phase 3: Knowledge extraction
+make dataflow-query             # Phase 4: Query pipeline
+make dataflow-integrate         # Phase 5: Integration testing
+make dataflow-advanced          # Phase 6: Advanced features
+```
+
+**Testing Philosophy**: 💪 Real Azure services only, no mocks, no fallbacks - follows strict fail-fast principles.
 
 ### **⚡ Essential Commands (Production Ready)**
 
@@ -19,7 +77,7 @@ azd deploy                                  # Rebuild containers with latest cod
 make deploy-with-data                       # Deploy with updated containers + automated pipeline
 
 # Option 2: GitHub Actions CI/CD (For environments without Docker)
-azd pipeline config                         # Setup automated container builds  
+azd pipeline config                         # Setup automated container builds
 git push                                    # Trigger rebuild with admin API
 make deploy-with-data                       # Deploy with updated containers
 
@@ -65,12 +123,14 @@ make dataflow-full                          # Complete any remaining pipeline ph
 ```
 
 **Why authentication validation is critical:**
+
 - **University/Enterprise Azure AD** enforces 1-24 hour token lifetimes
 - **Pipeline duration**: 7-20 minutes (can outlast tokens)
 - **Deployment includes**: Infrastructure (2-5 min) + Data pipeline (7-20 min)
 - **Fail-fast design**: System aborts rather than using fallback logic
 
 **Enhanced deployment commands automatically:**
+
 - ✅ Validate authentication before starting long operations
 - ✅ Provide specific guidance for token expiration
 - ✅ Abort with clear instructions rather than partial failures
@@ -93,7 +153,7 @@ https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag  #
 curl -X POST "https://ca-backend-maintie-rag-prod.<region>.azurecontainerapps.io/api/v1/rag" \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Azure AI language services capabilities", 
+    "query": "Azure AI language services capabilities",
     "max_results": 5,
     "max_tokens": 800,
     "use_domain_analysis": true,
@@ -150,7 +210,7 @@ azd up  # defaults to infrastructure only for backward compatibility
 # ✅ Safe to run multiple times - updates existing resources
 
 # Services Created (9 total):
-# ✅ Azure OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault, 
+# ✅ Azure OpenAI, Cognitive Search, Cosmos DB, Storage, ML, Key Vault,
 # ✅ Application Insights, Log Analytics, Container Apps
 ```
 
@@ -160,7 +220,7 @@ azd up  # defaults to infrastructure only for backward compatibility
 
 ```bash
 azd up                     # Creates infrastructure
-make deploy                # Alias for make deploy-with-data  
+make deploy                # Alias for make deploy-with-data
 make deploy-with-data      # Calls azd up + data pipeline
 make deploy-infrastructure-only  # Calls azd provision only
 
@@ -169,8 +229,9 @@ make deploy-infrastructure-only  # Calls azd provision only
 ```
 
 **What the automated pipeline does (when `AUTO_POPULATE_DATA=true`):**
+
 - 🏗️ **Infrastructure**: Deploy 9 Azure services with RBAC
-- 🧹 **Phase 0**: Clean all Azure services (Cosmos DB, Search, Storage) 
+- 🧹 **Phase 0**: Clean all Azure services (Cosmos DB, Search, Storage)
 - 🧪 **Phase 1**: Validate all 3 PydanticAI agents are working
 - 📥 **Phase 2**: Upload docs + create embeddings + build search indexes
 - 🧠 **Phase 3**: Run Agent 1 once to analyze all docs + build knowledge graph
@@ -182,7 +243,7 @@ make deploy-infrastructure-only  # Calls azd provision only
 When you run `make deploy-with-data`, here's what happens step-by-step:
 
 1. ✅ **Authentication validation** - Will pass (user has fresh tokens)
-2. ✅ **Phase 0: Cleanup** - Will use Azure CLI credentials correctly  
+2. ✅ **Phase 0: Cleanup** - Will use Azure CLI credentials correctly
 3. ✅ **Phase 1: Agent validation** - Will connect to agents properly
 4. ✅ **Phase 2: Data ingestion** - Will find data files in correct location (LIMITED by free tier)
 5. ✅ **Phase 3: Knowledge extraction** - Will create results in proper directory (GPT-4o-mini)
@@ -192,12 +253,14 @@ When you run `make deploy-with-data`, here's what happens step-by-step:
 **Cost Optimization**: Using free tiers and minimal configurations to save costs
 
 **Success Indicators:**
+
 - All phases show "✅ Phase X completed" messages
 - No "❌" authentication errors during execution
 - Final message: "🎉 COMPLETE 6-PHASE PIPELINE EXECUTED"
 - Session reports created in `logs/dataflow_execution_*.md`
 
 **If Issues Occur:**
+
 - Authentication expired: `az login && azd auth login`, then retry
 - Pipeline incomplete: Run `make dataflow-full` to complete remaining phases
 - Check logs: `make session-report` for detailed execution reports
@@ -626,6 +689,7 @@ curl $SERVICE_BACKEND_URI/api/v1/query \
 The Azure Universal RAG system orchestrates **3 specialized PydanticAI agents** that work together to provide intelligent document processing with **zero hardcoded domain bias**.
 
 #### **🧠 Agent 1: Domain Intelligence Agent**
+
 **Purpose**: Dynamically discovers content characteristics without predetermined categories
 
 ```python
@@ -642,12 +706,14 @@ print(f"Optimal chunk size: {analysis.processing_config.chunk_size}")
 ```
 
 **What it does**:
+
 - ✅ **Statistical analysis** of content distribution and patterns
-- ✅ **Vocabulary complexity measurement** without language assumptions  
+- ✅ **Vocabulary complexity measurement** without language assumptions
 - ✅ **Adaptive configuration generation** for downstream agents
 - ✅ **Zero domain categories** - discovers characteristics from actual data
 
-#### **📚 Agent 2: Knowledge Extraction Agent**  
+#### **📚 Agent 2: Knowledge Extraction Agent**
+
 **Purpose**: Extracts entities and relationships using Domain Intelligence insights
 
 ```python
@@ -655,7 +721,7 @@ from agents.knowledge_extraction.agent import run_knowledge_extraction
 
 # Uses Domain Intelligence output to adapt extraction approach
 extraction_result = await run_knowledge_extraction(
-    content, 
+    content,
     use_domain_analysis=True,  # Adapts based on Agent 1 findings
     use_generated_prompts=True  # Dynamic prompts from domain analysis
 )
@@ -666,15 +732,17 @@ print(f"Confidence: {extraction_result.extraction_confidence}")
 ```
 
 **What it does**:
+
 - ✅ **Multi-method extraction**: LLM + Pattern + Hybrid approaches
 - ✅ **Domain-adaptive parameters** from Agent 1 analysis
 - ✅ **Real-time Cosmos DB storage** via Gremlin API
 - ✅ **Quality validation** with confidence scoring
 
 #### **🔍 Agent 3: Universal Search Agent**
+
 **Purpose**: Orchestrates mandatory tri-modal search (Vector + Graph + GNN)
 
-```python  
+```python
 from agents.universal_search.agent import run_universal_search
 
 # Mandatory tri-modal search - ALL three modalities required
@@ -686,11 +754,12 @@ search_result = await run_universal_search(
 
 print(f"Strategy: {search_result.search_strategy_used}")  # "adaptive_mandatory_tri_modal"
 print(f"Vector results: {len(search_result.vector_results)}")
-print(f"Graph results: {len(search_result.graph_results)}")  
+print(f"Graph results: {len(search_result.graph_results)}")
 print(f"GNN results: {len(search_result.gnn_results)}")
 ```
 
 **What it does**:
+
 - ✅ **Vector Search**: Azure Cognitive Search with 1536D embeddings
 - ✅ **Graph Search**: Cosmos DB Gremlin traversal with Agent 2 knowledge graphs
 - ✅ **GNN Inference**: Azure ML Graph Neural Network predictions
@@ -702,30 +771,30 @@ print(f"GNN results: {len(search_result.gnn_results)}")
 graph TD
     A[User Query] --> B[🧠 Domain Intelligence Agent]
     B --> B1[Analyze Content Characteristics]
-    B1 --> B2[Generate Domain Signature]  
+    B1 --> B2[Generate Domain Signature]
     B2 --> B3[Create Adaptive Configuration]
-    
+
     B3 --> C[📚 Knowledge Extraction Agent]
     C --> C1[Multi-Method Entity Extraction]
     C1 --> C2[Relationship Discovery]
     C2 --> C3[Store in Knowledge Graph]
-    
+
     B3 --> D[🔍 Universal Search Agent]
     C3 --> D
     D --> D1[🔍 Vector Search - Azure Cognitive Search]
-    D --> D2[🕸️ Graph Search - Cosmos DB Gremlin]  
+    D --> D2[🕸️ Graph Search - Cosmos DB Gremlin]
     D --> D3[🧠 GNN Inference - Azure ML]
-    
+
     D1 --> E[⚗️ Intelligent Result Synthesis]
     D2 --> E
     D3 --> E
     E --> F[🤖 Azure OpenAI Answer Generation]
     F --> G[📄 Complete RAG Response]
-    
+
     classDef agent fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px
     classDef process fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
     classDef output fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    
+
     class B,C,D agent
     class B1,B2,B3,C1,C2,C3,D1,D2,D3,E,F process
     class G output
@@ -740,14 +809,14 @@ Here's how the agents collaborate with **real Azure services** in production:
 async def complete_rag_workflow(user_query: str, content: str):
     # Step 1: Domain Intelligence discovers content characteristics
     domain_analysis = await run_domain_analysis(content, detailed=True)
-    
-    # Step 2: Knowledge Extraction adapts to discovered characteristics  
+
+    # Step 2: Knowledge Extraction adapts to discovered characteristics
     extraction_result = await run_knowledge_extraction(
         content,
         use_domain_analysis=True,
         processing_config=domain_analysis.processing_config  # Agent 1 → Agent 2
     )
-    
+
     # Step 3: Universal Search uses both previous agents' outputs
     search_result = await run_universal_search(
         user_query,
@@ -756,7 +825,7 @@ async def complete_rag_workflow(user_query: str, content: str):
         search_weights=domain_analysis.processing_config.search_weights,  # Agent 1 → Agent 3
         knowledge_graph=extraction_result.graph_metadata  # Agent 2 → Agent 3
     )
-    
+
     # Step 4: Azure OpenAI generates final answer
     return {
         "generated_answer": search_result.generated_answer,
@@ -771,12 +840,14 @@ async def complete_rag_workflow(user_query: str, content: str):
 ### **🔧 Agent Communication Patterns**
 
 **Inter-Agent Data Flow:**
+
 1. **Domain Intelligence → Knowledge Extraction**: Adaptive processing parameters
-2. **Domain Intelligence → Universal Search**: Search strategy and weights  
+2. **Domain Intelligence → Universal Search**: Search strategy and weights
 3. **Knowledge Extraction → Universal Search**: Populated knowledge graphs
 4. **All Agents → API Response**: Unified results with complete provenance
 
 **Real Implementation Benefits:**
+
 - ✅ **Zero hardcoded assumptions** - each agent discovers/adapts dynamically
 - ✅ **Real Azure service integration** - no mocks or simulations
 - ✅ **Type-safe communication** - Pydantic models ensure data consistency
@@ -1081,27 +1152,29 @@ az group delete --name rg-maintie-rag-prod --yes --no-wait
 ### **Why azd down Fails**
 
 ❌ **Standard azd down is fundamentally broken:**
+
 - Generates NEW deployment name `prod-{current-timestamp}`
 - Searches for that newly generated name (which never existed)
 - Fails because it looks for wrong deployment
 - Cannot delete deployments from previous sessions
 
 ✅ **Fixed script works because it:**
+
 - Finds actual resource groups regardless of deployment patterns
 - Deletes real Azure resources directly
 - Works with any deployment method (azd up, make deploy, etc.)
 
 ### **What Gets Deleted**
 
-✅ **ALL Azure resources** in the resource group  
-✅ **Resource group itself** (complete cleanup)  
-✅ **Local azd state** cleaned automatically  
-✅ **All associated costs stopped** immediately  
+✅ **ALL Azure resources** in the resource group
+✅ **Resource group itself** (complete cleanup)
+✅ **Local azd state** cleaned automatically
+✅ **All associated costs stopped** immediately
 
 ### **Deletion Time & Cost Savings**
 
 - **Deletion time**: 2-5 minutes (much faster than creation)
-- **Cost after deletion**: $0 (all resources removed)  
+- **Cost after deletion**: $0 (all resources removed)
 - **Verification**: Script monitors deletion progress
 - **Safety**: Confirmation prompts protect against accidents
 
@@ -1124,6 +1197,7 @@ az resource list --resource-group "rg-maintie-rag-*" --output table
 ### **Common Enterprise/University Environment Issues**
 
 **Authentication Token Expiration:**
+
 ```bash
 # Symptoms: Pipeline fails mid-execution, "authentication expired" errors
 # Cause: University/Enterprise Azure AD short token lifetimes (1-24 hours)
@@ -1134,6 +1208,7 @@ make deploy-with-data                       # Retry with fresh tokens
 ```
 
 **Pipeline Phases Not Completing:**
+
 ```bash
 # Symptoms: Infrastructure deployed but no data populated
 # Cause: Authentication expired during postdeploy hook
@@ -1143,6 +1218,7 @@ make dataflow-full                          # Complete remaining phases manually
 ```
 
 **Azure Service Connection Failures:**
+
 ```bash
 # Symptoms: "DefaultAzureCredential failed" errors
 # Cause: Mismatched authentication contexts
@@ -1152,6 +1228,7 @@ az account set --subscription <id>         # Ensure consistent subscription
 ```
 
 **GNN Search Returns Empty Results:**
+
 ```bash
 # Symptoms: Vector and Graph work, but GNN returns no results
 # Cause: GNN models still training asynchronously (expected initially)

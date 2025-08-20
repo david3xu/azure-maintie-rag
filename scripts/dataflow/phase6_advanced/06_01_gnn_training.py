@@ -22,9 +22,9 @@ from pathlib import Path
 from typing import Any, Dict
 
 # Add project root to path for imports
-sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
-from config.settings import azure_settings
+from config.azure_settings import azure_settings
 from infrastructure.azure_cosmos.cosmos_gremlin_client import SimpleCosmosGremlinClient
 from infrastructure.azure_ml.ml_client import AzureMLClient
 
@@ -38,7 +38,8 @@ class ProductionGNNTrainingOrchestrator:
     def __init__(self):
         """Initialize production GNN training orchestrator."""
         self.ml_client = AzureMLClient()
-        self.cosmos_client = SimpleCosmosGremlinClient()
+        # Don't initialize cosmos_client here - get it from UniversalDeps with proper credentials
+        self.cosmos_client = None
         logger.info("🧠 Production GNN Training Orchestrator initialized")
 
     async def submit_gnn_training_job(
@@ -53,9 +54,9 @@ class ProductionGNNTrainingOrchestrator:
                 raise RuntimeError("Azure ML workspace not available")
 
             from azure.ai.ml import command
-            
+
             job_name = f"gnn-production-{int(time.time())}"
-            
+
             # Use stable curated environment (no container issues)
             environment_ref = "azureml://registries/azureml/environments/AzureML-sklearn-1.0-ubuntu20.04-py38-cpu/versions/1"
 
@@ -63,7 +64,7 @@ class ProductionGNNTrainingOrchestrator:
             graph_data = await self._extract_graph_data(domain)
             node_count = graph_data.get("summary", {}).get("node_count", 0)
             edge_count = graph_data.get("summary", {}).get("edge_count", 0)
-            
+
             logger.info(f"📊 Training on real graph: {node_count} nodes, {edge_count} edges")
 
             # Create proper Azure ML training command with REAL Azure storage outputs
@@ -168,7 +169,7 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
                 tags={
                     "training_type": "production_gnn",
                     "domain": domain,
-                    "compute_type": "instance", 
+                    "compute_type": "instance",
                     "graph_nodes": str(node_count),
                     "graph_edges": str(edge_count),
                     "version": "production_v1",
@@ -197,7 +198,7 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
 
             logger.info(f"✅ Production GNN job submitted: {submitted_job.name}")
             logger.info(f"🌐 Azure ML Studio: {submitted_job.studio_url}")
-            
+
             return result
 
         except Exception as e:
@@ -207,23 +208,29 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
     async def _extract_graph_data(self, domain: str) -> Dict[str, Any]:
         """Extract real graph data from Cosmos DB."""
         logger.info(f"🔍 Extracting graph data for domain: {domain}")
-        
+
         try:
+            # Get cosmos client from UniversalDeps with proper credentials
+            if not self.cosmos_client:
+                from agents.core.universal_deps import get_universal_deps
+                deps = await get_universal_deps()
+                self.cosmos_client = deps.cosmos_client
+
             # Query real Cosmos DB for graph structure
             nodes_query = "g.V().project('id', 'label', 'properties').by(id).by(label).by(valueMap())"
             nodes = await self.cosmos_client.execute_query(nodes_query)
-            
+
             edges_query = "g.E().project('id', 'label', 'inV', 'outV', 'properties').by(id).by(label).by(inV().id()).by(outV().id()).by(valueMap())"
             edges = await self.cosmos_client.execute_query(edges_query)
-            
+
             nodes_list = nodes if isinstance(nodes, list) else []
             edges_list = edges if isinstance(edges, list) else []
-            
+
             node_count = len(nodes_list)
             edge_count = len(edges_list)
-            
+
             logger.info(f"📊 Real graph: {node_count} nodes, {edge_count} edges")
-            
+
             return {
                 "success": True,
                 "nodes": nodes_list,
@@ -234,7 +241,7 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
                     "domain": domain
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"❌ Graph extraction error: {e}")
             # Fallback for demo
@@ -247,10 +254,10 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
     async def monitor_training(self, job_id: str) -> Dict[str, Any]:
         """Monitor production training job."""
         logger.info(f"📊 Monitoring production training: {job_id}")
-        
+
         try:
             job = self.ml_client.ml_client.jobs.get(job_id)
-            
+
             result = {
                 "success": True,
                 "job_id": job.name,
@@ -258,7 +265,7 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
                 "studio_url": job.studio_url,
                 "creation_time": str(job.creation_context.created_at) if job.creation_context else None
             }
-            
+
             # REAL Azure ML job status - NO fake metrics until job actually completes
             if job.status == "Completed":
                 logger.info(f"✅ Job {job.status} - REAL training completed, proceeding to model registration")
@@ -270,9 +277,9 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
             else:
                 logger.error(f"❌ Job {job.status} - Training failed or in error state")
                 result["ready_for_registration"] = False
-                
+
             return result
-            
+
         except Exception as e:
             logger.error(f"❌ Monitoring failed: {e}")
             return {"success": False, "error": str(e)}
@@ -280,12 +287,12 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
     async def register_completed_model(self, job_id: str, domain: str) -> Dict[str, Any]:
         """Register REAL trained model from completed Azure ML job using the GNNTrainingClient."""
         logger.info(f"📝 Registering REAL model from completed job: {job_id}")
-        
+
         try:
             # Use the existing GNNTrainingClient's register_trained_model method
             from infrastructure.azure_ml.gnn_training_client import GNNTrainingClient
             gnn_client = GNNTrainingClient()
-            
+
             # Prepare model metadata for registration
             model_metadata = {
                 "model_name": f"gnn-{domain}-{int(time.time())}",
@@ -301,10 +308,10 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
                     "graph_domain": domain
                 }
             }
-            
+
             # Register the model using the existing infrastructure
             registration_result = await gnn_client.register_trained_model(job_id, model_metadata)
-            
+
             # Handle different response formats (async bootstrap vs. completed registration)
             if registration_result.get("registration_status") == "pending_model_output":
                 # This is async bootstrap - model not yet available
@@ -330,7 +337,7 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
                     "training_job": registration_result.get("training_job_id", job_id),
                     "domain": domain
                 }
-            
+
         except Exception as e:
             logger.error(f"❌ REAL model registration failed: {e}")
             # QUICK FAIL - NO fallback for model registration
@@ -339,7 +346,7 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
     async def create_inference_endpoint(self, model_name: str, model_version: str, domain: str) -> Dict[str, Any]:
         """Create REAL Azure ML online endpoint for GNN inference."""
         logger.info(f"🌐 Creating REAL inference endpoint for model: {model_name}:{model_version}")
-        
+
         try:
             # Import required Azure ML components for REAL endpoint creation
             import os
@@ -354,7 +361,7 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
 
             # Create REAL managed online endpoint
             endpoint_name = f"gnn-{domain}-endpoint-{int(time.time())}"
-            
+
             endpoint = ManagedOnlineEndpoint(
                 name=endpoint_name,
                 description=f"Production GNN inference endpoint for {domain}",
@@ -365,18 +372,18 @@ ls -la outputs/ || echo "❌ Azure ML output directory not found - training fail
                     "service_type": "gnn_inference"
                 }
             )
-            
+
             # Create endpoint in REAL Azure ML
             logger.info(f"🚀 Creating REAL endpoint: {endpoint_name}")
             created_endpoint = self.ml_client.ml_client.online_endpoints.begin_create_or_update(endpoint).result()
-            
+
             logger.info(f"✅ REAL endpoint created: {created_endpoint.name}")
             logger.info(f"📊 Scoring URI: {created_endpoint.scoring_uri}")
-            
+
             # Create simple scoring script for the deployment
             temp_dir = tempfile.mkdtemp()
             score_file = os.path.join(temp_dir, "score.py")
-            
+
             # Simple scoring script that returns GNN predictions
             score_script = f'''import json
 import logging
@@ -393,7 +400,7 @@ def run(raw_data):
     try:
         data = json.loads(raw_data)
         request_type = data.get("request_type", "universal_prediction")
-        
+
         if request_type == "universal_prediction":
             predictions = [{{
                 "node_id": "gnn_prediction_1",
@@ -405,30 +412,30 @@ def run(raw_data):
             return json.dumps({{"predictions": predictions, "endpoint_source": "real_azure_ml_endpoint"}})
         else:
             return json.dumps({{"error": f"Unknown request type: {{request_type}}"}})
-            
+
     except Exception as e:
         return json.dumps({{"error": str(e)}})
 '''
-            
+
             with open(score_file, 'w') as f:
                 f.write(score_script)
-            
+
             logger.info(f"📄 Created scoring script at: {score_file}")
-            
+
             # Use a standard curated environment for deployment
             environment = "azureml://registries/azureml/environments/sklearn-1.5/versions/1"
-            
+
             # Create REAL deployment for the registered model
             deployment_name = "default"
-            
+
             # Create code configuration for deployment
             from azure.ai.ml.entities import CodeConfiguration
-            
+
             code_config = CodeConfiguration(
                 code=temp_dir,
                 scoring_script="score.py"
             )
-            
+
             deployment = ManagedOnlineDeployment(
                 name=deployment_name,
                 endpoint_name=endpoint_name,
@@ -442,23 +449,23 @@ def run(raw_data):
                     "MODEL_TYPE": "gnn_universal_rag"
                 }
             )
-            
+
             # Deploy to REAL Azure ML endpoint
             logger.info(f"📤 Creating REAL deployment: {deployment_name}")
             created_deployment = self.ml_client.ml_client.online_deployments.begin_create_or_update(deployment).result()
-            
+
             logger.info(f"✅ REAL deployment created: {created_deployment.name}")
-            
+
             # Set traffic to 100% for the new deployment
             created_endpoint.traffic = {deployment_name: 100}
             self.ml_client.ml_client.online_endpoints.begin_create_or_update(created_endpoint).result()
-            
+
             logger.info(f"🎯 Traffic routed to deployment: {deployment_name}")
-            
+
             # Clean up temp directory
             import shutil
             shutil.rmtree(temp_dir)
-            
+
             return {
                 "success": True,
                 "endpoint_name": created_endpoint.name,
@@ -468,7 +475,7 @@ def run(raw_data):
                 "instance_type": "Standard_DS3_v2",
                 "domain": domain
             }
-            
+
         except Exception as e:
             logger.error(f"❌ REAL endpoint creation failed: {e}")
             # QUICK FAIL - NO fallback for endpoint creation
@@ -477,17 +484,17 @@ def run(raw_data):
     async def complete_training_pipeline(self, job_id: str, domain: str) -> Dict[str, Any]:
         """Complete the REAL training pipeline: register model + create endpoint."""
         logger.info(f"🔄 Completing REAL training pipeline for job: {job_id}")
-        
+
         try:
             # Step 1: Verify training completion
             job_status = await self.monitor_training(job_id)
             if not job_status.get("ready_for_registration"):
                 raise RuntimeError(f"Job {job_id} not ready for registration - status: {job_status.get('status')}")
-            
+
             # Step 2: Register REAL model
             logger.info("📝 Step 2: Registering REAL trained model...")
             model_result = await self.register_completed_model(job_id, domain)
-            
+
             # Step 3: Create REAL inference endpoint
             logger.info("🌐 Step 3: Creating REAL inference endpoint...")
             endpoint_result = await self.create_inference_endpoint(
@@ -495,7 +502,7 @@ def run(raw_data):
                 model_result["model_version"],
                 domain
             )
-            
+
             # Return complete pipeline result
             return {
                 "success": True,
@@ -506,7 +513,7 @@ def run(raw_data):
                 "domain": domain,
                 "production_ready": True
             }
-            
+
         except Exception as e:
             logger.error(f"❌ REAL training pipeline completion failed: {e}")
             # QUICK FAIL - NO partial success patterns
@@ -515,14 +522,14 @@ def run(raw_data):
     async def discover_existing_models(self, domain: str) -> Dict[str, Any]:
         """Discover existing GNN models and deployments for the domain."""
         logger.info(f"🔍 Discovering existing GNN models for domain: {domain}")
-        
+
         try:
             # Get all models with GNN tags
             models = self.ml_client.ml_client.models.list()
             gnn_models = []
-            
+
             for model in models:
-                if (hasattr(model, 'tags') and model.tags and 
+                if (hasattr(model, 'tags') and model.tags and
                     model.tags.get('model_type') == 'gnn_universal_rag' and
                     model.tags.get('domain') == domain):
                     gnn_models.append({
@@ -531,13 +538,13 @@ def run(raw_data):
                         'creation_time': str(model.creation_context.created_at) if model.creation_context else None,
                         'training_job': model.tags.get('training_job', 'unknown')
                     })
-            
+
             # Get all endpoints with GNN deployments
             endpoints = self.ml_client.ml_client.online_endpoints.list()
             gnn_endpoints = []
-            
+
             for endpoint in endpoints:
-                if (hasattr(endpoint, 'tags') and endpoint.tags and 
+                if (hasattr(endpoint, 'tags') and endpoint.tags and
                     endpoint.tags.get('service_type') == 'gnn_inference' and
                     endpoint.tags.get('domain') == domain):
                     gnn_endpoints.append({
@@ -546,13 +553,13 @@ def run(raw_data):
                         'provisioning_state': endpoint.provisioning_state,
                         'model': endpoint.tags.get('model', 'unknown')
                     })
-            
+
             # Get completed training jobs
             jobs = self.ml_client.ml_client.jobs.list()
             completed_jobs = []
-            
+
             for job in jobs:
-                if (hasattr(job, 'tags') and job.tags and 
+                if (hasattr(job, 'tags') and job.tags and
                     job.tags.get('training_type') == 'production_gnn' and
                     job.tags.get('domain') == domain and
                     job.status == 'Completed'):
@@ -562,7 +569,7 @@ def run(raw_data):
                         'completion_time': str(job.creation_context.created_at) if job.creation_context else None,
                         'studio_url': job.studio_url
                     })
-            
+
             discovery_result = {
                 'domain': domain,
                 'existing_models': gnn_models,
@@ -574,10 +581,10 @@ def run(raw_data):
                 'has_deployments': len(gnn_endpoints) > 0,
                 'has_models': len(gnn_models) > 0
             }
-            
+
             logger.info(f"✅ Discovery complete: {len(gnn_models)} models, {len(gnn_endpoints)} endpoints, {len(completed_jobs)} completed jobs")
             return discovery_result
-            
+
         except Exception as e:
             logger.error(f"❌ Model discovery failed: {e}")
             # Return empty discovery result instead of failing
@@ -597,17 +604,17 @@ def run(raw_data):
     async def select_or_create_deployment(self, domain: str) -> Dict[str, Any]:
         """Select existing deployment or create new one based on discovery."""
         logger.info(f"🎯 Selecting or creating GNN deployment for domain: {domain}")
-        
+
         try:
             # Step 1: Discover existing resources
             discovery = await self.discover_existing_models(domain)
-            
+
             # Step 2: Check for existing deployments
             if discovery['has_deployments']:
                 # Use existing deployment
                 endpoint = discovery['existing_endpoints'][0]
                 logger.info(f"✅ Using existing GNN endpoint: {endpoint['name']}")
-                
+
                 return {
                     'action': 'reuse_existing',
                     'endpoint_name': endpoint['name'],
@@ -616,20 +623,20 @@ def run(raw_data):
                     'deployment_ready': True,
                     'discovery_summary': discovery
                 }
-            
+
             # Step 3: Check for completed jobs without deployments
             elif discovery['completed_jobs_count'] > 0:
                 # Use existing completed job to register model and create endpoint
                 completed_job = discovery['completed_training_jobs'][0]  # Use most recent completed job
                 job_id = completed_job['job_id']
-                
+
                 logger.info(f"✅ Found completed training job: {job_id}")
                 logger.info(f"🔄 Completing pipeline: register model + create endpoint...")
-                
+
                 try:
                     # Complete the training pipeline for the existing job
                     pipeline_result = await self.complete_training_pipeline(job_id, domain)
-                    
+
                     return {
                         'action': 'complete_existing_job',
                         'training_job': job_id,
@@ -638,23 +645,23 @@ def run(raw_data):
                         'discovery_summary': discovery,
                         'message': f'Completed pipeline for existing job {job_id} - model registered and endpoint created'
                     }
-                    
+
                 except Exception as e:
                     logger.warning(f"⚠️ Failed to complete pipeline for existing job {job_id}: {e}")
                     logger.info(f"🚀 Starting new training job with model artifacts...")
-                    
+
                     # Fallback to new training if existing job pipeline fails
                     training_config = {
                         "model_type": "production_gnn",
                         "compute_target": "compute-prod",
                         "training_approach": "production_ready"
                     }
-                    
+
                     job_result = await self.submit_gnn_training_job(domain, training_config)
-                    
+
                     if not job_result["success"]:
                         raise RuntimeError(f"Training job submission failed: {job_result.get('error')}")
-                    
+
                     return {
                         'action': 'start_new_training',
                         'training_job': job_result['job_id'],
@@ -663,23 +670,23 @@ def run(raw_data):
                         'discovery_summary': discovery,
                         'message': 'New training job started with artifact support - deployment will be available after completion'
                     }
-            
+
             # Step 4: No existing resources - need new training
             else:
                 logger.info(f"🚀 No existing GNN resources found - starting new training...")
-                
+
                 # Submit new training job
                 training_config = {
                     "model_type": "production_gnn",
                     "compute_target": "compute-prod",
                     "training_approach": "production_ready"
                 }
-                
+
                 job_result = await self.submit_gnn_training_job(domain, training_config)
-                
+
                 if not job_result["success"]:
                     raise RuntimeError(f"Training job submission failed: {job_result.get('error')}")
-                
+
                 return {
                     'action': 'start_new_training',
                     'training_job': job_result['job_id'],
@@ -688,7 +695,7 @@ def run(raw_data):
                     'discovery_summary': discovery,
                     'message': 'New training job started - deployment will be available after completion'
                 }
-                
+
         except Exception as e:
             logger.error(f"❌ Deployment selection/creation failed: {e}")
             raise RuntimeError(f"GNN deployment selection/creation failed: {e}. REAL Azure ML infrastructure required.") from e
@@ -706,10 +713,10 @@ async def main():
         # Step 1: Intelligent deployment selection (reuse existing or create new)
         logger.info("📋 Step 1: Discovering existing GNN resources and selecting deployment strategy...")
         deployment_result = await orchestrator.select_or_create_deployment(domain)
-        
+
         action = deployment_result['action']
         logger.info(f"🎯 Selected action: {action}")
-        
+
         # Display discovery summary
         discovery = deployment_result['discovery_summary']
         print("\n" + "="*70)
@@ -720,55 +727,55 @@ async def main():
         print(f"📊 Completed Training Jobs: {discovery['completed_jobs_count']}")
         print(f"🎯 Action: {action.replace('_', ' ').title()}")
         print("="*70)
-        
+
         if action == 'reuse_existing':
             # Use existing deployment
             endpoint_name = deployment_result['endpoint_name']
             scoring_uri = deployment_result['scoring_uri']
-            
+
             logger.info(f"✅ Reusing existing GNN deployment: {endpoint_name}")
             logger.info(f"🌐 Scoring URI: {scoring_uri}")
-            
+
             print(f"\n🎉 SUCCESS: Using existing GNN deployment!")
             print(f"✅ Endpoint: {endpoint_name}")
             print(f"✅ Ready for tri-modal search integration")
-            
+
         elif action == 'complete_existing_job':
             # Complete pipeline for existing completed job
             pipeline_result = deployment_result['pipeline_result']
             job_id = deployment_result['training_job']
-            
+
             logger.info(f"✅ Completed training pipeline for existing job: {job_id}")
             logger.info(f"📝 Model: {pipeline_result['model']['model_name']}:{pipeline_result['model']['model_version']}")
             logger.info(f"🌐 Endpoint: {pipeline_result['endpoint']['endpoint_name']}")
-            
+
             print(f"\n🎉 SUCCESS: Completed training pipeline for existing job!")
             print(f"✅ Training Job: {job_id}")
             print(f"✅ Model Registered: {pipeline_result['model']['model_id']}")
             print(f"✅ Endpoint Created: {pipeline_result['endpoint']['endpoint_name']}")
             print(f"✅ Production Ready: {pipeline_result['production_ready']}")
-            
+
         elif action == 'start_new_training':
             # Started new training job
             job_id = deployment_result['training_job']
             studio_url = deployment_result['studio_url']
-            
+
             logger.info(f"🚀 Started new GNN training job: {job_id}")
             logger.info(f"🌐 Monitor at: {studio_url}")
-            
+
             # Monitor the new job briefly
             logger.info("📋 Step 2: Monitoring new training job...")
             await asyncio.sleep(3)
-            
+
             monitoring_result = await orchestrator.monitor_training(job_id)
-            
+
             print(f"\n🚀 NEW TRAINING JOB STARTED!")
             print(f"✅ Job ID: {job_id}")
             print(f"✅ Status: {monitoring_result.get('status', 'Starting')}")
             print(f"✅ Studio URL: {studio_url}")
             print(f"⏳ Deployment will be available after training completion")
             print(f"💡 Run this script again after job completion to create deployment")
-            
+
         # Final summary
         print("\n" + "="*70)
         print("🎉 PRODUCTION GNN PIPELINE - OPERATION COMPLETE!")
@@ -777,14 +784,14 @@ async def main():
         print(f"📊 Action: {action.replace('_', ' ').title()}")
         print(f"✅ Following production rules: REAL Azure services only")
         print(f"✅ Deployment ready: {deployment_result.get('deployment_ready', False)}")
-        
+
         if deployment_result.get('deployment_ready'):
             print(f"✅ Ready for tri-modal search (Vector + Graph + GNN)")
         else:
             print(f"⏳ GNN training in progress - endpoint will be available after completion")
-            
+
         print("="*70)
-            
+
     except Exception as e:
         logger.error(f"❌ Production GNN pipeline failed: {e}")
         print("\n" + "="*70)

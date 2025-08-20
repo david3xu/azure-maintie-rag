@@ -1,92 +1,227 @@
-# CLAUDE.md
+# CLAUDE.md - Development Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**Comprehensive development guide for Claude Code when working with the Azure Universal RAG system**
 
-## 🚀 Critical Quick Start
+> **📝 Purpose**: This file provides complete development workflows, testing procedures, and architectural guidance for the production-grade multi-agent system.
+
+## 🚀 **Quick Development Setup**
+
+### **Environment Setup (CRITICAL)**
 
 ```bash
 # Always work from project root
 cd /workspace/azure-maintie-rag
 
-# Required environment setup
-export PYTHONPATH=/workspace/azure-maintie-rag    # Critical for all Python operations
+# Required environment variables (MUST SET for all Python operations)
+export PYTHONPATH=/workspace/azure-maintie-rag    # Required for agent imports
 export OPENBLAS_NUM_THREADS=1                     # Required for GNN/PyTorch stability
+export USE_MANAGED_IDENTITY=false                 # For local development
 
-# First-run health check (always do this)
-make health                                        # Verify system and Azure services
+# Azure authentication
+az login && azd auth login                         # Refresh enterprise tokens
+./scripts/deployment/sync-env.sh prod             # Sync Azure environment
+```
+
+### **First-Run Validation**
+
+```bash
+# System health check
+make health                                        # Check Azure services
 python -c "from agents.core.universal_models import UniversalDomainAnalysis; print('✅ Core imports working')"
 
-# Most common development workflow
-make dataflow-validate                             # Test all 3 PydanticAI agents (30s)
-# Make your code changes, then:
+# Agent validation (CRITICAL)
+make dataflow-validate                             # Test all 3 PydanticAI agents
+
+# Code quality
 black . && isort .                                 # Format code
 ./scripts/hooks/pre-commit-domain-bias-check.sh   # Check for domain bias
 pytest -m unit -x                                  # Run unit tests
 ```
 
-## Architecture Overview
+### **Most Common Development Workflows**
 
-**Azure Universal RAG**: Production-ready multi-agent system with PydanticAI framework and **zero hardcoded domain bias**.
+**1. Agent Development & Testing**:
 
-### Three Core PydanticAI Agents
+```bash
+# Test specific agents
+PYTHONPATH=/workspace/azure-maintie-rag python agents/domain_intelligence/agent.py
+PYTHONPATH=/workspace/azure-maintie-rag python agents/examples/demo_universal.py
+PYTHONPATH=/workspace/azure-maintie-rag python agents/examples/full_workflow_demo.py
 
-1. **Domain Intelligence Agent** (`agents/domain_intelligence/agent.py`)
-   - Discovers content characteristics dynamically (no predetermined categories)
-   - Entry point: `run_domain_analysis()`, `domain_intelligence_agent`
+# Full agent pipeline testing
+make dataflow-full-progress                        # Complete 6-phase testing
+```
 
-2. **Knowledge Extraction Agent** (`agents/knowledge_extraction/agent.py`)
-   - Extracts entities/relationships using Domain Intelligence output
-   - Entry point: `run_knowledge_extraction()`, `knowledge_extraction_agent`
+**2. Azure Service Development**:
 
-3. **Universal Search Agent** (`agents/universal_search/agent.py`)
-   - Orchestrates mandatory tri-modal search: Vector + Graph + GNN (no fallback)
-   - Entry point: `run_universal_search()`, `universal_search_agent`
+```bash
+# Infrastructure changes
+azd deploy                                         # Deploy infrastructure updates
+make deploy-with-data                              # Deploy + populate data
+
+# Service health monitoring
+make azure-status                                  # Check service containers
+make session-report                                # Performance metrics
+```
+
+## 🏗️ **System Architecture Overview**
+
+**Azure Universal RAG**: Production-ready multi-agent system with **zero hardcoded domain bias** philosophy following strict fail-fast principles with real Azure services.
+
+### **🤖 Three Core PydanticAI Agents**
+
+1. **🌍 Domain Intelligence Agent** (`agents/domain_intelligence/agent.py`)
+
+   - **Purpose**: Discovers content characteristics dynamically (no predetermined categories)
+   - **Innovation**: LLM-based analysis generates entity types from content (not hardcoded)
+   - **Output**: `UniversalDomainAnalysis` with vocabulary complexity, processing config
+   - **Key Tools**: `analyze_content_characteristics()`, `predict_entity_types()`, `generate_processing_configuration()`
+
+2. **📚 Knowledge Extraction Agent** (`agents/knowledge_extraction/agent.py`)
+
+   - **Purpose**: Extracts entities/relationships using Agent 1's discoveries
+   - **Innovation**: Cached prompt library (~32% performance improvement)
+   - **Methods**: LLM + Pattern + Hybrid approaches with Agent 1 → Agent 2 delegation
+   - **Storage**: Real Cosmos DB Gremlin integration
+   - **Key Tools**: `extract_entities_and_relationships()`, `generate_extraction_prompts()`
+
+3. **🔍 Universal Search Agent** (`agents/universal_search/agent.py`)
+   - **Purpose**: Orchestrates **mandatory** tri-modal search: Vector + Graph + GNN
+   - **Innovation**: No fallback logic - all three modalities required or system fails
+   - **Optimization**: Skips Agent 1 for queries (uses pre-analyzed data)
+   - **Key Tools**: `orchestrate_universal_search()`, `search_vector_index()`, `search_knowledge_graph()`
+
+### **🔄 Agent Communication Flow**
+
+```
+User Content → Domain Intelligence → Content Analysis + Entity Predictions
+                        ↓                               ↓
+               Knowledge Extraction ←────────────────┘
+                        ↓
+               Cosmos DB Graph Storage
+                        ↓
+User Query → Universal Search (Vector + Graph + GNN) → Unified Results
+```
+
+**Key Patterns**:
+
+- **Agent 1 → Agent 2**: Domain analysis guides extraction prompts
+- **Agent 1 Caching**: Results cached to avoid duplicate calls
+- **Agent 3 Optimization**: Skips Agent 1 for queries (production speed)
+  ↓
+  Universal Search (Vector + Graph + GNN)
+  ↓
+  Azure OpenAI Answer Generation
+
+````
 
 ## Essential Commands
 
 ### Development & Testing
 ```bash
-# Local development
+# Setup and run
 make setup                    # Install all dependencies
 make dev                      # Start API (8000) + Frontend (5174)
-make health                   # System health check
+make health                   # Complete system health check
 
-# Testing (REAL Azure services, NO mocks)
+# Testing (REAL Azure services only - NO mocks)
 pytest                        # All tests with asyncio_mode=auto
-pytest -m unit                # Agent logic tests
-pytest -m integration         # Multi-service integration
-pytest -x -vvv                # Debug mode (stop on first failure)
+pytest -m unit -x             # Unit tests, stop on first failure
+pytest -m integration -vvv    # Integration tests with verbose output
+pytest tests/test_agents.py::TestDomainIntelligenceAgent  # Specific test
 
 # 6-Phase Data Pipeline
-make dataflow-full            # Execute all phases (complete pipeline)
-make dataflow-validate        # Phase 1: Validate agents (CRITICAL)
+make dataflow-full            # Execute complete pipeline (cleanup→validate→ingest→extract→query→gnn)
+make dataflow-validate        # Phase 1: Validate all 3 agents (quick check)
 make dataflow-extract         # Phase 3: Knowledge extraction
 make dataflow-query           # Phase 4: Query & search testing
+make dataflow-integrate       # Phase 5: Integration testing
+make dataflow-advanced        # Phase 6: GNN & monitoring
+````
 
-# Code quality (REQUIRED before commits)
-black . --check && isort . --check-only
-./scripts/hooks/pre-commit-domain-bias-check.sh
+## 🧪 **Comprehensive Testing Infrastructure**
+
+### **6-Phase Testing Pipeline**
+
+The system uses a comprehensive 6-phase testing pipeline as the primary validation method:
+
+**Phase 0: Cleanup** - Reset Azure services to clean state
+
+```bash
+make dataflow-cleanup          # Clean all Azure data (preserves infrastructure)
 ```
+
+**Phase 1: Agent Validation** - Test agent connectivity and imports
+
+```bash
+make dataflow-validate         # CRITICAL - Test all 3 agents
+# Tests: Agent imports, initialization, basic functionality, Azure service connectivity
+```
+
+**Phase 2: Data Ingestion** - Upload real data to Azure services
+
+```bash
+make dataflow-ingest           # Upload data/raw/ to Storage, create embeddings, index in Search
+```
+
+**Phase 3: Knowledge Extraction** - Test Agent 1 → Agent 2 coordination
+
+```bash
+make dataflow-extract          # Test domain analysis → entity extraction → graph storage
+```
+
+**Phase 4: Query Pipeline** - Test Agent 3 tri-modal search
+
+```bash
+make dataflow-query            # Test Vector + Graph + GNN search (mandatory tri-modal)
+```
+
+**Phase 5: Integration Testing** - End-to-end workflow validation
+
+```bash
+make dataflow-integrate        # Test complete multi-agent workflows
+```
+
+**Phase 6: Advanced Features** - GNN training and monitoring
+
+```bash
+make dataflow-advanced         # Test GNN training, monitoring, advanced features
+```
+
+### **Testing Philosophy**
+
+💪 **Real Azure Services Only**: No mocks, no fallbacks, no fake patterns
+⚡ **Fail-Fast Behavior**: System fails completely on Azure service issues
+🎯 **Zero Domain Bias**: Tests validate universal content processing
+🔍 **Mandatory Tri-Modal**: Vector + Graph + GNN all required (no degradation)
+
+# Code quality checks (REQUIRED before commits)
+
+black . --check # Check formatting
+isort . --check-only # Check import ordering
+./scripts/hooks/pre-commit-domain-bias-check.sh # Domain bias detection
+
+````
 
 ### Deployment
 ```bash
-# Authentication (Enterprise/University environments)
+# Authentication setup (critical for enterprise environments)
 az login && azd auth login
 ./scripts/deployment/sync-auth.sh validate
 
-# Production deployment (RECOMMENDED)
-make deploy-with-data         # Full deployment with automated data pipeline
+# Deployment options
+make deploy-with-data         # Full deployment with data pipeline (10-15 min)
+make deploy-fast              # Infrastructure only (2-3 min)
+azd up                        # Standard Azure deployment
 
-# Fast deployment (infrastructure only)
-make deploy-fast              # 2-3 minutes, no data population
-
-# Manual cleanup
+# Cleanup (azd down is broken - use fixed version)
 ./scripts/azd-down-fixed.sh --force --purge
-```
+````
 
 ## 🚨 Critical Development Rules
 
-### Zero Domain Bias (ENFORCED by pre-commit)
+### 1. Zero Domain Bias (ENFORCED by pre-commit hook)
+
 ```python
 # ❌ WRONG - Hardcoded domain categories
 if domain in ["legal", "technical", "medical"]:
@@ -97,149 +232,254 @@ complexity = measure_vocabulary_complexity(content)
 parameters = adapt_based_on_measured_properties(complexity)
 ```
 
-### PydanticAI Agent Pattern (REQUIRED)
+### 2. PydanticAI Agent Pattern (REQUIRED)
+
 ```python
 from pydantic_ai import Agent
 from pydantic_ai.toolsets import FunctionToolset
 from agents.core.universal_deps import UniversalDeps
 
-# 1. Create toolset FIRST
+# Create toolset FIRST (not agent)
 toolset = FunctionToolset()
 
-# 2. Register tools on TOOLSET (not agent)
+# Register tools on TOOLSET
 @toolset.tool  # ✅ CORRECT - use toolset.tool
 async def analyze_content(ctx: RunContext[UniversalDeps], content: str):
     return await ctx.deps.azure_openai_client.analyze(content)
 
-# 3. Create agent WITH toolset
+# Create agent WITH toolset
 agent = Agent[UniversalDeps, OutputModel](
     model=azure_openai_model,
     toolsets=[toolset],  # Pass toolset here
     deps_type=UniversalDeps,
     retries=3
 )
+
+# ⚠️ NEVER use @agent.tool - causes Union type errors
 ```
 
-**⚠️ Using `@agent.tool` causes Union type errors with PydanticAI 0.6.2**
+### 3. Fail-Fast Philosophy
 
-### Fail-Fast Philosophy
-- **NO fallback logic** when ANY service fails
-- **NO fake success** responses
-- **NO partial operation** - ALL THREE modalities required for search
-- System **FAILS COMPLETELY** if Vector, Graph, OR GNN unavailable
+- **NO fallback logic** when services fail
+- **NO partial results** - all modalities required
+- System **fails completely** rather than degrading gracefully
+- This ensures data integrity and predictable behavior
+
+## High-Level Architecture
+
+### Multi-Agent Orchestration (`agents/orchestrator.py`)
+
+- `UniversalOrchestrator` coordinates all three agents
+- Implements caching to avoid redundant Domain Intelligence calls
+- Manages shared `UniversalDeps` across agents
+- Tracks costs and collects evidence for audit trails
+
+### Dependency Injection (`agents/core/universal_deps.py`)
+
+- Centralized Azure service initialization
+- Auto-detects environment (Container Apps vs Local)
+- Manages credentials via `DefaultAzureCredential` or `ManagedIdentityCredential`
+- Lazy initialization of expensive resources
+
+### Universal Models (`agents/core/universal_models.py`)
+
+- Domain-agnostic Pydantic models
+- No hardcoded domain types or categories
+- Flexible configuration based on discovered characteristics
+- Type-safe communication between agents
+
+### Infrastructure Layer (`infrastructure/`)
+
+- Azure service clients with retry logic
+- Unified prompt templates in `prompt_workflows/templates/`
+- GNN training and inference via Azure ML
+- Cost tracking and monitoring utilities
 
 ## 6-Phase Data Pipeline
 
-| Phase | Purpose | Entry Script | Success Criteria |
-|-------|---------|--------------|------------------|
-| **0** | Clean Azure data | `scripts/dataflow/phase0_cleanup/00_01_cleanup_all_services.py` | 0 documents/entities |
-| **1** | Validate agents | `scripts/dataflow/phase1_validation/01_00_basic_agent_connectivity.py` | All agents respond |
-| **2** | Ingest data | `scripts/dataflow/phase2_ingestion/02_02_storage_upload_primary.py` | All docs indexed |
-| **3** | Extract knowledge | `scripts/dataflow/phase3_knowledge/03_01_basic_entity_extraction.py` | 13+ entities, 8+ relationships |
-| **4** | Query pipeline | `scripts/dataflow/phase4_query/04_01_query_analysis.py` | 3+ results, 80%+ confidence |
-| **5** | Integration test | `scripts/dataflow/phase5_integration/05_01_full_pipeline_execution.py` | Complete pipeline works |
-| **6** | Advanced (GNN) | `scripts/dataflow/phase6_advanced/06_11_gnn_async_bootstrap.py` | Model deployed |
+| Phase | Purpose   | Key Script                                            | Success Indicator       |
+| ----- | --------- | ----------------------------------------------------- | ----------------------- |
+| 0     | Cleanup   | `phase0_cleanup/00_01_cleanup_all_services.py`        | All services empty      |
+| 1     | Validate  | `phase1_validation/01_00_basic_agent_connectivity.py` | Agents respond          |
+| 2     | Ingest    | `phase2_ingestion/02_02_storage_upload_primary.py`    | Docs uploaded           |
+| 3     | Extract   | `phase3_knowledge/03_01_basic_entity_extraction.py`   | Entities in Cosmos      |
+| 4     | Query     | `phase4_query/04_01_query_analysis.py`                | Results with confidence |
+| 5     | Integrate | `phase5_integration/05_01_full_pipeline_execution.py` | End-to-end works        |
+| 6     | Advanced  | `phase6_advanced/06_01_gnn_training.py`               | GNN model deployed      |
 
 ## Common Issues & Solutions
 
-### Import/Authentication Issues
-```bash
-# Import errors
-export PYTHONPATH=/workspace/azure-maintie-rag
-export OPENBLAS_NUM_THREADS=1
+### Import Errors
 
-# Azure authentication failed
+```bash
+# Always set PYTHONPATH
+export PYTHONPATH=/workspace/azure-maintie-rag
+
+# Test specific imports
+python -c "from agents.domain_intelligence.agent import domain_intelligence_agent; print('✅')"
+```
+
+### PydanticAI Union Type Error
+
+```bash
+# Must use specific OpenAI version
+pip install 'openai==1.98.0'
+
+# Check for incorrect patterns
+grep -r "@agent\.tool" agents/  # Should return NOTHING
+```
+
+### Azure Authentication
+
+```bash
+# Full re-authentication
 az login && azd auth login
 ./scripts/deployment/sync-env.sh prod
 
-# Test individual agent imports
-PYTHONPATH=/workspace/azure-maintie-rag python -c "from agents.domain_intelligence.agent import domain_intelligence_agent; print('✅')"
-```
-
-### PydanticAI Issues
-```bash
-# Union type error fix
-pip install 'openai==1.98.0'  # Critical version
-
-# Check for incorrect patterns
-grep -r "@agent\.tool" agents/  # Should return NO results
-grep -r "@.*_toolset\.tool" agents/  # Should find correct pattern
+# Test connection
+az account show
 ```
 
 ### Domain Bias Detection
+
 ```bash
 # Run pre-commit check
 ./scripts/hooks/pre-commit-domain-bias-check.sh
 
-# Manual scan
-grep -r "legal\|technical\|medical\|financial" agents/ --include="*.py" | grep -v "# OK:"
+# Manual scan for violations
+grep -r '"technical"\|"legal"\|"medical"' agents/ --include="*.py"
 ```
 
-## Key Architecture Files
+## Testing Strategies
 
-### Core Agent Framework
-- `agents/core/universal_models.py` - Domain-agnostic Pydantic models
-- `agents/core/agent_toolsets.py` - Centralized FunctionToolset management
-- `agents/core/universal_deps.py` - Azure service dependency injection
-- `agents/core/azure_pydantic_provider.py` - Azure OpenAI provider
-- `agents/orchestrator.py` - Multi-agent coordination
+### Unit Tests
 
-### Infrastructure
-- `infrastructure/prompt_workflows/templates/` - Unified extraction templates
-- `infrastructure/azure_ml/gnn_inference_client.py` - GNN model inference
+- Test agent logic in isolation
+- Mock Azure services for speed
+- Focus on business logic validation
+
+### Integration Tests
+
+- Use REAL Azure services (no mocks)
+- Test multi-agent workflows
+- Validate end-to-end processing
+
+### Running Single Tests
+
+```bash
+# Run specific test class
+pytest tests/test_agents.py::TestDomainIntelligenceAgent
+
+# Run specific test method
+pytest tests/test_agents.py::TestDomainIntelligenceAgent::test_agent_import
+
+# Run with debugging output
+pytest -xvvs tests/test_agents.py
+```
+
+## Key Configuration Files
+
+- `pytest.ini` - Test configuration with `asyncio_mode=auto`
 - `config/azure_settings.py` - Centralized Azure configuration
+- `config/environments/*.env` - Environment-specific settings
+- `.env` - Local development overrides
+- `azure.yaml` - Azure Developer CLI configuration
+- `infra/main.bicep` - Infrastructure as Code entry point
 
-### Testing & Quality
-- `pytest.ini` - asyncio_mode=auto for PydanticAI agents
-- `scripts/hooks/pre-commit-domain-bias-check.sh` - Domain bias enforcement
+## Azure Services Integration
+
+### Required Services (9 total)
+
+1. **Azure OpenAI** - Text processing (gpt-4o-mini for cost optimization)
+2. **Cognitive Search** - Vector search with 1536D embeddings
+3. **Cosmos DB** - Graph database with Gremlin API
+4. **Blob Storage** - Document storage
+5. **Azure ML** - GNN training and inference
+6. **Key Vault** - Secret management
+7. **Application Insights** - Monitoring
+8. **Log Analytics** - Centralized logging
+9. **Container Apps** - Hosting (optional)
+
+### Service Authentication
+
+- Uses `DefaultAzureCredential` for local development
+- Switches to `ManagedIdentityCredential` in Container Apps
+- All secrets stored in Key Vault
+- RBAC permissions for all services
+
+## Development Workflow
+
+### Making Changes
+
+1. Create feature branch
+2. Make code changes
+3. Run formatters: `black . && isort .`
+4. Check domain bias: `./scripts/hooks/pre-commit-domain-bias-check.sh`
+5. Run unit tests: `pytest -m unit`
+6. Test integration: `make dataflow-validate`
+7. Commit with descriptive message
+
+### Adding New Features
+
+1. Follow existing patterns in `agents/core/`
+2. Use universal models, avoid domain-specific types
+3. Implement discovery over classification
+4. Add tests for new functionality
+5. Update relevant documentation
 
 ## Session Management
 
-Enterprise session tracking with clean log replacement:
+The system tracks development sessions with comprehensive logging:
+
 ```bash
-make session-report  # View current session
-make clean          # Clean session, preserve cumulative
-make health         # Complete health check with reporting
+make session-report   # View current session metrics
+make clean           # Start fresh session
 ```
 
-Session files:
-- `logs/current_session` - Active session ID
-- `logs/dataflow_execution_<SESSION_ID>.md` - Session report
-- `logs/cumulative_dataflow_report.md` - Historical data
+Session files in `logs/`:
 
-## Technology Stack
-
-- **Backend**: Python 3.11+, PydanticAI 0.6.2, FastAPI, OpenAI 1.98.0 (critical)
-- **Frontend**: React 19.1.0, TypeScript 5.8.3, Vite 7.0.4
-- **Testing**: pytest 7.4.0+ with real Azure services (no mocks)
-- **Azure Services**: 9 integrated services (OpenAI, Search, Cosmos DB, Storage, ML, etc.)
-- **CI/CD**: GitHub Actions with OIDC, Azure Developer CLI (azd), Bicep IaC
-
-## Infrastructure Details
-
-### Azure Resources (Cost-Optimized)
-- **Azure OpenAI**: gpt-4.1-mini (cost-optimized)
-- **Cognitive Search**: BASIC tier (avoids quota conflicts)
-- **Cosmos DB**: Serverless with Gremlin API
-- **Container Apps**: Scale-to-zero capability
-- **Azure ML**: CPU-only compute ($0.168/hour)
-
-### Naming Pattern (Bicep)
-```bicep
-name: 'prefix-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
-```
-
-## Project Philosophy
-
-- **Zero Domain Bias**: System discovers characteristics, doesn't categorize
-- **No Mocks**: All testing uses real Azure services
-- **Fail-Fast**: Complete failure rather than fallback logic
-- **Universal Design**: Adapts to any content in `data/raw/`
-- **Tri-Modal Search**: Mandatory Vector + Graph + GNN (no fallback)
+- `current_session` - Active session ID
+- `dataflow_execution_*.md` - Session reports
+- `cumulative_dataflow_report.md` - Historical data
 
 ## Critical Versions
 
-- **OpenAI**: Must be 1.98.0 (PydanticAI compatibility)
+- **Python**: 3.11+ (Container Apps requirement)
+- **OpenAI**: 1.98.0 (PydanticAI compatibility)
 - **PydanticAI**: 0.6.2+ with Azure support
-- **Pytest**: 7.4.0+ with asyncio_mode=auto
-- **Python**: 3.11+ (Azure Container Apps requirement)
+- **pytest**: 7.4.0+ with asyncio_mode=auto
+- **React**: 19.1.0 (frontend)
+- **TypeScript**: 5.8.3 (frontend)
+
+## Philosophy & Principles
+
+1. **Zero Domain Bias**: System discovers characteristics, never assumes
+2. **No Mocks**: All testing uses real Azure services
+3. **Fail-Fast**: Complete failure rather than degraded operation
+4. **Universal Design**: Adapts to ANY content in `data/raw/`
+5. **Mandatory Tri-Modal**: Vector + Graph + GNN always required
+
+## Quick Debugging
+
+```bash
+# Check agent imports
+python -c "
+from agents.domain_intelligence.agent import domain_intelligence_agent
+from agents.knowledge_extraction.agent import knowledge_extraction_agent
+from agents.universal_search.agent import universal_search_agent
+print('✅ All agents import successfully')
+"
+
+# Test Azure connectivity
+python -c "
+import asyncio
+from agents.core.universal_deps import get_universal_deps
+async def test():
+    deps = await get_universal_deps()
+    print(f'Services: {list(deps.get_available_services())}')
+asyncio.run(test())
+"
+
+# Quick agent validation
+make dataflow-validate  # Should complete in ~30 seconds
+```

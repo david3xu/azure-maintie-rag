@@ -25,6 +25,15 @@ async def index_in_search(source_path: str, domain: str = "universal"):
         openai_client = deps.openai_client
         print("✅ Azure Search and OpenAI clients ready")
 
+        # Ensure search index exists before attempting to index documents
+        print("🔧 Ensuring search index exists...")
+        index_result = await search_client.ensure_index_exists()
+        if index_result["success"]:
+            print(f"✅ Search index ready: {index_result['data']['index_name']} ({index_result['data']['status']})")
+        else:
+            print(f"❌ Failed to ensure index exists: {index_result.get('error', 'Unknown error')}")
+            return False
+
         if not search_client or not openai_client:
             # NO SIMULATIONS - Azure services MUST work for production
             raise Exception(

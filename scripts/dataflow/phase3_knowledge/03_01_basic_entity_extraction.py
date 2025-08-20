@@ -4,7 +4,8 @@ Step 1: Basic Entity Extraction
 ==============================
 
 Task: Extract entities from all files using the optimized cached extraction approach.
-Logic: Process each file with Knowledge Extraction Agent using cached prompts.
+Logic: Process each DOMAIN (subdirectory) with Knowledge Extraction Agent using cached prompts.
+DOMAIN-AWARE: 1 subdirectory = 1 domain = 1 auto prompt = 1 extraction call
 NO FAKE SUCCESS PATTERNS - FAIL FAST if extraction fails.
 """
 
@@ -18,20 +19,40 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
 async def basic_entity_extraction():
-    """Extract entities from all files using cached prompts - Step 1 of knowledge extraction"""
+    """Extract entities from all files using domain-aware processing - Step 1 of knowledge extraction"""
     print("🔬 STEP 1: BASIC ENTITY EXTRACTION")
     print("=" * 50)
 
-    # Load data files - DISCOVER files dynamically (no hardcoded paths)
+    # Load data files - GROUP BY SUBDIRECTORY (DOMAIN-AWARE PROCESSING)
     project_root = Path(__file__).parent.parent.parent.parent
     data_root = project_root / "data" / "raw"
-    data_files = list(data_root.glob("**/*.md"))  # Find all .md files recursively
 
-    print(f"📂 Found {len(data_files)} files to process")
+    # Group files by subdirectory (each subdirectory = one domain)
+    domain_groups = {}
+    for md_file in data_root.glob("**/*.md"):
+        # Get the immediate subdirectory under data/raw
+        relative_path = md_file.relative_to(data_root)
+        if len(relative_path.parts) > 1:
+            domain_name = relative_path.parts[0]  # First subdirectory is the domain
+        else:
+            domain_name = "root"  # Files directly in data/raw
 
-    if not data_files:
+        if domain_name not in domain_groups:
+            domain_groups[domain_name] = []
+        domain_groups[domain_name].append(md_file)
+
+    total_files = sum(len(files) for files in domain_groups.values())
+    print(f"📂 Found {total_files} files in {len(domain_groups)} domains:")
+    for domain, files in domain_groups.items():
+        print(f"   🏷️  {domain}: {len(files)} files")
+
+    if not domain_groups:
         print("❌ FAIL FAST: No data files found")
         return False
+
+    # Check if we're in incremental mode
+    import os
+    skip_cleanup = os.environ.get("SKIP_CLEANUP", "false").lower() == "true"
 
     # Track results
     extraction_results = []
@@ -41,253 +62,199 @@ async def basic_entity_extraction():
     # Import the optimized extraction function
     from agents.knowledge_extraction.agent import run_knowledge_extraction
 
-    # INTELLIGENT BATCH SIZE MANAGEMENT
-    total_size = sum(f.stat().st_size for f in data_files)
-    max_files = len(data_files)
-    
-    # Dynamic batch sizing based on total content and file count
-    # Small datasets: batch process for efficiency
-    # Large datasets: individual processing to avoid memory/timeout issues
-    
-    # Calculate optimal batch parameters
-    avg_file_size = total_size / max_files if max_files > 0 else 0
-    
-    # Batch decision logic with multiple size thresholds
-    should_batch = (
-        total_size < 200_000 and           # Total content under 200KB
-        max_files <= 15 and               # Limited number of files
-        avg_file_size < 50_000             # Average file size under 50KB
-    )
-    
-    if should_batch:
-        print(f"📦 BATCH PROCESSING: {max_files} files ({total_size/1024:.1f}KB total, avg: {avg_file_size/1024:.1f}KB)")
-        print("   Using single extraction call for efficiency")
-        
-        # Combine all files into one batch with intelligent size limits
+    # DOMAIN-AWARE PROCESSING: One extraction per domain (subdirectory)
+    print(f"\n🧠 DOMAIN-AWARE EXTRACTION: Processing {len(domain_groups)} domains")
+    if skip_cleanup:
+        print("   🔄 Incremental mode: Only processing new/changed domains")
+    else:
+        print("   🧹 Full mode: Processing all domains (after cleanup)")
+    print("   🎯 Strategy: 1 domain = 1 auto prompt = 1 extraction call")
+
+    # Process each domain separately
+    processed_domains = 0
+    skipped_domains = 0
+
+    for domain_idx, (domain_name, domain_files) in enumerate(domain_groups.items(), 1):
+        print(f"\n🏷️  Processing domain {domain_idx}/{len(domain_groups)}: {domain_name}")
+        print(f"   📁 Files: {len(domain_files)} files")
+
+        # In incremental mode, check if domain already has entities in the graph
+        if skip_cleanup:
+            try:
+                # Check if entities exist for this domain in Cosmos DB
+                from agents.core.universal_deps import get_universal_deps
+                deps = await get_universal_deps()
+                cosmos_client = deps.cosmos_client
+
+                # Query for existing entities in this domain
+                domain_query = f"g.V().has('domain', '{domain_name}').count()"
+                existing_count = await cosmos_client.execute_query(domain_query)
+                domain_entity_count = existing_count[0] if existing_count else 0
+
+                if domain_entity_count > 0:
+                    print(f"   ⏭️  Skipping domain '{domain_name}' (already has {domain_entity_count} entities)")
+                    skipped_domains += 1
+                    continue
+
+            except Exception as e:
+                print(f"   ⚠️  Could not check existing entities for {domain_name}: {e}")
+                print(f"   🔄 Proceeding with processing...")
+
+        # Calculate domain statistics
+        domain_size = sum(f.stat().st_size for f in domain_files)
+        print(f"   📏 Total size: {domain_size/1024:.1f}KB")
+
+        # Combine all files in this domain into one extraction call
         combined_content = ""
         file_boundaries = []
-        
-        # Dynamic per-file content limit based on number of files
-        # More files = smaller chunk per file to stay under LLM token limits
-        max_content_per_file = min(3000, 150_000 // max_files)  # Smart limit scaling
-        
-        print(f"   📏 Max content per file: {max_content_per_file} chars")
-        
-        for i, data_file in enumerate(data_files):
+
+        # Each domain gets its own extraction with domain-specific context
+        for i, data_file in enumerate(domain_files):
             content = data_file.read_text(encoding="utf-8", errors="ignore")
             if len(content.strip()) < 50:
                 continue
-                
+
             start_pos = len(combined_content)
             combined_content += f"\n\n=== FILE {i+1}: {data_file.name} ===\n"
-            
-            # Use dynamic content limit based on total files
-            content_chunk = content[:max_content_per_file]
-            combined_content += content_chunk
+            combined_content += content
             end_pos = len(combined_content)
-            
+
             file_boundaries.append({
                 "filename": data_file.name,
                 "start": start_pos,
                 "end": end_pos,
-                "original_size": len(content),
-                "chunk_size": len(content_chunk),
-                "truncated": len(content) > max_content_per_file
+                "domain": domain_name,
+                "original_size": len(content)
             })
-        
-        print(f"   📊 Combined content: {len(combined_content)} characters")
-        print(f"   🔄 Running SINGLE extraction for all files...")
-        
+
+        print(f"   📊 Domain content: {len(combined_content)} characters")
+        print(f"   🧠 Running DOMAIN extraction for: {domain_name}")
+        print(f"   ⏳ Step 1/3: Analyzing domain characteristics...")
+
         start_time = time.time()
-        
-        # Single extraction call for entire batch
-        batch_result = await asyncio.wait_for(
-            run_knowledge_extraction(
-                content=combined_content,
-                use_domain_analysis=True,
-                force_refresh_cache=False,
-                verbose=True,
-            ),
-            timeout=120,  # 2 minute timeout for batch
-        )
-        
-        batch_time = time.time() - start_time
-        
-        print(f"   ✅ Batch extraction completed in {batch_time:.2f}s")
-        print(f"   📊 Total: {len(batch_result.entities)} entities, {len(batch_result.relationships)} relationships")
-        
-        # Distribute results back to individual files
-        for boundary in file_boundaries:
-            # For simplicity, divide results proportionally
-            file_portion = (boundary["end"] - boundary["start"]) / len(combined_content)
-            
-            entities_for_file = int(len(batch_result.entities) * file_portion)
-            relationships_for_file = int(len(batch_result.relationships) * file_portion)
-            
-            # Take proportional slice of results
-            start_idx = int(len(batch_result.entities) * (boundary["start"] / len(combined_content)))
-            entities_slice = batch_result.entities[start_idx:start_idx + entities_for_file]
-            
-            start_rel_idx = int(len(batch_result.relationships) * (boundary["start"] / len(combined_content)))
-            relationships_slice = batch_result.relationships[start_rel_idx:start_rel_idx + relationships_for_file]
-            
-            file_result = {
-                "filename": boundary["filename"],
-                "filepath": str(next(f for f in data_files if f.name == boundary["filename"])),
-                "entities_count": len(entities_slice),
-                "relationships_count": len(relationships_slice),
-                "extraction_confidence": batch_result.extraction_confidence,
-                "processing_time": batch_time / len(file_boundaries),  # Distribute time
-                "processing_method": "batch_optimized",
-                "extraction_result": batch_result  # Add the batch result for downstream processing
-            }
-            
-            extraction_results.append(file_result)
-            total_entities += len(entities_slice)
-            total_relationships += len(relationships_slice)
-            
-            print(f"   📄 {boundary['filename']}: {len(entities_slice)} entities, {len(relationships_slice)} relationships")
-    
-    else:
-        print(f"📄 INDIVIDUAL PROCESSING: {len(data_files)} files (large dataset)")
-        # Process each file individually for large datasets
-        for i, data_file in enumerate(data_files, 1):
-            try:
-                content = data_file.read_text(encoding="utf-8", errors="ignore")
-                print(f"\n📄 Processing {i}/{len(data_files)}: {data_file.name}")
-                print(f"   📊 Content: {len(content)} characters")
 
-                if len(content.strip()) < 100:  # Skip very small files
-                    print(f"   ⚠️  Skipping: File too small (< 100 chars)")
-                    continue
+        # Single extraction call for this domain
+        try:
+            print(f"   ⏳ Step 2/3: Extracting entities and relationships...")
+            print(f"   💡 Tip: First run takes longer as it generates domain-specific prompts")
 
-                # Limit content size to avoid timeouts (use first portion)
-                content_chunk = content[:1500] if len(content) > 1500 else content
-                print(f"   🔄 Processing chunk: {len(content_chunk)} characters")
+            domain_result = await asyncio.wait_for(
+                run_knowledge_extraction(
+                    content=combined_content,
+                    use_domain_analysis=True,
+                    force_refresh_cache=False,
+                    verbose=False
+                ),
+                timeout=1800  # 30 minute timeout per domain
+            )
 
-                # Use the optimized cached extraction with timeout
-                print(f"   🧠 Running knowledge extraction...")
-                start_time = time.time()
+            print(f"   ⏳ Step 3/3: Processing extraction results...")
 
-                result = await asyncio.wait_for(
-                    run_knowledge_extraction(
-                        content=content_chunk,
-                        use_domain_analysis=True,  # Use cached auto prompts
-                        force_refresh_cache=False,  # Reuse cache when possible
-                        verbose=False,  # Reduce output for pipeline
-                    ),
-                    timeout=60,  # 60 second timeout per file
-                )
-
+            # ExtractionResult doesn't have 'success' - if we get here, it succeeded
+            if domain_result:
                 extraction_time = time.time() - start_time
+                progress_percent = (domain_idx / len(domain_groups)) * 100
+                print(f"   ✅ Domain '{domain_name}' processed in {extraction_time:.1f}s")
+                print(f"   📊 Entities: {len(domain_result.entities)}, Relationships: {len(domain_result.relationships)}")
+                print(f"   📈 Overall progress: {progress_percent:.1f}% complete ({domain_idx}/{len(domain_groups)} domains)")
 
-                # Validate results
-                entities_count = len(result.entities)
-                relationships_count = len(result.relationships)
+                # Convert entities and relationships to serializable dictionaries
+                entities_data = []
+                for entity in domain_result.entities:
+                    entities_data.append({
+                        "text": entity.text,
+                        "type": entity.type,
+                        "confidence": entity.confidence,
+                        "context": entity.context
+                    })
 
-                print(
-                    f"   ✅ Extracted: {entities_count} entities, {relationships_count} relationships"
-                )
-                print(f"   ⏱️  Time: {extraction_time:.2f}s")
-                print(f"   🎯 Confidence: {result.extraction_confidence:.3f}")
+                relationships_data = []
+                for rel in domain_result.relationships:
+                    relationships_data.append({
+                        "source": rel.source,
+                        "target": rel.target,
+                        "relation": rel.relation,
+                        "confidence": rel.confidence,
+                        "context": rel.context
+                    })
 
-                # Store results for next step
-                file_result = {
-                    "filename": data_file.name,
-                    "filepath": str(data_file),
-                    "entities_count": entities_count,
-                    "relationships_count": relationships_count,
+                extraction_results.append({
+                    "domain": domain_name,
+                    "files": [f.name for f in domain_files],
+                    "file_boundaries": file_boundaries,
+                    "entities_count": len(domain_result.entities),
+                    "relationships_count": len(domain_result.relationships),
+                    "entities_data": entities_data,
+                    "relationships_data": relationships_data,
                     "extraction_time": extraction_time,
-                    "confidence": result.extraction_confidence,
-                    "processing_signature": result.processing_signature,
-                    "extraction_result": result,  # Keep full result for storage step
-                }
+                    "extraction_confidence": domain_result.extraction_confidence,
+                    "processing_signature": domain_result.processing_signature
+                })
 
-                extraction_results.append(file_result)
-                total_entities += entities_count
-                total_relationships += relationships_count
+                total_entities += len(domain_result.entities)
+                total_relationships += len(domain_result.relationships)
+                processed_domains += 1
 
-                # Show sample entities if any
-                if result.entities:
-                    sample_entities = [e.text for e in result.entities[:3]]
+                # Show sample results for verification
+                if domain_result.entities:
+                    # ExtractedEntity objects - get text attribute (entity name/text)
+                    sample_entities = [entity.text for entity in list(domain_result.entities)[:3]]
                     print(f"   📝 Sample entities: {sample_entities}")
+            else:
+                print(f"   ❌ Domain '{domain_name}' extraction failed - no result returned")
+                continue
 
-            except asyncio.TimeoutError:
-                print(f"   ❌ TIMEOUT: File {data_file.name} exceeded 60s limit")
-                continue
-            except Exception as e:
-                print(f"   ❌ ERROR: {data_file.name}: {e}")
-                continue
+        except asyncio.TimeoutError:
+            print(f"   ⏰ Domain '{domain_name}' extraction timed out (>30min)")
+            continue
+        except Exception as e:
+            print(f"   ❌ Domain '{domain_name}' extraction error: {str(e)}")
+            continue
+
+    # Processing complete for all domains
+    print(f"\n🎯 DOMAIN PROCESSING COMPLETE")
+    print(f"   📊 Total entities: {total_entities}")
+    print(f"   📊 Total relationships: {total_relationships}")
+    print(f"   🏷️  Domains processed: {processed_domains}")
+    if skip_cleanup and skipped_domains > 0:
+        print(f"   ⏭️  Domains skipped: {skipped_domains} (already had entities)")
+        print(f"   🔄 Incremental mode: {processed_domains + skipped_domains} total domains")
 
     # Save results to JSON for next step - use absolute path from script location
-    project_root = Path(__file__).parent.parent.parent.parent  # Go up to project root
-    results_dir = project_root / "scripts" / "dataflow" / "results"
-    results_dir.mkdir(parents=True, exist_ok=True)  # Create parent directories if needed
+    from scripts.dataflow.utilities.path_utils import get_results_dir
 
-    # Prepare serializable results (without the full extraction_result object)
-    serializable_results = []
-    for result in extraction_results:
-        serializable_result = result.copy()
-        serializable_result.pop("extraction_result")  # Remove non-serializable object
-        serializable_results.append(serializable_result)
+    results_dir = get_results_dir()
+
+    # Results are already serializable - no conversion needed
+    serializable_results = extraction_results
 
     results_file = results_dir / "step1_entity_extraction_results.json"
     with open(results_file, "w") as f:
         json.dump(
             {
                 "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                "total_files_processed": len(data_files),
-                "successful_extractions": len(extraction_results),
+                "total_domains_processed": len(domain_groups),
+                "total_files_processed": total_files,
                 "total_entities": total_entities,
                 "total_relationships": total_relationships,
-                "results": serializable_results,
+                "processing_method": "domain_aware",
+                "domain_results": serializable_results,
+                "success": len(extraction_results) > 0
             },
             f,
-            indent=2,
+            indent=2
         )
 
-    # Final results
-    print(f"\n📊 STEP 1 EXTRACTION RESULTS:")
-    print(f"=" * 40)
-    print(
-        f"✅ Successfully processed: {len(extraction_results)}/{len(data_files)} files"
-    )
-    print(f"📊 Total entities extracted: {total_entities}")
-    print(f"📊 Total relationships extracted: {total_relationships}")
     print(f"💾 Results saved to: {results_file}")
 
-    if len(extraction_results) > 0 and total_entities > 0:
-        avg_entities = total_entities / len(extraction_results)
-        avg_relationships = total_relationships / len(extraction_results)
-        print(f"📈 Average entities per file: {avg_entities:.1f}")
-        print(f"📈 Average relationships per file: {avg_relationships:.1f}")
-        print(f"\n🎉 STEP 1 COMPLETED SUCCESSFULLY")
-        print(f"🔄 Ready for Step 2: Storage in graph database")
-        return True
-    elif len(extraction_results) > 0 and total_entities == 0:
-        print(f"\n❌ FAIL FAST: Files processed but NO ENTITIES EXTRACTED")
-        print(f"💡 Check extraction prompts and Azure OpenAI responses")
-        return False
-    else:
-        print(f"\n❌ FAIL FAST: No files were processed successfully")
+    if len(extraction_results) == 0:
+        print("❌ FAIL FAST: No domains successfully processed")
         return False
 
-
-async def main():
-    """Main execution function"""
-    success = await basic_entity_extraction()
-    return success
+    print(f"✅ Step 1 complete: {len(extraction_results)} domains processed with {total_entities} entities")
+    return True
 
 
 if __name__ == "__main__":
-    try:
-        result = asyncio.run(main())
-        if result:
-            print("\n✅ Step 1: Basic entity extraction completed")
-            sys.exit(0)
-        else:
-            print("\n❌ Step 1: Basic entity extraction failed")
-            sys.exit(1)
-    except Exception as e:
-        print(f"\n❌ Step 1 error: {e}")
-        sys.exit(1)
+    result = asyncio.run(basic_entity_extraction())
+    sys.exit(0 if result else 1)

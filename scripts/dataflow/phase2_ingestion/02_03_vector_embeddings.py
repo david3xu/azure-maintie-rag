@@ -25,6 +25,15 @@ async def generate_embeddings(domain: str = "universal"):
         search_client = deps.search_client
         print("✅ Azure OpenAI and Search clients ready for embeddings")
 
+        # Ensure search index exists before generating embeddings
+        print("🔧 Ensuring search index exists...")
+        index_result = await search_client.ensure_index_exists()
+        if index_result["success"]:
+            print(f"✅ Search index ready: {index_result['data']['index_name']} ({index_result['data']['status']})")
+        else:
+            print(f"❌ Failed to ensure index exists: {index_result.get('error', 'Unknown error')}")
+            return None
+
         if not openai_client:
             # NO SIMULATIONS - Azure OpenAI required for production embeddings
             raise Exception(

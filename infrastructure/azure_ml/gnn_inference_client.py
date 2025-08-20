@@ -210,32 +210,19 @@ class GNNInferenceClient:
                 Model,
             )
 
-            # Create unique endpoint name (3-32 chars, Azure ML requirement)
-            timestamp_suffix = str(int(time.time()))[
-                -6:
-            ]  # Last 6 digits for uniqueness
-            endpoint_name = f"gnn-{timestamp_suffix}"  # Keep it short: gnn-123456
-            self.deployment_name = (
-                f"gnn-dep-{timestamp_suffix}"  # Keep deployment name short too
-            )
+            # Use centralized endpoint manager to prevent duplicates
+            from infrastructure.azure_ml.endpoint_manager import get_endpoint_manager
+            
+            endpoint_manager = await get_endpoint_manager()
+            endpoint_name = await endpoint_manager.create_shared_gnn_endpoint()
+            
+            # Use timestamp for deployment name only
+            timestamp_suffix = str(int(time.time()))[-6:]
+            self.deployment_name = f"gnn-dep-{timestamp_suffix}"
 
-            # Create online endpoint
-            endpoint = ManagedOnlineEndpoint(
-                name=endpoint_name,
-                description=f"Real Azure ML GNN endpoint for {model_name}",
-                auth_mode="key",
-                tags={
-                    "model_name": model_name,
-                    "model_type": "gnn",
-                    "framework": "pytorch_geometric",
-                },
-            )
-
-            # Create endpoint
-            endpoint = self.ml_client.online_endpoints.begin_create_or_update(
-                endpoint
-            ).result()
-            logger.info(f"✅ Real endpoint created: {endpoint_name}")
+            # Get the existing endpoint
+            endpoint = self.ml_client.online_endpoints.get(endpoint_name)
+            logger.info(f"♻️  Using shared endpoint: {endpoint_name}")
 
             # Get the trained model
             model = self.ml_client.models.get(model_name, label="latest")

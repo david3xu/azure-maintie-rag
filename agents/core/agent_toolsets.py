@@ -145,7 +145,7 @@ Content Sample:
 Task: Discover entity types that exist in THIS specific content. Look for these patterns:
 
 **UI & Interface Elements**: buttons, icons, menus, dialogs, panels, fields, controls, windows, panes
-**Process & Workflow Elements**: steps, methods, procedures, tasks, operations, workflows, training  
+**Process & Workflow Elements**: steps, methods, procedures, tasks, operations, workflows, training
 **Data & Information Objects**: documents, files, datasets, models, configurations, projects, labels
 **Technical Components**: APIs, services, tools, systems, frameworks, platforms, endpoints
 **ML & AI Concepts**: training, models, features, algorithms, evaluation, prediction, autolabeling
@@ -478,7 +478,7 @@ async def search_knowledge_graph(
         # PERFORMANCE OPTIMIZATION: Use targeted text-based Gremlin queries for each term
         # This replaces the expensive get_all_entities() + fuzzy matching approach
         matching_entities = []
-        
+
         # FIXED: Discover available domains instead of hardcoding 'azure_ai'
         available_domains = []
         try:
@@ -496,77 +496,80 @@ async def search_knowledge_graph(
                 f"Could not discover domains from Cosmos DB: {e}. Graph search requires functional Cosmos DB Gremlin API. "
                 "Verify Azure Cosmos DB service is properly configured and accessible."
             ) from e
-        
-        # FIXED: Use case-insensitive search approach since Gremlin containing() is case-sensitive
-        # Instead of multiple parallel queries, get all entities and filter manually for better reliability
-        matching_entities = []
-        
+
+        # REAL GRAPH INTELLIGENCE: Use semantic graph traversal, NOT fake keyword matching
+        # This leverages REAL Azure Cosmos DB Gremlin graph intelligence
+        print(f"   🧠 Using REAL graph intelligence for query terms: {query_terms}")
+
+        all_entities = []
+        all_relationships = []
+
         for domain in available_domains:
-            try:
-                # Get all entities from this domain (should be small since we have selective domains)
-                domain_query = f"g.V().has('domain', '{domain}').valueMap()"
-                domain_entities = await cosmos_client.execute_query(domain_query)
-                
-                print(f"   📊 Found {len(domain_entities)} entities in domain '{domain}'")
-                
-                # Manual case-insensitive filtering (more reliable than Gremlin case sensitivity)
-                for entity_data in domain_entities:
-                    if isinstance(entity_data, dict):
-                        # Extract text from Gremlin result format
-                        text_value = entity_data.get("text", [""])
-                        text_value = text_value[0] if isinstance(text_value, list) else str(text_value)
-                        
-                        # Check if any search term matches (case-insensitive)
-                        text_lower = text_value.lower()
-                        for term in query_terms[:3]:
-                            if term.lower() in text_lower:
-                                # Found a match!
-                                entity_type_value = entity_data.get("entity_type", ["unknown"])
-                                entity_type_value = entity_type_value[0] if isinstance(entity_type_value, list) else str(entity_type_value)
-                                
-                                matching_entities.append({
-                                    "text": text_value,
-                                    "entity_type": entity_type_value,
-                                    "domain": domain,
+            print(f"   🔍 Searching domain '{domain}' using REAL graph traversal...")
+
+            # Use REAL graph intelligence: find_related_entities for each query term
+            for term in query_terms:
+                try:
+                    # REAL AZURE SERVICE: Use existing advanced graph traversal
+                    related_entities = await cosmos_client.find_related_entities(
+                        entity_text=term,
+                        domain=domain,
+                        limit=max_results
+                    )
+
+                    if related_entities:
+                        print(f"     ✅ Found {len(related_entities)} relationships for '{term}' in '{domain}'")
+
+                        # Extract entities and relationships from REAL graph traversal
+                        for rel in related_entities:
+                            source_entity = rel.get("source_entity", "")
+                            target_entity = rel.get("target_entity", "")
+                            relation_type = rel.get("relation_type", "RELATES_TO")
+
+                            # Add source entity to results
+                            if source_entity and source_entity not in [e["text"] for e in all_entities]:
+                                all_entities.append({
+                                    "text": source_entity,
+                                    "entity_type": "discovered_via_graph_traversal",
+                                    "confidence": 0.9,  # Higher confidence for graph-discovered entities
+                                    "context": f"Found via graph traversal from '{term}'",
                                     "search_term": term,
-                                    "found_in_domain": domain
                                 })
-                                break  # Don't add the same entity multiple times
-                                
-            except Exception as e:
-                print(f"   ⚠️  Failed to search domain '{domain}': {e}")
-                continue
-        
-        print(f"   🎯 Case-insensitive search found {len(matching_entities)} total entity matches")
-        
-        # Add unique matching entities to results (deduplicate by text)
-        seen_texts = set()
-        for entity in matching_entities[:max_results]:
-            if entity["text"] not in seen_texts:
-                seen_texts.add(entity["text"])
-                results["entities"].append({
-                    "text": entity["text"],
-                    "entity_type": entity["entity_type"],
-                    "confidence": 0.8,
-                    "context": "",
-                    "search_term": entity["search_term"],
-                })
-        
-        # OPTIMIZED: Get relationships for top matching entities (max 2 for performance)
-        for entity in matching_entities[:2]:
-            related_entities = await cosmos_client.find_related_entities(
-                entity_text=entity["text"],
-                domain="azure_ai",
-                limit=3  # Reduced from 5 to 3 for performance
-            )
-            for rel in related_entities:
-                results["relationships"].append({
-                    "source": rel.get("source_entity", ""),
-                    "target": rel.get("target_entity", ""),
-                    "type": rel.get("relation_type", "RELATES_TO"),
-                    "confidence": 0.8,
-                })
-                
+
+                            # Add target entity to results
+                            if target_entity and target_entity not in [e["text"] for e in all_entities]:
+                                all_entities.append({
+                                    "text": target_entity,
+                                    "entity_type": "discovered_via_graph_traversal",
+                                    "confidence": 0.9,
+                                    "context": f"Found via graph traversal from '{term}'",
+                                    "search_term": term,
+                                })
+
+                            # Add relationship to results
+                            all_relationships.append({
+                                "source": source_entity,
+                                "target": target_entity,
+                                "type": relation_type,
+                                "confidence": 0.9,  # Higher confidence for real graph relationships
+                            })
+                    else:
+                        print(f"     ⚠️  No graph relationships found for '{term}' in '{domain}'")
+
+                except Exception as e:
+                    print(f"     ❌ Graph traversal failed for '{term}' in '{domain}': {e}")
+                    # FAIL FAST: Don't continue if REAL graph intelligence fails
+                    raise RuntimeError(
+                        f"REAL graph intelligence failed for term '{term}' in domain '{domain}': {e}. "
+                        "Cannot fall back to fake keyword matching - fix the root graph issue."
+                    ) from e
+
+        # Use REAL graph results only
+        results["entities"] = all_entities[:max_results]
+        results["relationships"] = all_relationships[:max_results]
+
+        print(f"   🎯 REAL graph intelligence found {len(all_entities)} entities and {len(all_relationships)} relationships")
+
     except Exception as e:
         # FAIL FAST: No fallback for graph search failures
         raise RuntimeError(
@@ -761,7 +764,7 @@ async def orchestrate_universal_search(
         missing.append("Vector")
     if not graph_results.get("entities"):
         missing.append("Graph")
-    
+
     # Special handling for GNN during async bootstrap phase
     # Check if GNN is legitimately in bootstrap vs. actual failure
     if not gnn_results:
@@ -782,7 +785,7 @@ async def orchestrate_universal_search(
 
     # Report results with async bootstrap status
     gnn_status = "active" if gnn_results else ("bootstrap" if gnn_predictions.get("inference_source") == "gnn_not_deployed_yet" else "failed")
-    
+
     print(
         f"🎉 MANDATORY tri-modal search completed: {len(unified_results)} unified results"
     )
@@ -790,7 +793,7 @@ async def orchestrate_universal_search(
         f"   📊 Vector: {len(vector_results.get('results', []))} + Graph: {len(graph_results.get('entities', []))} + GNN: {len(gnn_results)} ({gnn_status}) results"
     )
     print(f"   🎯 Search confidence: {search_confidence:.3f}")
-    
+
     if gnn_status == "bootstrap":
         print("   🚀 GNN: Async deployment in progress - will be available on subsequent requests")
 

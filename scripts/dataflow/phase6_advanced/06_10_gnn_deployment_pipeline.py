@@ -298,25 +298,15 @@ dependencies:
 
                 # Create endpoint
                 timestamp = str(int(time.time()))[-6:]
-                endpoint_name = f"gnn-{timestamp}"
-
-                endpoint = ManagedOnlineEndpoint(
-                    name=endpoint_name,
-                    description="Universal GNN endpoint for Azure Universal RAG tri-modal search",
-                    auth_mode="key",
-                    tags={
-                        "model_type": "universal_gnn",
-                        "purpose": "tri_modal_search",
-                        "pipeline": "phase6_reproducible",
-                    },
-                )
-
-                logger.info(f"🌐 Creating endpoint: {endpoint_name}")
-                endpoint_result = (
-                    self.ml_client.online_endpoints.begin_create_or_update(
-                        endpoint
-                    ).result()
-                )
+                # Use centralized endpoint manager to prevent duplicates
+                from infrastructure.azure_ml.endpoint_manager import get_endpoint_manager
+                
+                endpoint_manager = await get_endpoint_manager()
+                endpoint_name = await endpoint_manager.create_shared_gnn_endpoint()
+                
+                # Get the endpoint object
+                endpoint_result = self.ml_client.online_endpoints.get(endpoint_name)
+                logger.info(f"♻️  Using shared endpoint: {endpoint_name}")
 
                 # Create deployment
                 deployment_name = f"gnn-dep-{timestamp}"

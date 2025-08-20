@@ -23,7 +23,19 @@ from agents.core.universal_deps import get_universal_deps
 
 
 async def validate_phase0_completion():
-    """Validate that Phase 0 cleanup completed successfully"""
+    """Validate that Phase 0 cleanup completed successfully (or skip in incremental mode)"""
+    import os
+
+    # Check if we're in incremental mode
+    skip_cleanup = os.environ.get("SKIP_CLEANUP", "false").lower() == "true"
+
+    if skip_cleanup:
+        print("\n⏭️  SKIPPING PHASE 0 VALIDATION (INCREMENTAL MODE)")
+        print("=" * 50)
+        print("   📊 Incremental mode: Preserving existing data")
+        print("   🔄 Will add/update data based on data/raw content")
+        return True
+
     print("\n🧹 VALIDATING PHASE 0 COMPLETION")
     print("=" * 40)
 
@@ -63,13 +75,27 @@ async def validate_phase1_completion():
 
         deps = await get_universal_deps()
 
-        # Quick agent validation
+        # Quick agent validation with retry logic for rate limits
         print("   🧠 Testing Domain Intelligence Agent...")
         test_content = "Azure AI services provide machine learning capabilities."
-        domain_result = await run_domain_analysis(test_content, detailed=False)
-        if not domain_result or not domain_result.domain_signature:
-            raise RuntimeError("Domain Intelligence Agent not working")
-        print(f"   ✅ Domain Intelligence Agent operational")
+
+        # Implement retry logic for Azure OpenAI rate limits
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                domain_result = await run_domain_analysis(test_content, detailed=False)
+                if not domain_result or not domain_result.domain_signature:
+                    raise RuntimeError("Domain Intelligence Agent not working")
+                print(f"   ✅ Domain Intelligence Agent operational")
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < max_retries - 1:
+                    wait_time = 60 * (2 ** attempt)  # Exponential backoff: 60s, 120s, 240s
+                    print(f"   ⏰ Rate limit hit (attempt {attempt + 1}/{max_retries}), waiting {wait_time}s...")
+                    await asyncio.sleep(wait_time)
+                    continue
+                else:
+                    raise RuntimeError(f"Domain Intelligence Agent validation failed: {e}")
 
         print("   🔬 Testing Knowledge Extraction Agent...")
         # Just test that the agent can be initialized properly, skip full extraction

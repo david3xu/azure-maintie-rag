@@ -19,10 +19,21 @@ async def ingest_data(source_path: str, container_name: str = "raw-data"):
     print(f"📁 Data Ingestion: '{source_path}' → Azure Blob Storage")
 
     try:
-        # Initialize universal dependencies
+        # Initialize universal dependencies with correct container configuration
         deps = await get_universal_deps()
+        # Override the container for this specific upload operation
         storage_client = deps.storage_client
-        print(f"✅ Connected to Azure Blob Storage")
+        # Set the container name that the script expects to use
+        storage_client.container_name = container_name
+        print(f"✅ Connected to Azure Blob Storage (container: {container_name})")
+
+        # Also ensure search client is ready for subsequent indexing
+        search_client = deps.search_client
+        index_result = await search_client.ensure_index_exists()
+        if index_result["success"]:
+            print(f"✅ Search index ready for subsequent indexing: {index_result['data']['index_name']}")
+        else:
+            print(f"⚠️ Search index not ready - will need to be created later")
 
         # Find files to process
         source_directory = Path(source_path)
@@ -39,8 +50,18 @@ async def ingest_data(source_path: str, container_name: str = "raw-data"):
 
         print(f"📂 Found {len(md_files)} files to process")
 
+        # Check if we're in incremental mode
+        import os
+        skip_cleanup = os.environ.get("SKIP_CLEANUP", "false").lower() == "true"
+
+        if skip_cleanup:
+            print("🔄 Incremental mode: Only uploading new/changed files")
+        else:
+            print("🧹 Full mode: Uploading all files (after cleanup)")
+
         # Process all files
         processed = 0
+        skipped = 0
         total_size = 0
 
         for file_path in md_files:  # Process all available files
@@ -55,6 +76,19 @@ async def ingest_data(source_path: str, container_name: str = "raw-data"):
                 blob_name = (
                     file_path.name
                 )  # Just the file name, container is set in client
+
+                # In incremental mode, check if blob already exists
+                if skip_cleanup:
+                    try:
+                        # Check if blob exists
+                        existing_blob = await storage_client.get_blob_properties(blob_name)
+                        if existing_blob:
+                            print(f"⏭️  Skipped: {file_path.name} (already exists)")
+                            skipped += 1
+                            continue
+                    except Exception:
+                        # Blob doesn't exist, proceed with upload
+                        pass
 
                 try:
                     # Use storage client to upload (correct signature)
@@ -76,10 +110,15 @@ async def ingest_data(source_path: str, container_name: str = "raw-data"):
             except Exception as e:
                 print(f"⚠️ Failed to process {file_path.name}: {e}")
 
-        print(
-            f"✅ Processed {processed}/{len(md_files)} files ({total_size/1024:.1f} KB)"
-        )
-        return {"processed": processed, "total": len(md_files), "size": total_size}
+        if skip_cleanup and skipped > 0:
+            print(
+                f"✅ Processed {processed}/{len(md_files)} files, skipped {skipped} existing ({total_size/1024:.1f} KB)"
+            )
+        else:
+            print(
+                f"✅ Processed {processed}/{len(md_files)} files ({total_size/1024:.1f} KB)"
+            )
+        return {"processed": processed, "total": len(md_files), "skipped": skipped, "size": total_size}
 
     except Exception as e:
         print(f"❌ Data ingestion failed: {e}")

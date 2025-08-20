@@ -88,6 +88,7 @@ module hosting 'modules/hosting-services.bicep' = {
     openaiEndpoint: ai.outputs.openaiEndpoint
     searchEndpoint: coreServices.outputs.searchEndpoint
     cosmosEndpoint: data.outputs.cosmosEndpoint
+    cosmosKey: data.outputs.cosmosKey
     storageAccountName: coreServices.outputs.storageAccountName
     keyVaultName: coreServices.outputs.keyVaultName
     appInsightsConnectionString: coreServices.outputs.appInsightsConnectionString

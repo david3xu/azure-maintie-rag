@@ -154,9 +154,8 @@ class UniversalDeps:
             # Initialize Cosmos DB (required by Knowledge Extraction)
             try:
                 if not self.cosmos_client:
-                    self.cosmos_client = SimpleCosmosGremlinClient()
-                    # Pass the managed identity credential to the client
-                    self.cosmos_client.credential = self.credential
+                    # CRITICAL: Pass credential during construction to avoid initialization race condition
+                    self.cosmos_client = SimpleCosmosGremlinClient(credential=self.credential)
                     self.cosmos_client.ensure_initialized()  # Use synchronous ensure_initialized
                 services_status["cosmos"] = True
             except Exception as e:

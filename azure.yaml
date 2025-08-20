@@ -25,19 +25,20 @@ env:
   # Azure Resource Configuration
   AZURE_LOCATION: westus2
   AZURE_RESOURCE_GROUP_PREFIX: rg-maintie-rag
-  
+
   # Application Configuration
   OPENAI_MODEL_DEPLOYMENT: gpt-4.1-mini  # Your preferred model that works well
   EMBEDDING_MODEL_DEPLOYMENT: text-embedding-ada-002
   SEARCH_INDEX_NAME: maintie-index
   COSMOS_DATABASE_NAME: maintie-rag-db
   COSMOS_GRAPH_NAME: knowledge-graph
-  
+
   # Container Configuration
   BACKEND_PORT: 8000
-  
+
   # Data Pipeline Configuration
   AUTO_POPULATE_DATA: true  # REAL data pipeline with REAL Azure services
+  USE_INCREMENTAL_MODE: true  # Use incremental updates instead of full cleanup
 
 # Deployment hooks
 hooks:
@@ -47,25 +48,25 @@ hooks:
       echo "🏗️ Preparing Azure Universal RAG deployment..."
       echo "Environment: ${AZURE_ENV_NAME}"
       echo "Location: ${AZURE_LOCATION}"
-      
+
   postprovision:
     shell: sh
     run: |
       echo "✅ Infrastructure provisioned successfully!"
       echo ""
       echo "🔍 Checking deployed resources..."
-      
+
       # Get resource group info
       RESOURCE_GROUP="rg-maintie-rag-${AZURE_ENV_NAME}"
       echo "Resource Group: $RESOURCE_GROUP"
-      
+
       # List key resources
       echo ""
       echo "📦 Key Resources:"
       az resource list --resource-group "$RESOURCE_GROUP" --query "[].{Name:name, Type:type}" -o table 2>/dev/null || echo "Unable to list resources"
-      
+
       echo ""
-      
+
       # Check if automated data pipeline is enabled
       if [ "${AUTO_POPULATE_DATA:-true}" != "true" ]; then
         echo "⏭️  Automated data pipeline disabled (AUTO_POPULATE_DATA=false)"
@@ -75,20 +76,20 @@ hooks:
         echo "🚀 FAST DEPLOYMENT: Complete in ~2-3 minutes!"
         exit 0
       fi
-      
+
       echo "🚀 Option 2: Async Model Deployment - Executing REAL automated data pipeline..."
       echo ""
-      
+
       # Get backend endpoint for API calls
       BACKEND_URI=$(azd env get-values | grep "SERVICE_BACKEND_URI=" | cut -d'=' -f2 | tr -d '"')
       if [ -z "$BACKEND_URI" ]; then
         echo "❌ Backend URI not found - cannot execute automated pipeline"
         exit 1
       fi
-      
+
       echo "📍 Backend endpoint: $BACKEND_URI"
       echo "⏳ Waiting for backend container app to be fully ready..."
-      
+
       # Wait for backend to be ready (max 8 minutes for first deployment)
       for i in {1..48}; do
         if curl -s "$BACKEND_URI/api/v1/admin/status" > /dev/null 2>&1; then
@@ -98,9 +99,9 @@ hooks:
         echo "   Waiting... attempt $i/48"
         sleep 10
       done
-      
+
       echo "🔥 Executing REAL data pipeline via deployed backend API..."
-      
+
       # Phase 0: Trigger cleanup via backend API
       echo "📋 Phase 0: Cleaning existing Azure data via API..."
       if curl -X POST "$BACKEND_URI/api/v1/admin/cleanup" \
@@ -111,8 +112,8 @@ hooks:
       else
         echo "⚠️  Phase 0: Cleanup API call failed - continuing anyway"
       fi
-      
-      # Phase 1: Trigger agent validation via backend API  
+
+      # Phase 1: Trigger agent validation via backend API
       echo "📋 Phase 1: Validating agents via API..."
       if curl -X POST "$BACKEND_URI/api/v1/admin/validate-agents" \
          -H "Content-Type: application/json" \
@@ -122,7 +123,7 @@ hooks:
         echo "❌ Phase 1: Agent validation failed - check logs for details"
         echo "⚠️  Infrastructure deployed successfully, manual pipeline execution available"
       fi
-      
+
       # Phase 2: Trigger data ingestion via backend API
       echo "📋 Phase 2: Uploading REAL data via API..."
       if curl -X POST "$BACKEND_URI/api/v1/admin/ingest-data" \
@@ -134,7 +135,7 @@ hooks:
         echo "❌ Phase 2: Data ingestion failed - check logs for details"
         echo "⚠️  Infrastructure ready, try manual execution: make dataflow-ingest"
       fi
-      
+
       # Phase 3: Trigger knowledge extraction via backend API
       echo "📋 Phase 3: Building REAL knowledge graph via API..."
       if curl -X POST "$BACKEND_URI/api/v1/admin/extract-knowledge" \
@@ -147,7 +148,7 @@ hooks:
         echo "❌ Phase 3: Knowledge extraction failed - check logs for details"
         echo "⚠️  Infrastructure ready, try manual execution: make dataflow-extract"
       fi
-      
+
       # Phase 6: Trigger GNN async bootstrap via backend API
       echo "📋 Phase 6: Option 2 - REAL GNN async training via API..."
       if curl -X POST "$BACKEND_URI/api/v1/admin/train-gnn" \
@@ -161,11 +162,11 @@ hooks:
         echo "⚠️  Infrastructure ready, try manual execution: make dataflow-advanced"
         echo "🚨 Note: Tri-modal search requires ALL THREE modalities: Vector + Graph + GNN"
       fi
-      
+
       echo ""
       echo "🎉 OPTION 2: ASYNC MODEL DEPLOYMENT COMPLETED!"
       echo "✅ Infrastructure deployed with REAL Azure services"
-      echo "✅ REAL data uploaded and processed automatically"  
+      echo "✅ REAL data uploaded and processed automatically"
       echo "✅ Agent 1 analyzed ALL REAL documents automatically"
       echo "✅ REAL knowledge graph built in Cosmos DB"
       echo "✅ REAL GNN training using Azure ML CPU-only ($0.168/hour, auto-scale to zero)"
@@ -174,24 +175,24 @@ hooks:
       echo "🎯 System is now fully operational with REAL tri-modal search!"
       echo "💡 GNN endpoints use Azure ML CPU-only ($0.168/hour, 4-hour auto-shutdown enabled)"
       echo "💡 NO fallback, NO placeholders - all modalities use REAL Azure services"
-      
+
   postdeploy:
     shell: sh
     run: |
       echo "✅ Deployment complete!"
       echo ""
       echo "🔗 Getting deployment URLs..."
-      
+
       # Run our working URL script
       if [ -f "./scripts/show-deployment-urls.sh" ]; then
         ./scripts/show-deployment-urls.sh
       else
         echo "📍 Use this command to get URLs: ./scripts/show-deployment-urls.sh"
       fi
-      
+
       echo ""
       echo "📊 Environment: ${AZURE_ENV_NAME}"
-      
+
       # Check if automated data pipeline should run (Option 2: Async Model Deployment)
       if [ "${AUTO_POPULATE_DATA:-true}" != "true" ]; then
         echo "⏭️  Automated data pipeline disabled (AUTO_POPULATE_DATA=false)"
@@ -200,31 +201,36 @@ hooks:
         echo "🚀 FAST DEPLOYMENT: Infrastructure deployment complete!"
         exit 0
       fi
-      
+
       echo ""
       echo "🚀 Option 2: Async Model Deployment - Executing REAL automated data pipeline..."
       echo "💡 This runs after EVERY deployment to ensure data pipeline is current"
       echo ""
-      
+
       # Get backend endpoint
       BACKEND_URI=$(azd env get-values | grep "SERVICE_BACKEND_URI=" | cut -d'=' -f2 | tr -d '"')
       if [ -z "$BACKEND_URI" ]; then
         echo "❌ Backend URI not found - running local dataflow scripts instead"
         echo "🔄 Executing local Option 2 pipeline against deployed infrastructure..."
-        
+
         # Fallback: Run local dataflow scripts
         if command -v make >/dev/null 2>&1; then
-          echo "📋 Running: make dataflow-full (local execution against Azure services)"
-          make dataflow-full || echo "⚠️  Dataflow pipeline had issues - check logs"
+          if [ "${USE_INCREMENTAL_MODE:-true}" = "true" ]; then
+            echo "📋 Running: make dataflow-incremental (incremental update from data/raw)"
+            make dataflow-incremental || echo "⚠️  Incremental pipeline had issues - check logs"
+          else
+            echo "📋 Running: make dataflow-full (full pipeline with cleanup)"
+            make dataflow-full || echo "⚠️  Dataflow pipeline had issues - check logs"
+          fi
         else
-          echo "❌ Make not available - manual execution required: make dataflow-full"
+          echo "❌ Make not available - manual execution required: make dataflow-incremental"
         fi
         exit 0
       fi
-      
+
       echo "📍 Backend endpoint: $BACKEND_URI"
       echo "⏳ Waiting for backend container to be ready..."
-      
+
       # Wait for backend (increased time for Container App initialization)
       for i in {1..36}; do
         if curl -s "$BACKEND_URI/api/v1/health" > /dev/null 2>&1; then
@@ -234,35 +240,35 @@ hooks:
         echo "   Waiting... attempt $i/36"
         sleep 10
       done
-      
+
       # Execute local dataflow with proper authentication for automated deployment
       echo "🔄 Executing Option 2 pipeline with automated authentication handling..."
       echo "💡 This ensures Option 2 async deployment works in all environments"
-      
+
       if command -v make >/dev/null 2>&1; then
         echo "📋 Executing complete Option 2 pipeline locally against REAL Azure services..."
-        
+
         # Set proper authentication for local execution
         export USE_MANAGED_IDENTITY=false
         export OPENBLAS_NUM_THREADS=1
         export PYTHONPATH=$(pwd)
-        
+
         # Check if we're in a deployment context (azd environment available)
         if command -v azd >/dev/null 2>&1; then
           echo "🔑 Using azd deployment context with local credentials..."
           # Sync with current azd environment
           ./scripts/deployment/sync-env.sh $(azd env get-values | grep "AZURE_ENV_NAME=" | cut -d'=' -f2 | tr -d '"') 2>/dev/null || echo "Using existing environment"
-          
+
           # Enhanced authentication validation for enterprise environments
           echo "🔐 ENTERPRISE AUTHENTICATION VALIDATION FOR AUTOMATED PIPELINE"
           echo "=============================================================="
-          
+
           # Run comprehensive authentication diagnosis
           if [ -f "./scripts/deployment/sync-auth.sh" ]; then
             echo "🔍 Running authentication synchronization check..."
             ./scripts/deployment/sync-auth.sh
           fi
-          
+
           # Check if Azure CLI is authenticated
           if ! az account show >/dev/null 2>&1; then
             echo ""
@@ -279,14 +285,14 @@ hooks:
             echo "   make dataflow-full"
             echo ""
             echo "⚠️  EXPECTED BEHAVIOR: No fake success, honest error reporting"
-            
+
             # Try to get subscription info for user guidance
             AZD_SUBSCRIPTION=$(azd env get-values | grep "AZURE_SUBSCRIPTION_ID=" | cut -d'=' -f2 | tr -d '"' 2>/dev/null)
             if [ -n "$AZD_SUBSCRIPTION" ]; then
               echo "🔗 Target subscription: $AZD_SUBSCRIPTION"
               echo "💡 Use this subscription ID when re-authenticating"
             fi
-            
+
             # Skip automated pipeline - fail honestly
             echo ""
             echo "🚨 SKIPPING AUTOMATED PIPELINE DUE TO AUTHENTICATION EXPIRATION"
@@ -294,7 +300,7 @@ hooks:
             exit 0
           else
             echo "✅ Azure CLI authentication working"
-            
+
             # Verify subscription matches
             CLI_SUB=$(az account show --query id -o tsv 2>/dev/null)
             AZD_SUB=$(azd env get-values | grep "AZURE_SUBSCRIPTION_ID=" | cut -d'=' -f2 | tr -d '"' 2>/dev/null)
@@ -305,19 +311,19 @@ hooks:
             fi
           fi
         fi
-        
+
         # Execute the complete pipeline with timeout to prevent hanging
         echo "⏳ Starting Option 2 pipeline (timeout: 20 minutes)..."
         timeout 1200 make dataflow-full || {
           echo "⚠️  Pipeline timed out or had issues - this may be expected for large datasets"
           echo "💡 Deployment is functional - pipeline can be run manually if needed"
         }
-        
+
         echo ""
         echo "🎉 OPTION 2: ASYNC MODEL DEPLOYMENT ATTEMPTED!"
         echo "✅ Infrastructure deployed with REAL Azure services"
         echo "✅ Automated pipeline execution initiated"
-        echo "✅ All agents available for REAL Azure integration" 
+        echo "✅ All agents available for REAL Azure integration"
         echo "✅ TRI-MODAL SEARCH: Ready for Vector + Graph + GNN"
         echo ""
         echo "💡 Chat interface is ready - check backend health for pipeline status!"

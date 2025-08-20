@@ -7,6 +7,8 @@ param resourcePrefix string
 param openaiEndpoint string
 param searchEndpoint string
 param cosmosEndpoint string
+@secure()
+param cosmosKey string
 param storageAccountName string
 param keyVaultName string
 @secure()
@@ -142,6 +144,10 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'container-registry-password'
           value: containerRegistry.listCredentials().passwords[0].value
         }
+        {
+          name: 'azure-cosmos-key'
+          value: cosmosKey
+        }
       ]
     }
     template: {
@@ -185,6 +191,38 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             {
               name: 'PORT'
               value: '8000'
+            }
+            {
+              name: 'USE_MANAGED_IDENTITY'
+              value: 'false'
+            }
+            {
+              name: 'AZURE_SEARCH_INDEX'
+              value: 'maintie-prod-index'
+            }
+            {
+              name: 'AZURE_COSMOS_DATABASE_NAME'
+              value: 'maintie-rag-prod'
+            }
+            {
+              name: 'AZURE_COSMOS_GRAPH_NAME'
+              value: 'knowledge-graph-prod'
+            }
+            {
+              name: 'AZURE_STORAGE_CONTAINER'
+              value: 'maintie-prod-data'
+            }
+            {
+              name: 'AZURE_OPENAI_DEPLOYMENT_NAME'
+              value: 'gpt-4.1-mini'
+            }
+            {
+              name: 'AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME'
+              value: 'text-embedding-ada-002'
+            }
+            {
+              name: 'AZURE_COSMOS_KEY'
+              secretRef: 'azure-cosmos-key'
             }
           ]
           resources: {

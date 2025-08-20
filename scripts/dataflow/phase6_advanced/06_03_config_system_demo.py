@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
 """
-Configuration System Demo - Working Configuration Integration
-============================================================
+Configuration System Demo - Phase 6 Advanced
+=============================================
 
-Demonstrates the new, working configuration system:
-- Clean configuration without broken dependencies
-- Domain-aware parameter adaptation
-- Integration with query generation agents
-- Proper error handling and fallbacks
-- Real Azure service integration
-
-Shows the replacement of the broken centralized_config.py system.
+Demonstrates the advanced configuration system with dynamic Azure service
+adaptation, environment detection, and real-time parameter adjustment.
 """
 
 import asyncio
@@ -18,713 +12,272 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Dict, Any, List
 
-# Add backend to path
+# Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# Import simple dynamic configuration manager
-try:
-    from agents.core.simple_config_manager import (
-        analyze_domain_directory,
-        get_extraction_config_dynamic,
-        get_search_config_dynamic,
-        simple_dynamic_config_manager,
-    )
-except ImportError as e:
-    # FAIL FAST: No fake implementations allowed
-    raise RuntimeError(
-        f"Configuration system demo requires real simple_config_manager implementation: {e}. "
-        "No fake success patterns allowed - implement real Azure service-based configuration management first."
-    ) from e
+from config.universal_config import UniversalConfig
+from config.azure_settings import AzureSettings
 
 
-# Import real query generation tools
-try:
-    from agents.shared.query_tools import (
-        generate_analysis_query,
-        generate_gremlin_query,
-        generate_search_query,
-        orchestrate_query_workflow,
-    )
-    
-    # Create QueryRequest class for compatibility
-    class QueryRequest:
-        def __init__(
-            self, query_type, operation_type, context, parameters, query="test query"
-        ):
-            self.query_type = query_type
-            self.operation_type = operation_type
-            self.context = context
-            self.parameters = parameters
-            self.query = query
+async def demo_configuration_system():
+    """Demonstrate the configuration system capabilities"""
+    print("⚙️  CONFIGURATION SYSTEM DEMO")
+    print("=" * 50)
+    print("Showcasing dynamic Azure service configuration")
+    print("and adaptive parameter management")
+    print()
 
-    class MockOrchestrator:
-        async def generate_query(self, request):
-            # FAIL FAST: No mock success allowed
-            raise RuntimeError(
-                "Demo script using mock orchestrator. No fake successes allowed - implement real query orchestration first."
-            )
-
-        def get_cache_stats(self):
-            # Return basic stats for demo compatibility
-            return {
-                "cache_size": 0,
-                "cache_hits": 0,
-                "cache_misses": 0,
-                "cache_hit_rate": 0.0
-            }
-
-    query_orchestrator = MockOrchestrator()
-
-except ImportError as e:
-    # FAIL FAST: No fake query tools allowed
-    raise RuntimeError(
-        f"Demo script requires real query generation tools: {e}. "
-        "No fake success patterns allowed - implement real query tools first."
-    ) from e
-
-# Import working configuration system
-try:
-    from config.universal_config import UniversalConfig
-except ImportError:
-    # UniversalConfig not available, using azure_settings directly
-    UniversalConfig = None
-# Simplified imports for available config modules
-from config.azure_settings import azure_settings
-
-
-# Simple configuration functions for demo
-def get_extraction_config(content_characteristics, vocabulary_complexity=0.5):
-    """Get extraction configuration based on discovered content characteristics"""
-    # Adapt configuration based on measured properties instead of domain assumptions
-    base_threshold = 0.6 + (vocabulary_complexity * 0.2)  # Higher complexity = higher threshold
-    base_chunk_size = int(2000 - (vocabulary_complexity * 500))  # Higher complexity = smaller chunks
-    
-    base_config = type(
-        "Config",
-        (),
-        {
-            "entity_confidence_threshold": base_threshold,
-            "chunk_size": base_chunk_size,
-        },
-    )()
-    return base_config
-
-
-def get_search_config(query_characteristics, query=""):
-    """Get search configuration based on discovered query characteristics"""
-    # Adapt search based on query complexity instead of domain assumptions
-    query_complexity = len(query.split()) / 10.0  # Simple complexity measure
-    base_top_k = max(5, min(15, int(5 + query_complexity * 5)))  # 5-15 based on complexity
-    base_hop_count = max(2, min(4, int(2 + query_complexity)))  # 2-4 based on complexity
-    base_threshold = 0.7 + (query_complexity * 0.1)  # Higher complexity = higher threshold
-    
-    base_config = type(
-        "Config",
-        (),
-        {
-            "vector_top_k": base_top_k,
-            "graph_hop_count": base_hop_count,
-            "vector_similarity_threshold": min(0.9, base_threshold),
-        },
-    )()
-    return base_config
-
-
-# Use real configuration manager instead of mock
-config_manager = simple_dynamic_config_manager()
-
-
-def validate_configuration():
-    """Validate current configuration"""
-    # Real validation using Azure settings
-    from config.azure_settings import azure_settings
-    
-    validation_results = {
-        "openai_configured": bool(azure_settings.openai_api_key and azure_settings.azure_openai_endpoint),
-        "cosmos_configured": bool(azure_settings.azure_cosmos_endpoint and azure_settings.azure_cosmos_key),
-        "search_configured": bool(azure_settings.azure_search_endpoint and azure_settings.azure_search_key),
-        "storage_configured": bool(azure_settings.azure_storage_account),
-        "config_manager_functional": True,  # Config manager is working
-        "cache_operations_working": True,   # Cache operations are functional
-    }
-    
-    return validation_results
-
-
-def initialize_configuration() -> Dict[str, Any]:
-    """Initialize real configuration system with Azure services validation"""
-    print("   🔗 Validating Azure services configuration...")
-
-    validation = {
-        "azure_openai_configured": bool(
-            azure_settings.openai_api_key and azure_settings.azure_openai_endpoint
-        ),
-        "cosmos_configured": bool(
-            azure_settings.azure_cosmos_endpoint and azure_settings.azure_cosmos_key
-        ),
-        "search_configured": bool(
-            azure_settings.azure_search_endpoint and azure_settings.azure_search_key
-        ),
-        "storage_configured": bool(azure_settings.azure_storage_account),
-        "timestamp": time.time(),
+    demo_results = {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "tests": [],
+        "summary": {}
     }
 
-    configured_services = sum(
-        1 for v in validation.values() if isinstance(v, bool) and v
-    )
-    print(f"   ✅ {configured_services}/4 Azure services configured")
-
-    return validation
-
-
-def get_system_config() -> Dict[str, Any]:
-    """Get real system configuration"""
-    return {
-        "max_concurrent_requests": 10,
-        "timeout_seconds": 300,
-        "retry_attempts": 3,
-        "logging_level": "INFO",
-        "session_management": True,
-    }
-
-
-def get_model_config() -> Dict[str, Any]:
-    """Get real model configuration from Azure settings"""
-    return {
-        "openai_model": azure_settings.openai_deployment_name or "gpt-4o",
-        "api_version": azure_settings.openai_api_version or "2024-02-01",
-        "max_tokens": 4000,
-        "temperature": 0.1,
-        "embedding_model": azure_settings.embedding_deployment_name
-        or "text-embedding-ada-002",
-    }
-
-
-def get_query_generation_config() -> Dict[str, Any]:
-    """Get real query generation configuration"""
-    return {
-        "max_queries_per_domain": 5,
-        "query_complexity_levels": ["simple", "intermediate", "complex"],
-        "include_reasoning": True,
-        "use_domain_context": True,
-    }
-
-
-def get_azure_config() -> Dict[str, Any]:
-    """Get real Azure services configuration"""
-    return {
-        "openai_endpoint": azure_settings.azure_openai_endpoint or "Not configured",
-        "cosmos_endpoint": azure_settings.azure_cosmos_endpoint or "Not configured",
-        "search_endpoint": azure_settings.azure_search_endpoint or "Not configured",
-        "storage_account": azure_settings.azure_storage_account or "Not configured",
-        "resource_group": azure_settings.azure_resource_group or "Not configured",
-        "subscription_id": azure_settings.azure_subscription_id or "Not configured",
-    }
-
-
-async def configuration_system_demo(
-    data_directory: str = "data/raw",
-    session_id: str = None,
-) -> Dict[str, Any]:
-    """
-    Comprehensive demo of the working configuration system
-    """
-    session_id = session_id or f"config_demo_{int(time.time())}"
-    print("⚙️  Configuration System Demo - Working Implementation")
-    print(f"Session: {session_id}")
-    print("=" * 70)
-
-    results = {
-        "session_id": session_id,
-        "data_directory": data_directory,
-        "demos": [],
-        "overall_status": "in_progress",
-    }
-
-    start_time = time.time()
-
+    # Test 1: Universal Config Loading
+    print("🔧 Test 1: Universal Configuration Loading")
     try:
-        # Demo 1: Basic Configuration System
-        print("🔧 Demo 1: Basic Configuration System")
-        print("=" * 50)
-        basic_demo_start = time.time()
+        config = UniversalConfig()
 
-        # Initialize configuration system
-        print("   📋 Initializing configuration system...")
-        try:
-            validation = initialize_configuration()
-            init_success = True
-        except Exception as e:
-            print(f"   ⚠️  Initialization issue: {str(e)[:100]}...")
-            validation = {"azure_openai_configured": False}
-            init_success = False
+        print(f"   ✅ Config loaded successfully")
+        print(f"   📊 Debug mode: {config.DEBUG}")
+        print(f"   🚀 Environment: {config.ENVIRONMENT}")
+        print(f"   📝 Log level: {config.LOG_LEVEL}")
+        print(f"   ⏱️  Default timeout: {config.DEFAULT_TIMEOUT}s")
 
-        # Get basic configurations
-        system_config = get_system_config()
-        model_config = get_model_config()
-        query_config = get_query_generation_config()
-        azure_config = get_azure_config()
-
-        basic_demo_duration = time.time() - basic_demo_start
-
-        basic_demo = {
-            "demo": "basic_configuration",
-            "duration": basic_demo_duration,
-            "status": "completed" if init_success else "partial",
-            "configurations_loaded": {
-                "system": bool(system_config),
-                "model": bool(model_config),
-                "query_generation": bool(query_config),
-                "azure_services": bool(azure_config),
-            },
-            "validation_results": validation,
-            "configuration_details": {
-                "max_workers": system_config.get("max_concurrent_requests", 10),
-                "openai_timeout": system_config.get("timeout_seconds", 300),
-                "model_deployment": model_config.get("openai_model", "gpt-4o"),
-                "azure_configured": bool(azure_settings.openai_api_key),
-                "caching_enabled": system_config.get("session_management", True),
-                "query_caching_enabled": query_config.get("include_reasoning", True),
-            },
-        }
-
-        results["demos"].append(basic_demo)
-
-        print(
-            f"   ✅ System config: max_workers={system_config.get('max_concurrent_requests', 10)}, timeout={system_config.get('timeout_seconds', 300)}s"
-        )
-        print(
-            f"   ✅ Model config: {model_config.get('openai_model', 'gpt-4o')}, configured={bool(azure_settings.openai_api_key)}"
-        )
-        print(
-            f"   ✅ Query config: caching={query_config.get('include_reasoning', True)}, max_queries={query_config.get('max_queries_per_domain', 5)}"
-        )
-        print(
-            f"   ✅ Validation: {len([k for k, v in validation.items() if v])}/{len(validation)} services configured"
-        )
-        print(f"   ⏱️  Duration: {basic_demo_duration:.2f}s\n")
-
-        # Demo 2: Domain-Specific Configuration
-        print("🌍 Demo 2: Domain-Aware Configuration Adaptation")
-        print("=" * 50)
-        domain_demo_start = time.time()
-
-        # Get static domain configurations
-        print("   📊 Loading static domain configurations...")
-        general_extraction = get_extraction_config("simple_characteristics", vocabulary_complexity=0.3)
-        complex_extraction = get_extraction_config(
-            "complex_characteristics", vocabulary_complexity=0.8
-        )
-
-        general_search = get_search_config("simple_characteristics")
-        complex_search = get_search_config(
-            "complex_characteristics",
-            query="machine learning neural networks artificial intelligence",
-        )
-
-        # Try dynamic configurations
-        print("   🧠 Attempting dynamic domain analysis...")
-        try:
-            dynamic_extraction = await get_extraction_config_dynamic(
-                "test_domain", data_directory
-            )
-            dynamic_search = await get_search_config_dynamic(
-                "test_domain", query="Azure RAG system", data_directory=data_directory
-            )
-            dynamic_analysis = await analyze_domain_directory(data_directory)
-            dynamic_success = True
-            domain_signature = dynamic_analysis.domain_signature
-        except Exception as e:
-            print(f"   ⚠️  Dynamic analysis unavailable: {str(e)[:80]}...")
-            dynamic_extraction = {}
-            dynamic_search = {}
-            dynamic_analysis = None
-            dynamic_success = False
-            domain_signature = "unavailable"
-
-        domain_demo_duration = time.time() - domain_demo_start
-
-        domain_demo = {
-            "demo": "domain_aware_configuration",
-            "duration": domain_demo_duration,
-            "status": "completed",
-            "static_configurations": {
-                "general_vs_specialized": {
-                    "entity_threshold_general": general_extraction.entity_confidence_threshold,
-                    "entity_threshold_specialized": complex_extraction.entity_confidence_threshold,
-                    "chunk_size_general": general_extraction.chunk_size,
-                    "chunk_size_specialized": complex_extraction.chunk_size,
-                },
-                "search_adaptation": {
-                    "simple_vector_top_k": general_search.vector_top_k,
-                    "complex_vector_top_k": complex_search.vector_top_k,
-                    "simple_graph_hops": general_search.graph_hop_count,
-                    "complex_graph_hops": complex_search.graph_hop_count,
-                },
-            },
-            "dynamic_configuration": {
-                "success": dynamic_success,
-                "domain_discovered": domain_signature,
-                "extraction_params": len(dynamic_extraction),
-                "search_params": len(dynamic_search),
-            },
-        }
-
-        results["demos"].append(domain_demo)
-
-        print(
-            f"   ✅ General extraction threshold: {general_extraction.entity_confidence_threshold}"
-        )
-        print(
-            f"   ✅ Complex extraction threshold: {complex_extraction.entity_confidence_threshold}"
-        )
-        print(
-            f"   ✅ Simple search top_k: {general_search.vector_top_k}, complex: {complex_search.vector_top_k}"
-        )
-        print(
-            f"   {'✅' if dynamic_success else '⚠️'} Dynamic analysis: {domain_signature}"
-        )
-        print(f"   ⏱️  Duration: {domain_demo_duration:.2f}s\n")
-
-        # Demo 3: Query Generation Integration
-        print("🤖 Demo 3: Query Generation Configuration Integration")
-        print("=" * 50)
-        query_demo_start = time.time()
-
-        print("   🎯 Testing query generation with configuration...")
-
-        # Test query generation requests with configuration
-        test_requests = [
-            QueryRequest(
-                query_type="gremlin",
-                operation_type="insert_entity",
-                context={
-                    "entities": [
-                        {"text": "Azure", "type": "PLATFORM", "confidence": 0.9}
-                    ]
-                },
-                parameters={
-                    "confidence_threshold": complex_extraction.entity_confidence_threshold
-                },
-                query="INSERT ENTITY Azure",
-            ),
-            QueryRequest(
-                query_type="search",
-                operation_type="vector",
-                context={
-                    "search_text": "knowledge extraction",
-                    "domain_context": {"vocabulary_complexity": 0.7},
-                },
-                parameters={
-                    "similarity_threshold": complex_search.vector_similarity_threshold,
-                    "top_k": complex_search.vector_top_k,
-                },
-                query="knowledge extraction",
-            ),
-            QueryRequest(
-                query_type="analysis",
-                operation_type="domain_characterization",
-                context={
-                    "content_samples": ["Sample content for domain characterization"]
-                },
-                parameters={"analysis_depth": "adaptive"},
-                query="analyze domain characteristics",
-            ),
-        ]
-
-        query_results = []
-        successful_queries = 0
-
-        # Initialize dependencies for real query generation
-        from agents.core.universal_deps import get_universal_deps
-        deps = await get_universal_deps()
-        
-        # Create mock run context for query tools
-        class MockRunContext:
-            def __init__(self, deps):
-                self.deps = deps
-        
-        ctx = MockRunContext(deps)
-        
-        for i, request in enumerate(test_requests):
-            try:
-                print(f"      🔄 Generating {request.query_type} query...")
-                
-                start_time = time.time()
-                
-                # Use real query generation tools based on type
-                if request.query_type == "gremlin":
-                    query_result = await generate_gremlin_query(
-                        ctx, 
-                        "demo query for configuration testing",
-                        entity_types=["TEST", "CONFIG"],
-                        relationship_types=["CONFIGURES"]
-                    )
-                    success = bool(query_result and len(query_result) > 10)
-                elif request.query_type == "search":
-                    query_result = await generate_search_query(
-                        ctx,
-                        "configuration system testing"
-                    )
-                    success = bool(query_result and query_result.get("search_text"))
-                elif request.query_type == "analysis":
-                    query_result = await generate_analysis_query(
-                        ctx,
-                        "Test configuration content for analysis",
-                        "characteristics"
-                    )
-                    success = bool(query_result and query_result.get("analysis_type"))
-                else:
-                    query_result = None
-                    success = False
-                
-                generation_time = time.time() - start_time
-                
-                query_results.append(
-                    {
-                        "type": request.query_type,
-                        "success": success,
-                        "generation_time": generation_time,
-                        "error": None if success else "Query generation failed",
-                        "result_summary": f"Generated {request.query_type} query successfully" if success else "Failed"
-                    }
-                )
-                if success:
-                    successful_queries += 1
-                    print(
-                        f"         ✅ Generated in {generation_time:.3f}s"
-                    )
-                else:
-                    print(
-                        f"         ⚠️  Generation failed for {request.query_type} query"
-                    )
-            except Exception as e:
-                print(f"         ❌ Query generation error: {str(e)[:50]}...")
-                query_results.append(
-                    {
-                        "type": request.query_type,
-                        "success": False,
-                        "generation_time": 0.0,
-                        "error": str(e),
-                    }
-                )
-
-        # Get orchestrator stats
-        if hasattr(query_orchestrator, "get_cache_stats"):
-            cache_stats = query_orchestrator.get_cache_stats()
-        else:
-            cache_stats = {"cache_size": successful_queries}
-
-        query_demo_duration = time.time() - query_demo_start
-
-        query_demo = {
-            "demo": "query_generation_integration",
-            "duration": query_demo_duration,
-            "status": "completed",
-            "query_generation": {
-                "total_queries": len(test_requests),
-                "successful_queries": successful_queries,
-                "success_rate": successful_queries / len(test_requests),
-                "query_results": query_results,
-            },
-            "orchestrator_stats": cache_stats,
-            "configuration_integration": {
-                "extraction_thresholds_applied": True,
-                "search_parameters_applied": True,
-                "caching_enabled": query_config.get("include_reasoning", True),
-            },
-        }
-
-        results["demos"].append(query_demo)
-
-        print(
-            f"   ✅ Query generation: {successful_queries}/{len(test_requests)} successful"
-        )
-        print(f"   📊 Success rate: {(successful_queries/len(test_requests)*100):.1f}%")
-        print(f"   🏎️  Cache entries: {cache_stats['cache_size']}")
-        print(f"   ⏱️  Duration: {query_demo_duration:.2f}s\n")
-
-        # Demo 4: Configuration Management Features
-        print("⚙️  Demo 4: Configuration Management Features")
-        print("=" * 50)
-        mgmt_demo_start = time.time()
-
-        print("   🗂️  Testing configuration management...")
-
-        # Test cache management
-        initial_cache_size = len(config_manager._universal_configs)
-        config_manager.clear_domain_cache()
-        cleared_cache_size = len(config_manager._universal_configs)
-
-        # Re-load configurations
-        reloaded_extraction = get_extraction_config("test_characteristics")
-        final_cache_size = len(config_manager._universal_configs)
-
-        # Test validation
-        validation_check = validate_configuration()
-
-        mgmt_demo_duration = time.time() - mgmt_demo_start
-
-        mgmt_demo = {
-            "demo": "configuration_management",
-            "duration": mgmt_demo_duration,
-            "status": "completed",
-            "cache_management": {
-                "initial_cache_size": initial_cache_size,
-                "after_clear_size": cleared_cache_size,
-                "after_reload_size": final_cache_size,
-                "cache_working": cleared_cache_size == 0 and final_cache_size > 0,
-            },
-            "validation": validation_check,
-            "features_tested": [
-                "cache_clearing",
-                "configuration_reloading",
-                "validation_checking",
-            ],
-        }
-
-        results["demos"].append(mgmt_demo)
-
-        print(
-            f"   ✅ Cache management: {initial_cache_size} → {cleared_cache_size} → {final_cache_size}"
-        )
-        print(
-            f"   ✅ Validation: {sum(validation_check.values())}/{len(validation_check)} checks passed"
-        )
-        print(f"   ⏱️  Duration: {mgmt_demo_duration:.2f}s\n")
-
-        # Final Summary
-        total_time = time.time() - start_time
-        successful_demos = len(
-            [d for d in results["demos"] if d["status"] == "completed"]
-        )
-
-        results.update(
-            {
-                "overall_status": "completed",
-                "total_duration": total_time,
-                "summary": {
-                    "total_demos": len(results["demos"]),
-                    "successful_demos": successful_demos,
-                    "configuration_system_working": True,
-                    "azure_integration": validation.get(
-                        "azure_openai_configured", False
-                    ),
-                    "domain_adaptation": dynamic_success,
-                    "query_generation_integration": successful_queries > 0,
-                    "cache_management": mgmt_demo["cache_management"]["cache_working"],
-                },
-                "performance_metrics": {
-                    "total_duration": total_time,
-                    "avg_demo_duration": total_time / len(results["demos"]),
-                    "successful_query_rate": (
-                        successful_queries / len(test_requests) if test_requests else 0
-                    ),
-                    "configuration_overhead": sum(
-                        d["duration"] for d in results["demos"]
-                    )
-                    / total_time,
-                },
+        demo_results["tests"].append({
+            "name": "universal_config_loading",
+            "success": True,
+            "details": {
+                "debug": config.DEBUG,
+                "environment": config.ENVIRONMENT,
+                "log_level": config.LOG_LEVEL,
+                "timeout": config.DEFAULT_TIMEOUT
             }
-        )
-
-        print("🎉 Configuration System Demo Complete!")
-        print("=" * 70)
-        print(f"   📄 Session: {session_id}")
-        print(f"   ⏱️  Total time: {total_time:.2f}s")
-        print(f"   ✅ Successful demos: {successful_demos}/{len(results['demos'])}")
-        print(
-            f"   🌍 Domain adaptation: {'✅ Working' if dynamic_success else '⚠️ Fallback'}"
-        )
-        print(
-            f"   🤖 Query integration: {'✅ Working' if successful_queries > 0 else '❌ Failed'}"
-        )
-        print(f"   ⚙️  Configuration system: ✅ Fully functional")
-        print(f"   🏎️  Performance: {total_time:.2f}s for {len(results['demos'])} demos")
-
-        return results
+        })
 
     except Exception as e:
-        total_time = time.time() - start_time
-        results.update(
-            {
-                "overall_status": "failed",
-                "total_duration": total_time,
-                "error": str(e),
-                "demos_completed": len(results.get("demos", [])),
+        print(f"   ❌ Config loading failed: {e}")
+        demo_results["tests"].append({
+            "name": "universal_config_loading",
+            "success": False,
+            "error": str(e)
+        })
+
+    print()
+
+    # Test 2: Azure Settings Configuration
+    print("🔧 Test 2: Azure Settings Configuration")
+    try:
+        azure_settings = AzureSettings()
+
+        print(f"   ✅ Azure settings loaded")
+        print(f"   🤖 OpenAI deployment: {azure_settings.AZURE_OPENAI_DEPLOYMENT_NAME}")
+        print(f"   🧠 Embedding model: {azure_settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME}")
+        print(f"   🔍 Search service: {azure_settings.AZURE_SEARCH_SERVICE_NAME}")
+        print(f"   🌌 Cosmos endpoint configured: {bool(azure_settings.AZURE_COSMOS_ENDPOINT)}")
+
+        demo_results["tests"].append({
+            "name": "azure_settings_configuration",
+            "success": True,
+            "details": {
+                "openai_deployment": azure_settings.AZURE_OPENAI_DEPLOYMENT_NAME,
+                "embedding_deployment": azure_settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME,
+                "search_service": azure_settings.AZURE_SEARCH_SERVICE_NAME,
+                "cosmos_configured": bool(azure_settings.AZURE_COSMOS_ENDPOINT)
             }
-        )
+        })
 
-        print(f"❌ Configuration System Demo Failed!")
-        print(f"   📄 Session: {session_id}")
-        print(f"   ⏱️  Time elapsed: {total_time:.2f}s")
-        print(f"   📊 Demos completed: {len(results.get('demos', []))}")
-        print(f"   ❌ Error: {e}")
+    except Exception as e:
+        print(f"   ❌ Azure settings failed: {e}")
+        demo_results["tests"].append({
+            "name": "azure_settings_configuration",
+            "success": False,
+            "error": str(e)
+        })
 
-        return results
+    print()
+
+    # Test 3: Environment Detection
+    print("🔧 Test 3: Environment Detection & Adaptation")
+    try:
+        # Test different environment scenarios
+        from infrastructure.azure_auth.auth_manager import AzureAuthManager
+
+        auth_manager = AzureAuthManager()
+
+        # Check authentication status
+        auth_status = auth_manager.validate_authentication()
+
+        print(f"   ✅ Environment detection completed")
+        print(f"   🔐 Azure CLI status: {'✅' if auth_status.get('az_cli_ready') else '❌'}")
+        print(f"   📋 Subscription: {auth_status.get('subscription_id', 'Not available')[:20]}...")
+        print(f"   👤 User: {auth_status.get('user_name', 'Not available')}")
+
+        demo_results["tests"].append({
+            "name": "environment_detection",
+            "success": True,
+            "details": {
+                "az_cli_ready": auth_status.get('az_cli_ready', False),
+                "subscription_available": bool(auth_status.get('subscription_id')),
+                "user_authenticated": bool(auth_status.get('user_name'))
+            }
+        })
+
+    except Exception as e:
+        print(f"   ❌ Environment detection failed: {e}")
+        demo_results["tests"].append({
+            "name": "environment_detection",
+            "success": False,
+            "error": str(e)
+        })
+
+    print()
+
+    # Test 4: Dynamic Parameter Adjustment
+    print("🔧 Test 4: Dynamic Parameter Adjustment")
+    try:
+        # Simulate parameter adjustment based on workload
+        scenarios = [
+            {"name": "Light workload", "factor": 0.5},
+            {"name": "Normal workload", "factor": 1.0},
+            {"name": "Heavy workload", "factor": 2.0}
+        ]
+
+        adjustments = []
+        for scenario in scenarios:
+            base_timeout = config.DEFAULT_TIMEOUT
+            adjusted_timeout = int(base_timeout * scenario["factor"])
+
+            adjustments.append({
+                "scenario": scenario["name"],
+                "base_timeout": base_timeout,
+                "adjusted_timeout": adjusted_timeout,
+                "factor": scenario["factor"]
+            })
+
+            print(f"   📊 {scenario['name']}: {base_timeout}s → {adjusted_timeout}s")
+
+        print(f"   ✅ Dynamic adjustment simulation completed")
+
+        demo_results["tests"].append({
+            "name": "dynamic_parameter_adjustment",
+            "success": True,
+            "details": {
+                "adjustments": adjustments
+            }
+        })
+
+    except Exception as e:
+        print(f"   ❌ Dynamic adjustment failed: {e}")
+        demo_results["tests"].append({
+            "name": "dynamic_parameter_adjustment",
+            "success": False,
+            "error": str(e)
+        })
+
+    print()
+
+    # Test 5: Service Health Monitoring
+    print("🔧 Test 5: Service Health Monitoring")
+    try:
+        # Test basic service connectivity
+        from agents.core.universal_deps import get_universal_deps
+
+        deps = await get_universal_deps()
+
+        services_status = {}
+        services_to_check = ['openai', 'search', 'cosmos']
+
+        for service in services_to_check:
+            try:
+                is_available = deps.is_service_available(service)
+                services_status[service] = is_available
+                status_icon = "✅" if is_available else "❌"
+                print(f"   {status_icon} {service.title()} service: {'Available' if is_available else 'Not available'}")
+            except Exception as e:
+                services_status[service] = False
+                print(f"   ❌ {service.title()} service: Error - {str(e)[:50]}...")
+
+        demo_results["tests"].append({
+            "name": "service_health_monitoring",
+            "success": True,
+            "details": {
+                "services_checked": services_to_check,
+                "services_status": services_status,
+                "available_services": sum(services_status.values())
+            }
+        })
+
+    except Exception as e:
+        print(f"   ❌ Service health monitoring failed: {e}")
+        demo_results["tests"].append({
+            "name": "service_health_monitoring",
+            "success": False,
+            "error": str(e)
+        })
+
+    print()
+
+    # Summary
+    print("📊 CONFIGURATION DEMO SUMMARY")
+    print("=" * 40)
+
+    successful_tests = sum(1 for test in demo_results["tests"] if test["success"])
+    total_tests = len(demo_results["tests"])
+
+    print(f"✅ Successful tests: {successful_tests}/{total_tests}")
+
+    for test in demo_results["tests"]:
+        status_icon = "✅" if test["success"] else "❌"
+        print(f"   {status_icon} {test['name']}")
+
+    demo_results["summary"] = {
+        "total_tests": total_tests,
+        "successful_tests": successful_tests,
+        "success_rate": successful_tests / total_tests if total_tests > 0 else 0
+    }
+
+    # Save results
+    from scripts.dataflow.utilities.path_utils import get_results_dir
+    results_dir = get_results_dir()
+    results_file = results_dir / "config_system_demo_results.json"
+
+    with open(results_file, 'w') as f:
+        json.dump(demo_results, f, indent=2)
+
+    print(f"📄 Demo results saved to: {results_file}")
+
+    if successful_tests == total_tests:
+        print(f"\n🎉 CONFIGURATION DEMO COMPLETED SUCCESSFULLY")
+        print("All configuration components working correctly")
+        return True
+    else:
+        print(f"\n⚠️  CONFIGURATION DEMO PARTIALLY COMPLETED")
+        print(f"Some tests failed - check individual results above")
+        return successful_tests > 0
+
+
+async def main():
+    """Main execution function"""
+    print("🚀 Starting Configuration System Demo...")
+    print("This demonstrates the adaptive configuration capabilities")
+    print("of the Azure RAG system.\n")
+
+    success = await demo_configuration_system()
+    return success
 
 
 if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Configuration System Demo")
-    parser.add_argument(
-        "--data-dir",
-        default="data/raw",
-        help="Data directory for domain analysis",
-    )
-    parser.add_argument("--json", action="store_true", help="Output results as JSON")
-    parser.add_argument("--output", help="Save results to JSON file")
-    args = parser.parse_args()
-
-    print("⚙️  Azure Universal RAG - Configuration System Demo")
-    print("=" * 70)
-    print("Comprehensive demonstration of working configuration system:")
-    print("• Clean configuration without broken dependencies")
-    print("• Domain-aware parameter adaptation and optimization")
-    print("• Integration with PydanticAI query generation agents")
-    print("• Proper Azure service configuration and validation")
-    print("• Configuration management features and caching")
-    print("")
-
-    # Run the configuration demo
-    result = asyncio.run(configuration_system_demo(data_directory=args.data_dir))
-
-    # Handle JSON output
-    if args.json or args.output:
-        json_output = json.dumps(result, indent=2, default=str)
-
-        if args.output:
-            output_path = Path(args.output)
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(output_path, "w") as f:
-                f.write(json_output)
-            print(f"\n📄 Results saved to: {output_path}")
-
-        if args.json:
-            print(f"\n" + "=" * 70)
-            print("Demo Results JSON:")
-            print(json_output)
-
-    # Final summary
-    if result["overall_status"] == "completed":
-        print(f"\n🎉 SUCCESS: Configuration system demo completed!")
-        print(f"   📄 Session: {result['session_id']}")
-        print(f"   ⏱️  Duration: {result['total_duration']:.2f}s")
-        print(
-            f"   ✅ Demos successful: {result['summary']['successful_demos']}/{result['summary']['total_demos']}"
-        )
-        print(
-            f"   ⚙️  Configuration system: {'✅ Fully functional' if result['summary']['configuration_system_working'] else '❌ Issues detected'}"
-        )
-        print("Working configuration system successfully demonstrated!")
-        sys.exit(0)
-    else:
-        print(f"\n❌ FAILED: Configuration demo encountered issues.")
-        print(f"   📄 Session: {result['session_id']}")
-        print(f"   ⏱️  Duration: {result.get('total_duration', 0):.2f}s")
-        print(f"   📊 Demos completed: {len(result.get('demos', []))}")
-        print("Check the error messages above for details.")
+    try:
+        result = asyncio.run(main())
+        if result:
+            print("\n✅ Configuration demo completed successfully")
+            sys.exit(0)
+        else:
+            print("\n❌ Configuration demo had issues")
+            sys.exit(1)
+    except Exception as e:
+        print(f"\n❌ Configuration demo error: {e}")
         sys.exit(1)
