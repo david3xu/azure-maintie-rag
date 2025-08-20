@@ -238,7 +238,6 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               name: 'AZURE_COSMOS_KEY'
               secretRef: 'azure-cosmos-key'
             }
-            
           ]
           resources: {
             cpu: json(config.containerCpu)

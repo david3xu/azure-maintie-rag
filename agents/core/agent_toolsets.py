@@ -468,8 +468,8 @@ async def search_knowledge_graph(
 
     cosmos_client = ctx.deps.cosmos_client
 
-    # Extract query terms for entity search (preserve case for exact match)
-    query_terms = [term.strip() for term in query.split() if len(term.strip()) > 2]
+    # REAL GRAPH INTELLIGENCE: Use complete query for semantic graph traversal
+    # NO keyword splitting - use full query context for intelligent graph search
 
     results = {"entities": [], "relationships": [], "total_found": 0}
 
@@ -498,8 +498,8 @@ async def search_knowledge_graph(
             ) from e
 
         # REAL GRAPH INTELLIGENCE: Use semantic graph traversal, NOT fake keyword matching
-        # This leverages REAL Azure Cosmos DB Gremlin graph intelligence
-        print(f"   🧠 Using REAL graph intelligence for query terms: {query_terms}")
+        # This leverages REAL Azure Cosmos DB Gremlin graph intelligence for complete query
+        print(f"   🧠 Using REAL graph intelligence for complete query: '{query}'")
 
         all_entities = []
         all_relationships = []
@@ -507,62 +507,63 @@ async def search_knowledge_graph(
         for domain in available_domains:
             print(f"   🔍 Searching domain '{domain}' using REAL graph traversal...")
 
-            # Use REAL graph intelligence: find_related_entities for each query term
-            for term in query_terms:
-                try:
-                    # REAL AZURE SERVICE: Use existing advanced graph traversal
-                    related_entities = await cosmos_client.find_related_entities(
-                        entity_text=term,
-                        domain=domain,
-                        limit=max_results
-                    )
+            # REAL SEMANTIC GRAPH SEARCH: Use complete query for intelligent graph traversal
+            try:
+                # REAL AZURE SERVICE: Use semantic graph search with complete query context
+                related_entities = await cosmos_client.find_semantic_entities(
+                    query_text=query,
+                    domain=domain,
+                    limit=max_results
+                )
 
-                    if related_entities:
-                        print(f"     ✅ Found {len(related_entities)} relationships for '{term}' in '{domain}'")
+                if related_entities:
+                    print(f"     ✅ Found {len(related_entities)} semantic relationships for query in '{domain}'")
 
-                        # Extract entities and relationships from REAL graph traversal
-                        for rel in related_entities:
-                            source_entity = rel.get("source_entity", "")
-                            target_entity = rel.get("target_entity", "")
-                            relation_type = rel.get("relation_type", "RELATES_TO")
+                    # Extract entities and relationships from REAL semantic graph traversal
+                    for rel in related_entities:
+                        source_entity = rel.get("source_entity", "")
+                        target_entity = rel.get("target_entity", "")
+                        relation_type = rel.get("relation_type", "RELATES_TO")
+                        semantic_score = rel.get("semantic_score", 0.8)
 
-                            # Add source entity to results
-                            if source_entity and source_entity not in [e["text"] for e in all_entities]:
-                                all_entities.append({
-                                    "text": source_entity,
-                                    "entity_type": "discovered_via_graph_traversal",
-                                    "confidence": 0.9,  # Higher confidence for graph-discovered entities
-                                    "context": f"Found via graph traversal from '{term}'",
-                                    "search_term": term,
-                                })
-
-                            # Add target entity to results
-                            if target_entity and target_entity not in [e["text"] for e in all_entities]:
-                                all_entities.append({
-                                    "text": target_entity,
-                                    "entity_type": "discovered_via_graph_traversal",
-                                    "confidence": 0.9,
-                                    "context": f"Found via graph traversal from '{term}'",
-                                    "search_term": term,
-                                })
-
-                            # Add relationship to results
-                            all_relationships.append({
-                                "source": source_entity,
-                                "target": target_entity,
-                                "type": relation_type,
-                                "confidence": 0.9,  # Higher confidence for real graph relationships
+                        # Add source entity to results
+                        if source_entity and source_entity not in [e["text"] for e in all_entities]:
+                            all_entities.append({
+                                "text": source_entity,
+                                "entity_type": "semantic_graph_entity",
+                                "confidence": semantic_score,
+                                "context": f"Found via semantic graph search for '{query}'",
+                                "search_query": query,
                             })
-                    else:
-                        print(f"     ⚠️  No graph relationships found for '{term}' in '{domain}'")
 
-                except Exception as e:
-                    print(f"     ❌ Graph traversal failed for '{term}' in '{domain}': {e}")
-                    # FAIL FAST: Don't continue if REAL graph intelligence fails
-                    raise RuntimeError(
-                        f"REAL graph intelligence failed for term '{term}' in domain '{domain}': {e}. "
-                        "Cannot fall back to fake keyword matching - fix the root graph issue."
-                    ) from e
+                        # Add target entity to results
+                        if target_entity and target_entity not in [e["text"] for e in all_entities]:
+                            all_entities.append({
+                                "text": target_entity,
+                                "entity_type": "semantic_graph_entity",
+                                "confidence": semantic_score,
+                                "context": f"Found via semantic graph search for '{query}'",
+                                "search_query": query,
+                            })
+
+                        # Add relationship to results
+                        all_relationships.append({
+                            "source": source_entity,
+                            "target": target_entity,
+                            "type": relation_type,
+                            "confidence": semantic_score,
+                            "semantic_relevance": rel.get("semantic_relevance", "high"),
+                        })
+                else:
+                    print(f"     ⚠️  No semantic graph relationships found for query in '{domain}'")
+
+            except Exception as e:
+                print(f"     ❌ Semantic graph search failed for query in '{domain}': {e}")
+                # FAIL FAST: Don't continue if REAL semantic graph intelligence fails
+                raise RuntimeError(
+                    f"REAL semantic graph intelligence failed for query '{query}' in domain '{domain}': {e}. "
+                    "Cannot fall back to fake keyword matching - fix the root semantic graph issue."
+                ) from e
 
         # Use REAL graph results only
         results["entities"] = all_entities[:max_results]
@@ -658,16 +659,15 @@ async def orchestrate_universal_search(
     graph_results = await search_knowledge_graph(ctx, user_query, max_results)
     print(f"   ✅ Graph: {len(graph_results.get('entities', []))} entities")
 
-    # Step 3: PRODUCTION OPTIMIZATION - Skip Agent 1 for search queries
-    # Domain analysis is pre-computed during data ingestion phase
-    # Use consistent strategy based on pre-analyzed Azure data
-    domain_signature = "universal_default"
-    if use_domain_analysis:
-        print("⚡ Using pre-analyzed domain data (Agent 1 skipped for production speed)")
-        # Generate consistent signature based on query for reproducible results
-        import hashlib
-        query_hash = hashlib.md5(user_query.encode()).hexdigest()[:16]
-        domain_signature = f"adaptive_{query_hash}_mandatory_tri_modal"
+    # CORRECT ARCHITECTURE: Query time = Direct Unified Search System
+    # Domain Intelligence and Knowledge Extraction already completed during data preparation
+    # User Query → Unified Search System (this function) ← Pre-built knowledge graph
+    print("   🎯 UNIFIED SEARCH SYSTEM: Coordinating tri-modal search with pre-built knowledge graph")
+
+    # Generate consistent search strategy signature
+    import hashlib
+    query_hash = hashlib.md5(user_query.encode()).hexdigest()[:16]
+    domain_signature = f"unified_search_{query_hash}_tri_modal"
 
     # Step 4: GNN Inference (MANDATORY)
     print("   3️⃣ GNN inference (REQUIRED)...")
