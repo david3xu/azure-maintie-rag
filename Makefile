@@ -7,6 +7,7 @@ SHELL := /bin/bash
 # Basic Configuration
 PYTHONPATH := $(PWD)
 USE_MANAGED_IDENTITY := false
+export USE_MANAGED_IDENTITY
 
 help: ## Show available commands
 	@echo "🚀 Azure Universal RAG - Simple Commands"
@@ -35,16 +36,38 @@ extract-knowledge: ## Extract entities and relationships
 	@PYTHONPATH=$(PYTHONPATH) USE_MANAGED_IDENTITY=$(USE_MANAGED_IDENTITY) python scripts/dataflow/phase3_knowledge/03_02_graph_storage.py
 
 test-search: ## Test enhanced tri-modal search
-	@echo "🔍 Testing enhanced search..."
-	@PYTHONPATH=$(PYTHONPATH) python -c "import asyncio; from agents.orchestrator import UniversalOrchestrator; asyncio.run(UniversalOrchestrator().process_full_search_workflow('azure language training', max_results=3))"
+	@echo "🔍 Testing enhanced tri-modal search..."
+	@echo "Using REAL Azure services with key-based authentication"
+	@PYTHONPATH=$(PYTHONPATH) USE_MANAGED_IDENTITY=$(USE_MANAGED_IDENTITY) python scripts/test_trimodal.py
 
-test-backend: ## Test deployed backend
-	@echo "🌐 Testing deployed backend..."
+test-backend: ## Test deployed backend health
+	@echo "🌐 Testing deployed backend health..."
 	@curl -s "https://ca-backend-maintie-rag-prod.graymeadow-1e9c52ba.westus2.azurecontainerapps.io/health" | jq .
 
+test-backend-search: ## Test deployed backend tri-modal search
+	@echo "🔍 Testing deployed backend tri-modal search..."
+	@echo "Using REAL Azure services through deployed API"
+	@curl -X POST "https://ca-backend-maintie-rag-prod.graymeadow-1e9c52ba.westus2.azurecontainerapps.io/api/v1/search" \
+		-H "Content-Type: application/json" \
+		-d '{"query": "Azure machine learning training", "max_results": 3, "use_domain_analysis": true}' \
+		--max-time 60 | jq .
+
+test-backend-api-health: ## Test deployed backend API health endpoints
+	@echo "🔍 Testing deployed backend API health..."
+	@curl -s "https://ca-backend-maintie-rag-prod.graymeadow-1e9c52ba.westus2.azurecontainerapps.io/api/v1/health" | jq .
+
+
 test-frontend: ## Check frontend accessibility
-	@echo "🖥️  Testing frontend..."
+	@echo "🖥️  Testing frontend accessibility..."
 	@curl -I "https://ca-frontend-maintie-rag-prod.graymeadow-1e9c52ba.westus2.azurecontainerapps.io"
+
+test-frontend-full: ## Test frontend loading and functionality
+	@echo "🖥️  Testing frontend full functionality..."
+	@echo "Checking if React app loads properly"
+	@curl -s "https://ca-frontend-maintie-rag-prod.graymeadow-1e9c52ba.westus2.azurecontainerapps.io" | grep -q "Universal RAG" && echo "✅ Frontend: React app loaded" || echo "❌ Frontend: App not loading"
+
+test-all: test-search test-backend test-backend-search test-frontend-full ## Run all tests
+	@echo "🎉 All tests completed!"
 
 full-setup: populate-data extract-knowledge ## Complete data setup
 	@echo "✅ Full setup completed"

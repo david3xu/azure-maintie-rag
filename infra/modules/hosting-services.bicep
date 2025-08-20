@@ -23,11 +23,11 @@ param frontendImageName string = ''
 
 // Single configuration - FREE TIER OPTIMIZED (Cost Savings)
 var config = {
-  containerCpu: '0.25'             // MINIMUM: Reduce CPU allocation
-  containerMemory: '0.5Gi'         // MINIMUM: Reduce memory allocation
-  minReplicas: 0                   // FREE: Scale to zero when not used
-  maxReplicas: 1                   // MINIMAL: Single replica to save costs
-  registrySku: 'Basic'             // CHEAPEST: Basic tier
+  containerCpu: '0.25' // MINIMUM: Reduce CPU allocation
+  containerMemory: '0.5Gi' // MINIMUM: Reduce memory allocation
+  minReplicas: 0 // FREE: Scale to zero when not used
+  maxReplicas: 1 // MINIMAL: Single replica to save costs
+  registrySku: 'Basic' // CHEAPEST: Basic tier
 }
 
 // Get references to existing resources
@@ -120,7 +120,7 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
         external: true
         targetPort: 8000
         transport: 'http'
-        allowInsecure: true  // Allow for initial setup
+        allowInsecure: true // Allow for initial setup
         traffic: [
           {
             weight: 100
@@ -153,7 +153,9 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: !empty(backendImageName) ? backendImageName : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          image: !empty(backendImageName)
+            ? backendImageName
+            : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           name: 'backend'
           env: [
             {
@@ -221,9 +223,25 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: 'text-embedding-ada-002'
             }
             {
-              name: 'AZURE_COSMOS_KEY'
-              secretRef: 'azure-cosmos-key'
+              name: 'AZURE_OPENAI_ENDPOINT'
+              value: openaiEndpoint
             }
+            {
+              name: 'AZURE_SEARCH_ENDPOINT'
+              value: searchEndpoint
+            }
+            {
+              name: 'AZURE_COSMOS_ENDPOINT'
+              value: cosmosEndpoint
+            }
+                      {
+            name: 'AZURE_COSMOS_KEY'
+            secretRef: 'azure-cosmos-key'
+          }
+          {
+            name: 'AUTO_POPULATE_DATA'
+            value: 'true'
+          }
           ]
           resources: {
             cpu: json(config.containerCpu)
@@ -287,7 +305,9 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
     template: {
       containers: [
         {
-          image: !empty(frontendImageName) ? frontendImageName : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          image: !empty(frontendImageName)
+            ? frontendImageName
+            : 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           name: 'frontend'
           env: [
             {

@@ -34,6 +34,8 @@ class UniversalWorkflowResult(BaseModel):
     extraction_summary: Optional[Dict[str, Any]] = None
     search_results: Optional[List[SearchResult]] = None
     total_processing_time: float = Field(ge=0.0)
+    search_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    search_strategy_used: str = Field(default="unknown")
     agent_metrics: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     cost_summary: Dict[str, Any] = Field(default_factory=dict)  # Added cost tracking
     evidence_report: Optional[Dict[str, Any]] = Field(
@@ -401,6 +403,8 @@ class UniversalOrchestrator:
                 domain_analysis=domain_analysis,
                 search_results=search_result.unified_results if search_result else None,
                 total_processing_time=time.time() - start_time,
+                search_confidence=search_result.search_confidence if search_result else 0.0,
+                search_strategy_used=search_result.search_strategy_used if search_result else "failed",
                 agent_metrics=agent_metrics,
                 errors=errors,
                 warnings=warnings,
@@ -411,6 +415,8 @@ class UniversalOrchestrator:
             return UniversalWorkflowResult(
                 success=False,
                 total_processing_time=time.time() - start_time,
+                search_confidence=0.0,
+                search_strategy_used="error",
                 agent_metrics=agent_metrics,
                 errors=errors,
                 warnings=warnings,

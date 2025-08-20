@@ -37,8 +37,8 @@ env:
   BACKEND_PORT: 8000
 
   # Data Pipeline Configuration
-  AUTO_POPULATE_DATA: true  # REAL data pipeline with REAL Azure services
-  USE_INCREMENTAL_MODE: true  # Use incremental updates instead of full cleanup
+  AUTO_POPULATE_DATA: true  # Container auto-populates data on startup
+  USE_MANAGED_IDENTITY: false  # Use key-based authentication
 
 # Deployment hooks
 hooks:
@@ -183,151 +183,17 @@ hooks:
       echo ""
       echo "🔗 Getting deployment URLs..."
 
-      # Run our working URL script
-      if [ -f "./scripts/show-deployment-urls.sh" ]; then
-        ./scripts/show-deployment-urls.sh
-      else
-        echo "📍 Use this command to get URLs: ./scripts/show-deployment-urls.sh"
-      fi
-
-      echo ""
-      echo "📊 Environment: ${AZURE_ENV_NAME}"
-
-      # Check if automated data pipeline should run (Option 2: Async Model Deployment)
-      if [ "${AUTO_POPULATE_DATA:-true}" != "true" ]; then
-        echo "⏭️  Automated data pipeline disabled (AUTO_POPULATE_DATA=false)"
-        echo "💡 Run 'make dataflow-full' manually to populate data"
-        echo "💡 Chat interface is ready for testing (infrastructure only)!"
-        echo "🚀 FAST DEPLOYMENT: Infrastructure deployment complete!"
-        exit 0
-      fi
-
-      echo ""
-      echo "🚀 Option 2: Async Model Deployment - Executing REAL automated data pipeline..."
-      echo "💡 This runs after EVERY deployment to ensure data pipeline is current"
-      echo ""
-
       # Get backend endpoint
       BACKEND_URI=$(azd env get-values | grep "SERVICE_BACKEND_URI=" | cut -d'=' -f2 | tr -d '"')
-      if [ -z "$BACKEND_URI" ]; then
-        echo "❌ Backend URI not found - running local dataflow scripts instead"
-        echo "🔄 Executing local Option 2 pipeline against deployed infrastructure..."
+      FRONTEND_URI=$(azd env get-values | grep "SERVICE_FRONTEND_URI=" | cut -d'=' -f2 | tr -d '"')
 
-        # Fallback: Run local dataflow scripts
-        if command -v make >/dev/null 2>&1; then
-          if [ "${USE_INCREMENTAL_MODE:-true}" = "true" ]; then
-            echo "📋 Running: make dataflow-incremental (incremental update from data/raw)"
-            make dataflow-incremental || echo "⚠️  Incremental pipeline had issues - check logs"
-          else
-            echo "📋 Running: make dataflow-full (full pipeline with cleanup)"
-            make dataflow-full || echo "⚠️  Dataflow pipeline had issues - check logs"
-          fi
-        else
-          echo "❌ Make not available - manual execution required: make dataflow-incremental"
-        fi
-        exit 0
-      fi
-
-      echo "📍 Backend endpoint: $BACKEND_URI"
-      echo "⏳ Waiting for backend container to be ready..."
-
-      # Wait for backend (increased time for Container App initialization)
-      for i in {1..36}; do
-        if curl -s "$BACKEND_URI/api/v1/health" > /dev/null 2>&1; then
-          echo "✅ Backend ready after ${i}0 seconds"
-          break
-        fi
-        echo "   Waiting... attempt $i/36"
-        sleep 10
-      done
-
-      # Execute local dataflow with proper authentication for automated deployment
-      echo "🔄 Executing Option 2 pipeline with automated authentication handling..."
-      echo "💡 This ensures Option 2 async deployment works in all environments"
-
-      if command -v make >/dev/null 2>&1; then
-        echo "📋 Executing complete Option 2 pipeline locally against REAL Azure services..."
-
-        # Set proper authentication for local execution
-        export USE_MANAGED_IDENTITY=false
-        export OPENBLAS_NUM_THREADS=1
-        export PYTHONPATH=$(pwd)
-
-        # Check if we're in a deployment context (azd environment available)
-        if command -v azd >/dev/null 2>&1; then
-          echo "🔑 Using azd deployment context with local credentials..."
-          # Sync with current azd environment
-          ./scripts/deployment/sync-env.sh $(azd env get-values | grep "AZURE_ENV_NAME=" | cut -d'=' -f2 | tr -d '"') 2>/dev/null || echo "Using existing environment"
-
-          # Enhanced authentication validation for enterprise environments
-          echo "🔐 ENTERPRISE AUTHENTICATION VALIDATION FOR AUTOMATED PIPELINE"
-          echo "=============================================================="
-
-          # Run comprehensive authentication diagnosis
-          if [ -f "./scripts/deployment/sync-auth.sh" ]; then
-            echo "🔍 Running authentication synchronization check..."
-            ./scripts/deployment/sync-auth.sh
-          fi
-
-          # Check if Azure CLI is authenticated
-          if ! az account show >/dev/null 2>&1; then
-            echo ""
-            echo "❌ CRITICAL: Azure CLI authentication expired during deployment"
-            echo "🏫 University/Enterprise environments enforce short token lifetimes"
-            echo "💡 Token likely expired during infrastructure deployment (2-5 minutes)"
-            echo ""
-            echo "🔧 SOLUTION for automated Option 2 pipeline:"
-            echo "   1. Infrastructure deployment: ✅ COMPLETED"
-            echo "   2. Data pipeline: ❌ REQUIRES FRESH AUTHENTICATION"
-            echo ""
-            echo "📋 Manual completion steps:"
-            echo "   az login"
-            echo "   make dataflow-full"
-            echo ""
-            echo "⚠️  EXPECTED BEHAVIOR: No fake success, honest error reporting"
-
-            # Try to get subscription info for user guidance
-            AZD_SUBSCRIPTION=$(azd env get-values | grep "AZURE_SUBSCRIPTION_ID=" | cut -d'=' -f2 | tr -d '"' 2>/dev/null)
-            if [ -n "$AZD_SUBSCRIPTION" ]; then
-              echo "🔗 Target subscription: $AZD_SUBSCRIPTION"
-              echo "💡 Use this subscription ID when re-authenticating"
-            fi
-
-            # Skip automated pipeline - fail honestly
-            echo ""
-            echo "🚨 SKIPPING AUTOMATED PIPELINE DUE TO AUTHENTICATION EXPIRATION"
-            echo "   This is CORRECT behavior - no fallback, no fake success"
-            exit 0
-          else
-            echo "✅ Azure CLI authentication working"
-
-            # Verify subscription matches
-            CLI_SUB=$(az account show --query id -o tsv 2>/dev/null)
-            AZD_SUB=$(azd env get-values | grep "AZURE_SUBSCRIPTION_ID=" | cut -d'=' -f2 | tr -d '"' 2>/dev/null)
-            if [ "$CLI_SUB" = "$AZD_SUB" ]; then
-              echo "✅ Authentication contexts synchronized - proceeding with automated pipeline"
-            else
-              echo "⚠️  Authentication contexts may be mismatched"
-            fi
-          fi
-        fi
-
-        # Execute the complete pipeline with timeout to prevent hanging
-        echo "⏳ Starting Option 2 pipeline (timeout: 20 minutes)..."
-        timeout 1200 make dataflow-full || {
-          echo "⚠️  Pipeline timed out or had issues - this may be expected for large datasets"
-          echo "💡 Deployment is functional - pipeline can be run manually if needed"
-        }
-
-        echo ""
-        echo "🎉 OPTION 2: ASYNC MODEL DEPLOYMENT ATTEMPTED!"
-        echo "✅ Infrastructure deployed with REAL Azure services"
-        echo "✅ Automated pipeline execution initiated"
-        echo "✅ All agents available for REAL Azure integration"
-        echo "✅ TRI-MODAL SEARCH: Ready for Vector + Graph + GNN"
-        echo ""
-        echo "💡 Chat interface is ready - check backend health for pipeline status!"
-      else
-        echo "❌ Make not available - deploying infrastructure only"
-        echo "💡 Chat interface ready (run 'make dataflow-full' manually for full functionality)"
-      fi
+      echo "🌐 Backend:  $BACKEND_URI"
+      echo "🌐 Frontend: $FRONTEND_URI"
+      echo ""
+      echo "🚀 PERMANENT SOLUTION DEPLOYED!"
+      echo "✅ Backend container auto-populates data on startup"
+      echo "✅ All Azure service endpoints configured in container"
+      echo "✅ Key-based authentication configured"
+      echo "✅ Tri-modal search ready after container initialization"
+      echo ""
+      echo "💡 Test with: make test-backend-search"

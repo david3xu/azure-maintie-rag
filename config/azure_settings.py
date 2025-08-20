@@ -104,7 +104,10 @@ class Settings(BaseSettings):
 
     # Azure Identity & Security (azd-compatible)
     azure_client_id: str = Field(default="", env="AZURE_CLIENT_ID")  # azd output
-    use_managed_identity: bool = Field(default=True, env="USE_MANAGED_IDENTITY")
+    use_managed_identity: bool = Field(
+        default_factory=lambda: os.getenv("USE_MANAGED_IDENTITY", "false").lower() == "true",
+        env="USE_MANAGED_IDENTITY"
+    )
     cosmos_use_managed_identity: bool = Field(
         default=True, env="COSMOS_USE_MANAGED_IDENTITY"
     )
