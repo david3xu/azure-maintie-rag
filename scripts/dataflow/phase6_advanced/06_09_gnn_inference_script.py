@@ -119,9 +119,37 @@ def run(raw_data: str) -> str:
                 }
             )
 
-        # Create simple node features (real embedding approach)
+        # Create node features from REAL entity embeddings - NO RANDOM DATA
         num_nodes = len(entities)
-        node_features = torch.randn(num_nodes, 128)  # Random but real features
+
+        # Get real embeddings from Azure OpenAI for each entity
+        try:
+            from azure.identity import DefaultAzureCredential
+            from openai import AzureOpenAI
+
+            credential = DefaultAzureCredential()
+            token = credential.get_token("https://cognitiveservices.azure.com/.default").token
+
+            client = AzureOpenAI(
+                azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+                api_key=os.environ.get("AZURE_OPENAI_API_KEY") or token,
+                api_version="2024-02-01"
+            )
+
+            # Generate real embeddings for each entity
+            entity_texts = [entity.get("text", "") for entity in entities]
+            embeddings_response = client.embeddings.create(
+                input=entity_texts,
+                model=os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME", "text-embedding-ada-002")
+            )
+
+            # Convert to tensor
+            embeddings = [embedding.embedding for embedding in embeddings_response.data]
+            node_features = torch.tensor(embeddings, dtype=torch.float32)
+
+        except Exception as e:
+            logger.error(f"Failed to get real embeddings from Azure OpenAI: {e}")
+            raise RuntimeError(f"Real Azure OpenAI embeddings required for GNN inference: {e}")
 
         # Create edge indices from relationships (real graph structure)
         edge_indices = []

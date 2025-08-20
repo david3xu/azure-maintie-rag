@@ -6,13 +6,13 @@ param resourcePrefix string
 
 // Single configuration - FREE TIER OPTIMIZED (Cost Savings)
 var config = {
-  searchSku: 'basic'             // BASIC: Avoid free tier quota conflicts (existing free service)
+  searchSku: 'basic' // BASIC: Avoid free tier quota conflicts (existing free service)
   searchReplicas: 1
   searchPartitions: 1
-  storageSku: 'Standard_LRS'     // CHEAPEST: Locally redundant storage
-  storageAccessTier: 'Cool'      // CHEAPER: Lower storage costs
-  keyVaultSku: 'standard'        // FREE: 10,000 operations/month
-  logRetentionDays: 30           // AZURE FOR STUDENTS: Minimum allowed retention
+  storageSku: 'Standard_LRS' // CHEAPEST: Locally redundant storage
+  storageAccessTier: 'Cool' // CHEAPER: Lower storage costs
+  keyVaultSku: 'standard' // FREE: 10,000 operations/month
+  logRetentionDays: 30 // AZURE FOR STUDENTS: Minimum allowed retention
   // Container Registry: managed by hosting-services module
 }
 
@@ -26,15 +26,15 @@ resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-
   }
 }
 
-// Log Analytics Workspace
+// Log Analytics Workspace - add timestamp to avoid soft-delete conflicts
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-  name: 'log-${resourcePrefix}-${environmentName}'
+  name: 'log-${resourcePrefix}-${environmentName}-${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName, '2025'), 8)}'
   location: location
   properties: {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: config.logRetentionDays  // AZURE FOR STUDENTS: Use allowed retention
+    retentionInDays: config.logRetentionDays // AZURE FOR STUDENTS: Use allowed retention
     features: {
       enableLogAccessUsingOnlyResourcePermissions: true
     }
@@ -68,14 +68,14 @@ resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
   name: 'srch-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
   location: location
   sku: {
-    name: config.searchSku  // Use config setting (basic tier to avoid free quota conflicts)
+    name: config.searchSku // Use config setting (basic tier to avoid free quota conflicts)
   }
   properties: {
     replicaCount: config.searchReplicas
     partitionCount: config.searchPartitions
     hostingMode: 'default'
     publicNetworkAccess: 'enabled'
-    semanticSearch: 'disabled'  // DISABLE: Free tier doesn't support semantic search
+    semanticSearch: 'disabled' // DISABLE: Free tier doesn't support semantic search
     authOptions: {
       aadOrApiKey: {
         aadAuthFailureMode: 'http401WithBearerChallenge'
@@ -133,7 +133,7 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01'
     deleteRetentionPolicy: {
       allowPermanentDelete: false
       enabled: true
-      days: 7  // MINIMUM: Always use 7 days to save costs
+      days: 7 // MINIMUM: Always use 7 days to save costs
     }
   }
 }
@@ -197,7 +197,10 @@ resource searchIndexDataContributor 'Microsoft.Authorization/roleAssignments@202
   scope: searchService
   name: guid(searchService.id, managedIdentity.id, 'Search Index Data Contributor')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
+    )
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -207,7 +210,10 @@ resource searchServiceContributor 'Microsoft.Authorization/roleAssignments@2022-
   scope: searchService
   name: guid(searchService.id, managedIdentity.id, 'Search Service Contributor')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
+    )
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -217,7 +223,10 @@ resource storageDataContributor 'Microsoft.Authorization/roleAssignments@2022-04
   scope: storageAccount
   name: guid(storageAccount.id, managedIdentity.id, 'Storage Blob Data Contributor')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+    )
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -227,7 +236,10 @@ resource keyVaultSecretsOfficer 'Microsoft.Authorization/roleAssignments@2022-04
   scope: keyVault
   name: guid(keyVault.id, managedIdentity.id, 'Key Vault Secrets Officer')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+    )
     principalId: managedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -240,7 +252,10 @@ resource userKeyVaultSecretsOfficer 'Microsoft.Authorization/roleAssignments@202
   scope: keyVault
   name: guid(keyVault.id, principalId, 'Key Vault Secrets Officer')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+    )
     principalId: principalId
     principalType: 'User'
   }
@@ -251,7 +266,10 @@ resource userSearchIndexDataContributor 'Microsoft.Authorization/roleAssignments
   scope: searchService
   name: guid(searchService.id, principalId, 'Search Index Data Contributor')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
+    )
     principalId: principalId
     principalType: 'User'
   }
@@ -261,7 +279,10 @@ resource userSearchServiceContributor 'Microsoft.Authorization/roleAssignments@2
   scope: searchService
   name: guid(searchService.id, principalId, 'Search Service Contributor')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
+    )
     principalId: principalId
     principalType: 'User'
   }
@@ -272,7 +293,10 @@ resource userStorageDataContributor 'Microsoft.Authorization/roleAssignments@202
   scope: storageAccount
   name: guid(storageAccount.id, principalId, 'Storage Blob Data Contributor')
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+    )
     principalId: principalId
     principalType: 'User'
   }

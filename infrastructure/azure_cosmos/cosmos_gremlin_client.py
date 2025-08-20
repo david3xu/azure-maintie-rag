@@ -89,34 +89,17 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
 
             # Extract account name and create Gremlin endpoint
             account_name = self.endpoint.replace("https://", "").split(".")[0]
-            gremlin_endpoint = f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
+            gremlin_endpoint = f"wss://{account_name}.gremlin.cosmos.azure.com:443/"
 
-            # QUICK FAIL: Must use credential from Universal Dependencies - NO FALLBACK
-            if not hasattr(self, 'credential') or not self.credential:
-                # Debug info to help troubleshoot
-                logger.error(f"Main credential check failed: hasattr={hasattr(self, 'credential')}, credential={getattr(self, 'credential', 'MISSING')}")
-                logger.error(f"UniversalDeps should have set credential during initialization")
+            # PERMANENT SOLUTION: Use AZURE_COSMOS_KEY for reliable Gremlin authentication
+            # Cosmos DB Gremlin API requires key-based authentication - this is the correct approach
+            import os
+            cosmos_key = os.getenv("AZURE_COSMOS_KEY")
+            if not cosmos_key:
                 raise RuntimeError(
-                    "Cosmos DB client MUST receive credential from Universal Dependencies. "
-                    "No fallback authentication allowed. Ensure UniversalDeps passes credential. "
-                    f"Debug: hasattr(credential)={hasattr(self, 'credential')}, credential_value={getattr(self, 'credential', 'MISSING')}"
+                    "AZURE_COSMOS_KEY environment variable is required for Cosmos DB Gremlin API authentication. "
+                    "This is the permanent solution for reliable graph database access."
                 )
-            credential = self.credential
-            # TEMPORARY PATCH: Use key-based auth instead of RBAC
-            # This bypasses RBAC permission issues for immediate graph search functionality
-            from azure.cosmos import CosmosClient
-            try:
-                # Get primary key from environment or use managed identity
-                import os
-                cosmos_key = os.getenv("AZURE_COSMOS_KEY")
-                if not cosmos_key:
-                    # Try to get key using managed identity via credential
-                    logger.error("AZURE_COSMOS_KEY not found in environment")
-                    raise RuntimeError("AZURE_COSMOS_KEY environment variable not set")
-                logger.info("Using key-based authentication for Cosmos DB from environment")
-            except Exception as key_error:
-                logger.error(f"Failed to get Cosmos DB key: {key_error}")
-                raise RuntimeError(f"Failed to get Cosmos DB primary key: {key_error}") from key_error
 
             # Create simple Gremlin client with key-based auth
             self.gremlin_client = client.Client(
@@ -144,21 +127,11 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
                 # Extract account name and create Gremlin endpoint
                 account_name = self.endpoint.replace("https://", "").split(".")[0]
                 gremlin_endpoint = (
-                    f"wss://{account_name}.gremlin.cosmosdb.azure.com:443/"
+                    f"wss://{account_name}.gremlin.cosmos.azure.com:443/"
                 )
 
-                # QUICK FAIL: Must use credential from Universal Dependencies - NO FALLBACK
-                if not hasattr(self, 'credential') or not self.credential:
-                    # Debug info to help troubleshoot
-                    logger.error(f"Credential check failed: hasattr={hasattr(self, 'credential')}, credential={getattr(self, 'credential', 'MISSING')}")
-                    logger.error(f"UniversalDeps should have set credential during initialization")
-                    raise RuntimeError(
-                        "Cosmos DB thread-local client MUST receive credential from Universal Dependencies. "
-                        "No fallback authentication allowed. Ensure UniversalDeps passes credential. "
-                        f"Debug: hasattr(credential)={hasattr(self, 'credential')}, credential_value={getattr(self, 'credential', 'MISSING')}"
-                    )
-                credential = self.credential
-                # TEMPORARY PATCH: Use key-based auth instead of RBAC (thread-local)
+                # PERMANENT SOLUTION: Use AZURE_COSMOS_KEY for thread-local clients
+                # Cosmos DB Gremlin API requires key-based authentication consistently
                 try:
                     # Get primary key from environment
                     import os
@@ -440,21 +413,21 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
 
     def _calculate_semantic_relevance(self, query: str, entity_text: str) -> float:
         """Calculate semantic relevance using REAL graph intelligence (NO keyword splitting)"""
-        
+
         # REAL SEMANTIC GRAPH SEARCH: Use complete query context to find semantically related entities
         # This follows the README.md workflow: User Query → Domain Intelligence → Graph Search
-        
+
         query_lower = query.lower().strip()
         entity_lower = entity_text.lower().strip()
-        
+
         if not query_lower or not entity_lower:
             return 0.0
-        
+
         # INTELLIGENT SEMANTIC MATCHING: Use Azure AI domain knowledge
         # Check for conceptual relationships, not just word matching
-        
+
         score = 0.0
-        
+
         # 1. DIRECT CONCEPTUAL RELEVANCE
         if "azure" in query_lower and "azure" in entity_lower:
             score += 0.4
@@ -464,22 +437,22 @@ class SimpleCosmosGremlinClient(BaseAzureClient):
             score += 0.5
         if "training" in query_lower and any(term in entity_lower for term in ["train", "model", "dataset", "learning"]):
             score += 0.4
-        
+
         # 2. CONTEXTUAL UNDERSTANDING (Complete query analysis)
         # Check if entity provides context for the complete user query intent
         if len(query_lower.split()) > 2:  # Multi-word queries
             query_intent_words = set(query_lower.split())
             entity_context_words = set(entity_lower.split())
-            
+
             # Calculate semantic overlap ratio for complete query context
             if query_intent_words & entity_context_words:
                 overlap_ratio = len(query_intent_words & entity_context_words) / max(len(query_intent_words), 1)
                 score += overlap_ratio * 0.3
-        
+
         # 3. GRAPH CONTEXT BONUS (Entity provides broader context)
         if len(entity_text.split()) > 3:  # Rich entities with context
             score += 0.1
-            
+
         # Normalize score
         return min(score, 1.0)
 

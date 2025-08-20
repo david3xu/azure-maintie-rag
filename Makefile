@@ -60,6 +60,13 @@ test-backend-api-health: ## Test deployed backend API health endpoints
 	@echo "🔍 Testing deployed backend API health..."
 	@curl -s "https://ca-backend-maintie-rag-prod.graymeadow-1e9c52ba.westus2.azurecontainerapps.io/api/v1/health" | jq .
 
+populate-deployed-backend: ## Populate data in deployed backend container
+	@echo "📥 Populating data in deployed backend container..."
+	@echo "This runs ALL phases (validation, ingestion, knowledge, GNN) in sequence"
+	@curl -X POST "https://ca-backend-maintie-rag-prod.graymeadow-1e9c52ba.westus2.azurecontainerapps.io/api/v1/admin/populate-complete" \
+		-H "Content-Type: application/json" \
+		--max-time 3600 | jq .
+
 
 test-frontend: ## Check frontend accessibility
 	@echo "🖥️  Testing frontend accessibility..."
@@ -90,4 +97,4 @@ dev-frontend: ## Start frontend development server
 	@echo "🎨 Starting frontend..."
 	@cd frontend && npm run dev
 
-.PHONY: help health deploy deploy-with-data populate-data extract-knowledge test-search test-backend test-frontend full-setup clean dev-backend dev-frontend
+.PHONY: help health deploy deploy-with-data populate-data extract-knowledge test-search test-backend test-frontend full-setup clean dev-backend dev-frontend populate-deployed-backend

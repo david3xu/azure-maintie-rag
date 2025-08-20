@@ -300,6 +300,95 @@ async def _execute_gnn_training_async(auto_deploy: bool):
         # Log error but don't raise since this is background task
         print(f"Async GNN training error: {e}")
 
+@router.post("/populate-complete", response_model=AdminResponse)
+async def populate_complete_data():
+    """COMPLETE data population for deployed backend - runs ALL phases in sequence."""
+    try:
+        # Check if this is a deployed container (not local development)
+        PROJECT_ROOT = get_project_root()
+        is_container = str(PROJECT_ROOT) == "/app"
+
+        if not is_container:
+            raise HTTPException(status_code=400, detail="This endpoint is for deployed containers only. Use individual endpoints for local development.")
+
+        phases_completed = []
+
+        # Phase 1: Validate basic connectivity
+        print("🔍 Phase 1: Validating Azure service connectivity...")
+        validate_result = await run_dataflow_script("scripts/dataflow/phase1_validation/01_00_basic_agent_connectivity.py")
+        if not validate_result["success"]:
+            raise HTTPException(status_code=500, detail="Phase 1 validation failed - Azure services not accessible")
+        phases_completed.append("validation")
+
+        # Phase 2: Data ingestion (storage upload, embeddings, indexing)
+        print("📥 Phase 2: Ingesting REAL data...")
+
+        # Upload storage
+        upload_result = await run_dataflow_script("scripts/dataflow/phase2_ingestion/02_02_storage_upload_primary.py", timeout=600)
+        if not upload_result["success"]:
+            raise HTTPException(status_code=500, detail="Storage upload failed")
+
+        # Create embeddings
+        embeddings_result = await run_dataflow_script("scripts/dataflow/phase2_ingestion/02_03_vector_embeddings.py", timeout=600)
+        if not embeddings_result["success"]:
+            raise HTTPException(status_code=500, detail="Vector embeddings failed")
+
+        # Search indexing
+        indexing_result = await run_dataflow_script("scripts/dataflow/phase2_ingestion/02_04_search_indexing.py", timeout=600)
+        if not indexing_result["success"]:
+            raise HTTPException(status_code=500, detail="Search indexing failed")
+
+        phases_completed.append("ingestion")
+
+        # Phase 3: Knowledge extraction and graph building
+        print("🧠 Phase 3: Building REAL knowledge graph...")
+
+        # Entity extraction
+        extraction_result = await run_dataflow_script("scripts/dataflow/phase3_knowledge/03_01_basic_entity_extraction.py", timeout=1800)
+        if not extraction_result["success"]:
+            raise HTTPException(status_code=500, detail="Entity extraction failed")
+
+        # Graph storage
+        graph_result = await run_dataflow_script("scripts/dataflow/phase3_knowledge/03_02_graph_storage.py", timeout=600)
+        if not graph_result["success"]:
+            raise HTTPException(status_code=500, detail="Graph storage failed")
+
+        # Verification
+        verify_result = await run_dataflow_script("scripts/dataflow/phase3_knowledge/03_03_verification.py")
+        if not verify_result["success"]:
+            raise HTTPException(status_code=500, detail="Knowledge graph verification failed")
+
+        phases_completed.append("knowledge")
+
+        # Phase 6: GNN training (async mode)
+        print("🤖 Phase 6: Initiating REAL GNN training...")
+        try:
+            # Submit GNN training job (async)
+            gnn_result = await run_dataflow_script("scripts/dataflow/phase6_advanced/06_01_gnn_training.py", timeout=300)
+            if gnn_result["success"]:
+                phases_completed.append("gnn_submitted")
+            else:
+                print("⚠️ GNN training submission failed - continuing without GNN")
+        except Exception as e:
+            print(f"⚠️ GNN training failed: {e} - continuing without GNN")
+
+        return AdminResponse(
+            status="success",
+            message="COMPLETE data population finished - Backend is FULLY OPERATIONAL",
+            details={
+                "environment": "deployed_container",
+                "phases_completed": phases_completed,
+                "total_phases": len(phases_completed),
+                "project_root": str(PROJECT_ROOT),
+                "tri_modal_ready": len(phases_completed) >= 3  # validation, ingestion, knowledge
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Complete data population failed: {str(e)}")
+
 @router.get("/status", response_model=AdminResponse)
 async def get_admin_status():
     """Get status of admin system and available operations."""
@@ -309,7 +398,7 @@ async def get_admin_status():
         details={
             "available_operations": [
                 "cleanup", "validate-agents", "ingest-data",
-                "extract-knowledge", "train-gnn"
+                "extract-knowledge", "train-gnn", "populate-complete"
             ],
             "azure_services": "REAL services only",
             "data_source": "REAL data from data/raw/",

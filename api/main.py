@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.endpoints.search import router as search_router
 from api.endpoints.admin import router as admin_router
+from api.endpoints.diagnostics import router as diagnostics_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -28,6 +29,7 @@ app.add_middleware(
 # Include routers
 app.include_router(search_router)
 app.include_router(admin_router)
+app.include_router(diagnostics_router)
 
 
 @app.get("/")
@@ -38,12 +40,12 @@ async def root():
         "version": "1.0.0",
         "endpoints": [
             "/api/v1/search",
-            "/api/v1/extract", 
+            "/api/v1/extract",
             "/api/v1/health",
             "/api/v1/stream/workflow/{query_id}",
             "/api/v1/admin/cleanup",
             "/api/v1/admin/validate-agents",
-            "/api/v1/admin/ingest-data", 
+            "/api/v1/admin/ingest-data",
             "/api/v1/admin/extract-knowledge",
             "/api/v1/admin/train-gnn",
             "/api/v1/admin/status",

@@ -10,13 +10,14 @@ param appInsightsName string
 
 // Single configuration - CPU-ONLY OPTIMIZED (Azure for Students)
 var config = {
-  cosmosCapacityMode: 'Serverless' // FREE: First 1M RU/s and 25GB storage/month
-  cosmosRU: 0
+  cosmosCapacityMode: 'Provisioned' // Gremlin requires provisioned throughput
+  cosmosRU: 400 // Minimum recommended RU/s for Gremlin graph
 }
 
 // Azure Cosmos DB Account with Gremlin API for Knowledge Graphs
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
-  name: 'cosmos-${resourcePrefix}-${environmentName}-${uniqueString(resourceGroup().id, resourcePrefix, environmentName)}'
+  // Force new account to drop serverless capability and enable provisioned throughput
+  name: 'cosmos-${resourcePrefix}-${environmentName}-${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName, 'provisioned'), 12)}'
   location: location
   kind: 'GlobalDocumentDB'
   properties: {
@@ -184,9 +185,9 @@ resource cosmosDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
   }
 }
 
-// Azure ML Workspace for GNN Training and Inference
+// Azure ML Workspace for GNN Training and Inference - add uniqueString to avoid soft-delete conflicts
 resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' = {
-  name: 'ml-${resourcePrefix}-${environmentName}-${substring(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 0, 6)}'
+  name: 'ml-${resourcePrefix}-${environmentName}-${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName, '2025'), 8)}'
   location: location
   properties: {
     friendlyName: 'Azure Universal RAG ML Workspace'
@@ -195,7 +196,7 @@ resource mlWorkspace 'Microsoft.MachineLearningServices/workspaces@2023-04-01' =
     keyVault: resourceId('Microsoft.KeyVault/vaults', keyVaultName)
     applicationInsights: resourceId('Microsoft.Insights/components', appInsightsName)
     publicNetworkAccess: 'Enabled'
-    imageBuildCompute: 'compute-${environmentName}'
+    // imageBuildCompute will be set after workspace creation to avoid container registry conflicts
   }
   identity: {
     type: 'SystemAssigned'
@@ -242,7 +243,8 @@ output cosmosAccountName string = cosmosAccount.name
 output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
 output cosmosResourceId string = cosmosAccount.id
 output cosmosGremlinEndpoint string = 'wss://${cosmosAccount.name}.gremlin.cosmos.azure.com:443/'
-@secure()
+// PERMANENT SOLUTION: Always output the current Cosmos DB key for reliable authentication
+// This ensures containers always have the correct key for Gremlin API access
 output cosmosKey string = cosmosAccount.listKeys().primaryMasterKey
 
 output gremlinDatabaseName string = gremlinDatabase.name

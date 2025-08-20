@@ -40,9 +40,9 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 }
 
 // Container Registry for hosting container images
-// Supported in all Azure subscription types including Azure for Students
+// Use proper uniqueString for naming consistency and avoid conflicts
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
-  name: 'cr${replace(resourcePrefix, '-', '')}${environmentName}${substring(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 0, 6)}'
+  name: 'cr${replace(resourcePrefix, '-', '')}${environmentName}${take(uniqueString(resourceGroup().id, resourcePrefix, environmentName), 8)}'
   location: location
   sku: {
     name: config.registrySku
@@ -148,6 +148,10 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
           name: 'azure-cosmos-key'
           value: cosmosKey
         }
+        {
+          name: 'cosmos-connection-string'
+          value: 'AccountEndpoint=${cosmosEndpoint};AccountKey=${cosmosKey};'
+        }
       ]
     }
     template: {
@@ -196,23 +200,23 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'USE_MANAGED_IDENTITY'
-              value: 'false'
+              value: 'true'
             }
             {
               name: 'AZURE_SEARCH_INDEX'
-              value: 'maintie-prod-index'
+              value: 'maintie-${environmentName}-index'
             }
             {
               name: 'AZURE_COSMOS_DATABASE_NAME'
-              value: 'maintie-rag-prod'
+              value: 'maintie-rag-${environmentName}'
             }
             {
               name: 'AZURE_COSMOS_GRAPH_NAME'
-              value: 'knowledge-graph-prod'
+              value: 'knowledge-graph-${environmentName}'
             }
             {
               name: 'AZURE_STORAGE_CONTAINER'
-              value: 'maintie-prod-data'
+              value: 'maintie-${environmentName}-data'
             }
             {
               name: 'AZURE_OPENAI_DEPLOYMENT_NAME'
@@ -223,20 +227,12 @@ resource backendApp 'Microsoft.App/containerApps@2023-05-01' = {
               value: 'text-embedding-ada-002'
             }
             {
-              name: 'AZURE_OPENAI_ENDPOINT'
-              value: openaiEndpoint
-            }
-            {
-              name: 'AZURE_SEARCH_ENDPOINT'
-              value: searchEndpoint
-            }
-            {
-              name: 'AZURE_COSMOS_ENDPOINT'
-              value: cosmosEndpoint
-            }
-            {
               name: 'AZURE_COSMOS_KEY'
               secretRef: 'azure-cosmos-key'
+            }
+            {
+              name: 'COSMOS_CONNECTION_STRING'
+              secretRef: 'cosmos-connection-string'
             }
           ]
           resources: {
