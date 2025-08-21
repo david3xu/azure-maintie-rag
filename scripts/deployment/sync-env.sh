@@ -25,21 +25,43 @@ fi
 
 echo "📁 Syncing backend configuration..."
 
-# Create environment file from current azd values
-azd env get-values > "config/environments/${TARGET_ENV}.env.tmp"
-rm -f "config/environments/${TARGET_ENV}.env"
-mv "config/environments/${TARGET_ENV}.env.tmp" "config/environments/${TARGET_ENV}.env"
-echo "✅ Created: config/environments/${TARGET_ENV}.env"
+# Get current azd values
+azd env get-values > azd_values.tmp
 
-# Update .env symlink in root
-rm -f .env
-ln -sf "config/environments/${TARGET_ENV}.env" .env
-echo "✅ Updated: .env -> config/environments/${TARGET_ENV}.env"
+# If .env exists, preserve it and update/add only new values
+if [ -f .env ]; then
+    echo "🔄 Updating existing .env file..."
+    cp .env .env.backup
+    
+    # Update existing .env with new values from azd
+    while IFS='=' read -r key value; do
+        if [ -n "$key" ] && [ -n "$value" ]; then
+            # Remove quotes from value if present
+            clean_value=$(echo $value | sed 's/^"\(.*\)"$/\1/')
+            
+            # Update or add the key in .env
+            if grep -q "^${key}=" .env; then
+                sed -i "s|^${key}=.*|${key}=\"${clean_value}\"|" .env
+            else
+                echo "${key}=\"${clean_value}\"" >> .env
+            fi
+        fi
+    done < azd_values.tmp
+    
+    echo "✅ Updated existing .env file with azd values"
+else
+    echo "📄 Creating new .env file..."
+    echo "# Azure Universal RAG Environment Configuration" > .env
+    echo "# Generated from azd environment: ${TARGET_ENV}" >> .env
+    echo "# $(date)" >> .env
+    echo "" >> .env
+    cat azd_values.tmp >> .env
+    echo "✅ Created new .env file"
+fi
 
-# Update Makefile default environment
-sed -i "s/AZURE_ENVIRONMENT := .*/AZURE_ENVIRONMENT := \$(or \$(AZURE_ENVIRONMENT), ${TARGET_ENV})/" Makefile
-echo "✅ Updated: Makefile default environment"
+# Cleanup
+rm -f azd_values.tmp .env.backup
 
 echo ""
-echo "🎉 Backend synchronized with azd environment: $TARGET_ENV"
-echo "🚀 Ready to run: make setup && make run"
+echo "🎉 Environment synchronized: $TARGET_ENV"
+echo "🚀 Ready to run: make dataflow-full"

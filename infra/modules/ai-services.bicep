@@ -5,10 +5,10 @@ param principalId string
 param resourcePrefix string
 param managedIdentityPrincipalId string
 
-// Single configuration - COST OPTIMIZED (MINIMAL CAPACITY per README)
+// Single configuration - PIPELINE OPTIMIZED (HIGHER CAPACITY for dataflow)
 var config = {
-  miniCapacity: 10 // INCREASED: 10K TPM for dataflow pipeline (was 1 = 1K TPM)
-  embeddingCapacity: 10 // INCREASED: 10K TPM for vector embeddings (was 1 = 1K TPM)
+  miniCapacity: 30 // INCREASED: 30K TPM for multi-phase dataflow pipeline (was 10K TPM)
+  embeddingCapacity: 20 // INCREASED: 20K TPM for vector embeddings (was 10K TPM)
   location: 'East US 2' // Force East US 2 for better OpenAI quota availability in Azure for Students
 }
 

@@ -10,16 +10,42 @@ NO FAKE SUCCESS PATTERNS - FAIL FAST if services aren't properly cleaned.
 
 import asyncio
 import json
+import os
 import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Add backend to path (project root is 4 levels up: scripts/dataflow/phase0_cleanup/ -> root)
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Ensure fresh environment loading (critical after fix-azure script)
+os.environ['PYTHONPATH'] = str(project_root)
+os.environ['USE_MANAGED_IDENTITY'] = 'false'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+
+# Force reload environment with fresh .env from fix-azure script
+from dotenv import load_dotenv
+# Load from project root .env file (updated by azd/fix-azure)
+env_file = project_root / '.env'
+if env_file.exists():
+    load_dotenv(env_file, override=True)
+    # Force reload azure settings and UniversalDeps to pick up fresh credentials
+    import sys
+    if 'config.azure_settings' in sys.modules:
+        del sys.modules['config.azure_settings']
+    if 'config.settings' in sys.modules:
+        del sys.modules['config.settings']
+    if 'agents.core.universal_deps' in sys.modules:
+        del sys.modules['agents.core.universal_deps']
+else:
+    load_dotenv(override=True)  # Load any available .env
 
 # Import path utilities for consistent directory handling
 from scripts.dataflow.utilities.path_utils import get_results_dir
 
-from agents.core.universal_deps import get_universal_deps
+# Import after environment setup to ensure fresh credentials
+from agents.core.universal_deps import get_universal_deps, reset_universal_deps
 
 
 async def verify_cosmos_db_clean():
@@ -28,6 +54,8 @@ async def verify_cosmos_db_clean():
     print("=" * 50)
 
     try:
+        # Reset UniversalDeps to force fresh initialization with new credentials
+        reset_universal_deps()
         deps = await get_universal_deps()
         cosmos_client = deps.cosmos_client
 

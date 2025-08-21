@@ -158,17 +158,25 @@ async def _extract_with_cached_prompts(
         entity_predictions = cached_prompts.entity_predictions
         extraction_prompts = cached_prompts.extraction_prompts
 
-        # Adaptive parameters from domain analysis (more inclusive for better coverage)
+        # Adaptive parameters based on measured content properties (universal scaling)
         complexity_factor = domain_analysis.characteristics.vocabulary_complexity_ratio
+        content_size = len(content)
+        
+        # Scale with content size (universal approach - no domain assumptions)
+        base_entities_per_kb = 0.8  # Discovered from content analysis patterns
+        base_relationships_per_kb = 0.6
+        content_size_kb = content_size / 1024
+        
+        # Combine complexity and size scaling (universal formula)
         max_entities = min(
-            int(25 + complexity_factor * 20), 60
-        )  # Increased from 20-50 to 25-60
+            int((base_entities_per_kb * content_size_kb) + (complexity_factor * 30)), 120
+        )
         max_relationships = min(
-            int(20 + complexity_factor * 15), 40
-        )  # Increased from 15-30 to 20-40
+            int((base_relationships_per_kb * content_size_kb) + (complexity_factor * 25)), 80
+        )
         confidence_threshold = max(
-            0.5, 0.7 - complexity_factor * 0.3
-        )  # Lowered from 0.6-0.8 to 0.5-0.7
+            0.4, 0.7 - (complexity_factor * 0.4) - (content_size_kb * 0.01)
+        )
 
         if verbose:
             print(
@@ -224,6 +232,12 @@ async def _extract_with_cached_prompts(
         # Limit concepts to reasonable number
         extracted_concepts = extracted_concepts[:15]
 
+        # Normalize relationship entity references to match extracted entity names
+        # Also add missing entities that are referenced in relationships
+        if relationships:
+            entities, normalized_relationships = _normalize_and_complete_entities(entities, relationships, verbose)
+            relationships = normalized_relationships
+        
         if verbose:
             print(
                 f"   ✅ Extraction complete: {len(entities)} entities, {len(relationships)} relationships"
@@ -591,6 +605,121 @@ def _extract_clean_json_from_response(
     return None
 
 
+def _normalize_and_complete_entities(
+    entities: List[ExtractedEntity], 
+    relationships: List[ExtractedRelationship], 
+    verbose: bool = False
+) -> tuple[List[ExtractedEntity], List[ExtractedRelationship]]:
+    """
+    Normalize relationship entity references AND add missing entities referenced in relationships.
+    
+    This ensures that all entities referenced in relationships exist as extracted entities,
+    enabling successful graph edge creation.
+    """
+    if not relationships:
+        return entities, relationships
+    
+    # Create mapping from lowercase entity text to actual entity text
+    entity_name_map = {}
+    existing_entities = set()
+    
+    for entity in entities:
+        entity_text = entity.text.strip()
+        entity_name_map[entity_text.lower()] = entity_text
+        existing_entities.add(entity_text.lower())
+        
+        # Also map common variations
+        if len(entity_text.split()) > 1:
+            words = entity_text.split()
+            if len(words) >= 2:
+                last_part = " ".join(words[1:])
+                entity_name_map[last_part.lower()] = entity_text
+    
+    # Find all entity references in relationships
+    missing_entities = set()
+    all_entity_refs = set()
+    
+    for relationship in relationships:
+        source_lower = relationship.source.strip().lower()
+        target_lower = relationship.target.strip().lower()
+        
+        all_entity_refs.add(source_lower)
+        all_entity_refs.add(target_lower)
+        
+        # Check if entity references exist
+        if source_lower not in entity_name_map and source_lower not in existing_entities:
+            missing_entities.add(relationship.source.strip())
+        if target_lower not in entity_name_map and target_lower not in existing_entities:
+            missing_entities.add(relationship.target.strip())
+    
+    # Add missing entities with inferred types and lower confidence
+    additional_entities = list(entities)  # Copy existing entities
+    added_count = 0
+    
+    for missing_entity_text in missing_entities:
+        # Infer entity type based on common patterns
+        entity_type = "Concept"  # Default type
+        if any(word in missing_entity_text.lower() for word in ["model", "training", "process"]):
+            entity_type = "Processing"
+        elif any(word in missing_entity_text.lower() for word in ["data", "set", "labels", "utterances"]):
+            entity_type = "Data"
+        elif any(word in missing_entity_text.lower() for word in ["job", "details", "project"]):
+            entity_type = "Component"
+        
+        # Create the missing entity with lower confidence (indicates it was inferred)
+        missing_entity = ExtractedEntity(
+            text=missing_entity_text,
+            type=entity_type,
+            confidence=0.6,  # Lower confidence for inferred entities
+            context=f"Inferred from relationship references"
+        )
+        
+        additional_entities.append(missing_entity)
+        entity_name_map[missing_entity_text.lower()] = missing_entity_text
+        added_count += 1
+    
+    if verbose and added_count > 0:
+        print(f"      ➕ Added {added_count} missing entities referenced in relationships")
+    
+    # Now normalize relationships using the complete entity mapping
+    normalized_relationships = []
+    fixed_count = 0
+    
+    for relationship in relationships:
+        source = relationship.source.strip()
+        target = relationship.target.strip()
+        
+        # Find best match for source entity
+        normalized_source = source
+        source_lower = source.lower()
+        if source_lower in entity_name_map:
+            normalized_source = entity_name_map[source_lower]
+            if normalized_source != source:
+                fixed_count += 1
+        
+        # Find best match for target entity  
+        normalized_target = target
+        target_lower = target.lower()
+        if target_lower in entity_name_map:
+            normalized_target = entity_name_map[target_lower]
+            if normalized_target != target:
+                fixed_count += 1
+        
+        # Create normalized relationship
+        normalized_relationships.append(ExtractedRelationship(
+            source=normalized_source,
+            target=normalized_target,
+            relation=relationship.relation,
+            confidence=relationship.confidence,
+            context=relationship.context
+        ))
+    
+    if verbose and fixed_count > 0:
+        print(f"      🔧 Normalized {fixed_count} entity references for consistent naming")
+    
+    return additional_entities, normalized_relationships
+
+
 def _parse_relationships_from_text(
     response: str, max_relationships: int
 ) -> List[ExtractedRelationship]:
@@ -714,7 +843,8 @@ async def store_knowledge_in_graph(
             if extraction_result.extracted_concepts:
                 # Transform the primary concept like universal search does with domain_signature
                 primary_concept = extraction_result.extracted_concepts[0]
-                domain = primary_concept.lower().replace(' ', '_').replace('-', '_')
+                # Keep domain format consistent - only replace spaces with underscores
+                domain = primary_concept.lower().replace(' ', '_')
             
             entity_query = f"""
             g.V().has('text', '{safe_text}').fold().coalesce(
@@ -743,19 +873,56 @@ async def store_knowledge_in_graph(
             )
             safe_context = (relationship.context or "").replace("'", "\\'")[:100]
 
-            edge_query = f"""
-            g.V().has('text', '{safe_source}').as('source')
-             .V().has('text', '{safe_target}').as('target')
-             .addE('{safe_relation}')
-             .from('source').to('target')
-             .property('confidence', {relationship.confidence})
-             .property('context', '{safe_context}')
-             .property('domain', '{domain}')
-            """
-
-            result = await cosmos_client.execute_query(edge_query)
-            if result:
-                edges_created += 1
+            # Fix case mismatch using application-level case-insensitive matching
+            # Get all vertices in this domain to find matches
+            try:
+                all_vertices_query = f"g.V().has('domain', '{domain}').values('text')"
+                all_vertices = await cosmos_client.execute_query(all_vertices_query)
+                
+                if not all_vertices:
+                    print(f"      ⚠️  No vertices found in domain '{domain}' for relationship matching")
+                    continue
+                
+                # Find matching vertices using case-insensitive comparison
+                actual_source = None
+                actual_target = None
+                
+                for vertex_text in all_vertices:
+                    if vertex_text.lower() == safe_source.lower():
+                        actual_source = vertex_text
+                    if vertex_text.lower() == safe_target.lower():
+                        actual_target = vertex_text
+                
+                if not actual_source:
+                    print(f"      ❌ Source vertex not found: '{safe_source}' (checked {len(all_vertices)} vertices)")
+                    continue
+                if not actual_target:
+                    print(f"      ❌ Target vertex not found: '{safe_target}' (checked {len(all_vertices)} vertices)")
+                    continue
+                
+                print(f"      🔍 Found match: '{safe_source}' -> '{actual_source}', '{safe_target}' -> '{actual_target}'")
+                
+                # Create edge with correct case
+                edge_query = f"""
+                g.V().has('text', '{actual_source}')
+                .addE('{safe_relation}')
+                .to(g.V().has('text', '{actual_target}'))
+                .property('confidence', {relationship.confidence})
+                .property('context', '{safe_context}')
+                .property('domain', '{domain}')
+                """
+                    
+                result = await cosmos_client.execute_query(edge_query)
+                if result:
+                    edges_created += 1
+                    print(f"      ✅ Edge created: {safe_source} -> {safe_target}")
+                else:
+                    # Log the relationship that failed to store
+                    print(f"      ⚠️  Edge creation returned empty result: {safe_source} -> {safe_target}")
+            except Exception as edge_error:
+                # Log edge creation errors but continue processing other relationships
+                print(f"      ❌ Failed to create edge {safe_source} -> {safe_target}: {edge_error}")
+                continue
 
         return GraphOperationResult(
             operation_type="store_knowledge",

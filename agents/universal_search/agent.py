@@ -282,7 +282,8 @@ async def _execute_graph_search(
         # Step 1: Try to use the EXACT domain signature from domain analysis (matches knowledge extraction)
         if domain_analysis and hasattr(domain_analysis, 'domain_signature'):
             # Use the domain signature directly as storage domain (matches knowledge extraction logic)
-            potential_domain = domain_analysis.domain_signature.lower().replace(' ', '_').replace('-', '_')
+            # Keep hyphens as-is to match how domains are actually stored
+            potential_domain = domain_analysis.domain_signature.lower().replace(' ', '_')
             search_domain = potential_domain
             print(f"   🎯 Using domain from analysis: '{search_domain}'")
         

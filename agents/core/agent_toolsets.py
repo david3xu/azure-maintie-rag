@@ -408,12 +408,14 @@ Extract entities from the following content, prioritizing the predicted types:
 {content[:1500]}...
 
 For each entity, provide:
-1. Text: The exact text span
+1. Text: Concise entity name (2-4 words max, not full sentences)
 2. Type: One of the predicted types ({', '.join(entity_types)}) or discover new type
 3. Confidence: Based on prediction confidence and text clarity
 4. Context: Surrounding context that supports the classification
 
 Return results in JSON format.
+
+CRITICAL: Extract concise entity names (2-4 words) - NOT full sentences or descriptions.
 """
     else:
         prompts[
@@ -426,6 +428,16 @@ No specific entity types predicted - use universal patterns.
 
 Extract entities from: {content[:1500]}...
 Focus on significant terms, proper nouns, and technical concepts.
+
+For each entity, provide:
+1. Text: Concise entity name (2-4 words max, not full sentences)
+2. Type: Discovered entity type based on content
+3. Confidence: Based on text clarity and significance
+4. Context: Surrounding context that supports the entity
+
+Return results in JSON format.
+
+CRITICAL: Extract concise entity names (2-4 words) - NOT full sentences or descriptions.
 """
 
     # Generate relationship extraction prompt
@@ -447,6 +459,20 @@ Based on predicted entity types, focus on these relationship patterns:
 {', '.join(relationship_hints) if relationship_hints else 'universal relationship patterns'}
 
 Extract relationships from: {content[:1500]}...
+
+For each relationship, provide:
+1. Source: Entity name that appears as source (must exist in the content)
+2. Target: Entity name that appears as target (must exist in the content) 
+3. Relation: Descriptive relationship type (not generic)
+4. Confidence: Based on text evidence and clarity
+
+CRITICAL INSTRUCTIONS:
+- ONLY extract relationships between entities that actually appear in the content
+- If you reference an entity in a relationship, that entity MUST be extractable from the text
+- Include ALL entities mentioned in relationships in your entity extraction
+- Use concise entity names (2-4 words max)
+
+Return results in JSON format with both entities and relationships.
 """
 
     return prompts
@@ -1205,9 +1231,9 @@ async def _extract_key_content_terms_via_llm(
         )
 
     # Create focused prompt for term extraction using FULL REAL content
-    analysis_prompt = f"""Analyze this COMPLETE content and identify the 3 most IMPORTANT terms that characterize what this content is fundamentally about (not just frequent words, but key concepts that define the content's purpose and domain).
+    analysis_prompt = f"""Analyze this content and identify the key terms (1-5 terms) that appear frequently and have high information content based on their context and usage patterns.
 
-Return ONLY a JSON array of exactly 3 terms, like: ["term1", "term2", "term3"]
+Return ONLY a JSON array of 1-5 terms, like: ["term1", "term2", "term3"]
 
 COMPLETE CONTENT TO ANALYZE:
 {content}"""  # Use FULL content, not truncated
@@ -1263,9 +1289,9 @@ COMPLETE CONTENT TO ANALYZE:
             f"Azure OpenAI returned invalid JSON after cleaning: '{response_text}'. JSON error: {e}"
         )
 
-    if not isinstance(terms, list) or len(terms) != 3:
+    if not isinstance(terms, list) or len(terms) < 1:
         raise ValueError(
-            f"Azure OpenAI returned invalid format: expected list of 3 terms, got {terms}"
+            f"Azure OpenAI returned invalid format: expected list of 1-5 terms, got {terms}"
         )
 
     # Clean and validate terms

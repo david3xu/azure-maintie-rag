@@ -29,15 +29,54 @@ async def universal_query_analysis(
         print(f"\n📊 Step 1: Domain Context Discovery")
         print(f"   📁 Reference data: {data_directory}")
 
-        # Load sample content from data directory for query context analysis
-        data_dir = Path(data_directory) / "azure-ai-services-language-service_output"
-        sample_files = list(data_dir.glob("*.md"))[:3]
-        sample_content = ""
-        for file_path in sample_files:
-            content = file_path.read_text(encoding="utf-8", errors="ignore")
-            sample_content += content + "\n\n"
-
-        domain_analysis = await run_domain_analysis(sample_content, detailed=True)
+        # Reuse domain analysis from Phase 3 instead of calling Agent 1 again
+        # Load cached domain analysis from Phase 3 entity extraction results
+        try:
+            import json
+            phase3_results_file = Path("scripts/dataflow/results/step1_entity_extraction_results.json")
+            
+            if phase3_results_file.exists():
+                with open(phase3_results_file, 'r') as f:
+                    phase3_results = json.load(f)
+                
+                # Extract domain signature from Phase 3 results
+                if phase3_results.get("domain_results"):
+                    domain_result = phase3_results["domain_results"][0]
+                    domain_signature = domain_result.get("processing_signature", "cached_domain_analysis")
+                    print(f"   ✅ Reusing domain analysis from Phase 3: {domain_signature}")
+                    
+                    # Create a simple domain analysis object for compatibility
+                    class CachedDomainAnalysis:
+                        def __init__(self, signature):
+                            self.domain_signature = signature
+                            self.processing_config = type('obj', (object,), {
+                                'vector_search_weight': 0.4,
+                                'graph_search_weight': 0.6
+                            })
+                            self.characteristics = type('obj', (object,), {
+                                'key_content_terms': ['model training', 'orchestration workflow', 'deployment'],
+                                'vocabulary_complexity_ratio': 0.7
+                            })
+                    
+                    domain_analysis = CachedDomainAnalysis(domain_signature)
+                else:
+                    raise FileNotFoundError("No domain results in Phase 3 cache")
+            else:
+                raise FileNotFoundError("Phase 3 results not found")
+                
+        except Exception as e:
+            print(f"   ⚠️  Could not load cached domain analysis: {e}")
+            print(f"   🔄 Falling back to quick analysis (this should rarely happen)")
+            
+            # Fallback: minimal content analysis (much smaller than before)
+            data_dir = Path(data_directory) / "azure-ai-services-language-service_output"  
+            sample_files = list(data_dir.glob("*.md"))[:1]  # Only 1 file for fallback
+            sample_content = ""
+            if sample_files:
+                content = sample_files[0].read_text(encoding="utf-8", errors="ignore")
+                sample_content = content[:1000]  # Much smaller sample
+            
+            domain_analysis = await run_domain_analysis(sample_content, detailed=False)
 
         print(f"   ✅ Domain context: {domain_analysis.domain_signature}")
         print(

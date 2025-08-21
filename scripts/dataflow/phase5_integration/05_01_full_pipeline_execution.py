@@ -77,15 +77,39 @@ async def run_universal_full_pipeline(
         # Read sample content from data directory
         data_path = Path(data_dir)
         sample_files = list(data_path.rglob("*.md"))[:5]  # Get first 5 markdown files
-        sample_content = ""
-        for file_path in sample_files:
-            try:
-                content = file_path.read_text(encoding="utf-8")
-                sample_content += content + "\n\n"  # Full content of each file
-            except:
-                continue
-
-        domain_analysis = await run_domain_analysis(sample_content)
+        # Reuse domain analysis from Phase 3 instead of calling Agent 1 again
+        try:
+            import json
+            phase3_results_file = Path("scripts/dataflow/results/step1_entity_extraction_results.json")
+            
+            if phase3_results_file.exists():
+                with open(phase3_results_file, 'r') as f:
+                    phase3_results = json.load(f)
+                
+                # Extract domain signature from Phase 3 results
+                if phase3_results.get("domain_results"):
+                    domain_result = phase3_results["domain_results"][0]
+                    domain_signature = domain_result.get("processing_signature", "cached_domain_analysis")
+                    
+                    # Create a simple domain analysis object for compatibility
+                    class CachedDomainAnalysis:
+                        def __init__(self, signature):
+                            self.domain_signature = signature
+                    
+                    domain_analysis = CachedDomainAnalysis(domain_signature)
+                    print(f"   🔄 Reusing cached domain analysis from Phase 3")
+                else:
+                    raise FileNotFoundError("No domain results in Phase 3 cache")
+            else:
+                raise FileNotFoundError("Phase 3 results not found")
+                
+        except Exception as e:
+            print(f"   ⚠️  Could not load cached domain analysis: {e}")
+            print(f"   🔄 This should not happen in normal pipeline execution")
+            
+            # Emergency fallback (should rarely execute in normal pipeline)
+            sample_content = "Azure AI services documentation"
+            domain_analysis = await run_domain_analysis(sample_content, detailed=False)
 
         stage_duration = time.time() - stage_start
         pipeline_results["stages_completed"].append(

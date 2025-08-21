@@ -11,9 +11,7 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agents.universal_search.agent import UniversalSearchAgent
-from infrastructure.azure_openai.openai_client import AzureOpenAIClient
-from infrastructure.azure_storage.storage_client import SimpleStorageClient
+from agents.universal_search.agent import run_universal_search
 
 
 async def process_query(query: str, domain: str = "general"):
@@ -21,31 +19,25 @@ async def process_query(query: str, domain: str = "general"):
     print(f"🔍 Processing Query: '{query}'")
 
     try:
-        # Initialize services
-        azure_services = ConsolidatedAzureServices()
-        await azure_services.initialize_all_services()
-
-        # Initialize search agent
-        search_agent = UniversalSearchAgent(azure_services)
-
-        # Process query
-        result = await search_agent.process_query(
-            {"query": query, "domain": domain, "limit": 10}
+        # Use the same approach as 04_01_query_analysis.py that works
+        result = await run_universal_search(
+            query=query,
+            max_results=10,
+            use_domain_analysis=True
         )
 
-        if result.get("success"):
-            results = result.get("results", [])
-            print(f"✅ Found {len(results)} results")
+        print(f"✅ Found {result.total_results_found} total results")
+        print(f"🎯 Search confidence: {result.search_confidence:.2f}")
+        print(f"📊 Strategy used: {result.search_strategy_used}")
 
-            for i, result_item in enumerate(results[:3], 1):
-                title = result_item.get("title", "No title")[:50]
-                score = result_item.get("score", 0)
-                print(f"   {i}. {title}... (score: {score:.2f})")
+        if result.unified_results:
+            print(f"📋 Top results:")
+            for i, result_item in enumerate(result.unified_results[:3], 1):
+                title = result_item.title[:50] if result_item.title else "No title"
+                score = result_item.score
+                print(f"   {i}. {title}... (score: {score:.3f})")
 
-            return True
-        else:
-            print(f"❌ Query failed: {result.get('error')}")
-            return False
+        return result.total_results_found > 0
 
     except Exception as e:
         print(f"❌ Query processing failed: {e}")

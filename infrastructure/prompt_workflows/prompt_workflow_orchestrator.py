@@ -105,9 +105,13 @@ class PromptWorkflowOrchestrator:
         template_config = content_config or {}
 
         # FORCE chunking parameters (always set, regardless of force_chunking flag)
+        # Scale chunk size with content size (universal approach)
+        total_content_size = sum(len(text) for text in texts)
+        adaptive_chunk_size = min(max(1200, total_content_size // 20), 3000)  # Scale from 1.2KB to 3KB
+        
         template_config.setdefault(
-            "chunk_size", 800
-        )  # Smaller default for better processing
+            "chunk_size", adaptive_chunk_size
+        )  # Adaptive sizing based on content volume
         template_config.setdefault(
             "chunk_overlap_ratio", 0.3
         )  # Higher overlap for better context

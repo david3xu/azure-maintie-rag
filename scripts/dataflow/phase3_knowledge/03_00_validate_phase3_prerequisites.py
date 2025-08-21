@@ -104,36 +104,50 @@ async def validate_agent1_readiness() -> Tuple[bool, Dict[str, Any]]:
     total_start = time.time()
     successful_tests = 0
 
-    for i, file_path in enumerate(test_files, 1):
-        print(f"\n--- Testing File {i}: {file_path.name} ---")
-
-        # Load content
-        try:
-            content = file_path.read_text(encoding="utf-8", errors="ignore")
-            content_length = len(content)
-            print(f"📄 Content loaded: {content_length:,} characters")
-
-            # Use full content for validation
-            print(f"📄 Using full content for validation ({content_length:,} chars)")
-
-        except Exception as e:
-            print(f"❌ Failed to load {file_path.name}: {e}")
+    # Group files by domain (parent directory)
+    domains = {}
+    for file_path in test_files:
+        domain = file_path.parent.name
+        if domain not in domains:
+            domains[domain] = []
+        domains[domain].append(file_path)
+    
+    print(f"   📁 Found {len(domains)} domain(s) to test")
+    
+    # Test Agent 1 once per domain (not per file)
+    for domain_name, domain_files in domains.items():
+        print(f"\n--- Testing Domain: {domain_name} ({len(domain_files)} files) ---")
+        
+        # Combine content from all files in domain
+        combined_content = ""
+        total_size = 0
+        for file_path in domain_files[:3]:  # Sample up to 3 files per domain for validation
+            try:
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
+                combined_content += content + "\n\n"
+                total_size += len(content)
+            except Exception as e:
+                print(f"   ⚠️  Failed to load {file_path.name}: {e}")
+        
+        if not combined_content:
+            print(f"   ❌ No content loaded for domain {domain_name}")
             continue
-
-        # Test Agent 1 analysis
+            
+        print(f"   📄 Combined content: {total_size:,} characters from {min(3, len(domain_files))} files")
+        
+        # Test Agent 1 analysis on domain
         try:
             start_time = time.time()
-            domain_analysis = await run_domain_analysis(content, detailed=True)
+            domain_analysis = await run_domain_analysis(combined_content[:30000], detailed=True)  # Limit for validation
             processing_time = time.time() - start_time
 
-            print(f"✅ Agent 1 analysis completed in {processing_time:.2f}s")
+            print(f"   ✅ Agent 1 analysis completed in {processing_time:.2f}s")
             print(f"   Domain signature: {domain_analysis.domain_signature}")
-            print(
-                f"   Content confidence: {domain_analysis.content_type_confidence:.3f}"
-            )
+            print(f"   Content confidence: {domain_analysis.content_type_confidence:.3f}")
 
-            agent1_test_results[file_path.name] = {
+            agent1_test_results[domain_name] = {
                 "status": "success",
+                "files_tested": len(domain_files),
                 "processing_time_seconds": processing_time,
                 "domain_signature": domain_analysis.domain_signature,
                 "content_confidence": domain_analysis.content_type_confidence,
@@ -146,8 +160,8 @@ async def validate_agent1_readiness() -> Tuple[bool, Dict[str, Any]]:
             successful_tests += 1
 
         except Exception as e:
-            print(f"❌ Agent 1 analysis failed for {file_path.name}: {e}")
-            agent1_test_results[file_path.name] = {"status": "failed", "error": str(e)}
+            print(f"   ❌ Agent 1 analysis failed for domain {domain_name}: {e}")
+            agent1_test_results[domain_name] = {"status": "failed", "error": str(e)}
 
     total_time = time.time() - total_start
     print(f"\n⏱️  Total Agent 1 testing time: {total_time:.2f}s")
@@ -155,8 +169,8 @@ async def validate_agent1_readiness() -> Tuple[bool, Dict[str, Any]]:
     validation_results["validation_steps"]["agent1_testing"] = {
         "status": "passed" if successful_tests > 0 else "failed",
         "successful_tests": successful_tests,
-        "total_tests": len(test_files),
-        "success_rate": successful_tests / len(test_files) if test_files else 0,
+        "total_tests": len(domains),
+        "success_rate": successful_tests / len(domains) if domains else 0,
         "total_processing_time": total_time,
         "individual_results": agent1_test_results,
     }

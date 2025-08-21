@@ -9,17 +9,49 @@ Comprehensive cleanup of all data from Azure services while preserving:
 
 import asyncio
 import json
+import os
 import shutil
 import sys
 import time
 from pathlib import Path
 
-# Add backend to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Add backend to path (project root is 4 levels up: scripts/dataflow/phase0_cleanup/ -> root)
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Ensure fresh environment loading (critical after fix-azure script)
+os.environ['PYTHONPATH'] = str(project_root)
+os.environ['USE_MANAGED_IDENTITY'] = 'false'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+
+# Force reload environment with fresh .env from fix-azure script
+from dotenv import load_dotenv
+# Load from project root .env file (updated by azd/fix-azure)
+env_file = project_root / '.env'
+print(f"   🔍 Looking for .env at: {env_file.resolve()}")
+if env_file.exists():
+    load_dotenv(env_file, override=True)
+    print(f"   ✅ Loaded fresh environment from: {env_file.resolve()}")
+    
+    # Force reload azure settings and UniversalDeps to pick up fresh credentials
+    import sys
+    if 'config.azure_settings' in sys.modules:
+        del sys.modules['config.azure_settings']
+    if 'config.settings' in sys.modules:
+        del sys.modules['config.settings']
+    if 'agents.core.universal_deps' in sys.modules:
+        del sys.modules['agents.core.universal_deps']
+    print(f"   🔄 Forced config and dependencies reload for fresh credentials")
+else:
+    print(f"   ❌ .env file not found at: {env_file.resolve()}")
+    print(f"   💡 Run: make fix-azure to create .env with Azure credentials")
+    # Try loading from current directory as fallback
+    load_dotenv(override=True)
 
 # Import path utilities for consistent directory handling
 from scripts.dataflow.utilities.path_utils import get_results_dir
-from agents.core.universal_deps import get_universal_deps
+# Import after environment setup to ensure fresh credentials
+from agents.core.universal_deps import get_universal_deps, reset_universal_deps
 from infrastructure.azure_ml.gnn_model import UniversalGNNConfig
 
 
@@ -98,6 +130,10 @@ async def clean_azure_services():
     print("=" * 40)
 
     try:
+        # Reset UniversalDeps to force fresh initialization with new credentials
+        reset_universal_deps()
+        print("   🔄 Reset UniversalDeps singleton for fresh credential loading")
+        
         # Initialize dependencies to access Azure services
         deps = await get_universal_deps()
         available_services = deps.get_available_services()
